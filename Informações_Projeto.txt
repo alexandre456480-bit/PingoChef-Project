@@ -1,0 +1,1377 @@
+DOCUMENTO MESTRE DE PRODUTO
+SaaS de
+Cardápio Digital
+Especificação completa para orientar a implementação no Antigravity com Angular,
+Node.js e Supabase.
+PRODUTO
+UX/UI
+FULLSTACK
+CYBERSECURITY
+FASE INICIAL EM FOCO
+Login / Cadastro com token / Painel do usuário
+Versão 1.0 | 03 de setembro de 2026
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+2
+LEIA PRIMEIRO
+Como a IA deve usar este documento
+Este PDF é a fonte de verdade funcional e arquitetural do projeto. Ele foi escrito para uma IA de programação
+entender o produto inteiro antes de editar qualquer arquivo, mas trabalhar em partes pequenas, verificáveis
+e reversíveis.
+REGRA CENTRAL
+A IA não deve tentar construir o SaaS inteiro de uma vez. Antes de cada etapa, deve ler este documento,
+identificar somente o escopo solicitado, inspecionar o código existente, propor um plano curto,
+implementar, testar e registrar o que mudou.
+Ordem de autoridade
+PEDIDO ATUAL
+ESTE PDF
+DECISÕES.md
+CÓDIGO EXISTENTE
+• Decisões marcadas como atuais substituem ideias anteriores do chat.
+• Itens marcados como futuro devem influenciar o modelo de dados, mas não devem aparecer no MVP sem
+solicitação.
+• Itens marcados como fora do escopo não devem ser implementados por iniciativa da IA.
+• Não inserir conta, senha, token bruto ou service role em código, commit, log, print ou neste PDF.
+• A conta e o token de teste devem vir de variáveis de ambiente/seed local e nunca ser reutilizados em
+produção.
+Saída esperada de cada tarefa no Antigravity
+1. Entendimento
+2. Mudanças
+3. Evidências
+4. Próximo passo
+Objetivo, escopo e restrições
+Arquivos alterados e decisões
+Build, testes, screenshots e
+riscos
+Uma próxima tarefa pequena
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+3
+NAVEGAÇÃO
+Sumário executivo
+Cada capítulo começa em uma nova página. A ordem foi pensada para a IA compreender primeiro o produto,
+depois a experiência, a arquitetura, a segurança e, por fim, a execução imediata.
+01 Visão do produto · 4
+17 Modelo de dados recomendado · 20
+02 Atores, linguagem e identificadores · 5
+18 Multi-tenant e RLS · 21
+03 Escopo oficial do MVP e evolução · 6
+19 Contrato inicial da API · 22
+04 Mapa de rotas e áreas · 7
+20 Uploads e mídia · 23
+05 Jornada pública do cliente · 8
+21 Assinatura e administração · 24
+06 Welcome e Home modular · 9
+22 Threat model do MVP · 25
+07 Categorias e produtos · 10
+23 Testes e critérios de segurança · 26
+08 Likes e carrinho local · 11
+24 Performance, responsividade e acessibilidade ·
+27
+09 Painel do usuário · 12
+25 Ambientes, segredos e observabilidade · 28
+10 Módulos do painel · 13
+26 Roadmap de implementação · 29
+11 Design system e personalização · 14
+27 Plano de execução imediato no Antigravity · 30
+12 Draft, preview, publicação e rollback · 15
+28 Definition of Done da Fase 1 · 31
+13 Arquitetura fullstack · 16
+29 Protocolo com Gemini Flash e Claude Opus · 32
+14 Sessão e autenticação segura · 17
+30 Prompt mestre para iniciar a Fase 1 · 33
+15 Cadastro com token de ativação · 18
+31 Decisões consolidadas · 34
+16 Fase 1: telas e comportamentos · 19
+32 Referências técnicas e notas finais · 35
+ATALHO PARA COMEÇAR
+Para a implementação atual, leia obrigatoriamente os capítulos 13 a 19, 22, 23 e 27 a 30. Os demais
+mantêm coerência com o produto completo.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+4
+FUNDAÇÃO
+01 Visão do produto
+O produto é um SaaS de experiências de cardápio digital para restaurantes, bares e estabelecimentos
+semelhantes. Ele não deve parecer um PDF hospedado nem um catálogo genérico: deve transformar a
+entrada pelo QR Code em uma vitrine visual, rápida, personalizável e orientada à descoberta.
+Proposta de valor
+Permitir que o estabelecimento apresente sua marca e seus itens de forma mais bonita,
+clara e persuasiva, favorecendo descoberta, confiança e aumento do ticket, sem
+introduzir no MVP a complexidade de um sistema operacional de pedidos.
+Princípio
+Significado prático
+Experiência antes do catálogo
+Welcome, transição, Home-vitrine, categorias e detalhes bem encadeados.
+Marca do estabelecimento
+Logo, capa, cores, fontes e template preservam identidade sem permitir que o usuário destrua
+a hierarquia visual.
+Mobile first
+A jornada pública nasce para celular, mas funciona em tablet e desktop.
+Configuração guiada
+Templates, paletas e opções controladas; liberdade com limites técnicos e de qualidade.
+Segurança por arquitetura
+O navegador não tem autoridade; Node valida regras; RLS isola os dados; segredos ficam no
+servidor.
+Evolução sem retrabalho
+Business separado de user, draft/publicação, blocos de Home e tabelas preparadas para
+recursos futuros.
+NÃO É O PRODUTO AGORA
+Não é sistema de cozinha, PDV, delivery, pagamento, gestão de mesas, login de consumidor, integração
+com caixa ou plataforma completa de pedidos.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+5
+MODELO MENTAL
+02 Atores, linguagem e identificadores
+Termo
+Quem/o que é
+Regra
+Usuário
+Dono/assinante que administra o cardápio
+Um usuário por estabelecimento no MVP. Compartilhar senha não é
+recurso suportado.
+Cliente
+Consumidor que lê o QR Code
+Não cria conta. Acessa somente a experiência pública.
+Business
+Identidade interna do estabelecimento
+UUID; nunca usar slug ou token como chave de autorização.
+Token de ativação
+Segredo temporário e de uso único
+Ativa o onboarding; não renova mensalidade e não entra na URL.
+Slug
+Endereço público legível
+Ex.: /m/pizzaria-bella; personalizável, único e não secreto.
+Subscription
+Direito de uso
+active, expired, suspended ou cancelled; separado do token.
+Tenant
+Fronteira de dados de um business
+Toda leitura/escrita privada é limitada ao tenant autenticado.
+TOKEN DE ATIVAÇÃO -> onboarding único
+BUSINESS ID (UUID) -> identidade interna
+SLUG -> endereço público
+SUBSCRIPTION -> direito de uso no tempo
+JWT/SESSÃO -> identidade autenticada da requisição
+DECISÃO SUBSTITUÍDA
+A URL antiga com código, como /QR56TA/Painel, não deve ser usada. O token não identifica o negócio e
+nunca deve aparecer em rota pública ou privada.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+6
+CONTROLE DE ESCOPO
+03 Escopo oficial do MVP e evolução
+Agora / fundação
+Preparar sem expor
+Futuro
+Não implementar agora
+Cadastro com token; login; sessão;
+painel isolado; Business básico;
+categorias/produtos; design;
+preview; draft/publicar; cardápio
+público; like; carrinho local.
+Galeria e vídeo de produto;
+complementos; rollback; vários
+usuários; cobrança automática; QR
+download; admin expandido.
+Recuperação de senha;
+verificação de e-mail;
+pagamentos; analytics avançado;
+mais templates; permissões por
+função.
+Pedido enviado à cozinha;
+checkout; pagamento do
+consumidor; mesa; delivery;
+garçons; PDV; login do cliente.
+MVP funcional em uma frase
+Cadastro -> ativação -> login -> painel isolado -> configurar cardápio -> preview -> publicar -> URL pública
+-> Welcome -> Home -> categorias -> detalhes -> likes + carrinho local
+Limites técnicos iniciais
+• A comunicação comercial pode usar 'sem preocupação com limite' somente após definição de plano.
+Internamente sempre existem limites contra abuso.
+• Recomendação inicial: até 100 categorias e 1.000 produtos por business; valores configuráveis, não
+hardcoded na interface.
+• Uploads precisam de limite por arquivo, dimensões, MIME real e cota por tenant. 'Sem limite de KB' é uma
+ideia antiga substituída por segurança.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+7
+ARQUITETURA DE INFORMAÇÃO
+04 Mapa de rotas e áreas
+Área
+Rota
+Acesso
+Responsabilidade
+Autenticação
+/login
+Público
+Entrar; não revela se um e-mail existe além do necessário.
+Ativação
+/cadastro
+Público + token
+Criar conta e consumir token válido em fluxo controlado.
+Painel
+/painel
+Autenticado
+Resumo e próximos passos do estabelecimento.
+Menu
+/painel/menu
+Autenticado
+Categorias, itens, ordenação, status e edição.
+Empresa
+/painel/empresa
+Autenticado
+Nome, logo e descrição no MVP.
+Design
+/painel/design
+Autenticado
+Template, paleta, fonte, animações e blocos.
+Preview
+/painel/preview
+Autenticado
+Render do rascunho; nunca confundir com publicado.
+Público
+/m/:slug
+Público
+Somente snapshot publicado e business apto.
+Admin
+/admin
+Admin forte
+Mínimo cedo: contas, status, assinatura, token e suspensão.
+Separação também na API
+/api/auth/...
+/api/private/... # requer sessão + tenant
+/api/public/menus/:slug/... # somente dados publicados
+/api/admin/... # autenticação forte + autorização server-side
+REGRA DE PRIVACIDADE
+O endpoint público nunca devolve ownerEmail, userId, token, assinatura detalhada, caminhos internos,
+dados administrativos ou rascunho.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+8
+EXPERIÊNCIA
+05 Jornada pública do cliente
+O cliente chega normalmente pelo QR Code e deve alcançar os produtos com baixa fricção. Welcome e Home
+vivem na mesma aplicação Angular; podem usar estados/rotas filhas, sem HTML independente nem reload
+completo.
+QR CODE
+WELCOME
+TRANSIÇÃO
+HOME
+CATEGORIAS
+PRODUTO
+Etapa
+Conteúdo
+Critério de UX
+Welcome
+Background, logo, nome, frase opcional e CTA 'Ver cardápio'
+Simples, carregamento prioritário e botão evidente.
+Transição
+Zoom/fade/slide entre estados
+300-700 ms; respeitar prefers-reduced-motion.
+Home
+Hero/logo obrigatórios + blocos opcionais
+Vitrine, não lista gigante.
+Categorias
+Scroll horizontal e navegação suave
+Ícone, nome ou ambos, conforme design.
+Lista
+Cards legíveis, imagem otimizada e preço coerente
+Itens inativos/ausentes não aparecem.
+Detalhes
+Bottom sheet mobile; modal lateral desktop
+Foto, descrição, preço, atributos e ações.
+Like
+Um estado local + registro coletivo leve
+Like/unlike rápido e idempotente.
+Carrinho
+Lista local de itens, quantidade e total estimado
+Deixar claro que não envia pedido.
+MÉTRICA DE EXPERIÊNCIA
+A beleza não pode atrasar a decisão. O caminho Welcome -> primeiro item deve ser rápido, acessível e
+utilizável em rede móvel instável.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+9
+DESIGN DA ÁREA PÚBLICA
+06 Welcome e Home modular
+WELCOME
+Uma tela imersiva, com pouco texto e CTA central. A imagem deve
+ter overlay suficiente para contraste. Logo e CTA precisam manter
+legibilidade em qualquer foto.
+HOME
+Hero/capa e logo são obrigatórios. Os demais blocos são ativáveis,
+configuráveis e ordenáveis pelo usuário.
+Blocos aprovados
+• Promoções, com preço anterior/atual e contador opcional.
+• Mais curtidos, nunca 'mais pedidos'.
+• Especial da Casa, um produto escolhido pelo estabelecimento.
+• Novidades ou destaques manuais.
+• Categorias e atalhos de navegação.
+RESTAURANTE
+PROMOÇÕES
+MAIS CURTIDOS
+Modelo de blocos
+home_blocks: id, business_id, type, position, enabled, config_json
+Tipos iniciais: hero | promotion | most_liked | featured_product | categories
+Novos tipos futuros não exigem reconstruir a Home.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+10
+CONTEÚDO
+07 Categorias e produtos
+Elemento
+MVP
+Preparação futura
+Categoria
+Nome; ativa/inativa; posição; apresentação por ícone,
+nome ou ambos
+Descrição/imagem somente se o produto pedir depois.
+Ícones
+Biblioteca interna curada
+Versionar chaves de ícone; não salvar SVG arbitrário do
+usuário.
+Produto
+Nome recomendado; descrição, preço, foto e categoria
+podem ser opcionais conforme regra da tela
+Galeria, vídeo, preparo, complementos e etiquetas.
+Preço
+price_cents pode ser null; modo 'ocultar' ou 'consultar
+estabelecimento'
+Moedas adicionais apenas quando houver demanda.
+Promoção
+Preço promocional opcional; período opcional; ativa/inativa
+Regras avançadas e campanhas.
+Atributos
+Serve X pessoas, volume, peso e tempo de preparo
+Campos tipados ou catálogo de atributos.
+Estado
+Ativo/inativo, posição e soft delete
+Agenda de disponibilidade.
+Detalhe do produto
+No celular, abrir em bottom sheet com gesto/fechar acessível; no desktop, modal lateral. O modal precisa
+prender o foco, fechar com Escape, restaurar o foco no card anterior e impedir scroll do fundo.
+RESPONSABILIDADE COMPARTILHADA
+O usuário pode criar muitas categorias, mas o SaaS deve orientar: alertar sobre excesso, mostrar preview
+real e aplicar limites técnicos altos para evitar abuso e custo descontrolado.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+11
+INTERAÇÕES PÚBLICAS
+08 Likes e carrinho local
+Carrinho e likes têm arquiteturas diferentes. O carrinho não tem autoridade e pode ficar no navegador; o like
+coletivo precisa de uma chamada pequena ao servidor.
+Recurso
+Persistência
+Regra
+Segurança
+Carrinho
+localStorage com expiração
+configurável (recomendação: 12 h)
+Salvar itemId e quantity; recalcular com o
+cardápio carregado
+Alterações no DevTools não
+afetam banco, pagamento ou
+restaurante.
+Total
+Somente derivado em memória
+Exibir 'Total estimado'
+Se virar pedido real, backend
+deverá recalcular tudo.
+Like visual
+Estado local otimista
+Clique alterna like/unlike; coração
+preenchido quando curtido
+Reconciliar a resposta do servidor
+sem travar a interface.
+Like coletivo
+Banco
+Um por item por sessão anônima
+persistente
+Unique constraint, rate limit,
+validação do item e proteção
+contra bot.
+Visibilidade
+Configuração do business
+Mostrar contagem pública ou usar apenas
+no ranking
+O painel sempre pode exibir
+ranking por categoria.
+visitor_id aleatório no navegador
+like_key = HMAC(server_secret, business_id + visitor_id)
+UNIQUE(menu_item_id, like_key)
+POST = like idempotente | DELETE = unlike idempotente
+TEXTO OBRIGATÓRIO NO CARRINHO
+'Esta lista ajuda você a acompanhar os itens desejados e não envia o pedido ao estabelecimento.' Não usar
+CTA 'Finalizar pedido' no MVP.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+12
+EXPERIÊNCIA PRIVADA
+09 Painel do usuário
+A referência visual aprovada é um painel escuro, premium e organizado, com navegação lateral, área central
+de edição e preview de celular fixo no desktop. A imagem anexada inspira hierarquia e composição, não deve
+ser copiada literalmente.
+Referência 01 - painel escuro com navegação lateral, conteúdo central e área contextual. Substituir linguagem de pedidos/financeiro
+pelos módulos do cardápio.
+Shell do painel
+Região
+Desktop
+Mobile/tablet
+Sidebar
+Persistente/recolhível
+Drawer acionado por botão; foco controlado.
+Editor
+Coluna principal com formulários e listas
+Uma coluna, ações primárias sticky quando necessário.
+Preview
+Celular fixo ao lado, atualização em tempo real
+Abrir em aba/modal de preview; nunca esmagar o editor.
+Publicar
+Ação global visível e estado do rascunho
+CTA fixo com confirmação e feedback.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+13
+FUNCIONALIDADE PRIVADA
+10 Módulos do painel
+Módulo
+Responsabilidade do MVP
+Estados essenciais
+Dashboard
+Resumo, status da assinatura/cardápio, checklist inicial, atalhos e métricas
+simples
+Vazio, incompleto, rascunho, publicado,
+assinatura expirada/suspensa.
+Main Menu
+CRUD de categorias e produtos; arrastar posição; ativar/desativar;
+editar/excluir
+Loading, vazio, erro, salvando, salvo,
+conflito e limite.
+My Business
+Nome, logo e descrição
+Nome ainda não definido após cadastro;
+upload em progresso; erro de validação.
+Design
+Template, paletas, cor livre, fontes, animações, estilo de categoria e blocos
+Alteração local, rascunho salvo,
+restauração e preview.
+Preview
+Render fiel do rascunho em tamanhos mobile/tablet
+Nunca consulta snapshot público por
+engano.
+Publicação
+Validar rascunho e gerar snapshot publicado
+Bloqueada por erro, publicando, sucesso,
+versão e rollback futuro.
+Likes
+Ranking geral e por categoria
+Com/sem dados; contagem pública
+ligada/desligada.
+Dashboard inicial aprovado para a Fase 1
+• Saudação e nome da conta; status da sessão e do plano de teste.
+• Checklist: cadastrar empresa, enviar logo, criar primeira categoria, criar primeiro item, personalizar design
+e publicar.
+• Cards: status do cardápio, último salvamento/publicação, total de categorias/itens e link público quando
+existir.
+• Atalhos: 'Configurar empresa', 'Criar categoria', 'Abrir design' e 'Ver preview'.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+14
+DIREÇÃO VISUAL
+11 Design system e personalização
+O design deve preservar qualidade mesmo com personalização. A liberdade é oferecida dentro de sistemas
+controlados: templates, tokens de cor, pares tipográficos e opções de componente.
+Controle
+Opções
+Guardrail
+Templates
+Minimal, Premium, Dark, Elegant, Modern, Bar, Restaurant
+Um schema de configuração comum; template não duplica
+regras de negócio.
+Paletas
+Conjuntos pré-definidos + seletor livre
+Verificar contraste e sugerir correção; fallback seguro.
+Fontes
+Biblioteca curada por categorias: elegante, moderna,
+casual, premium, clássica e minimalista
+Carregar somente pesos usados; impedir fontes externas
+arbitrárias.
+Cards
+Raio, sombra, imagem, densidade e disposição aprovados
+Não liberar controle pixel a pixel.
+Categorias
+Ícone, nome ou ícone + nome
+Ícones próprios do sistema; consistência de tamanho.
+Animações
+Fade, slide, scale e none
+Curta, performática, reduzida quando o sistema solicitar.
+Blocos
+Ativar, configurar e ordenar
+Hero e logo obrigatórios; validação antes de publicar.
+Referências visuais anexadas
+Referência 02 - composição mobile, fotografia dominante,
+cartões e paleta orgânica.
+Referência 03 - comunicação do QR e estrutura pública em
+smartphone.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+15
+INTEGRIDADE EDITORIAL
+12
+Draft, preview, publicação e
+rollback
+EDITAR
+SALVAR
+RASCUNHO
+PREVIEW
+VALIDAR
+PUBLICAR
+VERSÃO
+A área privada trabalha com dados de rascunho. O cardápio público lê somente um snapshot imutável
+aprovado. A publicação é uma operação de domínio, não um simples booleano espalhado em produtos.
+Draft normalizado (business, categorias, produtos, blocos, design)
+-> validação server-side
+-> transação de publicação
+-> menu_publications(version, snapshot_json, published_at)
+-> business.current_publication_id
+-> GET /api/public/menus/:slug lê somente o snapshot atual
+Benefício
+Resultado
+Consistência
+O público nunca recebe metade de uma edição.
+Performance
+Uma leitura de snapshot reduz joins na rota pública.
+Rollback
+Versões anteriores podem ser reativadas futuramente.
+Auditoria
+Sabe-se quem publicou e quando.
+Preview
+O usuário vê o rascunho sem afetar clientes.
+VALIDAÇÃO ANTES DE PUBLICAR
+Exigir nome do business, slug válido, hero/logo conforme a configuração, ao menos uma categoria ativa e
+um item publicável. Exibir erros por campo e não criar snapshot parcial.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+16
+VISÃO TÉCNICA
+13 Arquitetura fullstack
+ANGULAR
+Interface
+Sem autoridade
+NODE API
+Regras
+Autorização
+SUPABASE
+Auth + Postgres
+Storage
+RLS
+Última barreira
+por tenant
+Camada
+Responsabilidade
+Nunca confiar em
+Angular
+UI, estado local, formulários, preview, acessibilidade e chamadas tipadas
+IDs enviados, validação visual, preço local,
+guardas de rota.
+Node.js API
+Autenticação da requisição, tenant, regras, validação, rate limit, publicação
+e integrações
+Dados do navegador, business_id
+informado, MIME declarado.
+Supabase Auth
+Usuário, credenciais e sessão
+Claims usados sem validação de
+assinatura/expiração.
+PostgreSQL
+Dados, constraints, transações, índices, RLS e snapshots
+Aplicação como única barreira de
+autorização.
+Storage
+Logo e mídia, com caminhos por tenant e políticas
+Extensão, nome original ou Content-Type
+isolado.
+Estrutura sugerida do repositório
+apps/
+web/ # Angular
+api/ # Node.js
+packages/
+contracts/ # DTOs/schemas compartilhados sem regras secretas
+ui/ # tokens/componentes somente se houver ganho real
+supabase/
+migrations/
+tests/
+docs/
+PROJECT_STATE.md
+DECISIONS.md
+SECURITY.md
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+17
+FASE 1
+14 Sessão e autenticação segura
+Arquitetura preferida: padrão BFF. O Angular chama a API Node; o Node interage com Supabase Auth e
+mantém tokens em cookies HttpOnly, Secure e SameSite. Isso reduz exposição a scripts e concentra a política
+de sessão.
+Fluxo
+Servidor
+Cliente
+Login
+Valida credenciais no Auth, cria sessão e define cookies seguros
+Nunca grava senha/token em localStorage.
+Sessão
+Valida expiração e identidade; renova conforme política
+GET /api/auth/session hidrata o estado.
+Logout
+Revoga/encerra sessão e limpa cookies
+Limpa estado em memória e redireciona.
+Ações mutáveis
+Valida Origin/CSRF, sessão, tenant e schema
+Angular envia token CSRF conforme contrato.
+Guarda
+API decide autorização real
+AuthGuard melhora UX, mas não protege
+recurso.
+Estados de autenticação
+UNAUTHENTICATED -> REGISTERING -> ACTIVE_SESSION
+ACTIVE_SESSION -> EXPIRED_SESSION -> UNAUTHENTICATED
+BUSINESS active + subscription active -> painel completo + público
+subscription expired -> painel limitado/renovação; público controlado
+business suspended -> acesso negado segundo política administrativa
+ANTES DE CLIENTES PAGANTES
+Adicionar recuperação de senha e verificação de e-mail. É possível fazer depois, mas a estrutura de estados
+e telas deve ser preparada desde agora.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+18
+FASE 1
+15 Cadastro com token de ativação
+O token é gerado manualmente no início, possui validade configurável (recomendação inicial: 30 dias), uso
+único e nunca é armazenado em texto puro. A mensalidade é controlada por subscription, não por reativação
+do token.
+POST /api/auth/register
+1. Validar e-mail, senha e formato do token.
+2. Derivar token_hash com HMAC e segredo server-side.
+3. Localizar token unused, não expirado e não reservado.
+4. Reservar token por curto período para evitar corrida.
+5. Criar usuário no Supabase Auth.
+6. Em transação: consumir token, criar profile, business vazio e subscription.
+7. Se falhar: compensar criação do usuário/liberar reserva.
+8. Criar sessão segura e devolver DTO mínimo.
+Token
+Permitido
+Resposta
+Válido
+Uma criação
+Conta e business criados; used_at preenchido.
+Inválido
+Nenhuma
+Mensagem genérica e rate limit.
+Expirado
+Nenhuma
+Informar expiração sem revelar dados internos.
+Usado
+Nenhuma
+Não criar nova conta; orientar suporte.
+Duas requisições
+simultâneas
+Somente uma
+Constraint/transação impede duplo consumo.
+DADOS DE TESTE
+TOKEN_TESTE, EMAIL_TESTE e SENHA_TESTE devem existir somente em .env.local não versionado ou seed
+de desenvolvimento. O PDF, README público, logs e screenshots não devem conter os valores reais.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+19
+LOGIN, CADASTRO E PAINEL
+16 Fase 1: telas e comportamentos
+Tela
+Campos e ações
+Estados e mensagens
+Login
+E-mail, senha, mostrar/ocultar senha, entrar
+Carregando, credencial inválida genérica, rate
+limit, sessão expirada, indisponibilidade.
+Cadastro
+E-mail, senha, confirmar senha, token, termos; criar conta
+Força da senha, token inválido/expirado/usado,
+conflito de e-mail, envio protegido contra duplo
+clique.
+Painel
+Shell, saudação, checklist, cards e atalhos
+Business sem nome/logo, assinatura de teste,
+skeleton, erro recuperável e logout.
+Empresa inicial
+Nome, descrição e logo
+Autosave opcional apenas quando seguro;
+feedback explícito de salvar.
+Requisitos de validação
+• E-mail normalizado para comparação, validado no servidor e nunca refletido sem escape.
+• Senha com política de comprimento e bloqueio de senhas comuns/vazadas quando possível; não impor
+regras cosméticas frágeis.
+• Token aceita visualmente grupos, mas é normalizado no servidor; mensagens não expõem hash, ID,
+comprador ou datas internas.
+• Após login, /painel deve carregar apenas o business derivado da sessão; jamais aceitar business_id da
+query como autoridade.
+• A interface precisa funcionar com teclado, leitores de tela, zoom de 200% e redução de movimento.
+Critério visual
+Login e cadastro devem transmitir produto premium sem prejudicar velocidade: layout em duas áreas no
+desktop (marca/benefício + formulário) e formulário prioritário em uma coluna no celular. Erros ficam junto ao
+campo e também em resumo acessível quando necessário.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+20
+POSTGRESQL
+17 Modelo de dados recomendado
+Tabela
+Campos principais
+Regras/índices
+profiles
+user_id, created_at, updated_at
+PK/FK auth.users; nenhum dado secreto.
+businesses
+id, owner_user_id, name, description, logo_path, slug, status,
+current_publication_id
+owner único no MVP; slug unique; soft
+delete.
+activation_tokens
+id, token_hash, status, expires_at, used_at, used_by
+hash unique; raw token nunca persiste.
+subscriptions
+id, business_id, status, starts_at, expires_at
+um status atual coerente;
+histórico/auditoria.
+categories
+id, business_id, name, icon_key, display_mode, position, is_active
+unique de posição não obrigatório; index
+business_id.
+menu_items
+id, business_id, category_id, name, description, price_cents,
+promo_price_cents, media_path, position, is_active
+FK composta/trigger evita categoria de
+outro tenant; preços >= 0.
+item_attributes
+item_id, type, value, unit, position
+Tipos aprovados; sem HTML arbitrário.
+promotions
+business_id, item_id/config, starts_at, ends_at, enabled
+ends_at > starts_at; servidor determina
+validade.
+design_settings
+business_id, template_key, palette, font_pair, category_style, motion
+Schema JSON validado/versionado.
+home_blocks
+business_id, type, position, enabled, config_json
+Tipos allowlist; config validada por tipo.
+item_likes
+business_id, item_id, like_key, created_at
+UNIQUE(item_id, like_key); index para
+ranking.
+menu_publications
+business_id, version, snapshot_json, published_by, published_at
+UNIQUE(business_id, version); imutável.
+audit_logs
+actor, action, target, metadata segura, created_at
+Append-only; nunca
+senha/token/conteúdo sensível.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+21
+CONTROLE DE ACESSO
+18 Multi-tenant e RLS
+A regra de segurança mais importante do SaaS é impedir que o usuário A leia ou altere
+qualquer recurso do usuário B, mesmo conhecendo um UUID válido.
+JWT/sessão -> auth.uid() -> businesses.owner_user_id -> tenant atual
+Recurso.business_id deve corresponder ao tenant atual
+Falha -> 404 preferencial quando não convém confirmar existência
+RLS repete a barreira dentro do PostgreSQL
+Camada
+Teste obrigatório
+API
+Usuário A tenta GET/PATCH/DELETE no item de B -> negado.
+Banco
+Políticas SELECT, INSERT, UPDATE e DELETE testadas separadamente.
+Storage
+Usuário A tenta caminho businesses/B/... -> negado.
+Publicação
+A não publica snapshot de B nem injeta item/categoryId de B.
+Admin
+Somente função server-side; nunca confiar em is_admin do Angular.
+Uso das chaves Supabase
+• Publishable/anon key pode existir no cliente somente para fluxos projetados para ela; não é segredo, mas
+RLS e grants precisam estar corretos.
+• service_role bypassa RLS e deve ficar exclusivamente no servidor, usada apenas em operações
+administrativas específicas.
+• No CRUD comum, o Node deve propagar a identidade do usuário/usar cliente com JWT para que RLS
+continue atuando como defesa em profundidade.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+22
+ENDPOINTS
+19 Contrato inicial da API
+Método e rota
+Entrada
+Saída/responsabilidade
+POST /api/auth/register
+email, password, activationToken
+Cria Auth + profile + business + subscription; sessão
+segura.
+POST /api/auth/login
+email, password
+Sessão em cookie; DTO mínimo do usuário.
+POST /api/auth/logout
+CSRF + sessão
+Revoga sessão e limpa cookies.
+GET /api/auth/session
+cookie
+authenticated, user e business/status mínimos.
+GET /api/private/dashboard
+sessão
+Checklist, contadores e status derivados do tenant.
+GET /api/private/business/me
+sessão
+Business do usuário; sem business_id na query.
+PATCH /api/private/business/me
+name, description
+Validação e update somente no tenant.
+POST /api/private/business/logo
+upload validado
+Caminho seguro/asset; limites e política.
+GET /api/public/menus/:slug
+slug
+Snapshot publicado permitido, cacheável.
+POST/DELETE .../items/:id/like
+visitor id + item
+Like/unlike idempotente e rate-limited.
+Envelope de erro
+{
+"error": {
+"code": "ACTIVATION_TOKEN_INVALID",
+"message": "Não foi possível concluir o cadastro.",
+"fieldErrors": {"activationToken": "Verifique o código informado."},
+"requestId": "req_..."
+}
+}
+NUNCA
+Não retornar stack trace, query SQL, nome de tabela, chave Supabase, hash, token, caminho local, objeto
+bruto do Auth ou detalhes de outro tenant.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+23
+SEGURANÇA DE ARQUIVOS
+20 Uploads e mídia
+Logo e fotos são uma superfície relevante de ataque e custo. Limites visíveis podem ser generosos, mas a
+plataforma sempre valida e normaliza no servidor.
+Controle
+Implementação
+Tamanho
+Limite inicial recomendado por imagem: 8 MB; cota por tenant configurável.
+Tipo
+Allowlist JPEG, PNG e WebP; verificar assinatura real e decodificar a imagem.
+Dimensões
+Limitar pixels totais e dimensões; rejeitar image bombs.
+Nome
+Ignorar nome como chave; gerar UUID e extensão após normalização.
+Processamento
+Remover metadados, corrigir orientação, gerar variantes responsivas e WebP/AVIF quando suportado.
+Caminho
+businesses/{businessId}/...; autorização server-side e política de Storage.
+Entrega
+URLs assinadas ou públicas somente para assets publicados; cache com versionamento.
+SVG
+Não aceitar upload arbitrário no MVP; usar ícones internos revisados.
+Exclusão
+Soft delete/referência; limpeza assíncrona somente após período de recuperação.
+Exemplo de rejeição correta
+foto.jpg.exe -> rejeitar
+imagem 400 MB -> rejeitar antes de processar
+Content-Type image/png com bytes executáveis -> rejeitar
+SVG com script -> não aceitar
+path contendo businessId de outro tenant -> ignorar/404
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+24
+OPERAÇÕES
+21 Assinatura e administração
+O admin mínimo deve entrar relativamente cedo, depois da fundação de Auth, Business e Menu, antes de
+testes amplos com clientes. Não precisa nascer como dashboard sofisticado.
+Módulo admin mínimo
+Capacidade
+Proteção
+Contas
+Listar usuário/business, datas e status
+MFA antes de produção; autorização server-side.
+Tokens
+Criar/revogar/consultar estado sem exibir raw novamente
+Raw exibido uma vez; auditoria.
+Assinaturas
+Ativar/expirar/suspender/cancelar
+Motivo, ator, timestamp e step-up para ação
+crítica.
+Suspensão
+Desativar cardápio público imediatamente
+Reversível; página controlada; não apagar dados.
+Conteúdo abusivo
+Despublicar/remover referência de mídia
+Soft delete + trilha de auditoria.
+Exclusão
+Solicitar exclusão recuperável
+Confirmação forte, espera, backup e ação
+posterior.
+Política de conta
+business.status: active | suspended | deleting | deleted
+subscription.status: active | expired | suspended | cancelled
+activation_token.status: unused | reserved | used | revoked | expired
+CONTA COMPROMETIDA
+Ações administrativas destrutivas não podem depender de um único clique. Preferir suspensão reversível,
+MFA, step-up authentication, confirmação explícita e audit log append-only.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+25
+CYBERSECURITY
+22 Threat model do MVP
+Ameaça
+Exemplo
+Controles mínimos
+IDOR / quebra de
+tenant
+Alterar UUID de um item
+Tenant derivado da sessão, filtros server-side, RLS e testes A/B.
+XSS
+Descrição com script/HTML
+Não aceitar HTML arbitrário; escape; sanitização contextual; CSP/Trusted
+Types quando viável.
+CSRF
+Site externo aciona PATCH
+SameSite, token CSRF e validação Origin para cookie auth.
+Credential stuffing
+Muitas tentativas no login
+Rate limit progressivo, mensagens genéricas, logs e MFA no admin.
+Abuso de token
+Força bruta/reuso/corrida
+Entropia alta, hash, validade, uso único, reserva, rate limit e constraint.
+Upload malicioso
+Executável/arquivo gigante
+Allowlist, magic bytes, decoder, tamanho, pixels, rename e storage
+isolado.
+Bot de likes
+Milhares de likes
+Unique, HMAC de sessão, rate limit, validação e detecção de anomalia.
+Vazamento de
+segredo
+service_role no Angular/Git
+Secret scanning, .env fora do Git, rotação e ambientes separados.
+Mass assignment
+Enviar owner_user_id/status
+Schemas allowlist e DTOs de entrada específicos.
+Exclusão acidental
+Admin apaga business
+Soft delete, confirmação, step-up, logs e recuperação.
+Headers e plataforma
+Configurar HTTPS, HSTS em produção, CSP progressiva, frame-ancestors, nosniff, Referrer-Policy, CORS
+estrito por ambiente e limites de payload. Dependências devem ser travadas, atualizadas e examinadas no
+CI.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+26
+QUALIDADE
+23 Testes e critérios de segurança
+Nível
+Testes indispensáveis
+Unitário
+Schemas, normalização, estado do token, cálculo de promoção, expiração do carrinho, policies de domínio.
+Integração API
+Cadastro feliz e falhas; login/logout; sessão expirada; tenant A/B; upload inválido; publicação transacional.
+RLS / banco
+Allow e deny para SELECT/INSERT/UPDATE/DELETE em cada tabela exposta; anon, authenticated e outro owner.
+E2E
+Cadastro com token -> painel; login; completar Business; criar conteúdo; preview; publicar; abrir /m/:slug.
+Acessibilidade
+Teclado, foco, rótulos, contraste, leitores de tela, zoom 200% e reduced motion.
+Responsividade
+Larguras pequenas, celulares comuns, tablet, desktop e orientação horizontal.
+Segurança negativa
+IDOR, mass assignment, brute force, CSRF, XSS, upload polyglot e segredo no bundle.
+Performance
+Bundle, LCP da Welcome/Home, imagens, número de requests e rota pública em rede lenta.
+Portões do CI
+LINT
+TYPECHECK
+UNIT
+INTEGRAÇÃO
+RLS
+BUILD
+REGRA DE ENTREGA
+Nenhuma fase é considerada concluída apenas porque 'funciona na tela'. O Antigravity deve apresentar
+evidências de build/testes e listar riscos ou pontos ainda simulados.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+27
+EXPERIÊNCIA TÉCNICA
+24
+Performance, responsividade e
+acessibilidade
+Tema
+Decisão
+Imagens
+srcset/sizes, lazy loading abaixo da dobra, dimensão reservada, thumbnails e formato moderno.
+Welcome
+Preload somente do asset crítico; não carregar toda a galeria antes do CTA.
+Home
+Blocos sob demanda e skeletons discretos; evitar carrosséis pesados.
+Cache público
+ETag/Cache-Control no snapshot e assets versionados; invalidação na publicação.
+Angular
+Lazy routes do painel/admin, componentes pequenos, estado previsível e detecção eficiente.
+API
+Paginação no painel, limites de query, índices business_id/position e timeouts.
+A11y
+HTML semântico, foco visível, targets de toque adequados e contraste AA.
+Movimento
+Animações curtas, GPU-friendly e alternativa para prefers-reduced-motion.
+Resiliência
+Mensagens úteis, retry apenas em operações idempotentes e não duplicar publicação/cadastro.
+Orçamentos recomendados para a rota pública
+Indicador
+Meta de trabalho inicial
+LCP mobile
+Buscar <= 2,5 s em condição representativa, medido e revisado.
+CLS
+Buscar <= 0,1 reservando espaço de imagens/cards.
+Interação
+CTA e navegação sem bloqueios longos; animação <= 700 ms.
+Payload inicial
+Carregar apenas o snapshot e assets necessários à primeira dobra.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+28
+OPERAÇÃO SEGURA
+25
+Ambientes, segredos e
+observabilidade
+Ambiente
+Dados
+Segredos
+Regra
+Local
+Seed fictício e conta/token de teste
+.env.local ignorado
+Nunca apontar acidentalmente
+para produção.
+Staging
+Dados sintéticos
+Secret manager da plataforma
+Mesmo schema/policies de
+produção.
+Produção
+Dados reais mínimos
+Segredos próprios e rotacionáveis
+Acesso restrito, backup e
+monitoramento.
+Logs permitidos
+• requestId, rota normalizada, status, latência, ator/tenant pseudonimizado, ação administrativa e resultado.
+• Nunca senha, token bruto, cookie, Authorization, service_role, corpo completo de cadastro ou URL
+assinada.
+• Alertar sobre picos de 401/403/429, falhas repetidas de token, volume de upload e anomalias de likes.
+• Manter audit log separado de logs técnicos e com política de retenção definida.
+Migrações e backups
+Toda alteração de schema, grants ou RLS deve estar em migration versionada e revisável. Backups precisam
+de teste de restauração; 'backup existente' sem restore testado não é evidência suficiente.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+29
+DO INÍCIO AO FIM
+26 Roadmap de implementação
+Fase
+Entrega
+Saída verificável
+0. Fundação
+Repo, Angular/API, environments, CI, contratos, migrations base e design tokens
+Builds verdes, app shell e healthcheck.
+1. Auth + painel
+Cadastro/token, login/logout/sessão, Business vazio, dashboard e conta/token de
+teste
+Fluxo E2E e isolamento inicial
+aprovados.
+2. Conteúdo
+My Business, categorias, produtos, ordenação, estados e uploads
+CRUD completo e testes cross-tenant.
+3. Design
+Templates, paletas, fontes, categorias, animações e Home modular
+Preview em tempo real e responsivo.
+4. Publicação
+Validação, snapshot, /m/:slug, Welcome, Home e detalhes
+Rascunho não vaza; versão pública
+estável.
+5. Interações
+Likes, ranking, visibilidade e carrinho local com expiração
+Abuso básico contido e UX clara.
+6. Admin mínimo
+Contas, tokens, assinatura, suspensão e audit log
+Ações reversíveis e protegidas.
+7. Hardening
+Recuperar senha, verificar e-mail, MFA admin, CSP, testes e observabilidade
+Checklist pré-produção aprovado.
+8. Comercial
+Pagamento, automação de subscription, QR download e planos
+Cobrança não reutiliza token de
+ativação.
+9. Expansão
+Galeria/vídeo, complementos, usuários/equipes, analytics e integrações
+Somente por demanda validada.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+30
+FASE 1 DETALHADA
+27
+Plano de execução imediato no
+Antigravity
+A primeira solicitação à IA deve abranger somente Login, Cadastro e o shell do Painel. Dividir em entregas
+curtas evita alterações gigantes e reduz consumo de contexto.
+1
+Inspeção
+Mapear repo, versões, comandos, envs, rotas e dívida existente. Não editar
+ainda.
+2
+Fundação
+Criar módulos web/api, config por ambiente, healthcheck, contratos e
+proteção de secrets.
+3
+Banco
+Migrations: profiles, businesses, activation_tokens, subscriptions; grants,
+RLS e testes.
+4
+Backend Auth
+Register/login/logout/session; token hash/reserva; cookies; rate limit;
+validação e logs seguros.
+5
+Frontend Auth
+Telas responsivas, schemas, feedback, guard UX, interceptor CSRF/session e
+acessibilidade.
+6
+Painel
+Layout, sidebar/drawer, dashboard inicial, estados vazios, Business mínimo e
+logout.
+7
+Seed
+Criar mecanismo local para conta/token de teste sem commitar valores
+reais.
+8
+Verificação
+Unit, integração, RLS, E2E, build, screenshots mobile/desktop e checklist de
+segurança.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+31
+ACEITE
+28 Definition of Done da Fase 1
+Área
+Condição para aceitar
+Cadastro
+Token válido cria exatamente uma conta/business/subscription; inválido, expirado, usado ou concorrente não cria
+inconsistência.
+Login
+Credencial válida inicia sessão; erro é genérico; logout revoga/limpa; refresh não perde sessão indevidamente.
+Painel
+Não autenticado é redirecionado; autenticado vê somente seu business; estados vazios e falhas são tratados.
+Tenant
+Testes provam que usuário A não lê/escreve recursos de B na API, banco e Storage.
+Segredos
+Nenhum valor sensível no bundle Angular, Git, logs, PDF, screenshot ou resposta de erro.
+UI
+Login/cadastro/painel aprovados em mobile, tablet e desktop; teclado, foco e contraste funcionam.
+Banco
+Migrations reproduzíveis; RLS/grants explícitos; constraints e índices documentados.
+Qualidade
+Lint, typecheck, unit, integração, RLS e build verdes; passos de execução atualizados.
+Documentação
+PROJECT_STATE.md e DECISIONS.md refletem exatamente o que foi implementado e o que ainda é simulado.
+Teste de ataque mínimo
+1. Registrar com token duas vezes -> segunda tentativa falha.
+2. Trocar UUID de business/item -> 404/403 sem vazamento.
+3. Enviar owner_user_id/status no PATCH -> campos ignorados/rejeitados.
+4. Forçar 20 logins/tokens -> 429 conforme política.
+5. Inspecionar bundle/logs -> nenhum segredo.
+6. Chamar API sem Angular -> backend continua protegendo tudo.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+32
+EFICIÊNCIA DE CONTEXTO
+29
+Protocolo de trabalho com Gemini
+Flash e Claude Opus
+Os modelos devem receber o mínimo de contexto necessário, mas nunca trabalhar sem as decisões centrais.
+O estado do projeto deve morar em arquivos curtos e atualizados, não depender de reenvio do chat inteiro.
+Modelo
+Usar principalmente para
+Evitar
+Gemini Flash
+Leitura localizada, tarefas mecânicas, componentes simples, testes
+pequenos, documentação e verificação rápida
+Decidir sozinho autenticação, RLS,
+multi-tenant ou grandes refactors.
+Claude Opus
+Arquitetura, threat modeling, fluxos transacionais, revisão de segurança,
+refactors críticos e validação de decisões
+Usá-lo em toda alteração trivial ou pedir
+leitura desnecessária de todo o repo.
+Arquivos de memória do projeto
+Arquivo
+Conteúdo
+Tamanho desejado
+docs/PROJECT_STATE.md
+O que existe, comandos, fase atual, bloqueios e próxima tarefa
+Curto; atualizado após cada
+entrega.
+docs/DECISIONS.md
+ADRs compactas: decisão, motivo, consequências e data
+Somente decisões duráveis.
+docs/SECURITY.md
+Modelo de ameaça, segredos, auth, tenant, uploads e checklist
+Referência técnica viva.
+TASK.md
+Objetivo atual, escopo, aceite e arquivos candidatos
+Substituído a cada tarefa.
+CONTROLE DE MUDANÇAS
+Antes de uma alteração estrutural, a IA deve declarar qual decisão deste PDF seria modificada, impacto em
+banco/API/UI/segurança e plano de migração. Não reescrever a arquitetura silenciosamente.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+33
+COPIAR PARA O ANTIGRAVITY
+30 Prompt mestre para iniciar a Fase 1
+Envie este PDF junto com o projeto e use o texto abaixo. Substitua apenas os placeholders locais; não cole
+credenciais reais na conversa.
+Leia integralmente o PDF 'Especificação Mestra - SaaS de Cardápio Digital' e trate-o como fonte de verdade.
+Nesta tarefa, implemente somente a Fase 1: Login, Cadastro com token de ativação e shell do Painel do
+usuário.
+Antes de editar: (1) inspecione o repositório e os comandos; (2) resuma o estado atual; (3) liste as decisões
+do PDF aplicáveis; (4) proponha um plano curto por arquivos. Não implemente menu público, pedidos, pagamento
+ou recursos futuros.
+Stack: Angular no frontend, Node.js na API e Supabase Auth/PostgreSQL/Storage. O Angular não é autoridade.
+Toda autorização real ocorre no Node e no banco. O tenant é derivado da sessão; nunca confie em business_id
+do navegador. A service_role nunca entra no Angular e só pode ser usada no servidor para operações
+específicas. Mantenha RLS/grants e testes de isolamento.
+Cadastro: e-mail, senha e token de ativação. Token de uso único, expirável, armazenado apenas como hash/HMAC.
+Criar Auth + profile + business vazio + subscription com tratamento de concorrência e compensação.
+Login/sessão preferencialmente no padrão BFF com cookies HttpOnly/Secure/SameSite, CSRF/Origin e rate limit.
+Dados de teste somente em env/seed local não versionado.
+Painel: layout responsivo premium, sidebar no desktop/drawer no mobile, dashboard com checklist e atalhos.
+Incluir estados loading, vazio, erro, sessão expirada e assinatura de teste. Manter acessibilidade.
+Entregue migrations, RLS/grants, schemas, API, Angular, testes unitários/integração/RLS/E2E relevantes e
+documentação. Ao finalizar, mostre arquivos alterados, comandos executados, resultados, screenshots
+mobile/desktop, riscos restantes e atualize PROJECT_STATE.md e DECISIONS.md. Pare após a Fase 1.
+PLACEHOLDERS LOCAIS
+Configure a conta/token de teste fora do prompt e do código versionado. Se o Antigravity precisar dos
+valores, disponibilize-os por variáveis locais com nomes como TEST_USER_EMAIL e
+TEST_ACTIVATION_TOKEN.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+34
+REGISTRO OFICIAL
+31 Decisões consolidadas
+ID
+Decisão atual
+D01
+Angular + Node.js + Supabase; Node é a camada de negócio.
+D02
+Um usuário por business no MVP; arquitetura mantém user e business separados.
+D03
+Token, business ID, slug, subscription e sessão são conceitos diferentes.
+D04
+Token é uso único; mensalidade altera subscription, não reativa token.
+D05
+URL pública oficial /m/:slug; painel em /painel.
+D06
+Tenant vem da sessão; RLS é defesa em profundidade.
+D07
+Home modular; hero e logo obrigatórios; blocos restantes ativáveis/ordenáveis.
+D08
+Não existe bloco 'mais pedidos' no MVP; usar 'mais curtidos'.
+D09
+Especial da Casa é um produto escolhido pelo usuário.
+D10
+Promoção pode ter intervalo e contador; validade real vem do servidor.
+D11
+Vários templates + paletas e fontes curadas + cor livre com guardrails.
+D12
+Categorias usam ícone, nome ou ambos; ícones pertencem ao sistema.
+D13
+Draft -> preview -> publicar; snapshots permitem rollback futuro.
+D14
+Carrinho fica local, expira e não envia pedido.
+D15
+Likes são híbridos, com like/unlike, ranking e visibilidade configurável.
+D16
+Produtos aceitam preço nulo e promoção; preparar galeria, vídeo, atributos e complementos.
+D17
+Limites técnicos existem para categorias, produtos e uploads.
+D18
+Admin mínimo entra cedo; suspensão é preferida à exclusão; MFA/step-up antes de produção.
+D19
+Verificação de e-mail e recuperação de senha podem vir depois, mas antes da abertura ampla.
+D20
+Fase inicial atual: login, cadastro com conta/token de teste e painel do usuário.
+ESPECIFICAÇÃO MESTRA - CARDÁPIO DIGITAL
+ANTIGRAVITY / V1.0 / 03 SET 2026
+Fonte de verdade do produto - decisões atuais prevalecem sobre ideias antigas
+35
+BASE DE SEGURANÇA
+32 Referências técnicas e notas finais
+As decisões de segurança foram alinhadas com documentação oficial e guias reconhecidos. As referências
+abaixo devem ser revisitadas durante a implementação porque frameworks e recomendações evoluem.
+Angular - Security
+https://angular.dev/best-practices/security
+Supabase - Row Level Security
+https://supabase.com/docs/guides/database/postgres/row-level-security
+Supabase - Storage Access Control
+https://supabase.com/docs/guides/storage/security/access-control
+Supabase - User sessions
+https://supabase.com/docs/guides/auth/sessions
+OWASP - Authentication Cheat Sheet
+https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
+OWASP - REST Security Cheat Sheet
+https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html
+OWASP - File Upload Cheat Sheet
+https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+ÚLTIMA INSTRUÇÃO À IA
+Construa uma base pequena e comprovadamente segura. Não confunda planejamento futuro com escopo
+atual. Quando houver dúvida que altere produto, banco, autorização ou UX, pare e registre a decisão antes
+de codificar.
+Documento preparado para orientar desenvolvimento assistido por IA no Antigravity.
+Fim da especificação - versão 1.0
