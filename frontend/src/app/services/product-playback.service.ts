@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../constants/api';
 
 export interface ProductGalleryMedia {
   id: string;
@@ -19,7 +20,7 @@ export interface PlaybackSession {
 
 @Injectable({ providedIn: 'root' })
 export class ProductPlaybackService {
-  private readonly apiUrl = 'http://localhost:3000/api/v1';
+  private readonly apiUrl = API_BASE_URL;
 
   constructor(private readonly http: HttpClient) {}
 

@@ -27,7 +27,7 @@ describe('VideoUploadService', () => {
       expect(result.mediaId).toBe('media-1');
     });
 
-    const req = http.expectOne('http://localhost:3000/api/v1/items/item-1/media/video/upload-intent');
+    const req = http.expectOne('/api/v1/items/item-1/media/video/upload-intent');
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.get('Authorization')).toBe('Bearer user-access-token');
     expect(req.request.body).toEqual({ fileSizeBytes: 1024, mimeType: 'video/mp4' });
@@ -65,4 +65,3 @@ describe('VideoUploadService', () => {
 function videoFile(name: string, type: string, size: number): File {
   return new File([new Uint8Array(size)], name, { type });
 }
-

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { Category, MenuItem, Subcategory } from './menu.service';
 import { DesignSettings } from './design.service';
+import { API_BASE_URL } from '../constants/api';
 
 export interface PublicBusiness {
   name: string;
@@ -29,7 +30,7 @@ export interface PublicMenuResponse {
   providedIn: 'root'
 })
 export class PublicMenuService {
-  private apiUrl = 'http://localhost:3000/api/v1/public';
+  private apiUrl = `${API_BASE_URL}/public`;
 
   loading = signal<boolean>(false);
   error = signal<string | null>(null);

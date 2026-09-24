@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { API_BASE_URL } from '../constants/api';
 
 export interface RegisterRequest {
   email: string;
@@ -24,8 +25,8 @@ export interface LoginRequest {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api/v1/auth';
-  private businessApiUrl = 'http://localhost:3000/api/v1/business';
+  private apiUrl = `${API_BASE_URL}/auth`;
+  private businessApiUrl = `${API_BASE_URL}/business`;
 
   // Signals do Angular para Estado Reativo do Usuário
   currentUser = signal<any>(null);

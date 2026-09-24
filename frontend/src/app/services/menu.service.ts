@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { ProductGalleryMedia } from './product-playback.service';
+import { API_BASE_URL } from '../constants/api';
 
 export interface Category {
   id: string;
@@ -47,7 +48,7 @@ export interface MenuItem {
   providedIn: 'root'
 })
 export class MenuService {
-  private apiUrl = 'http://localhost:3000/api/v1';
+  private apiUrl = API_BASE_URL;
 
   categories = signal<Category[]>([]);
   subcategories = signal<Subcategory[]>([]);

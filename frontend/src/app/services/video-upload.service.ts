@@ -7,6 +7,7 @@ import {
 } from '@angular/common/http';
 import { Observable, filter, map } from 'rxjs';
 import type { AllowedVideoMimeType } from '../features/product-video/video-file-validation';
+import { API_BASE_URL } from '../constants/api';
 
 export type ProductMediaStatus =
   | 'waiting'
@@ -45,7 +46,7 @@ export interface DirectUploadProgress {
 
 @Injectable({ providedIn: 'root' })
 export class VideoUploadService {
-  private readonly apiUrl = 'http://localhost:3000/api/v1';
+  private readonly apiUrl = API_BASE_URL;
 
   constructor(private readonly http: HttpClient) {}
 

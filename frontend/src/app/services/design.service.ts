@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { API_BASE_URL } from '../constants/api';
 
 // ── Interfaces de Cores & Paletas ──
 
@@ -308,7 +309,7 @@ export const DEFAULT_INTRO_CARD: IntroCardConfig = {
   providedIn: 'root'
 })
 export class DesignService {
-  private apiUrl = 'http://localhost:3000/api/v1';
+  private apiUrl = API_BASE_URL;
 
   // Estado salvo (do servidor)
   savedDesign = signal<DesignSettings | null>(null);

@@ -19,7 +19,7 @@ describe('PublicMenuService hardening', () => {
 
   it('does not replace an inactive or missing tenant with demo public data', () => {
     service.loadPublicMenu('inactive-tenant').subscribe();
-    const req = http.expectOne('http://localhost:3000/api/v1/public/menu/inactive-tenant');
+    const req = http.expectOne('/api/v1/public/menu/inactive-tenant');
     req.flush({ success: false }, { status: 404, statusText: 'Not Found' });
 
     expect(service.menuData()).toBeNull();
