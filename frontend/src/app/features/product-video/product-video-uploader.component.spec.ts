@@ -1,12 +1,30 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { ProductVideoUploaderComponent } from './product-video-uploader.component';
-import { VideoUploadService } from '../../services/video-upload.service';
+import { ProductMediaDeletionStatus, VideoUploadService } from '../../services/video-upload.service';
 
 class VideoUploadServiceStub {
+  readonly deletedMediaIds: string[] = [];
+
   listProductMedia(): Observable<never[]> { return of([]); }
-  deleteProductMedia(): Observable<void> { return of(undefined); }
+  deleteProductMedia(_itemId: string, mediaId: string): Observable<ProductMediaDeletionStatus> {
+    this.deletedMediaIds.push(mediaId);
+    return of('deleted');
+  }
 }
+
+const readyMedia = (id: string) => ({
+  id,
+  mediaType: 'video' as const,
+  source: 'mux' as const,
+  position: 0,
+  status: 'ready' as const,
+  isPublished: true,
+  durationSeconds: 8,
+  errorCode: null,
+  createdAt: '2026-09-23T10:00:00.000Z',
+  updatedAt: '2026-09-23T10:01:00.000Z'
+});
 
 describe('ProductVideoUploaderComponent', () => {
   let fixture: ComponentFixture<ProductVideoUploaderComponent>;
@@ -42,6 +60,37 @@ describe('ProductVideoUploaderComponent', () => {
   it('contains reduced-motion handling in the component styles', () => {
     const styles = (ProductVideoUploaderComponent as any).ɵcmp.styles.join('\n');
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
+  });
+
+  it('shows explicit replace and delete actions for an existing video', () => {
+    const component = fixture.componentInstance;
+    component.itemId = 'item-1';
+    component.videoMedia = [readyMedia('media-old')];
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.video-dropzone')).toBeNull();
+    expect(element.querySelector('.replace-button')?.textContent).toContain('Trocar vídeo');
+    expect(element.querySelector('.delete-button')?.textContent).toContain('Excluir vídeo');
+
+    (element.querySelector('.delete-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(element.querySelector('.delete-confirmation')?.textContent).toContain('Mux');
+  });
+
+  it('deletes the previous asset only after the replacement is ready', () => {
+    const component = fixture.componentInstance;
+    const service = TestBed.inject(VideoUploadService) as unknown as VideoUploadServiceStub;
+    component.itemId = 'item-1';
+
+    component.replacementMediaId = 'media-old';
+    (component as any).activeMediaId = 'media-new';
+    expect(service.deletedMediaIds).toEqual([]);
+
+    (component as any).applyMedia([readyMedia('media-old'), readyMedia('media-new')]);
+
+    expect(service.deletedMediaIds).toEqual(['media-old']);
+    expect(component.state).toBe('ready');
   });
 
   it('turns an errored Mux asset into a clear UI error state', () => {

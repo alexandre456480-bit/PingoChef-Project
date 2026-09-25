@@ -44,6 +44,8 @@ export interface DirectUploadProgress {
   complete: boolean;
 }
 
+export type ProductMediaDeletionStatus = 'deleted' | 'pending_deletion';
+
 @Injectable({ providedIn: 'root' })
 export class VideoUploadService {
   private readonly apiUrl = API_BASE_URL;
@@ -93,11 +95,11 @@ export class VideoUploadService {
     ).pipe(map(response => response.data));
   }
 
-  deleteProductMedia(itemId: string, mediaId: string): Observable<void> {
-    return this.http.delete<void>(
+  deleteProductMedia(itemId: string, mediaId: string): Observable<ProductMediaDeletionStatus> {
+    return this.http.delete<{ success: true; data: { status: 'pending_deletion' } }>(
       `${this.apiUrl}/items/${encodeURIComponent(itemId)}/media/${encodeURIComponent(mediaId)}`,
-      this.authOptions()
-    );
+      { ...this.authOptions(), observe: 'response' }
+    ).pipe(map(response => response.status === 202 ? 'pending_deletion' : 'deleted'));
   }
 
   private authOptions(): { headers: HttpHeaders } {

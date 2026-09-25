@@ -60,6 +60,24 @@ describe('VideoUploadService', () => {
     req.flush('');
     expect(progress).toEqual([58, 100]);
   });
+
+  it('distinguishes immediate deletion from provider cleanup pending', () => {
+    const outcomes: string[] = [];
+
+    service.deleteProductMedia('item-1', 'media-1').subscribe(status => outcomes.push(status));
+    const deleted = http.expectOne('/api/v1/items/item-1/media/media-1');
+    expect(deleted.request.method).toBe('DELETE');
+    deleted.flush(null, { status: 204, statusText: 'No Content' });
+
+    service.deleteProductMedia('item-1', 'media-2').subscribe(status => outcomes.push(status));
+    const pending = http.expectOne('/api/v1/items/item-1/media/media-2');
+    pending.flush(
+      { success: true, data: { status: 'pending_deletion' } },
+      { status: 202, statusText: 'Accepted' }
+    );
+
+    expect(outcomes).toEqual(['deleted', 'pending_deletion']);
+  });
 });
 
 function videoFile(name: string, type: string, size: number): File {

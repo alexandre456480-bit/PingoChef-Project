@@ -27,6 +27,7 @@ type UploadUiState =
   | 'requesting'
   | 'uploading'
   | 'processing'
+  | 'replacing'
   | 'ready'
   | 'rejected'
   | 'error'
@@ -61,23 +62,24 @@ type UploadUiState =
           </div>
         </div>
       } @else {
-        @if (state === 'selecting' || state === 'error' || state === 'rejected' || state === 'ready') {
+        <input
+          #videoInput
+          type="file"
+          accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+          (change)="onFileInput($event)"
+          hidden />
+
+        @if ((state === 'selecting' || state === 'error' || state === 'rejected' || state === 'ready') && !hasReadyVideo) {
           <button
             type="button"
             class="video-dropzone"
             [class.dragging]="dragging"
             [disabled]="hasPendingMedia"
-            (click)="videoInput.click()"
+            (click)="chooseVideo(videoInput)"
             (dragenter)="onDragEnter($event)"
             (dragover)="onDragOver($event)"
             (dragleave)="onDragLeave($event)"
             (drop)="onDrop($event)">
-            <input
-              #videoInput
-              type="file"
-              accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
-              (change)="onFileInput($event)"
-              hidden />
             <span class="drop-icon" aria-hidden="true">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -111,7 +113,7 @@ type UploadUiState =
           </div>
           <button type="button" class="upload-button" (click)="startUpload()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
-            Enviar vídeo
+            {{ replacementMediaId ? 'Trocar vídeo' : 'Enviar vídeo' }}
           </button>
         }
 
@@ -141,7 +143,17 @@ type UploadUiState =
         @if (state === 'processing') {
           <div class="state-card mascot processing" role="status" aria-live="polite">
             <img src="/icons_chef_hat.webp" alt="" />
-            <div><strong>Processando seu vídeo…</strong><span>O PingoChef está preparando tudo. Você pode salvar e voltar depois.</span></div>
+            <div>
+              <strong>{{ replacementMediaId ? 'Preparando o novo vídeo…' : 'Processando seu vídeo…' }}</strong>
+              <span>{{ replacementMediaId ? 'O vídeo atual continuará disponível até o novo ficar pronto.' : 'O PingoChef está preparando tudo. Você pode salvar e voltar depois.' }}</span>
+            </div>
+          </div>
+        }
+
+        @if (state === 'replacing') {
+          <div class="state-card mascot processing" role="status" aria-live="polite">
+            <img src="/icons_chef_hat.webp" alt="" />
+            <div><strong>Finalizando a troca…</strong><span>Removendo com segurança o vídeo anterior da Mux e do banco de dados.</span></div>
           </div>
         }
 
@@ -178,16 +190,41 @@ type UploadUiState =
                   <strong>{{ statusLabel(media.status) }}</strong>
                   <span>{{ media.durationSeconds !== null ? formatDuration(media.durationSeconds) : 'Duração sendo confirmada' }}</span>
                 </div>
-                <button
-                  type="button"
-                  class="delete-button"
-                  [disabled]="deletingMediaId === media.id"
-                  (click)="deleteMedia(media)"
-                  [attr.aria-label]="'Excluir vídeo com status ' + statusLabel(media.status)">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
-                </button>
+                <div class="media-actions">
+                  @if (media.status === 'ready') {
+                    <button
+                      type="button"
+                      class="media-action replace-button"
+                      [disabled]="isVideoBusy"
+                      (click)="replaceMedia(media, videoInput)">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 7h-9"/><path d="m16 3 4 4-4 4"/><path d="M4 17h9"/><path d="m8 21-4-4 4-4"/></svg>
+                      Trocar vídeo
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="media-action delete-button"
+                    [disabled]="isVideoBusy || media.status === 'pending_deletion'"
+                    (click)="requestDelete(media)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+                    {{ media.status === 'pending_deletion' ? 'Exclusão pendente' : 'Excluir vídeo' }}
+                  </button>
+                </div>
               </article>
             }
+          </div>
+        }
+
+        @if (pendingDeleteMedia) {
+          <div class="delete-confirmation" role="alertdialog" aria-labelledby="delete-video-title">
+            <div>
+              <strong id="delete-video-title">Excluir este vídeo?</strong>
+              <span>Ele será removido do cardápio, do banco de dados e da Mux. Esta ação não pode ser desfeita.</span>
+            </div>
+            <div class="confirmation-actions">
+              <button type="button" class="keep-button" (click)="cancelDelete()">Manter vídeo</button>
+              <button type="button" class="confirm-delete-button" (click)="confirmDelete()">Excluir definitivamente</button>
+            </div>
           </div>
         }
       }
@@ -244,7 +281,7 @@ type UploadUiState =
     .file-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: #F47B20; background: rgba(244,123,32,.1); flex: 0 0 auto; }
     .file-copy { flex: 1; }
     .file-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .icon-button, .delete-button { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; }
+    .icon-button { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; }
     .icon-button { border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: #A1A1AA; }
     .upload-button {
       width: 100%; margin-top: 9px; min-height: 42px; border: 0; border-radius: 12px; cursor: pointer;
@@ -261,13 +298,29 @@ type UploadUiState =
     .progress-track { height: 7px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
     .progress-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #D26E2D, #F47B20); transition: width 180ms ease-out; }
     .media-list { display: flex; flex-direction: column; gap: 7px; margin-top: 11px; }
-    .media-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 11px; border: 1px solid rgba(255,255,255,.06); background: rgba(255,255,255,.025); }
+    .media-row { display: flex; align-items: center; gap: 10px; padding: 11px; border-radius: 11px; border: 1px solid rgba(255,255,255,.06); background: rgba(255,255,255,.025); }
     .media-status-icon { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #F59E0B; background: rgba(245,158,11,.1); flex: 0 0 auto; }
     .media-status-icon[data-status="ready"] { color: #22C55E; background: rgba(34,197,94,.1); }
     .media-status-icon[data-status="rejected"], .media-status-icon[data-status="errored"] { color: #EF4444; background: rgba(239,68,68,.1); }
     .media-copy { flex: 1; }
-    .delete-button { border: 1px solid rgba(239,68,68,.16); background: rgba(239,68,68,.07); color: #F87171; }
-    .delete-button:disabled { opacity: .4; cursor: wait; }
+    .media-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+    .media-action, .keep-button, .confirm-delete-button {
+      min-height: 34px; border-radius: 9px; padding: 0 11px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; font: 650 .7rem 'Inter', sans-serif; transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+    .replace-button { border: 1px solid rgba(244,123,32,.25); background: rgba(244,123,32,.09); color: #FB923C; }
+    .delete-button { border: 1px solid rgba(239,68,68,.2); background: rgba(239,68,68,.07); color: #F87171; }
+    .media-action:disabled { opacity: .42; cursor: not-allowed; }
+    .delete-confirmation {
+      margin-top: 11px; padding: 13px; border-radius: 12px; border: 1px solid rgba(239,68,68,.25); background: rgba(69,10,10,.22);
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    }
+    .delete-confirmation > div:first-child { display: flex; flex-direction: column; gap: 4px; }
+    .delete-confirmation strong { color: #F4F4F5; font-size: .8rem; }
+    .delete-confirmation span { color: #A1A1AA; font-size: .69rem; line-height: 1.45; }
+    .confirmation-actions { display: flex; gap: 7px; flex: 0 0 auto; }
+    .keep-button { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.045); color: #D4D4D8; }
+    .confirm-delete-button { border: 1px solid rgba(239,68,68,.28); background: #B91C1C; color: #FFF; }
     .media-skeleton { display: flex; gap: 8px; margin-top: 11px; }
     .media-skeleton span { display: block; height: 48px; flex: 1; border-radius: 10px; background: linear-gradient(90deg, rgba(255,255,255,.03), rgba(255,255,255,.08), rgba(255,255,255,.03)); background-size: 200% 100%; animation: shimmer 1.3s infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -276,7 +329,15 @@ type UploadUiState =
       .video-dropzone:not(:disabled):hover { border-color: #F47B20; background: rgba(244,123,32,.055); transform: translateY(-1px); }
       .upload-button:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(244,123,32,.28); }
       .icon-button:hover { color: white; background: rgba(255,255,255,.08); }
-      .delete-button:hover:not(:disabled) { background: rgba(239,68,68,.14); }
+      .replace-button:hover:not(:disabled) { background: rgba(244,123,32,.16); transform: translateY(-1px); }
+      .delete-button:hover:not(:disabled) { background: rgba(239,68,68,.14); transform: translateY(-1px); }
+      .keep-button:hover { background: rgba(255,255,255,.08); }
+      .confirm-delete-button:hover { background: #991B1B; }
+    }
+    @media (max-width: 620px) {
+      .media-row, .delete-confirmation { align-items: stretch; flex-direction: column; }
+      .media-actions, .confirmation-actions { width: 100%; }
+      .media-action, .confirmation-actions button { flex: 1; }
     }
     @media (prefers-reduced-motion: reduce) {
       .video-dropzone, .upload-button, .progress-track span { transition: none; }
@@ -301,6 +362,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   dragging = false;
   errorMessage = '';
   deletingMediaId: string | null = null;
+  replacementMediaId: string | null = null;
+  pendingDeleteMedia: ProductMediaView | null = null;
 
   private activeMediaId: string | null = null;
   private intentSubscription?: Subscription;
@@ -315,6 +378,15 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     return this.videoMedia.some(media => ['waiting', 'uploading', 'processing'].includes(media.status));
   }
 
+  get hasReadyVideo(): boolean {
+    return this.videoMedia.some(media => media.status === 'ready');
+  }
+
+  get isVideoBusy(): boolean {
+    return ['validating', 'selected', 'requesting', 'uploading', 'processing', 'replacing', 'cancelling'].includes(this.state)
+      || this.deletingMediaId !== null;
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['itemId']) {
       this.stopRequests();
@@ -327,7 +399,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   ngOnDestroy(): void {
     this.destroyed = true;
     if (this.pollingRetryTimer) window.clearTimeout(this.pollingRetryTimer);
-    const shouldCompensate = ['requesting', 'uploading', 'cancelling'].includes(this.state);
+    const shouldCompensate = ['requesting', 'uploading', 'cancelling'].includes(this.state)
+      || (this.state === 'processing' && this.replacementMediaId !== null);
     this.stopRequests();
     if (shouldCompensate && this.itemId && this.activeMediaId) {
       this.videoService.deleteProductMedia(this.itemId, this.activeMediaId).subscribe({ error: () => undefined });
@@ -339,6 +412,20 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     const file = input.files?.[0];
     input.value = '';
     if (file) void this.selectFile(file);
+  }
+
+  chooseVideo(input: HTMLInputElement): void {
+    this.replacementMediaId = null;
+    input.value = '';
+    input.click();
+  }
+
+  replaceMedia(media: ProductMediaView, input: HTMLInputElement): void {
+    if (media.status !== 'ready' || this.isVideoBusy) return;
+    this.replacementMediaId = media.id;
+    this.errorMessage = '';
+    input.value = '';
+    input.click();
   }
 
   onDragEnter(event: DragEvent): void {
@@ -360,6 +447,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     event.preventDefault();
     this.dragging = false;
     if (this.hasPendingMedia) return;
+    this.replacementMediaId = null;
     const file = event.dataTransfer?.files?.[0];
     if (file) void this.selectFile(file);
   }
@@ -374,6 +462,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     } catch (error) {
       this.selectedVideo = null;
       this.errorMessage = error instanceof Error ? error.message : 'Não foi possível validar o vídeo.';
+      if (this.replacementMediaId) this.errorMessage += ' O vídeo anterior foi mantido.';
+      this.replacementMediaId = null;
       this.setState('error');
     }
   }
@@ -440,14 +530,29 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     this.resetSelection();
   }
 
-  deleteMedia(media: ProductMediaView): void {
-    if (!this.itemId || this.deletingMediaId || !confirm('Excluir este vídeo do produto?')) return;
+  requestDelete(media: ProductMediaView): void {
+    if (this.isVideoBusy || media.status === 'pending_deletion') return;
+    this.pendingDeleteMedia = media;
+  }
+
+  cancelDelete(): void {
+    this.pendingDeleteMedia = null;
+  }
+
+  confirmDelete(): void {
+    const media = this.pendingDeleteMedia;
+    if (!this.itemId || !media || this.deletingMediaId) return;
+    this.pendingDeleteMedia = null;
     this.deletingMediaId = media.id;
     this.videoService.deleteProductMedia(this.itemId, media.id).subscribe({
-      next: () => {
+      next: deletionStatus => {
         this.deletingMediaId = null;
         if (this.activeMediaId === media.id) this.activeMediaId = null;
-        this.onToast.emit('Vídeo removido.');
+        if (this.replacementMediaId === media.id) this.replacementMediaId = null;
+        this.setState('selecting');
+        this.onToast.emit(deletionStatus === 'pending_deletion'
+          ? 'Vídeo retirado do cardápio. A limpeza na Mux continuará automaticamente.'
+          : 'Vídeo removido do banco de dados e da Mux.');
         this.mediaChanged.emit();
         this.loadMedia();
       },
@@ -525,6 +630,11 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
       if (active.status === 'ready') {
         this.pollingSubscription?.unsubscribe();
         this.pollingSubscription = undefined;
+        if (this.replacementMediaId && this.replacementMediaId !== active.id) {
+          this.finalizeReplacement();
+          return;
+        }
+        this.activeMediaId = null;
         this.setState('ready');
         this.onToast.emit('Vídeo pronto para a próxima etapa!');
         this.mediaChanged.emit();
@@ -534,6 +644,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
         this.errorMessage = active.errorCode === 'DURATION_LIMIT_EXCEEDED'
           ? 'A duração real ultrapassou 15 segundos. O asset foi removido com segurança.'
           : 'O vídeo não atende aos requisitos de processamento.';
+        if (this.replacementMediaId) this.errorMessage += ' O vídeo anterior foi mantido.';
+        this.replacementMediaId = null;
         this.pollingSubscription?.unsubscribe();
         this.pollingSubscription = undefined;
         this.setState('rejected');
@@ -543,6 +655,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
         this.errorMessage = active.status === 'pending_deletion'
           ? 'A exclusão está pendente e será tentada novamente.'
           : 'O Mux não conseguiu processar este vídeo.';
+        if (this.replacementMediaId) this.errorMessage += ' O vídeo anterior foi mantido.';
+        this.replacementMediaId = null;
         this.pollingSubscription?.unsubscribe();
         this.pollingSubscription = undefined;
         this.setState('error');
@@ -558,7 +672,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   }
 
   private handleUploadError(message: string): void {
-    this.errorMessage = message;
+    this.errorMessage = this.replacementMediaId ? `${message} O vídeo anterior foi mantido.` : message;
+    this.replacementMediaId = null;
     this.directUploadSubscription?.unsubscribe();
     this.setState('error');
     if (this.itemId && this.activeMediaId) {
@@ -575,13 +690,43 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     this.activeMediaId = null;
     this.errorMessage = '';
     this.uploadProgress = 0;
+    this.replacementMediaId = null;
+    this.pendingDeleteMedia = null;
     this.state = 'selecting';
     if (emitBusy) this.busyChange.emit(false);
   }
 
   private setState(state: UploadUiState): void {
     this.state = state;
-    this.busyChange.emit(['validating', 'selected', 'requesting', 'uploading', 'cancelling'].includes(state));
+    this.busyChange.emit(['validating', 'selected', 'requesting', 'uploading', 'processing', 'replacing', 'cancelling'].includes(state));
+  }
+
+  private finalizeReplacement(): void {
+    if (!this.itemId || !this.replacementMediaId) return;
+    const previousMediaId = this.replacementMediaId;
+    this.replacementMediaId = null;
+    this.setState('replacing');
+    this.deletingMediaId = previousMediaId;
+    this.videoService.deleteProductMedia(this.itemId, previousMediaId).subscribe({
+      next: deletionStatus => {
+        this.deletingMediaId = null;
+        this.activeMediaId = null;
+        this.setState('ready');
+        this.onToast.emit(deletionStatus === 'pending_deletion'
+          ? 'Vídeo trocado. A limpeza do anterior na Mux continuará automaticamente.'
+          : 'Vídeo trocado com sucesso.');
+        this.mediaChanged.emit();
+        this.loadMedia();
+      },
+      error: () => {
+        this.deletingMediaId = null;
+        this.activeMediaId = null;
+        this.setState('ready');
+        this.onToast.emit('O novo vídeo está pronto. A limpeza do anterior continuará automaticamente.');
+        this.mediaChanged.emit();
+        this.loadMedia();
+      }
+    });
   }
 
   private stopRequests(): void {
