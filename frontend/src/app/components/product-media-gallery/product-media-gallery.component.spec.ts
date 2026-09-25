@@ -46,6 +46,13 @@ describe('ProductMediaGalleryComponent', () => {
     expect(element.querySelector('button.play-button')).not.toBeNull();
   });
 
+  it('places video before the product image in the carousel', () => {
+    fixture.componentRef.setInput('imageUrl', '/produto.webp');
+    fixture.detectChanges();
+    expect(fixture.componentInstance.slides.map(slide => slide.kind)).toEqual(['video', 'image']);
+    expect(fixture.componentInstance.activeSlide.kind).toBe('video');
+  });
+
   it('requests signed playback only when the Play button is activated', () => {
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button.play-button')?.click();
     expect(playback.requestPlayback).toHaveBeenCalledWith(
@@ -76,7 +83,9 @@ describe('ProductMediaGalleryComponent', () => {
     const player = (fixture.nativeElement as HTMLElement).querySelector('mux-player');
     expect(player).not.toBeNull();
     expect(player?.getAttribute('preload')).toBe('none');
+    expect(player?.hasAttribute('muted')).toBe(true);
     expect(player?.getAttribute('playback-token')).toBe('short-token');
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="dialog"]')).not.toBeNull();
     expect((fixture.nativeElement as HTMLElement).innerHTML).not.toContain('stream.mux.com');
   });
 

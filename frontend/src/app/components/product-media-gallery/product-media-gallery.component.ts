@@ -3,8 +3,11 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  EventEmitter,
+  HostListener,
   Input,
   OnDestroy,
+  Output,
   ViewChild
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -38,19 +41,6 @@ type GallerySlide =
         <div class="media-stage">
           @if (activeSlide.kind === 'image') {
             <img [src]="activeSlide.imageUrl" [alt]="productName" class="media-image" />
-          } @else if (session && activeMediaId === activeSlide.media.id) {
-            <mux-player
-              #player
-              class="mux-player"
-              [attr.playback-id]="session.playbackId"
-              [attr.playback-token]="session.playbackToken"
-              [attr.metadata-video-id]="activeSlide.media.id"
-              [attr.metadata-video-title]="session.videoTitle"
-              [attr.poster]="imageUrl || null"
-              preload="none"
-              autoplay
-              playsinline>
-            </mux-player>
           } @else {
             <div class="video-poster" [style.background-image]="imageUrl ? 'url(' + imageUrl + ')' : 'none'">
               <div class="poster-shade"></div>
@@ -103,6 +93,46 @@ type GallerySlide =
                 (click)="select(index)">
               </button>
             }
+          </div>
+        }
+
+        @if (session && activeMediaId && activeSlide.kind === 'video') {
+          <div
+            class="video-lightbox"
+            role="dialog"
+            aria-modal="true"
+            [attr.aria-label]="'VÃ­deo de ' + productName"
+            (click)="closeExpanded()">
+            <div
+              class="expanded-player-shell"
+              [style.width]="expandedPlayerWidth"
+              [style.aspect-ratio]="playerAspectRatio"
+              (click)="$event.stopPropagation()">
+              <div class="expanded-player-topbar">
+                <span>{{ productName }}</span>
+                <span class="muted-label" aria-label="ReproduÃ§Ã£o sem Ã¡udio">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
+                  Sem Ã¡udio
+                </span>
+              </div>
+              <mux-player
+                #player
+                class="mux-player expanded-player"
+                [attr.playback-id]="session.playbackId"
+                [attr.playback-token]="session.playbackToken"
+                [attr.metadata-video-id]="activeSlide.media.id"
+                [attr.metadata-video-title]="session.videoTitle"
+                [attr.poster]="imageUrl || null"
+                preload="none"
+                muted
+                autoplay
+                playsinline
+                (loadedmetadata)="onPlayerMetadata($event)">
+              </mux-player>
+              <button type="button" class="close-video-button" aria-label="Fechar vÃ­deo" (click)="closeExpanded()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
           </div>
         }
       </section>
@@ -182,15 +212,87 @@ type GallerySlide =
     .gallery-dot.active { width: 24px; background: var(--accent-color); }
     .playback-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: #FFF3F3; color: #8B1A3A; font-size: .8rem; }
     .playback-error button { border: 1px solid currentColor; border-radius: 8px; padding: 6px 9px; background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+    .video-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(12, 8, 10, .9);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      animation: lightboxFade 220ms ease-out;
+    }
+    .expanded-player-shell {
+      position: relative;
+      max-width: 94vw;
+      max-height: 84vh;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 22px;
+      background: #0E0B0D;
+      box-shadow: 0 28px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.04);
+      animation: playerZoom 280ms cubic-bezier(.16, 1, .3, 1);
+    }
+    .expanded-player { width: 100%; height: 100%; --media-object-fit: contain; }
+    .expanded-player-topbar {
+      position: absolute;
+      z-index: 4;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 58px 24px 16px;
+      color: #fff;
+      font-size: .82rem;
+      font-weight: 750;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(0,0,0,.72), transparent);
+    }
+    .expanded-player-topbar > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .muted-label { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; color: rgba(255,255,255,.78); font-size: .7rem; }
+    .muted-label svg { width: 15px; height: 15px; }
+    .close-video-button {
+      position: absolute;
+      z-index: 6;
+      top: 11px;
+      right: 11px;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(18,12,15,.7);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: transform 180ms ease, background 180ms ease;
+    }
+    .close-video-button svg { width: 19px; height: 19px; }
+    .close-video-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent-color) 75%, white); outline-offset: 3px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    @media (hover: hover) { .play-button:hover { transform: translateY(-2px); background: rgba(20,14,17,.9); } }
+    @keyframes lightboxFade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes playerZoom { from { opacity: 0; transform: translateY(12px) scale(.86); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (hover: hover) {
+      .play-button:hover { transform: translateY(-2px); background: rgba(20,14,17,.9); }
+      .close-video-button:hover { transform: scale(1.06); background: rgba(35,22,28,.9); }
+    }
     @media (max-width: 640px) {
       .media-stage { aspect-ratio: 4 / 3; touch-action: pan-y; }
       .nav-button { display: none; }
+      .video-lightbox { padding: 14px; }
+      .expanded-player-shell { max-width: 96vw; max-height: 82vh; border-radius: 18px; }
+      .expanded-player-topbar { padding-left: 13px; }
     }
     @media (prefers-reduced-motion: reduce) {
       .play-button, .gallery-dot { transition: none; }
       .loading-ring { animation-duration: 1.4s; }
+      .video-lightbox, .expanded-player-shell { animation: none; }
     }
   `]
 })
@@ -201,13 +303,16 @@ export class ProductMediaGalleryComponent implements OnDestroy {
   @Input() media: ProductGalleryMedia[] = [];
   @Input() publicSlug: string | null = null;
   @Input() previewMode = false;
-  @ViewChild('player') player?: ElementRef<HTMLElement & { pause?: () => void }>;
+  @Output() expandedChange = new EventEmitter<boolean>();
+  @ViewChild('player') player?: ElementRef<HTMLElement & { pause?: () => void; videoWidth?: number; videoHeight?: number }>;
 
   activeIndex = 0;
   activeMediaId: string | null = null;
   session: PlaybackSession | null = null;
   loading = false;
   errorMessage: string | null = null;
+  playerAspectRatio = '16 / 9';
+  expandedPlayerWidth = 'min(92vw, 960px)';
   private touchStartX: number | null = null;
 
   constructor(
@@ -218,10 +323,13 @@ export class ProductMediaGalleryComponent implements OnDestroy {
 
   get slides(): GallerySlide[] {
     const result: GallerySlide[] = [];
-    if (this.imageUrl) result.push({ key: 'primary-image', kind: 'image', imageUrl: this.imageUrl });
-    for (const media of this.media.filter(item => item.mediaType === 'video' && item.source === 'mux')) {
+    const videos = this.media
+      .filter(item => item.mediaType === 'video' && item.source === 'mux')
+      .sort((a, b) => a.position - b.position);
+    for (const media of videos) {
       result.push({ key: media.id, kind: 'video', media });
     }
+    if (this.imageUrl) result.push({ key: 'primary-image', kind: 'image', imageUrl: this.imageUrl });
     return result;
   }
 
@@ -243,6 +351,7 @@ export class ProductMediaGalleryComponent implements OnDestroy {
       await this.playerLoader.load();
       this.activeMediaId = media.id;
       this.session = response.data;
+      this.expandedChange.emit(true);
     } catch {
       this.errorMessage = 'Não foi possível carregar o vídeo agora.';
       this.activeMediaId = null;
@@ -255,6 +364,27 @@ export class ProductMediaGalleryComponent implements OnDestroy {
 
   retry(): void {
     if (this.activeSlide.kind === 'video') void this.play(this.activeSlide.media);
+  }
+
+  closeExpanded(): void {
+    this.stopPlayback();
+  }
+
+  onPlayerMetadata(event: Event): void {
+    const player = event.currentTarget as HTMLElement & { videoWidth?: number; videoHeight?: number };
+    const width = Number(player.videoWidth);
+    const height = Number(player.videoHeight);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return;
+
+    const ratio = width / height;
+    const maxWidth = Math.min(window.innerWidth * .94, window.innerHeight * .84 * ratio, 960);
+    this.playerAspectRatio = `${width} / ${height}`;
+    this.expandedPlayerWidth = `${Math.max(220, Math.round(maxWidth))}px`;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.session) this.closeExpanded();
   }
 
   previous(): void { this.select((this.activeIndex - 1 + this.slides.length) % this.slides.length); }
@@ -282,5 +412,8 @@ export class ProductMediaGalleryComponent implements OnDestroy {
     this.session = null;
     this.activeMediaId = null;
     this.errorMessage = null;
+    this.playerAspectRatio = '16 / 9';
+    this.expandedPlayerWidth = 'min(92vw, 960px)';
+    this.expandedChange.emit(false);
   }
 }

@@ -1091,7 +1091,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
       <!-- ══════════════════════════════════════════════════ -->
       @if (selectedProduct) {
         <div class="product-modal-backdrop" (click)="closeProductDetail()">
-          <div class="product-modal-sheet" (click)="$event.stopPropagation()" [style.background]="surfaceColor">
+          <div class="product-modal-sheet" [class.video-expanded]="productVideoExpanded" (click)="$event.stopPropagation()" [style.background]="surfaceColor">
             <button type="button" class="sheet-close-btn" aria-label="Fechar detalhes" (click)="closeProductDetail()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
@@ -1102,7 +1102,8 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
               [imageUrl]="selectedProduct.imageUrl || null"
               [media]="selectedProduct.media || []"
               [publicSlug]="publicSlug"
-              [previewMode]="isPhonePreview">
+              [previewMode]="isPhonePreview"
+              (expandedChange)="productVideoExpanded = $event">
             </app-product-media-gallery>
 
             <div class="modal-sheet-content">
@@ -2886,6 +2887,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
       position: relative;
       animation: sheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .product-modal-sheet.video-expanded { overflow: visible; }
     @keyframes sheetUp {
       from { transform: translateY(100%); }
       to { transform: translateY(0); }
@@ -3460,6 +3462,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   searchActive = false;
   searchFilter = '';
   selectedProduct: MenuItem | null = null;
+  productVideoExpanded = false;
   modalItemQuantity = 1;
 
   // Carousel state
@@ -4019,10 +4022,12 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   openProductDetail(item: MenuItem): void {
     this.selectedProduct = item;
+    this.productVideoExpanded = false;
     this.modalItemQuantity = 1;
   }
 
   closeProductDetail(): void {
+    this.productVideoExpanded = false;
     this.selectedProduct = null;
   }
 
