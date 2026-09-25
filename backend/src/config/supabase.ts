@@ -5,7 +5,6 @@ dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
@@ -33,7 +32,10 @@ export const supabaseAdmin = createClient(
 
 // Cliente com contexto do usuário autenticado para respeitar RLS
 export const createUserClient = (accessToken: string) => {
-  const key = supabaseAnonKey || supabaseServiceKey || 'dummy-key';
+  // This client stays server-side. The service key is used only as the API key;
+  // the explicit user JWT below remains the Authorization identity, so
+  // PostgREST continues to enforce RLS as the authenticated user.
+  const key = supabaseServiceKey || 'dummy-key';
   return createClient(
     isSupabaseConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
     key,
@@ -50,4 +52,3 @@ export const createUserClient = (accessToken: string) => {
     }
   );
 };
-
