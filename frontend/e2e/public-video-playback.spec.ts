@@ -52,7 +52,7 @@ const menuResponse = {
       displayOrder: 0,
       media: [{
         id: '33333333-3333-4333-8333-333333333333',
-        mediaType: 'video', source: 'mux', position: 0, durationSeconds: 10
+        mediaType: 'video', source: 'mux', position: 0, durationSeconds: 10, aspectRatio: '16:9'
       }]
     }]
   }

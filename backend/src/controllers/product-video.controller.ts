@@ -46,7 +46,9 @@ function routeParam(value: string | string[]): string {
 
 const uploadIntentSchema = z.object({
   fileSizeBytes: z.number().int().positive(),
-  mimeType: z.enum(ALLOWED_VIDEO_MIME_TYPES)
+  mimeType: z.enum(ALLOWED_VIDEO_MIME_TYPES),
+  aspectRatio: z.enum(['16:9', '9:16']),
+  replacesMediaId: z.string().uuid().nullable().optional().default(null)
 }).strict();
 
 const itemParamSchema = z.string().uuid();
@@ -79,7 +81,9 @@ export async function createVideoUploadIntentController(
       clientIp: ipKeyGenerator(req.ip || req.socket.remoteAddress || 'unknown'),
       corsOrigin: origin,
       declaredFileSizeBytes: body.fileSizeBytes,
-      declaredMimeType: body.mimeType
+      declaredMimeType: body.mimeType,
+      aspectRatio: body.aspectRatio,
+      replacesMediaId: body.replacesMediaId
     });
 
     return res.status(201).json({ success: true, data: result });

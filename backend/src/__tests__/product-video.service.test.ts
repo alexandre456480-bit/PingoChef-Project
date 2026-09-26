@@ -41,6 +41,8 @@ function media(overrides: Partial<ProductMediaRecord> = {}): ProductMediaRecord 
     mux_asset_id: 'asset-1',
     mux_playback_id: null,
     duration_seconds: null,
+    aspect_ratio: '16:9',
+    replaces_media_id: null,
     upload_expires_at: null,
     deletion_attempts: 0,
     updated_at: new Date().toISOString(),
@@ -63,7 +65,7 @@ function repositoryMock(): jest.Mocked<ProductMediaRepository> {
     listGalleryMedia: jest.fn(),
     publishReadyForBusiness: jest.fn(),
     markProcessing: jest.fn(),
-    markReady: jest.fn(),
+    markReady: jest.fn().mockResolvedValue([]),
     markRejected: jest.fn(),
     markErrored: jest.fn(),
     markAssetDeleted: jest.fn(),
@@ -101,6 +103,7 @@ describe('ProductVideoService security boundaries', () => {
       status: 'processing',
       is_published: false,
       duration_seconds: null,
+      aspect_ratio: '9:16',
       last_error_code: null,
       created_at: '2026-09-23T10:00:00.000Z',
       updated_at: '2026-09-23T10:01:00.000Z'
@@ -129,7 +132,9 @@ describe('ProductVideoService security boundaries', () => {
       clientIp: '203.0.113.10',
       corsOrigin: 'https://app.example.com',
       declaredFileSizeBytes: 50 * 1024 * 1024 + 1,
-      declaredMimeType: 'video/mp4'
+      declaredMimeType: 'video/mp4',
+      aspectRatio: '16:9',
+      replacesMediaId: null
     })).rejects.toMatchObject({ status: 413, code: 'VIDEO_FILE_TOO_LARGE' });
 
     expect(repository.reserveUpload).not.toHaveBeenCalled();
@@ -155,7 +160,9 @@ describe('ProductVideoService security boundaries', () => {
       clientIp: '203.0.113.10',
       corsOrigin: 'https://app.example.com',
       declaredFileSizeBytes: 1024,
-      declaredMimeType: 'video/mp4'
+      declaredMimeType: 'video/mp4',
+      aspectRatio: '9:16',
+      replacesMediaId: 'media-old'
     });
 
     expect(repository.reserveUpload.mock.invocationCallOrder[0])
@@ -198,7 +205,9 @@ describe('ProductVideoService security boundaries', () => {
       clientIp: '203.0.113.10',
       corsOrigin: 'https://app.example.com',
       declaredFileSizeBytes: 1024,
-      declaredMimeType: 'video/mp4'
+      declaredMimeType: 'video/mp4',
+      aspectRatio: '16:9',
+      replacesMediaId: null
     })).rejects.toMatchObject({ code: 'UPLOAD_ATTACH_FAILED' });
 
     expect(provider.cancelUpload).toHaveBeenCalledWith('upload-orphan');
@@ -225,7 +234,9 @@ describe('ProductVideoService security boundaries', () => {
       clientIp: '203.0.113.10',
       corsOrigin: 'https://app.example.com',
       declaredFileSizeBytes: 1024,
-      declaredMimeType: 'video/mp4'
+      declaredMimeType: 'video/mp4',
+      aspectRatio: '16:9',
+      replacesMediaId: null
     })).rejects.toMatchObject({ status: 429, code: 'DAILY_UPLOAD_LIMIT_REACHED' });
 
     expect(provider.createDirectUpload).not.toHaveBeenCalled();
@@ -256,6 +267,35 @@ describe('ProductVideoService security boundaries', () => {
     );
     expect(repository.finishWebhook).toHaveBeenCalledWith('event-ready', 'processed');
     expect(provider.deleteAsset).not.toHaveBeenCalled();
+  });
+
+  it('removes the replaced provider asset after the atomic ready transition', async () => {
+    const repository = repositoryMock();
+    const provider = providerMock();
+    repository.claimWebhook.mockResolvedValue(true);
+    repository.findByAssetId.mockResolvedValue(media({ id: 'media-new' }));
+    repository.markReady.mockResolvedValue(['media-old']);
+    repository.findById.mockResolvedValue(media({
+      id: 'media-old',
+      status: 'pending_deletion',
+      mux_asset_id: 'asset-old'
+    }));
+    const service = new ProductVideoService(repository, provider, config);
+
+    await service.processWebhook({
+      id: 'event-replacement-ready',
+      type: 'video.asset.ready',
+      data: {
+        id: 'asset-new',
+        duration: 10,
+        playback_ids: [{ id: 'playback-new', policy: 'signed' }]
+      }
+    });
+
+    expect(provider.deleteAsset).toHaveBeenCalledWith('asset-old');
+    expect(repository.deleteMedia).toHaveBeenCalledWith('media-old');
+    expect(provider.deleteAsset.mock.invocationCallOrder[0])
+      .toBeLessThan(repository.deleteMedia.mock.invocationCallOrder[0]);
   });
 
   it('rejects and deletes an asset when the real provider duration exceeds 15 seconds', async () => {

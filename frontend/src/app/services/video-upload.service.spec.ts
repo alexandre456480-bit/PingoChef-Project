@@ -23,14 +23,19 @@ describe('VideoUploadService', () => {
   });
 
   it('requests an intent from the authenticated BFF without authority fields', () => {
-    service.createUploadIntent('item-1', 1024, 'video/mp4').subscribe(result => {
+    service.createUploadIntent('item-1', 1024, 'video/mp4', '9:16', 'media-old').subscribe(result => {
       expect(result.mediaId).toBe('media-1');
     });
 
     const req = http.expectOne('/api/v1/items/item-1/media/video/upload-intent');
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.get('Authorization')).toBe('Bearer user-access-token');
-    expect(req.request.body).toEqual({ fileSizeBytes: 1024, mimeType: 'video/mp4' });
+    expect(req.request.body).toEqual({
+      fileSizeBytes: 1024,
+      mimeType: 'video/mp4',
+      aspectRatio: '9:16',
+      replacesMediaId: 'media-old'
+    });
     expect(req.request.body).not.toHaveProperty('businessId');
     req.flush({
       success: true,

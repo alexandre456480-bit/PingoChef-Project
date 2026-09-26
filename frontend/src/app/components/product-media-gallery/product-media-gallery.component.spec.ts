@@ -34,7 +34,8 @@ describe('ProductMediaGalleryComponent', () => {
       mediaType: 'video',
       source: 'mux',
       position: 0,
-      durationSeconds: 12
+      durationSeconds: 12,
+      aspectRatio: '16:9'
     }]);
     fixture.detectChanges();
   });
@@ -94,5 +95,21 @@ describe('ProductMediaGalleryComponent', () => {
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
     const gallery = (fixture.nativeElement as HTMLElement).querySelector('.media-gallery');
     expect(gallery?.getAttribute('tabindex')).toBe('0');
+  });
+
+  it('uses the selected portrait ratio without overflowing the phone layout', () => {
+    fixture.componentRef.setInput('media', [{
+      id: 'media-portrait',
+      mediaType: 'video',
+      source: 'mux',
+      position: 0,
+      durationSeconds: 9,
+      aspectRatio: '9:16'
+    }]);
+    fixture.detectChanges();
+
+    const stage = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.media-stage');
+    expect(stage?.classList.contains('portrait-video')).toBe(true);
+    expect(stage?.style.aspectRatio).toBe('9 / 16');
   });
 });

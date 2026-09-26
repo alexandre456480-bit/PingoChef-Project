@@ -131,7 +131,8 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
           mediaType: media.media_type,
           source: media.source,
           position: media.position,
-          durationSeconds: media.duration_seconds === null ? null : Number(media.duration_seconds)
+          durationSeconds: media.duration_seconds === null ? null : Number(media.duration_seconds),
+          aspectRatio: media.aspect_ratio
         });
         mediaByItem.set(media.menu_item_id, list);
       }

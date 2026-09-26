@@ -19,6 +19,8 @@ export interface ProductMediaRecord {
   mux_asset_id: string | null;
   mux_playback_id: string | null;
   duration_seconds: number | null;
+  aspect_ratio: '16:9' | '9:16';
+  replaces_media_id: string | null;
   upload_expires_at: string | null;
   deletion_attempts: number;
   updated_at: string;
@@ -31,6 +33,8 @@ export interface ReserveUploadInput {
   ipHash: string;
   declaredFileSizeBytes: number;
   declaredMimeType: string;
+  aspectRatio: '16:9' | '9:16';
+  replacesMediaId: string | null;
   dailyLimit: number;
   pendingLimit: number;
   rateLimit: number;
@@ -50,6 +54,7 @@ export interface OwnerMediaView {
   status: ProductMediaStatus;
   is_published: boolean;
   duration_seconds: number | null;
+  aspect_ratio: '16:9' | '9:16' | null;
   last_error_code: string | null;
   created_at: string;
   updated_at: string;
@@ -62,6 +67,7 @@ export interface GalleryMediaView {
   source: 'storage' | 'mux' | 'external';
   position: number;
   duration_seconds: number | null;
+  aspect_ratio: '16:9' | '9:16';
 }
 
 export interface WebhookClaim {
@@ -85,7 +91,7 @@ export interface ProductMediaRepository {
   listGalleryMedia(businessId: string, itemIds: string[], publishedOnly: boolean): Promise<GalleryMediaView[]>;
   publishReadyForBusiness(businessId: string): Promise<number>;
   markProcessing(mediaId: string, uploadId: string, assetId: string): Promise<ProductMediaRecord | null>;
-  markReady(mediaId: string, assetId: string, durationSeconds: number, playbackId: string): Promise<void>;
+  markReady(mediaId: string, assetId: string, durationSeconds: number, playbackId: string): Promise<string[]>;
   markRejected(mediaId: string, assetId: string, durationSeconds: number, errorCode: string): Promise<void>;
   markErrored(mediaId: string, errorCode: string, assetId?: string | null): Promise<void>;
   markAssetDeleted(mediaId: string): Promise<void>;
@@ -105,6 +111,8 @@ const MEDIA_SELECT = [
   'mux_asset_id',
   'mux_playback_id',
   'duration_seconds',
+  'aspect_ratio',
+  'replaces_media_id',
   'upload_expires_at',
   'deletion_attempts',
   'updated_at'
@@ -129,7 +137,9 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
       p_daily_limit: input.dailyLimit,
       p_pending_limit: input.pendingLimit,
       p_rate_limit: input.rateLimit,
-      p_rate_window_seconds: input.rateWindowSeconds
+      p_rate_window_seconds: input.rateWindowSeconds,
+      p_aspect_ratio: input.aspectRatio,
+      p_replaces_media_id: input.replacesMediaId
     });
 
     if (error) throw databaseError('reservar');
@@ -219,9 +229,10 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
   async listOwnedForItem(businessId: string, menuItemId: string): Promise<OwnerMediaView[]> {
     const { data, error } = await supabaseAdmin
       .from('product_media')
-      .select('id,media_type,source,position,status,is_published,duration_seconds,last_error_code,created_at,updated_at')
+      .select('id,media_type,source,position,status,is_published,duration_seconds,aspect_ratio,last_error_code,created_at,updated_at')
       .eq('business_id', businessId)
       .eq('menu_item_id', menuItemId)
+      .neq('status', 'pending_deletion')
       .order('position', { ascending: true })
       .order('created_at', { ascending: true });
     if (error) throw databaseError('consultar');
@@ -237,7 +248,7 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
 
     let query = supabaseAdmin
       .from('product_media')
-      .select('id,menu_item_id,media_type,source,position,duration_seconds')
+      .select('id,menu_item_id,media_type,source,position,duration_seconds,aspect_ratio')
       .eq('business_id', businessId)
       .eq('source', 'mux')
       .eq('status', 'ready')
@@ -283,17 +294,17 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
     return data as ProductMediaRecord | null;
   }
 
-  async markReady(mediaId: string, assetId: string, durationSeconds: number, playbackId: string): Promise<void> {
-    await this.updateOne(mediaId, {
-      status: 'ready',
-      is_published: false,
-      mux_asset_id: assetId,
-      mux_playback_id: playbackId,
-      duration_seconds: durationSeconds,
-      last_error_code: null,
-      last_provider_sync_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+  async markReady(mediaId: string, assetId: string, durationSeconds: number, playbackId: string): Promise<string[]> {
+    const { data, error } = await supabaseAdmin.rpc('finalize_product_video_ready', {
+      p_media_id: mediaId,
+      p_mux_asset_id: assetId,
+      p_duration_seconds: durationSeconds,
+      p_mux_playback_id: playbackId
     });
+    if (error) throw databaseError('finalizar');
+    return (data ?? [])
+      .map((row: { replaced_media_id?: string | null }) => row.replaced_media_id)
+      .filter((id: string | null | undefined): id is string => Boolean(id));
   }
 
   async markRejected(mediaId: string, assetId: string, durationSeconds: number, errorCode: string): Promise<void> {

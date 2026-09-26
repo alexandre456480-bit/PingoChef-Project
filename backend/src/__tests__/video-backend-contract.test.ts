@@ -6,6 +6,10 @@ const migration = fs.readFileSync(
   path.join(root, 'supabase/migrations/20260924000000_add_video_backend_controls.sql'),
   'utf8'
 );
+const replacementMigration = fs.readFileSync(
+  path.join(root, 'supabase/migrations/20260925000000_single_product_video_and_aspect_ratio.sql'),
+  'utf8'
+);
 const server = fs.readFileSync(path.join(root, 'backend/src/server.ts'), 'utf8');
 const muxProvider = fs.readFileSync(
   path.join(root, 'backend/src/services/mux-video.service.ts'),
@@ -64,5 +68,13 @@ describe('Mux backend static security contract', () => {
     expect(migration).toContain('ALTER TABLE public.mux_webhook_events FORCE ROW LEVEL SECURITY');
     expect(migration).toMatch(/REVOKE ALL ON FUNCTION public\.reserve_video_upload[\s\S]*FROM PUBLIC, anon, authenticated/i);
     expect(migration).toMatch(/GRANT EXECUTE ON FUNCTION public\.claim_mux_webhook_event[\s\S]*TO service_role/i);
+  });
+
+  it('enforces a single active product video and finalizes replacements atomically', () => {
+    expect(replacementMigration).toContain('product_media_one_ready_video_per_item_uidx');
+    expect(replacementMigration).toContain('product_media_one_pending_video_per_item_uidx');
+    expect(replacementMigration).toContain('finalize_product_video_ready');
+    expect(replacementMigration).toContain("aspect_ratio IN ('16:9', '9:16')");
+    expect(replacementMigration).toMatch(/REVOKE ALL ON FUNCTION public\.finalize_product_video_ready[\s\S]*FROM PUBLIC, anon, authenticated/i);
   });
 });

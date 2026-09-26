@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription, timer, switchMap } from 'rxjs';
 import {
   ProductMediaView,
+  VideoAspectRatio,
   VideoUploadService
 } from '../../services/video-upload.service';
 import {
@@ -111,6 +112,34 @@ type UploadUiState =
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
+          <fieldset class="ratio-picker">
+            <legend>Como o vídeo deve aparecer?</legend>
+            <p>Escolha o formato usado no cardápio. O vídeo será encaixado sem ultrapassar a tela.</p>
+            <div class="ratio-options" role="radiogroup" aria-label="Proporção do vídeo">
+              <button
+                type="button"
+                class="ratio-option"
+                [class.active]="selectedAspectRatio === '16:9'"
+                role="radio"
+                [attr.aria-checked]="selectedAspectRatio === '16:9'"
+                (click)="selectAspectRatio('16:9')">
+                <span class="ratio-preview landscape" aria-hidden="true"><span></span></span>
+                <span class="ratio-copy"><strong>Horizontal</strong><small>16:9 · tela ampla</small></span>
+                <span class="radio-mark" aria-hidden="true"></span>
+              </button>
+              <button
+                type="button"
+                class="ratio-option"
+                [class.active]="selectedAspectRatio === '9:16'"
+                role="radio"
+                [attr.aria-checked]="selectedAspectRatio === '9:16'"
+                (click)="selectAspectRatio('9:16')">
+                <span class="ratio-preview portrait" aria-hidden="true"><span></span></span>
+                <span class="ratio-copy"><strong>Vertical</strong><small>9:16 · estilo stories</small></span>
+                <span class="radio-mark" aria-hidden="true"></span>
+              </button>
+            </div>
+          </fieldset>
           <button type="button" class="upload-button" (click)="startUpload()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
             {{ replacementMediaId ? 'Trocar vídeo' : 'Enviar vídeo' }}
@@ -188,7 +217,7 @@ type UploadUiState =
                 </span>
                 <div class="media-copy">
                   <strong>{{ statusLabel(media.status) }}</strong>
-                  <span>{{ media.durationSeconds !== null ? formatDuration(media.durationSeconds) : 'Duração sendo confirmada' }}</span>
+                  <span>{{ media.durationSeconds !== null ? formatDuration(media.durationSeconds) : 'Duração sendo confirmada' }} · {{ ratioLabel(media.aspectRatio) }}</span>
                 </div>
                 <div class="media-actions">
                   @if (media.status === 'ready') {
@@ -283,6 +312,25 @@ type UploadUiState =
     .file-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .icon-button { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; }
     .icon-button { border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: #A1A1AA; }
+    .ratio-picker { margin: 11px 0 0; padding: 13px; border: 1px solid rgba(255,255,255,.07); border-radius: 13px; background: rgba(10,10,12,.38); }
+    .ratio-picker legend { padding: 0 4px; color: #F4F4F5; font: 700 .8rem 'Outfit', sans-serif; }
+    .ratio-picker > p { margin: 0 0 10px; color: #71717A; font-size: .69rem; line-height: 1.45; }
+    .ratio-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .ratio-option {
+      position: relative; min-height: 70px; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.025); color: #A1A1AA; display: flex; align-items: center; gap: 10px;
+      text-align: left; cursor: pointer; transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+    .ratio-option.active { border-color: rgba(244,123,32,.7); background: rgba(244,123,32,.1); box-shadow: inset 0 0 0 1px rgba(244,123,32,.12); }
+    .ratio-option:focus-visible { outline: 3px solid rgba(244,123,32,.28); outline-offset: 2px; }
+    .ratio-preview { width: 38px; height: 31px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid rgba(244,123,32,.48); border-radius: 6px; background: rgba(244,123,32,.08); }
+    .ratio-preview.portrait { width: 23px; height: 38px; margin-inline: 7px 8px; }
+    .ratio-preview span { width: 6px; height: 6px; border-radius: 50%; background: #F47B20; box-shadow: 0 0 0 3px rgba(244,123,32,.12); }
+    .ratio-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+    .ratio-copy strong { color: #E4E4E7; font-size: .76rem; }
+    .ratio-copy small { color: #71717A; font-size: .64rem; }
+    .radio-mark { width: 15px; height: 15px; flex: 0 0 auto; border: 1.5px solid #71717A; border-radius: 50%; box-shadow: inset 0 0 0 3px rgba(10,10,12,.9); }
+    .ratio-option.active .radio-mark { border-color: #F47B20; background: #F47B20; }
     .upload-button {
       width: 100%; margin-top: 9px; min-height: 42px; border: 0; border-radius: 12px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px; color: white; font: 700 .82rem 'Outfit', sans-serif;
@@ -329,12 +377,14 @@ type UploadUiState =
       .video-dropzone:not(:disabled):hover { border-color: #F47B20; background: rgba(244,123,32,.055); transform: translateY(-1px); }
       .upload-button:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(244,123,32,.28); }
       .icon-button:hover { color: white; background: rgba(255,255,255,.08); }
+      .ratio-option:hover { border-color: rgba(244,123,32,.45); transform: translateY(-1px); }
       .replace-button:hover:not(:disabled) { background: rgba(244,123,32,.16); transform: translateY(-1px); }
       .delete-button:hover:not(:disabled) { background: rgba(239,68,68,.14); transform: translateY(-1px); }
       .keep-button:hover { background: rgba(255,255,255,.08); }
       .confirm-delete-button:hover { background: #991B1B; }
     }
     @media (max-width: 620px) {
+      .ratio-options { grid-template-columns: 1fr; }
       .media-row, .delete-confirmation { align-items: stretch; flex-direction: column; }
       .media-actions, .confirmation-actions { width: 100%; }
       .media-action, .confirmation-actions button { flex: 1; }
@@ -357,6 +407,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   state: UploadUiState = 'selecting';
   uploadProgress = 0;
   selectedVideo: ValidatedVideoFile | null = null;
+  selectedAspectRatio: VideoAspectRatio = '16:9';
   videoMedia: ProductMediaView[] = [];
   loadingMedia = false;
   dragging = false;
@@ -399,8 +450,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   ngOnDestroy(): void {
     this.destroyed = true;
     if (this.pollingRetryTimer) window.clearTimeout(this.pollingRetryTimer);
-    const shouldCompensate = ['requesting', 'uploading', 'cancelling'].includes(this.state)
-      || (this.state === 'processing' && this.replacementMediaId !== null);
+    const shouldCompensate = ['requesting', 'uploading', 'cancelling'].includes(this.state);
     this.stopRequests();
     if (shouldCompensate && this.itemId && this.activeMediaId) {
       this.videoService.deleteProductMedia(this.itemId, this.activeMediaId).subscribe({ error: () => undefined });
@@ -416,6 +466,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
 
   chooseVideo(input: HTMLInputElement): void {
     this.replacementMediaId = null;
+    this.selectedAspectRatio = '16:9';
     input.value = '';
     input.click();
   }
@@ -423,6 +474,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   replaceMedia(media: ProductMediaView, input: HTMLInputElement): void {
     if (media.status !== 'ready' || this.isVideoBusy) return;
     this.replacementMediaId = media.id;
+    this.selectedAspectRatio = media.aspectRatio ?? '16:9';
     this.errorMessage = '';
     input.value = '';
     input.click();
@@ -448,6 +500,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     this.dragging = false;
     if (this.hasPendingMedia) return;
     this.replacementMediaId = null;
+    this.selectedAspectRatio = '16:9';
     const file = event.dataTransfer?.files?.[0];
     if (file) void this.selectFile(file);
   }
@@ -476,7 +529,9 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     this.intentSubscription = this.videoService.createUploadIntent(
       this.itemId,
       selection.file.size,
-      selection.mimeType
+      selection.mimeType,
+      this.selectedAspectRatio,
+      this.replacementMediaId
     ).subscribe({
       next: intent => {
         this.activeMediaId = intent.mediaId;
@@ -528,6 +583,11 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
 
   clearSelection(): void {
     this.resetSelection();
+  }
+
+  selectAspectRatio(aspectRatio: VideoAspectRatio): void {
+    if (this.state !== 'selected') return;
+    this.selectedAspectRatio = aspectRatio;
   }
 
   requestDelete(media: ProductMediaView): void {
@@ -585,6 +645,10 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     return `${seconds.toFixed(1).replace('.', ',')} s`;
   }
 
+  ratioLabel(aspectRatio: VideoAspectRatio | null): string {
+    return aspectRatio === '9:16' ? 'Vertical 9:16' : 'Horizontal 16:9';
+  }
+
   private loadMedia(startPollingAfter = false): void {
     if (!this.itemId) return;
     this.loadingMedia = this.videoMedia.length === 0;
@@ -630,14 +694,13 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
       if (active.status === 'ready') {
         this.pollingSubscription?.unsubscribe();
         this.pollingSubscription = undefined;
-        if (this.replacementMediaId && this.replacementMediaId !== active.id) {
-          this.finalizeReplacement();
-          return;
-        }
+        const completedReplacement = Boolean(this.replacementMediaId && this.replacementMediaId !== active.id);
+        this.replacementMediaId = null;
         this.activeMediaId = null;
         this.setState('ready');
-        this.onToast.emit('Vídeo pronto para a próxima etapa!');
+        this.onToast.emit(completedReplacement ? 'Vídeo trocado com sucesso.' : 'Vídeo pronto para a próxima etapa!');
         this.mediaChanged.emit();
+        this.loadMedia();
         return;
       }
       if (active.status === 'rejected') {
@@ -690,6 +753,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     this.activeMediaId = null;
     this.errorMessage = '';
     this.uploadProgress = 0;
+    this.selectedAspectRatio = '16:9';
     this.replacementMediaId = null;
     this.pendingDeleteMedia = null;
     this.state = 'selecting';
@@ -699,34 +763,6 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   private setState(state: UploadUiState): void {
     this.state = state;
     this.busyChange.emit(['validating', 'selected', 'requesting', 'uploading', 'processing', 'replacing', 'cancelling'].includes(state));
-  }
-
-  private finalizeReplacement(): void {
-    if (!this.itemId || !this.replacementMediaId) return;
-    const previousMediaId = this.replacementMediaId;
-    this.replacementMediaId = null;
-    this.setState('replacing');
-    this.deletingMediaId = previousMediaId;
-    this.videoService.deleteProductMedia(this.itemId, previousMediaId).subscribe({
-      next: deletionStatus => {
-        this.deletingMediaId = null;
-        this.activeMediaId = null;
-        this.setState('ready');
-        this.onToast.emit(deletionStatus === 'pending_deletion'
-          ? 'Vídeo trocado. A limpeza do anterior na Mux continuará automaticamente.'
-          : 'Vídeo trocado com sucesso.');
-        this.mediaChanged.emit();
-        this.loadMedia();
-      },
-      error: () => {
-        this.deletingMediaId = null;
-        this.activeMediaId = null;
-        this.setState('ready');
-        this.onToast.emit('O novo vídeo está pronto. A limpeza do anterior continuará automaticamente.');
-        this.mediaChanged.emit();
-        this.loadMedia();
-      }
-    });
   }
 
   private stopRequests(): void {

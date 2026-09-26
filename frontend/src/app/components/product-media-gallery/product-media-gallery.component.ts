@@ -32,13 +32,18 @@ type GallerySlide =
     @if (slides.length > 0) {
       <section
         class="media-gallery"
+        [class.phone-preview]="previewMode"
         tabindex="0"
         aria-label="Galeria do produto"
         (keydown.arrowLeft)="previous()"
         (keydown.arrowRight)="next()"
         (touchstart)="onTouchStart($event)"
         (touchend)="onTouchEnd($event)">
-        <div class="media-stage">
+        <div
+          class="media-stage"
+          [class.video-stage]="activeSlide.kind === 'video'"
+          [class.portrait-video]="activeSlide.kind === 'video' && activeSlide.media.aspectRatio === '9:16'"
+          [style.aspect-ratio]="stageAspectRatio">
           @if (activeSlide.kind === 'image') {
             <img [src]="activeSlide.imageUrl" [alt]="productName" class="media-image" />
           } @else {
@@ -148,6 +153,9 @@ type GallerySlide =
       overflow: hidden;
       background: color-mix(in srgb, var(--surface-color) 82%, #000);
     }
+    .media-stage.video-stage { max-width: 100%; margin-inline: auto; background: #161114; }
+    .media-stage.portrait-video { width: min(100%, 292px); max-height: min(62vh, 520px); border-radius: 0 0 18px 18px; }
+    .media-gallery.phone-preview .media-stage.portrait-video { width: min(100%, 203px); max-height: 360px; }
     .media-image, .mux-player { display: block; width: 100%; height: 100%; object-fit: cover; }
     .mux-player { --media-object-fit: cover; }
     .video-poster {
@@ -284,6 +292,8 @@ type GallerySlide =
     }
     @media (max-width: 640px) {
       .media-stage { aspect-ratio: 4 / 3; touch-action: pan-y; }
+      .media-stage.video-stage { touch-action: pan-y; }
+      .media-stage.portrait-video { width: min(100%, 280px); max-height: min(60vh, 498px); }
       .nav-button { display: none; }
       .video-lightbox { padding: 14px; }
       .expanded-player-shell { max-width: 96vw; max-height: 82vh; border-radius: 18px; }
@@ -337,10 +347,16 @@ export class ProductMediaGalleryComponent implements OnDestroy {
     return this.slides[Math.min(this.activeIndex, this.slides.length - 1)];
   }
 
+  get stageAspectRatio(): string {
+    if (this.activeSlide.kind !== 'video') return '16 / 10';
+    return this.cssAspectRatio(this.activeSlide.media.aspectRatio);
+  }
+
   async play(media: ProductGalleryMedia): Promise<void> {
     if (this.loading) return;
     this.loading = true;
     this.errorMessage = null;
+    this.applyPlayerLayout(media.aspectRatio);
     try {
       const response = await firstValueFrom(this.playback.requestPlayback(
         this.itemId,
@@ -371,15 +387,7 @@ export class ProductMediaGalleryComponent implements OnDestroy {
   }
 
   onPlayerMetadata(event: Event): void {
-    const player = event.currentTarget as HTMLElement & { videoWidth?: number; videoHeight?: number };
-    const width = Number(player.videoWidth);
-    const height = Number(player.videoHeight);
-    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return;
-
-    const ratio = width / height;
-    const maxWidth = Math.min(window.innerWidth * .94, window.innerHeight * .84 * ratio, 960);
-    this.playerAspectRatio = `${width} / ${height}`;
-    this.expandedPlayerWidth = `${Math.max(220, Math.round(maxWidth))}px`;
+    if (this.activeSlide.kind === 'video') this.applyPlayerLayout(this.activeSlide.media.aspectRatio);
   }
 
   @HostListener('document:keydown.escape')
@@ -415,5 +423,19 @@ export class ProductMediaGalleryComponent implements OnDestroy {
     this.playerAspectRatio = '16 / 9';
     this.expandedPlayerWidth = 'min(92vw, 960px)';
     this.expandedChange.emit(false);
+  }
+
+  private applyPlayerLayout(aspectRatio: ProductGalleryMedia['aspectRatio']): void {
+    const numericRatio = aspectRatio === '9:16' ? 9 / 16 : 16 / 9;
+    const widthLimit = aspectRatio === '9:16' ? 520 : 960;
+    const availableWidth = this.previewMode ? 330 : window.innerWidth * .94;
+    const availableHeight = this.previewMode ? 470 : window.innerHeight * .84;
+    const maxWidth = Math.min(availableWidth, availableHeight * numericRatio, widthLimit);
+    this.playerAspectRatio = this.cssAspectRatio(aspectRatio);
+    this.expandedPlayerWidth = `${Math.max(220, Math.round(maxWidth))}px`;
+  }
+
+  private cssAspectRatio(aspectRatio: ProductGalleryMedia['aspectRatio']): string {
+    return aspectRatio === '9:16' ? '9 / 16' : '16 / 9';
   }
 }

@@ -26,6 +26,8 @@ export interface UploadIntentInput {
   corsOrigin: string;
   declaredFileSizeBytes: number;
   declaredMimeType: string;
+  aspectRatio: '16:9' | '9:16';
+  replacesMediaId: string | null;
 }
 
 export interface UploadIntentResult {
@@ -57,7 +59,10 @@ const DENIALS: Record<string, { status: number; message: string }> = {
   USER_UPLOAD_RATE_LIMITED: { status: 429, message: 'Muitas tentativas de upload.' },
   BUSINESS_UPLOAD_RATE_LIMITED: { status: 429, message: 'Muitas tentativas de upload.' },
   IP_UPLOAD_RATE_LIMITED: { status: 429, message: 'Muitas tentativas de upload.' },
-  INVALID_UPLOAD_METADATA: { status: 400, message: 'Metadados do arquivo inválidos.' }
+  INVALID_UPLOAD_METADATA: { status: 400, message: 'Metadados do arquivo inválidos.' },
+  VIDEO_ALREADY_EXISTS: { status: 409, message: 'Este produto já possui um vídeo. Use a opção de troca.' },
+  VIDEO_REPLACEMENT_NOT_FOUND: { status: 409, message: 'O vídeo que seria trocado não está mais disponível.' },
+  VIDEO_UPLOAD_IN_PROGRESS: { status: 409, message: 'Já existe um vídeo em processamento para este produto.' }
 };
 
 export class ProductVideoService {
@@ -78,6 +83,9 @@ export class ProductVideoService {
     if (!ALLOWED_VIDEO_MIME_TYPES.includes(input.declaredMimeType as any)) {
       throw new VideoHttpError(400, 'VIDEO_MIME_TYPE_NOT_ALLOWED', 'Tipo de vídeo não permitido.');
     }
+    if (!['16:9', '9:16'].includes(input.aspectRatio)) {
+      throw new VideoHttpError(400, 'VIDEO_ASPECT_RATIO_NOT_ALLOWED', 'Proporção de vídeo não permitida.');
+    }
 
     const ipHash = createHmac('sha256', this.config.ipHashSecret)
       .update(input.clientIp || 'unknown')
@@ -90,6 +98,8 @@ export class ProductVideoService {
       ipHash,
       declaredFileSizeBytes: input.declaredFileSizeBytes,
       declaredMimeType: input.declaredMimeType,
+      aspectRatio: input.aspectRatio,
+      replacesMediaId: input.replacesMediaId,
       dailyLimit: this.config.dailyUploadLimit,
       pendingLimit: this.config.maxPendingUploads,
       rateLimit: this.config.uploadRateLimit,
@@ -197,6 +207,7 @@ export class ProductVideoService {
       status: row.status,
       isPublished: row.is_published,
       durationSeconds: row.duration_seconds,
+      aspectRatio: row.aspect_ratio,
       errorCode: row.last_error_code,
       createdAt: row.created_at,
       updatedAt: row.updated_at
@@ -394,7 +405,32 @@ export class ProductVideoService {
       return;
     }
 
-    await this.repository.markReady(media.id, assetId, duration as number, signedPlaybackId);
+    const replacedMediaIds = await this.repository.markReady(
+      media.id,
+      assetId,
+      duration as number,
+      signedPlaybackId
+    );
+    await this.cleanupReplacedMedia(replacedMediaIds ?? []);
+  }
+
+  private async cleanupReplacedMedia(mediaIds: string[]): Promise<void> {
+    for (const mediaId of mediaIds) {
+      const previous = await this.repository.findById(mediaId);
+      if (!previous) continue;
+      try {
+        await this.deleteProviderResource(previous);
+        await this.repository.deleteMedia(previous.id);
+      } catch {
+        // The database transition already hid the old video. Reconciliation
+        // safely retries provider and row cleanup without exposing duplicates.
+        try {
+          await this.repository.recordDeletionFailure(previous, 'PROVIDER_DELETE_FAILED');
+        } catch {
+          // A later reconciliation scan still sees the pending_deletion row.
+        }
+      }
+    }
   }
 
   private async rejectAndDelete(

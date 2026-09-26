@@ -2881,13 +2881,18 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
     .product-modal-sheet {
       width: 100%;
       max-width: 440px;
+      max-height: min(92dvh, 760px);
       border-radius: 24px 24px 0 0;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
       border: 1px solid rgba(255, 255, 255, 0.1);
       position: relative;
       animation: sheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .product-modal-sheet.video-expanded { overflow: visible; }
+    .menu-viewport.in-phone .product-modal-sheet { max-height: 500px; }
     @keyframes sheetUp {
       from { transform: translateY(100%); }
       to { transform: translateY(0); }

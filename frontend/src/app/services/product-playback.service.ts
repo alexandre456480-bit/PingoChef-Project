@@ -9,6 +9,7 @@ export interface ProductGalleryMedia {
   source: 'storage' | 'mux' | 'external';
   position: number;
   durationSeconds: number | null;
+  aspectRatio: '16:9' | '9:16';
 }
 
 export interface PlaybackSession {

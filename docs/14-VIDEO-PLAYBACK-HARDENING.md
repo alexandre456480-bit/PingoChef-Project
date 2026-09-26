@@ -20,6 +20,23 @@ explicitamente fora do escopo.
 O preview reutiliza o mesmo renderer, mas solicita a autorização autenticada e
 aceita mídia `ready` ainda não publicada pertencente ao tenant do owner.
 
+## Vídeo único, troca e proporção
+
+- Cada produto possui no máximo um vídeo `ready` e um upload em andamento. Índices
+  parciais no PostgreSQL são a barreira final contra concorrência e chamadas diretas.
+- O upload-intent recebe `aspectRatio` (`16:9` ou `9:16`) e, numa troca,
+  `replacesMediaId`. O backend valida produto, tenant e estado do vídeo anterior.
+- O vídeo anterior continua disponível enquanto o novo processa. Quando o webhook
+  confirma o novo asset, a função `finalize_product_video_ready` desativa o anterior
+  e ativa o novo na mesma transação, preservando a publicação quando o anterior já
+  estava visível no cardápio.
+- A remoção do asset anterior na Mux ocorre logo depois. Falhas deixam somente uma
+  linha técnica `pending_deletion`, fora das projeções do painel/cardápio e retomada
+  pela reconciliação.
+- A proporção escolhida é persistida e projetada nas APIs administrativa e pública.
+  O renderer usa caixas 16:9/9:16 com `contain` no player expandido e limites próprios
+  para o preview de celular, sem ultrapassar a moldura.
+
 ## Variáveis de ambiente
 
 Somente nomes; os valores devem ficar no gerenciador de secrets do ambiente:

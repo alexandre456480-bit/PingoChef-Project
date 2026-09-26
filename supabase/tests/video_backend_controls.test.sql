@@ -5,12 +5,16 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET LOCAL search_path = public, extensions;
 
-SELECT plan(22);
+SELECT plan(27);
 
 SELECT has_table('public', 'video_upload_attempts', 'upload attempts table exists');
 SELECT has_table('public', 'mux_webhook_events', 'webhook idempotency table exists');
 SELECT has_column('public', 'product_media', 'declared_file_size_bytes', 'declared size exists');
 SELECT has_column('public', 'product_media', 'upload_expires_at', 'upload expiry exists');
+SELECT has_column('public', 'product_media', 'aspect_ratio', 'video aspect ratio exists');
+SELECT has_column('public', 'product_media', 'replaces_media_id', 'replacement relation exists');
+SELECT has_index('public', 'product_media', 'product_media_one_ready_video_per_item_uidx', 'one ready video index exists');
+SELECT has_index('public', 'product_media', 'product_media_one_pending_video_per_item_uidx', 'one pending video index exists');
 
 INSERT INTO auth.users (
     id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -104,6 +108,12 @@ SELECT results_eq(
     $$ SELECT MAX(declared_file_size_bytes) FROM public.product_media $$,
     $$ VALUES (52428800::bigint) $$,
     'the declared byte size is retained'
+);
+
+SELECT results_eq(
+    $$ SELECT aspect_ratio FROM public.product_media LIMIT 1 $$,
+    $$ VALUES ('16:9'::text) $$,
+    'legacy RPC callers receive the safe horizontal default'
 );
 
 SELECT ok(

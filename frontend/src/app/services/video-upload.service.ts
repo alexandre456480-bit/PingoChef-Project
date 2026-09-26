@@ -26,6 +26,7 @@ export interface ProductMediaView {
   status: ProductMediaStatus;
   isPublished: boolean;
   durationSeconds: number | null;
+  aspectRatio: VideoAspectRatio | null;
   errorCode: string | null;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +45,8 @@ export interface DirectUploadProgress {
   complete: boolean;
 }
 
+export type VideoAspectRatio = '16:9' | '9:16';
+
 export type ProductMediaDeletionStatus = 'deleted' | 'pending_deletion';
 
 @Injectable({ providedIn: 'root' })
@@ -55,11 +58,13 @@ export class VideoUploadService {
   createUploadIntent(
     itemId: string,
     fileSizeBytes: number,
-    mimeType: AllowedVideoMimeType
+    mimeType: AllowedVideoMimeType,
+    aspectRatio: VideoAspectRatio,
+    replacesMediaId: string | null
   ): Observable<VideoUploadIntent> {
     return this.http.post<{ success: true; data: VideoUploadIntent }>(
       `${this.apiUrl}/items/${encodeURIComponent(itemId)}/media/video/upload-intent`,
-      { fileSizeBytes, mimeType },
+      { fileSizeBytes, mimeType, aspectRatio, replacesMediaId },
       this.authOptions()
     ).pipe(map(response => response.data));
   }

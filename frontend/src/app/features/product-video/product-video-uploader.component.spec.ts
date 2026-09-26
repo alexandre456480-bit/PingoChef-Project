@@ -21,6 +21,7 @@ const readyMedia = (id: string) => ({
   status: 'ready' as const,
   isPublished: true,
   durationSeconds: 8,
+  aspectRatio: '16:9' as const,
   errorCode: null,
   createdAt: '2026-09-23T10:00:00.000Z',
   updatedAt: '2026-09-23T10:01:00.000Z'
@@ -78,7 +79,27 @@ describe('ProductVideoUploaderComponent', () => {
     expect(element.querySelector('.delete-confirmation')?.textContent).toContain('Mux');
   });
 
-  it('deletes the previous asset only after the replacement is ready', () => {
+  it('offers accessible horizontal and vertical layout choices for a selected video', () => {
+    const component = fixture.componentInstance;
+    component.itemId = 'item-1';
+    component.state = 'selected';
+    component.selectedVideo = {
+      file: new File(['video'], 'produto.mp4', { type: 'video/mp4' }),
+      mimeType: 'video/mp4',
+      durationSeconds: 8
+    };
+    fixture.detectChanges();
+
+    const vertical = (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('.ratio-option[aria-checked="false"]');
+    vertical?.click();
+    fixture.detectChanges();
+
+    expect(component.selectedAspectRatio).toBe('9:16');
+    expect(vertical?.getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('does not rely on the browser to delete the previous asset after replacement', () => {
     const component = fixture.componentInstance;
     const service = TestBed.inject(VideoUploadService) as unknown as VideoUploadServiceStub;
     component.itemId = 'item-1';
@@ -89,8 +110,9 @@ describe('ProductVideoUploaderComponent', () => {
 
     (component as any).applyMedia([readyMedia('media-old'), readyMedia('media-new')]);
 
-    expect(service.deletedMediaIds).toEqual(['media-old']);
+    expect(service.deletedMediaIds).toEqual([]);
     expect(component.state).toBe('ready');
+    expect(component.replacementMediaId).toBeNull();
   });
 
   it('turns an errored Mux asset into a clear UI error state', () => {
@@ -106,6 +128,7 @@ describe('ProductVideoUploaderComponent', () => {
       status: 'errored',
       isPublished: false,
       durationSeconds: null,
+      aspectRatio: '16:9',
       errorCode: 'MUX_ASSET_ERRORED',
       createdAt: '2026-09-23T10:00:00.000Z',
       updatedAt: '2026-09-23T10:01:00.000Z'
