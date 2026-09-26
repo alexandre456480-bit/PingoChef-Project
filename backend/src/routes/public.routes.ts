@@ -33,9 +33,32 @@ const playbackLimiter = rateLimit({
   }
 });
 
+const likeLimiter = rateLimit({
+  windowMs: boundedEnvInteger('LIKE_RATE_WINDOW_SECONDS', 60, 10, 3600) * 1000,
+  limit: boundedEnvInteger('LIKE_RATE_LIMIT', 20, 1, 300),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.warn('[Security Audit]', {
+      event: 'like_rate_limit_exceeded',
+      requestId: res.locals?.requestId,
+      method: req.method,
+      path: req.path
+    });
+    return res.status(429).json({
+      success: false,
+      error: {
+        code: 'LIKE_RATE_LIMITED',
+        message: 'Muitas tentativas de curtida. Aguarde um instante.',
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+});
+
 // Endpoints abertos sem autenticação para o cardápio público do cliente final
 router.get('/menu/:slug', getPublicMenuController as any);
-router.post('/menu/:slug/like/:itemId', likeItemController as any);
+router.post('/menu/:slug/like/:itemId', likeLimiter, likeItemController as any);
 router.post(
   '/menus/:slug/items/:itemId/media/:mediaId/playback',
   playbackLimiter,

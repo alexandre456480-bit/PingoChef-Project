@@ -1,10 +1,66 @@
 import { Request, Response, NextFunction } from 'express';
+import { createHmac, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
 
 const slugParamSchema = z.string().trim().regex(/^[a-z0-9-]+$/, 'Slug inválido');
+
+const LIKE_VISITOR_COOKIE = 'pc_like_visitor';
+const visitorIdSchema = z.string().uuid();
+const demoLikeKeys = new Set<string>();
+
+function boundedEnvInteger(name: string, fallback: number, min: number, max: number): number {
+  const parsed = Number(process.env[name] ?? fallback);
+  return Number.isSafeInteger(parsed) && parsed >= min && parsed <= max ? parsed : fallback;
+}
+
+function readCookie(req: Request, name: string): string | undefined {
+  const rawCookie = req.headers.cookie;
+  if (!rawCookie) return undefined;
+
+  for (const part of rawCookie.split(';')) {
+    const separator = part.indexOf('=');
+    if (separator < 0 || part.slice(0, separator).trim() !== name) continue;
+    try {
+      return decodeURIComponent(part.slice(separator + 1).trim());
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
+function getLikeIdentity(req: Request, res: Response, businessId: string): { visitorHash: string; ipHash: string } | null {
+  const configuredSecret = process.env.LIKE_HASH_SECRET?.trim();
+  if (isSupabaseConfigured && (!configuredSecret || configuredSecret.length < 32)) {
+    return null;
+  }
+
+  const secret = configuredSecret || 'demo-only-like-hash-secret-not-for-production';
+  const existingVisitorId = readCookie(req, LIKE_VISITOR_COOKIE);
+  const visitorId = existingVisitorId && visitorIdSchema.safeParse(existingVisitorId).success
+    ? existingVisitorId
+    : randomUUID();
+
+  if (visitorId !== existingVisitorId) {
+    res.cookie(LIKE_VISITOR_COOKIE, visitorId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+  }
+
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  const digest = (value: string) => createHmac('sha256', secret).update(value).digest('hex');
+  return {
+    visitorHash: digest(`visitor:${businessId}:${visitorId}`),
+    ipHash: digest(`ip:${businessId}:${clientIp}`)
+  };
+}
 
 export const getPublicMenuController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -408,42 +464,71 @@ export const likeItemController = async (req: Request, res: Response, next: Next
       });
     }
 
-    let newLikes = 1;
+    const identity = getLikeIdentity(req, res, businessId);
+    if (!identity) {
+      console.error('[Security Audit]', {
+        event: 'like_hash_secret_missing',
+        requestId: res.locals?.requestId
+      });
+      return res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Serviço de curtidas temporariamente indisponível.',
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+    let newLikes = 0;
+    let created = false;
 
     if (isSupabaseConfigured) {
-      // 1. Tentar RPC atômica caso instalada no Supabase
-      const { data: rpcLikes, error: rpcErr } = await supabaseAdmin.rpc('increment_likes', {
+      const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc('register_anonymous_like', {
         p_item_id: itemId,
-        p_business_id: businessId
+        p_business_id: businessId,
+        p_visitor_hash: identity.visitorHash,
+        p_ip_hash: identity.ipHash,
+        p_ip_limit: boundedEnvInteger('LIKE_IP_RATE_LIMIT', 30, 1, 500),
+        p_window_seconds: boundedEnvInteger('LIKE_IP_RATE_WINDOW_SECONDS', 3600, 60, 86400)
       });
 
-      if (!rpcErr && typeof rpcLikes === 'number') {
-        newLikes = rpcLikes;
-      } else {
-        // 2. Fallback de persistência segura com filtro por business_id
-        const { data: item, error: itemErr } = await supabaseAdmin
-          .from('menu_items')
-          .select('likes_count')
-          .eq('id', itemId)
-          .eq('business_id', businessId)
-          .maybeSingle();
-
-        if (itemErr || !item) {
-          return res.status(404).json({
-            success: false,
-            error: { code: 'ITEM_NOT_FOUND', message: 'Item não encontrado.', timestamp: new Date().toISOString() }
-          });
-        }
-
-        newLikes = Math.max((item.likes_count || 0) + 1, 0);
-        await supabaseAdmin
-          .from('menu_items')
-          .update({ likes_count: newLikes })
-          .eq('id', itemId)
-          .eq('business_id', businessId);
+      if (rpcError) {
+        console.error('[Data Audit]', {
+          event: 'anonymous_like_registration_failed',
+          requestId: res.locals?.requestId
+        });
+        return res.status(503).json({
+          success: false,
+          error: {
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'Não foi possível registrar a curtida agora.',
+            timestamp: new Date().toISOString()
+          }
+        });
       }
+
+      const rpcRow = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+      if (!rpcRow || rpcRow.denial_code === 'ITEM_NOT_FOUND') {
+        return res.status(404).json({
+          success: false,
+          error: { code: 'ITEM_NOT_FOUND', message: 'Item não encontrado.', timestamp: new Date().toISOString() }
+        });
+      }
+      if (rpcRow.denial_code === 'LIKE_RATE_LIMITED') {
+        return res.status(429).json({
+          success: false,
+          error: {
+            code: 'LIKE_RATE_LIMITED',
+            message: 'Limite de curtidas atingido. Aguarde antes de tentar novamente.',
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+
+      newLikes = Number(rpcRow.likes_count) || 0;
+      created = rpcRow.created === true;
     } else {
-      // Modo local/demo
       const localItem = localDb.items.find(i => i.id === itemId && i.business_id === businessId);
       if (!localItem) {
         return res.status(404).json({
@@ -451,15 +536,21 @@ export const likeItemController = async (req: Request, res: Response, next: Next
           error: { code: 'ITEM_NOT_FOUND', message: 'Item não encontrado no catálogo.', timestamp: new Date().toISOString() }
         });
       }
-      localItem.likes_count = (localItem.likes_count || 0) + 1;
-      newLikes = localItem.likes_count;
+      const demoLikeKey = `${businessId}:${itemId}:${identity.visitorHash}`;
+      if (!demoLikeKeys.has(demoLikeKey)) {
+        demoLikeKeys.add(demoLikeKey);
+        localItem.likes_count = (localItem.likes_count || 0) + 1;
+        created = true;
+      }
+      newLikes = localItem.likes_count || 0;
     }
 
     return res.status(200).json({
       success: true,
       data: {
         itemId,
-        likesCount: newLikes
+        likesCount: newLikes,
+        created
       }
     });
   } catch (error) {

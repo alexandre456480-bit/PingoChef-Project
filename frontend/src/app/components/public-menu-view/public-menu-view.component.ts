@@ -386,6 +386,9 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                               type="button"
                               class="card-like-btn"
                               [class.liked]="isLiked(item.id)"
+                              [disabled]="isLikePending(item.id)"
+                              [attr.aria-pressed]="isLiked(item.id)"
+                              [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                               (click)="onLikeClick($event, item.id)">
                               <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
                                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
@@ -525,6 +528,9 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                                 type="button"
                                 class="card-like-btn"
                                 [class.liked]="isLiked(item.id)"
+                                [disabled]="isLikePending(item.id)"
+                                [attr.aria-pressed]="isLiked(item.id)"
+                                [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                                 (click)="onLikeClick($event, item.id)">
                                 <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
                                   <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
@@ -600,6 +606,9 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                                 type="button"
                                 class="card-like-btn"
                                 [class.liked]="isLiked(item.id)"
+                                [disabled]="isLikePending(item.id)"
+                                [attr.aria-pressed]="isLiked(item.id)"
+                                [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                                 (click)="onLikeClick($event, item.id)">
                                 <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
                                   <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
@@ -781,6 +790,9 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                                       type="button"
                                       class="item-like-overlay-btn"
                                       [class.liked]="isLiked(item.id)"
+                                      [disabled]="isLikePending(item.id)"
+                                      [attr.aria-pressed]="isLiked(item.id)"
+                                      [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                                       (click)="onLikeClick($event, item.id)"
                                       title="Curtir">
                                       <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
@@ -910,6 +922,9 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                                     type="button"
                                     class="item-like-overlay-btn"
                                     [class.liked]="isLiked(item.id)"
+                                    [disabled]="isLikePending(item.id)"
+                                    [attr.aria-pressed]="isLiked(item.id)"
+                                    [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                                     (click)="onLikeClick($event, item.id)"
                                     title="Curtir">
                                     <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
@@ -1019,6 +1034,9 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                               type="button"
                               class="item-like-overlay-btn"
                               [class.liked]="isLiked(item.id)"
+                              [disabled]="isLikePending(item.id)"
+                              [attr.aria-pressed]="isLiked(item.id)"
+                              [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                               (click)="onLikeClick($event, item.id)"
                               title="Curtir">
                               <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
@@ -1116,6 +1134,9 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                     type="button"
                     class="sheet-like-action"
                     [class.liked]="isLiked(selectedProduct.id)"
+                    [disabled]="isLikePending(selectedProduct.id)"
+                    [attr.aria-pressed]="isLiked(selectedProduct.id)"
+                    [attr.aria-label]="isLiked(selectedProduct.id) ? 'Item já curtido' : 'Curtir item'"
                     (click)="onLikeClick($event, selectedProduct.id)">
                     <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="isLiked(selectedProduct.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
                       <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
@@ -3469,6 +3490,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   selectedProduct: MenuItem | null = null;
   productVideoExpanded = false;
   modalItemQuantity = 1;
+  private previewLikedItemIds = new Set<string>();
 
   // Carousel state
   activeBannerIndex = 0;
@@ -4065,17 +4087,20 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   onLikeClick(event: Event, itemId: string): void {
     event.stopPropagation();
     if (!this.enableLikes) return;
-    const slug = this.business.slug || 'sapatolandia-gourmet';
 
     if (this.isPhonePreview) {
+      if (this.previewLikedItemIds.has(itemId)) return;
+      this.previewLikedItemIds.add(itemId);
       const it = this.items.find(i => i.id === itemId);
       if (it) {
         it.likesCount = (it.likesCount || 0) + 1;
       }
-      this.publicMenuService.likeItem(slug, itemId);
-    } else {
-      this.publicMenuService.likeItem(slug, itemId).subscribe();
+      return;
     }
+
+    if (this.publicMenuService.isLikePending(itemId)) return;
+    const slug = this.business.slug || 'sapatolandia-gourmet';
+    this.publicMenuService.likeItem(slug, itemId).subscribe();
   }
 
   onAddToCartClick(event: Event, item: MenuItem): void {
@@ -4091,7 +4116,13 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   isLiked(itemId: string): boolean {
-    return this.publicMenuService.isItemLiked(itemId);
+    return this.isPhonePreview
+      ? this.previewLikedItemIds.has(itemId)
+      : this.publicMenuService.isItemLiked(itemId);
+  }
+
+  isLikePending(itemId: string): boolean {
+    return !this.isPhonePreview && this.publicMenuService.isLikePending(itemId);
   }
 
   getCatSvg(cat: Category): SafeHtml | null {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../services/auth.service';
 import { MenuService } from '../../../../services/menu.service';
 import { ActiveSection } from '../../components/sidebar/sidebar.component';
+import { buildPublicMenuUrl } from '../../../../constants/public-menu';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -54,13 +55,26 @@ import { ActiveSection } from '../../components/sidebar/sidebar.component';
           </div>
         </div>
 
-        <div class="stat-card clay link-card" style="--i:4" (click)="copyLink()">
+        <div class="stat-card clay link-card" style="--i:4">
           <div class="stat-icon-wrap purple">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
           </div>
           <div class="stat-info">
             <span class="stat-value link-val">{{ publicLink }}</span>
-            <span class="stat-label">Link Público · Copiar</span>
+            <div class="link-actions">
+              <a
+                class="link-action"
+                [class.disabled]="!hasPublicLink"
+                [href]="hasPublicLink ? publicLink : null"
+                target="_blank"
+                rel="noopener noreferrer"
+                [attr.aria-disabled]="!hasPublicLink">
+                Abrir
+              </a>
+              <button type="button" class="link-action" [disabled]="!hasPublicLink" (click)="copyLink()">
+                Copiar
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -219,8 +233,9 @@ import { ActiveSection } from '../../components/sidebar/sidebar.component';
     }
 
     .stat-card.link-card {
-      cursor: pointer;
+      gap: 12px;
     }
+    .stat-card.link-card .stat-info { flex: 1; }
     .stat-card.link-card:hover {
       border-color: rgba(244, 123, 32, 0.25);
     }
@@ -275,6 +290,25 @@ import { ActiveSection } from '../../components/sidebar/sidebar.component';
       color: #71717A;
       margin-top: 2px;
     }
+    .link-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .link-action {
+      border: 0;
+      background: transparent;
+      color: #F47B20;
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 0;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .link-action:hover:not(:disabled):not(.disabled) { color: #FF9A52; }
+    .link-action:focus-visible { outline: 2px solid #F47B20; outline-offset: 3px; border-radius: 2px; }
+    .link-action:disabled, .link-action.disabled { color: #71717A; cursor: not-allowed; }
 
     /* ── Checklist ── */
     .clay-card {
@@ -494,7 +528,8 @@ export class DashboardHomeComponent implements OnInit {
   totalCategories = 0;
   totalItems = 0;
   menuStatus = 'Rascunho';
-  publicLink = 'cardapio.app/m/...';
+  publicLink = 'Não configurado';
+  hasPublicLink = false;
 
   checklistItems: { label: string; route: ActiveSection; done: boolean }[] = [];
 
@@ -510,7 +545,8 @@ export class DashboardHomeComponent implements OnInit {
 
     this.totalCategories = this.menuService.categories().length;
     this.totalItems = this.menuService.items().length;
-    this.publicLink = slug ? `cardapio.app/m/${slug}` : 'Não configurado';
+    this.hasPublicLink = !!slug;
+    this.publicLink = slug ? buildPublicMenuUrl(slug) : 'Não configurado';
     this.menuStatus = this.totalItems > 0 ? 'Publicado' : 'Rascunho';
 
     this.checklistItems = [
@@ -530,7 +566,7 @@ export class DashboardHomeComponent implements OnInit {
   copyLink(): void {
     const biz = this.authService.currentBusiness();
     if (biz?.slug) {
-      navigator.clipboard.writeText(`https://cardapio.app/m/${biz.slug}`);
+      navigator.clipboard.writeText(buildPublicMenuUrl(biz.slug));
       this.onToast.emit('Link copiado para a área de transferência!');
     } else {
       this.onToast.emit('Configure o slug da empresa primeiro.');

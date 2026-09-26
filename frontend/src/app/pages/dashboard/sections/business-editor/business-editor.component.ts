@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../services/auth.service';
+import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
 
 @Component({
   selector: 'app-business-editor',
@@ -92,7 +93,7 @@ import { AuthService } from '../../../../services/auth.service';
                 <label>Slug da URL Pública <span class="required-star">*</span></label>
               </div>
               <div class="input-addon">
-                <span class="addon-prefix">cardapio.app/m/</span>
+                <span class="addon-prefix" [title]="publicMenuPathLabel">{{ publicMenuPathLabel }}</span>
                 <input
                   type="text"
                   [(ngModel)]="form.slug"
@@ -519,6 +520,9 @@ import { AuthService } from '../../../../services/auth.service';
       color: #52525B;
       font-size: 0.84rem;
       white-space: nowrap;
+      max-width: 58%;
+      overflow: hidden;
+      text-overflow: ellipsis;
       border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
     .addon-field {
@@ -840,6 +844,7 @@ import { AuthService } from '../../../../services/auth.service';
   `]
 })
 export class BusinessEditorComponent implements OnInit {
+  readonly publicMenuPathLabel = PUBLIC_MENU_PATH_LABEL;
   @Output() onToast = new EventEmitter<string>();
 
   form = {

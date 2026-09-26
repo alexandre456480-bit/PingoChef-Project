@@ -2,6 +2,7 @@ import request from 'supertest';
 import app from '../server';
 import { localDb } from '../config/localDb';
 import { hashActivationToken } from '../controllers/auth.controller';
+import { isSupabaseConfigured } from '../config/supabase';
 
 describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () => {
   const originalEnv = process.env;
@@ -179,6 +180,26 @@ describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () 
   // Caso 6: Atomicidade de curtidas
   // --------------------------------------------------------------------------
   describe('6. Atomicidade de curtidas', () => {
+    it('deve registrar somente uma curtida por visitante e item', async () => {
+      if (isSupabaseConfigured) return;
+      process.env.APP_MODE = 'demo';
+      localDb.seedDefaultAccount();
+      const visitor = request.agent(app);
+
+      const first = await visitor
+        .post('/api/v1/public/menu/sapatolandia-gourmet/like/item_01');
+      const second = await visitor
+        .post('/api/v1/public/menu/sapatolandia-gourmet/like/item_01');
+
+      expect(first.status).toBe(200);
+      expect(first.body.data.created).toBe(true);
+      expect(second.status).toBe(200);
+      expect(second.body.data.created).toBe(false);
+      expect(second.body.data.likesCount).toBe(first.body.data.likesCount);
+      expect(first.headers['set-cookie']?.[0]).toContain('HttpOnly');
+      delete process.env.APP_MODE;
+    });
+
     it('deve incrementar likes de forma consistente e rejeitar item inválido', async () => {
       process.env.APP_MODE = 'demo';
       const res = await request(app)

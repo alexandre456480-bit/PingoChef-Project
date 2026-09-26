@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { Observable, tap, catchError, finalize, of } from 'rxjs';
 import { Category, MenuItem, Subcategory } from './menu.service';
 import { DesignSettings } from './design.service';
 import { API_BASE_URL } from '../constants/api';
@@ -26,6 +26,15 @@ export interface PublicMenuResponse {
   items: MenuItem[];
 }
 
+interface LikeApiResponse {
+  success: boolean;
+  data: {
+    itemId: string;
+    likesCount: number;
+    created: boolean;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -36,6 +45,7 @@ export class PublicMenuService {
   error = signal<string | null>(null);
   menuData = signal<PublicMenuResponse | null>(null);
   likedItemIds = signal<Set<string>>(new Set());
+  pendingLikeIds = signal<Set<string>>(new Set());
 
   constructor(private http: HttpClient) {
     this.loadLikedItemsFromStorage();
@@ -153,39 +163,53 @@ export class PublicMenuService {
     this.loading.set(false);
   }
 
-  likeItem(slug: string, itemId: string): Observable<any> {
-    // Evitar múltiplos likes do mesmo visitante localmente
+  likeItem(slug: string, itemId: string): Observable<LikeApiResponse | null> {
     const currentLikes = new Set(this.likedItemIds());
-    if (currentLikes.has(itemId)) {
-      return of({ success: true, message: 'Já curtido' });
+    if (currentLikes.has(itemId) || this.pendingLikeIds().has(itemId)) {
+      return of(null);
     }
 
+    const previousCount = this.menuData()?.items.find(item => item.id === itemId)?.likesCount || 0;
     currentLikes.add(itemId);
     this.likedItemIds.set(currentLikes);
     this.saveLikedItemsToStorage();
+    this.pendingLikeIds.set(new Set([...this.pendingLikeIds(), itemId]));
+    this.setItemLikesCount(itemId, previousCount + 1);
 
-    // Atualização otimista no menuData
-    const currentData = this.menuData();
-    if (currentData) {
-      const updatedItems = currentData.items.map(item => {
-        if (item.id === itemId) {
-          return { ...item, likesCount: (item.likesCount || 0) + 1 };
-        }
-        return item;
-      });
-      this.menuData.set({ ...currentData, items: updatedItems });
-    }
-
-    return this.http.post(`${this.apiUrl}/menu/${slug}/like/${itemId}`, {}).pipe(
+    return this.http.post<LikeApiResponse>(`${this.apiUrl}/menu/${slug}/like/${itemId}`, {}).pipe(
+      tap((response) => this.setItemLikesCount(itemId, response.data.likesCount)),
       catchError((err) => {
         console.warn('Erro ao sincronizar like no servidor:', err);
+        const rolledBackLikes = new Set(this.likedItemIds());
+        rolledBackLikes.delete(itemId);
+        this.likedItemIds.set(rolledBackLikes);
+        this.saveLikedItemsToStorage();
+        this.setItemLikesCount(itemId, previousCount);
         return of(null);
+      }),
+      finalize(() => {
+        const pending = new Set(this.pendingLikeIds());
+        pending.delete(itemId);
+        this.pendingLikeIds.set(pending);
       })
     );
   }
 
   isItemLiked(itemId: string): boolean {
     return this.likedItemIds().has(itemId);
+  }
+
+  isLikePending(itemId: string): boolean {
+    return this.pendingLikeIds().has(itemId);
+  }
+
+  private setItemLikesCount(itemId: string, likesCount: number): void {
+    const currentData = this.menuData();
+    if (!currentData) return;
+    this.menuData.set({
+      ...currentData,
+      items: currentData.items.map(item => item.id === itemId ? { ...item, likesCount } : item)
+    });
   }
 
   private loadLikedItemsFromStorage(): void {
