@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { PublicMenuViewComponent } from '../../components/public-menu-view/public-menu-view.component';
@@ -146,7 +146,7 @@ import { PublicMenuService } from '../../services/public-menu.service';
     }
   `]
 })
-export class PublicMenuComponent implements OnInit {
+export class PublicMenuComponent implements OnInit, OnDestroy {
   slug: string = '';
 
   constructor(
@@ -157,8 +157,22 @@ export class PublicMenuComponent implements OnInit {
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       this.slug = params.get('slug') || 'sapatolandia-gourmet';
-      this.publicMenuService.loadPublicMenu(this.slug).subscribe();
+      this.publicMenuService.loadPublicMenu(this.slug).subscribe(() => {
+        const businessLogo = this.publicMenuService.menuData()?.business.logoUrl;
+        if (businessLogo) this.setFavicon(businessLogo);
+      });
     });
+  }
+
+  ngOnDestroy(): void {
+    this.setFavicon('/icon_pinguim.webp', 'image/webp');
+  }
+
+  private setFavicon(href: string, type = ''): void {
+    const favicon = document.querySelector<HTMLLinkElement>('#app-favicon');
+    if (!favicon) return;
+    favicon.href = href;
+    favicon.type = type;
   }
 
   get loading() {

@@ -34,7 +34,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
     LikesSectionComponent
   ],
   template: `
-    <div class="dashboard-shell">
+    <div class="dashboard-shell" [attr.data-panel-theme]="panelTheme">
       <!-- 1. Sidebar -->
       <app-sidebar
         [activeSection]="activeSection"
@@ -52,7 +52,9 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
           [businessName]="businessName"
           [logoUrl]="businessLogo"
           [searchQuery]="searchQuery"
+          [isDarkTheme]="panelTheme === 'dark'"
           (searchChange)="searchQuery = $event"
+          (themeToggle)="togglePanelTheme()"
           (toggleSidebar)="mobileSidebarOpen = !mobileSidebarOpen"
           (togglePreview)="mobilePreviewOpen = !mobilePreviewOpen">
         </app-topbar>
@@ -450,6 +452,7 @@ export class DashboardComponent implements OnInit {
   mobileSidebarOpen = false;
   mobilePreviewOpen = false;
   showDesktopPreview = true;
+  panelTheme: 'light' | 'dark' = 'light';
 
   constructor(
     public authService: AuthService,
@@ -460,6 +463,12 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    try {
+      this.panelTheme = localStorage.getItem('pingo-chef-panel-theme') === 'dark' ? 'dark' : 'light';
+    } catch {
+      this.panelTheme = 'light';
+    }
+
     // Carrega dados iniciais essenciais para alimentar os componentes e o phone-preview em tempo real
     this.menuService.loadCategories().subscribe();
     this.menuService.loadItems().subscribe();
@@ -480,6 +489,15 @@ export class DashboardComponent implements OnInit {
 
   toggleDesktopPreview(): void {
     this.showDesktopPreview = !this.showDesktopPreview;
+  }
+
+  togglePanelTheme(): void {
+    this.panelTheme = this.panelTheme === 'light' ? 'dark' : 'light';
+    try {
+      localStorage.setItem('pingo-chef-panel-theme', this.panelTheme);
+    } catch {
+      // O tema continua funcionando mesmo quando o armazenamento está indisponível.
+    }
   }
 
   showToast(msg: string): void {

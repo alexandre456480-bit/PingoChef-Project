@@ -17,8 +17,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       <div class="sidebar-top">
         <!-- Brand -->
         <div class="sidebar-brand">
-          <img src="/logo_img.webp" alt="Cardápio Digital" class="brand-logo" />
-          <span class="brand-text">Cardápio<span class="brand-accent">Digital</span></span>
+          <img src="/pingo_chef_logo_principal.webp" alt="Pingo Chef — Cardápio Digital" class="brand-logo" />
         </div>
 
         <!-- Navigation -->
@@ -150,16 +149,16 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
 
     /* ── Brand ── */
     .sidebar-brand {
-      padding: 0 20px 32px 20px;
+      padding: 0 20px 24px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
       animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
     }
 
     .brand-logo {
-      width: 40px;
-      height: 40px;
+      width: 132px;
+      height: 92px;
       object-fit: contain;
       filter: drop-shadow(0 4px 12px rgba(244, 123, 32, 0.3));
       animation: floatLogo 3s ease-in-out infinite;

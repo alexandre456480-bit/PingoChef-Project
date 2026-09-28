@@ -41,6 +41,24 @@ import { FormsModule } from '@angular/forms';
 
       <!-- Right side -->
       <div class="topbar-right">
+        <button
+          class="theme-toggle-btn"
+          type="button"
+          (click)="themeToggle.emit()"
+          [attr.aria-pressed]="isDarkTheme"
+          [attr.aria-label]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'"
+          [title]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'">
+          @if (isDarkTheme) {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.8 15.1A8.5 8.5 0 0 1 8.9 3.2 8.5 8.5 0 1 0 20.8 15.1Z"/>
+            </svg>
+          }
+        </button>
+
         <!-- Mobile preview toggle -->
         <button class="preview-toggle-btn" (click)="togglePreview.emit()" title="Preview do Cardápio">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -161,6 +179,31 @@ import { FormsModule } from '@angular/forms';
       flex-shrink: 0;
     }
 
+    .theme-toggle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #F47B20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle-btn:hover {
+      transform: translateY(-2px) rotate(-6deg);
+      color: #8B1A3A;
+    }
+
+    .theme-toggle-btn:focus-visible {
+      outline: 3px solid rgba(244, 123, 32, 0.25);
+      outline-offset: 2px;
+    }
+
     .preview-toggle-btn {
       display: none;
       width: 40px;
@@ -269,7 +312,9 @@ export class TopbarComponent {
   @Input() logoUrl: string | null = null;
   @Input() searchQuery = '';
   @Input() searchPlaceholder = 'Buscar produtos, categorias...';
+  @Input() isDarkTheme = false;
   @Output() searchChange = new EventEmitter<string>();
+  @Output() themeToggle = new EventEmitter<void>();
   @Output() toggleSidebar = new EventEmitter<void>();
   @Output() togglePreview = new EventEmitter<void>();
 }

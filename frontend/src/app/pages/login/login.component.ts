@@ -26,7 +26,7 @@ import { AuthService } from '../../services/auth.service';
 
         <!-- Cabeçalho (Logo Centralizada + Título) -->
         <header class="auth-header-section">
-          <img src="/logo_img.webp" alt="Logo" class="auth-logo-center" />
+          <img src="/pingo_chef_logo_principal.webp" alt="Pingo Chef" class="auth-logo-center" />
           <h1 class="auth-page-title">Entrar</h1>
           <p class="auth-page-subtitle">Informe suas credenciais de acesso</p>
         </header>
