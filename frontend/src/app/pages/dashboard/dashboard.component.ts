@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MenuService } from '../../services/menu.service';
 import { DesignService } from '../../services/design.service';
-import { forkJoin, switchMap } from 'rxjs';
+import { finalize, forkJoin, switchMap } from 'rxjs';
 import { ProductPlaybackService } from '../../services/product-playback.service';
+import { PingoLoaderComponent } from '../../components/pingo-loader/pingo-loader.component';
 
 import { SidebarComponent, ActiveSection } from './components/sidebar/sidebar.component';
 import { TopbarComponent } from './components/topbar/topbar.component';
@@ -31,10 +32,17 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
     BusinessEditorComponent,
     DesignEditorComponent,
     PreviewSectionComponent,
-    LikesSectionComponent
+    LikesSectionComponent,
+    PingoLoaderComponent
   ],
   template: `
     <div class="dashboard-shell" [attr.data-panel-theme]="panelTheme">
+      <app-pingo-loader
+        [active]="isInitialLoading || isPublishing"
+        [fullscreen]="true"
+        [message]="isPublishing ? 'Preparando seu cardápio...' : 'Preparando tudo para você...'">
+      </app-pingo-loader>
+
       <!-- 1. Sidebar -->
       <app-sidebar
         [activeSection]="activeSection"
@@ -452,27 +460,38 @@ export class DashboardComponent implements OnInit {
   mobileSidebarOpen = false;
   mobilePreviewOpen = false;
   showDesktopPreview = true;
-  panelTheme: 'light' | 'dark' = 'light';
+  panelTheme: 'light' | 'dark' = 'dark';
+  isInitialLoading = true;
+  isPublishing = false;
+
+  private pendingInitialRequests = 3;
 
   constructor(
     public authService: AuthService,
     public menuService: MenuService,
     public designService: DesignService,
     private productPlaybackService: ProductPlaybackService,
+    private cdr: ChangeDetectorRef,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     try {
-      this.panelTheme = localStorage.getItem('pingo-chef-panel-theme') === 'dark' ? 'dark' : 'light';
+      this.panelTheme = localStorage.getItem('pingo-chef-panel-theme') === 'light' ? 'light' : 'dark';
     } catch {
-      this.panelTheme = 'light';
+      this.panelTheme = 'dark';
     }
 
     // Carrega dados iniciais essenciais para alimentar os componentes e o phone-preview em tempo real
-    this.menuService.loadCategories().subscribe();
-    this.menuService.loadItems().subscribe();
-    this.designService.loadDesign().subscribe();
+    this.menuService.loadCategories()
+      .pipe(finalize(() => this.completeInitialRequest()))
+      .subscribe();
+    this.menuService.loadItems()
+      .pipe(finalize(() => this.completeInitialRequest()))
+      .subscribe();
+    this.designService.loadDesign()
+      .pipe(finalize(() => this.completeInitialRequest()))
+      .subscribe();
   }
 
   get businessName(): string {
@@ -513,11 +532,18 @@ export class DashboardComponent implements OnInit {
   }
 
   publishMenu(): void {
+    if (this.isPublishing) return;
+    this.isPublishing = true;
+
     forkJoin({
       design: this.designService.saveDesign(),
       media: this.productPlaybackService.publishReadyMedia()
     }).pipe(
-      switchMap(() => this.menuService.loadItems())
+      switchMap(() => this.menuService.loadItems()),
+      finalize(() => {
+        this.isPublishing = false;
+        this.cdr.markForCheck();
+      })
     ).subscribe({
       next: () => {
         this.showToast('Cardápio publicado com sucesso na versão online!');
@@ -526,5 +552,11 @@ export class DashboardComponent implements OnInit {
         this.showToast('Não foi possível concluir a publicação. Tente novamente.');
       }
     });
+  }
+
+  private completeInitialRequest(): void {
+    this.pendingInitialRequests = Math.max(0, this.pendingInitialRequests - 1);
+    this.isInitialLoading = this.pendingInitialRequests > 0;
+    this.cdr.markForCheck();
   }
 }

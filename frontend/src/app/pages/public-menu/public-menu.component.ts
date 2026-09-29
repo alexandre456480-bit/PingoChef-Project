@@ -1,21 +1,24 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { PingoLoaderComponent } from '../../components/pingo-loader/pingo-loader.component';
 import { PublicMenuViewComponent } from '../../components/public-menu-view/public-menu-view.component';
 import { PublicMenuService } from '../../services/public-menu.service';
 
 @Component({
   selector: 'app-public-menu',
   standalone: true,
-  imports: [CommonModule, PublicMenuViewComponent],
+  imports: [CommonModule, PingoLoaderComponent, PublicMenuViewComponent],
   template: `
     <div class="public-page-shell">
-      @if (loading) {
-        <div class="public-loading-screen">
-          <div class="spinner-ring"></div>
-          <p class="loading-label">Carregando cardápio...</p>
-        </div>
-      } @else if (error) {
+      <app-pingo-loader
+        [active]="loading"
+        [fullscreen]="true"
+        size="large"
+        message="Preparando seu cardápio...">
+      </app-pingo-loader>
+
+      @if (!loading && error) {
         <div class="public-error-screen">
           <div class="error-icon">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -26,7 +29,7 @@ import { PublicMenuService } from '../../services/public-menu.service';
           <p class="error-desc">{{ error }}</p>
           <a href="/login" class="btn-home">Acessar Plataforma</a>
         </div>
-      } @else {
+      } @else if (!loading) {
         <!-- App Mobile Frame Container -->
         <main class="public-app-container">
           <app-public-menu-view [isPhonePreview]="false" [publicSlug]="slug"></app-public-menu-view>
@@ -62,35 +65,6 @@ import { PublicMenuService } from '../../services/public-menu.service';
       background: #111114;
       box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
       position: relative;
-    }
-
-    /* Loading Screen */
-    .public-loading-screen {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      min-height: 100vh;
-    }
-
-    .spinner-ring {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(244, 123, 32, 0.2);
-      border-top-color: #F47B20;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .loading-label {
-      font-size: 0.9rem;
-      color: #A1A1AA;
     }
 
     /* Error Screen */

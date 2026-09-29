@@ -266,6 +266,8 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
     }
 
     .clay-card {
+      min-width: 0;
+      box-sizing: border-box;
       background: #1A1A1E;
       border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 22px;
@@ -430,7 +432,8 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
     /* ── Campos do Formulário ── */
     .fields-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      min-width: 0;
       gap: 18px;
       margin-bottom: 24px;
     }
@@ -441,6 +444,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
     .form-field {
       display: flex;
       flex-direction: column;
+      min-width: 0;
       gap: 6px;
       animation: fieldIn 0.4s calc(var(--i, 0) * 80ms + 100ms) cubic-bezier(0.4, 0, 0.2, 1) both;
     }
@@ -504,6 +508,9 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
 
     .input-addon {
       display: flex;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       background: #141416;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
@@ -515,6 +522,8 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
       box-shadow: 0 0 0 3px rgba(244, 123, 32, 0.1);
     }
     .addon-prefix {
+      min-width: 0;
+      flex: 0 1 auto;
       padding: 11px 12px;
       background: rgba(255, 255, 255, 0.03);
       color: #52525B;
@@ -526,6 +535,8 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
       border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
     .addon-field {
+      flex: 1 1 0;
+      min-width: 0;
       border: none !important;
       border-radius: 0 !important;
       box-shadow: none !important;
@@ -831,7 +842,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
     }
 
     @media (max-width: 640px) {
-      .fields-grid { grid-template-columns: 1fr; }
+      .fields-grid { grid-template-columns: minmax(0, 1fr); }
       .upload-zone { flex-direction: column; text-align: center; }
       .bg-image-box { flex-direction: column; text-align: center; }
       .bg-preview-wrap { width: 100%; height: 120px; }

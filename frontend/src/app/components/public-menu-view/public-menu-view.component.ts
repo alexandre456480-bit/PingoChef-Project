@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -17,11 +17,12 @@ import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { findCatalogIcon } from '../../constants/icon-catalog';
 import { ProductMediaGalleryComponent } from '../product-media-gallery/product-media-gallery.component';
+import { MenuRevealDirective } from './menu-reveal.directive';
 
 @Component({
   selector: 'app-public-menu-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductMediaGalleryComponent],
+  imports: [CommonModule, FormsModule, ProductMediaGalleryComponent, MenuRevealDirective],
   template: `
     <div
       class="menu-viewport"
@@ -104,6 +105,14 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
         </div>
       }
 
+      @if (viewState === 'transitioning') {
+        <div class="entry-transition-layer" aria-hidden="true">
+          <span class="entry-panel entry-panel-left"></span>
+          <span class="entry-panel entry-panel-right"></span>
+          <span class="entry-mark"><img [src]="logoUrl" alt="" (error)="onLogoError($event)" /></span>
+        </div>
+      }
+
       <!-- ══════════════════════════════════════════════════ -->
       <!-- ── 2. VITRINE & MENU PRINCIPAL ── -->
       <!-- ══════════════════════════════════════════════════ -->
@@ -111,6 +120,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
         <div
           class="menu-main-shell"
           [class.anim-enter]="viewState === 'transitioning'"
+          [class.menu-opening]="menuOpening"
           [style.background]="screenBg">
 
           <!-- Floating Control Capsule (Search, Cart & Reset) -->
@@ -179,7 +189,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
           }
 
           <!-- Scrollable Showcase Body -->
-          <div class="showcase-scrollable">
+          <div class="showcase-scrollable" #showcaseScroller>
 
             <!-- 0. ESTRUTURA MINIMAL: APENAS A LOGO CENTRALIZADA ACIMA DO HERO -->
             @if (logoPosition === 'above-hero' && !searchFilter && showHeroBlock) {
@@ -209,6 +219,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
             <ng-template #heroBannerTemplate>
               <div
                 class="showcase-hero-banner"
+                appMenuReveal
                 [attr.data-hero-style]="currentTemplate.heroStyle"
                 (mouseenter)="stopBannerTimer()"
                 (mouseleave)="startBannerTimer()">
@@ -257,6 +268,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                 <div class="intro-description-wrapper">
                   <div
                     class="intro-description-card"
+                    appMenuReveal
                     [style.background]="surfaceColor + '18'"
                     [style.border-color]="surfaceColor + '35'">
 
@@ -290,7 +302,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
 
                 <!-- BLOCO DE CATEGORIAS -->
                 @else if (block.type === 'categories' && showCategoriesBlock) {
-                  <div class="categories-nav-section" [attr.data-cat-layout]="currentTemplate.categoryLayout">
+                  <div class="categories-nav-section" appMenuReveal [attr.data-cat-layout]="currentTemplate.categoryLayout">
                     <div class="cat-nav-scroll">
                       <!-- Botão Início com Ícone Personalizado de Bistrô/Fachada Gastronômica -->
                       <button
@@ -341,7 +353,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
 
                 <!-- BLOCO DE PROMOÇÕES -->
                 @else if (block.type === 'promotion' && showPromoBlock && promoItems.length > 0) {
-                  <div class="showcase-block promo-block">
+                  <div class="showcase-block promo-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
                         <span class="badge-promo-fire">🔥</span>
@@ -403,7 +415,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
 
                 <!-- BLOCO MAIS CURTIDOS -->
                 @else if (block.type === 'most_liked' && showMostLikedBlock && enableLikes && mostLikedItems.length > 0) {
-                  <div class="showcase-block">
+                  <div class="showcase-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
                         <span class="badge-heart">❤️</span>
@@ -441,7 +453,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
 
                 <!-- BLOCO PRATOS DO CHEF / ESPECIALIDADES -->
                 @else if (block.type === 'featured_product' && showFeaturedBlock && featuredItems.length > 0) {
-                  <div class="showcase-block featured-chef-block">
+                  <div class="showcase-block featured-chef-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
                         <span class="badge-chef-star">
@@ -483,7 +495,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
 
                 <!-- BLOCO COMBOS ESPECIAIS -->
                 @else if (block.type === 'combo' && showCombosBlock && comboItems.length > 0) {
-                  <div class="showcase-block combos-block">
+                  <div class="showcase-block combos-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
                         <span class="badge-combo-box">
@@ -564,7 +576,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
 
                 <!-- BLOCO MAIS VENDIDOS -->
                 @else if (block.type === 'best_seller' && showBestSellersBlock && bestSellerItems.length > 0) {
-                  <div class="showcase-block best-sellers-block">
+                  <div class="showcase-block best-sellers-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
                         <span class="badge-trophy-gold">
@@ -693,7 +705,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
 
             <!-- 5. CATÁLOGO DE PRODUTOS POR CATEGORIA OU RESULTADO DA BUSCA -->
             @if (activeCatId || searchFilter) {
-              <div class="catalog-section">
+              <div class="catalog-section" #catalogSection [class.category-enter]="categoryTransitioning">
                 <div class="catalog-header-row">
                   <div>
                     <h3 class="section-heading" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">
@@ -715,7 +727,10 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                       <div class="subcategory-group">
                         <div
                           class="subcategory-header-collapsible"
+                          appMenuReveal
                           (click)="toggleSubcategory(sub.id)"
+                          (keydown.enter)="toggleSubcategory(sub.id)"
+                          (keydown.space)="$event.preventDefault(); toggleSubcategory(sub.id)"
                           role="button"
                           tabindex="0"
                           [attr.aria-expanded]="!isSubcategoryCollapsed(sub.id)">
@@ -736,6 +751,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                             @for (item of getItemsBySubcategory(sub.id); track item.id; let idx = $index) {
                               <div
                                 class="product-item-card"
+                                appMenuReveal
                                 [style.background]="surfaceColor"
                                 [style.--card-idx]="idx"
                                 (click)="openProductDetail(item)">
@@ -849,7 +865,10 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                     <div class="subcategory-group">
                       <div
                         class="subcategory-header-collapsible"
+                        appMenuReveal
                         (click)="toggleSubcategory('__other__')"
+                        (keydown.enter)="toggleSubcategory('__other__')"
+                        (keydown.space)="$event.preventDefault(); toggleSubcategory('__other__')"
                         role="button"
                         tabindex="0"
                         [attr.aria-expanded]="!isSubcategoryCollapsed('__other__')">
@@ -870,6 +889,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                           @for (item of getItemsWithoutSubcategory(); track item.id; let idx = $index) {
                             <div
                               class="product-item-card"
+                              appMenuReveal
                               [style.background]="surfaceColor"
                               [style.--card-idx]="idx"
                               (click)="openProductDetail(item)">
@@ -980,6 +1000,7 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
                     @for (item of displayItems; track item.id; let idx = $index) {
                       <div
                         class="product-item-card"
+                        appMenuReveal
                         [style.background]="surfaceColor"
                         [style.--card-idx]="idx"
                         (click)="openProductDetail(item)">
@@ -1350,8 +1371,6 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
       background-position: center;
       padding: 24px 20px;
       text-align: center;
-      transition: all 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: transform, opacity, filter;
     }
 
     .welcome-overlay {
@@ -1521,10 +1540,67 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
     }
 
     .welcome-screen.anim-exit {
-      transform: scale(1.15);
-      filter: blur(14px);
-      opacity: 0;
       pointer-events: none;
+      animation: welcomeRetreat 460ms cubic-bezier(0.55, 0, 0.8, 0.35) both;
+    }
+    @keyframes welcomeRetreat {
+      to { opacity: 0; transform: translateY(-14px) scale(0.93); }
+    }
+
+    .entry-transition-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      overflow: hidden;
+      pointer-events: none;
+      display: grid;
+      place-items: center;
+    }
+    .entry-panel {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 50.5%;
+      background: linear-gradient(130deg, var(--primary-color), var(--accent-color));
+    }
+    .entry-panel-left {
+      left: 0;
+      box-shadow: 8px 0 26px rgba(0, 0, 0, 0.2);
+      animation: entryDoorLeft 1120ms cubic-bezier(0.76, 0, 0.24, 1) both;
+    }
+    .entry-panel-right {
+      right: 0;
+      background: linear-gradient(230deg, var(--primary-color), var(--secondary-color));
+      box-shadow: -8px 0 26px rgba(0, 0, 0, 0.2);
+      animation: entryDoorRight 1120ms cubic-bezier(0.76, 0, 0.24, 1) both;
+    }
+    @keyframes entryDoorLeft {
+      0% { transform: translateX(-105%); }
+      27%, 43% { transform: translateX(0); }
+      100% { transform: translateX(-105%); }
+    }
+    @keyframes entryDoorRight {
+      0% { transform: translateX(105%); }
+      27%, 43% { transform: translateX(0); }
+      100% { transform: translateX(105%); }
+    }
+    .entry-mark {
+      z-index: 1;
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      animation: entryMarkPop 1120ms linear both;
+    }
+    .entry-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    @keyframes entryMarkPop {
+      0%, 24% { opacity: 0; transform: scale(0.55) rotate(-18deg); }
+      34%, 50% { opacity: 1; transform: scale(1) rotate(0); }
+      72%, 100% { opacity: 0; transform: scale(1.45) rotate(8deg); }
     }
 
     /* ══════════════════════════════════════════════════ */
@@ -1540,11 +1616,11 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
     }
 
     .menu-main-shell.anim-enter {
-      animation: menuCascadeIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: menuCascadeIn 850ms 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
     @keyframes menuCascadeIn {
-      from { opacity: 0; transform: translateY(30px) scale(0.96); }
+      from { opacity: 0; transform: translateY(42px) scale(0.93); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
@@ -1643,6 +1719,38 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
       gap: 16px;
     }
     .showcase-scrollable::-webkit-scrollbar { display: none; }
+
+    /* Cada seção se abre como uma página; só transform e opacity são animados. */
+    .menu-reveal-pending {
+      opacity: 0;
+      transform: translate3d(0, 14px, 0) rotate(-0.7deg);
+    }
+    .menu-reveal-visible {
+      animation: menuPageReveal 340ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    }
+    .menu-opening .menu-reveal-visible {
+      animation-duration: 620ms;
+      animation-delay: 820ms;
+    }
+    .menu-opening .showcase-scrollable > .menu-reveal-visible:nth-child(2n) { animation-delay: 910ms; }
+    .menu-opening .showcase-scrollable > .menu-reveal-visible:nth-child(3n) { animation-delay: 990ms; }
+    .items-grid > .menu-reveal-visible:nth-child(4n + 2) { animation-delay: 45ms; }
+    .items-grid > .menu-reveal-visible:nth-child(4n + 3) { animation-delay: 90ms; }
+    .items-grid > .menu-reveal-visible:nth-child(4n + 4) { animation-delay: 135ms; }
+    .menu-opening .items-grid > .menu-reveal-visible:nth-child(4n + 2) { animation-delay: 875ms; }
+    .menu-opening .items-grid > .menu-reveal-visible:nth-child(4n + 3) { animation-delay: 930ms; }
+    .menu-opening .items-grid > .menu-reveal-visible:nth-child(4n + 4) { animation-delay: 985ms; }
+    @keyframes menuPageReveal {
+      from { opacity: 0; transform: translate3d(0, 14px, 0) rotate(-0.7deg); }
+      to { opacity: 1; transform: none; }
+    }
+    .catalog-section.category-enter {
+      animation: categoryPageIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    }
+    @keyframes categoryPageIn {
+      from { opacity: 0.65; transform: translate3d(10px, 0, 0); }
+      to { opacity: 1; transform: none; }
+    }
 
     /* ══════════════════════════════════════════════════ */
     /* ── BLOCO DE APRESENTAÇÃO / DESCRIÇÃO INICIAL ── */
@@ -3470,10 +3578,19 @@ import { ProductMediaGalleryComponent } from '../product-media-gallery/product-m
         animation: none !important;
         transition: none !important;
       }
+      .menu-reveal-pending, .menu-reveal-visible, .catalog-section.category-enter {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .entry-transition-layer { display: none !important; }
+      .welcome-screen.anim-exit { display: none !important; }
     }
   `]
 })
 export class PublicMenuViewComponent implements OnInit, OnDestroy {
+  @ViewChild('showcaseScroller') private showcaseScroller?: ElementRef<HTMLElement>;
+  @ViewChild('catalogSection') private catalogSection?: ElementRef<HTMLElement>;
   /** Se for true, consome os signals em tempo real do painel (DesignService, MenuService, AuthService) */
   @Input() isPhonePreview = false;
 
@@ -3482,9 +3599,13 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   // View state: 'welcome' -> 'transitioning' -> 'menu'
   viewState: 'welcome' | 'transitioning' | 'menu' = 'welcome';
+  menuOpening = false;
+  private openingTimers: ReturnType<typeof setTimeout>[] = [];
 
   // Filters & selection
   activeCatId: string | null = null;
+  categoryTransitioning = false;
+  private categoryFrame = 0;
   searchActive = false;
   searchFilter = '';
   selectedProduct: MenuItem | null = null;
@@ -3546,6 +3667,8 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopBannerTimer();
+    if (this.categoryFrame) cancelAnimationFrame(this.categoryFrame);
+    this.openingTimers.forEach(clearTimeout);
     if (this.previewSyncTimer) {
       clearInterval(this.previewSyncTimer);
       this.previewSyncTimer = null;
@@ -3846,8 +3969,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   getItemsWithoutSubcategory(): MenuItem[] {
+    const visibleSubcategoryIds = new Set(this.activeCategorySubcategories.map(s => s.id));
     return this.displayItems
-      .filter(i => !i.subcategoryId)
+      .filter(i => !i.subcategoryId || !visibleSubcategoryIds.has(i.subcategoryId))
       .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   }
 
@@ -4018,10 +4142,21 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   // ── INTERAÇÕES & ANIMAÇÃO ──
 
   openMenuWithAnimation(): void {
-    this.viewState = 'transitioning';
-    setTimeout(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       this.viewState = 'menu';
-    }, 650);
+      return;
+    }
+    this.menuOpening = true;
+    this.viewState = 'transitioning';
+    this.openingTimers.push(setTimeout(() => {
+      this.viewState = 'menu';
+      this.cdr.detectChanges();
+    }, 1120));
+    this.openingTimers.push(setTimeout(() => {
+      this.menuOpening = false;
+      this.openingTimers = [];
+      this.cdr.detectChanges();
+    }, 1580));
   }
 
   resetToWelcome(): void {
@@ -4040,11 +4175,22 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   filterCategory(catId: string | null): void {
+    if (this.activeCatId === catId && !this.searchFilter) return;
+    if (this.categoryFrame) cancelAnimationFrame(this.categoryFrame);
+    this.categoryTransitioning = false;
     this.activeCatId = catId;
     this.searchFilter = '';
     this.activeBannerIndex = 0;
     this.startBannerTimer();
     this.cdr.markForCheck();
+    this.categoryFrame = requestAnimationFrame(() => {
+      this.showcaseScroller?.nativeElement.scrollTo({ top: 0, behavior: 'auto' });
+      this.cdr.detectChanges();
+      void this.catalogSection?.nativeElement.offsetWidth;
+      this.categoryTransitioning = true;
+      this.categoryFrame = 0;
+      this.cdr.detectChanges();
+    });
   }
 
   openProductDetail(item: MenuItem): void {

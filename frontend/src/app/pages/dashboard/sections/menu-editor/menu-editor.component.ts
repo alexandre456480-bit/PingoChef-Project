@@ -534,27 +534,15 @@ import { ProductVideoUploaderComponent } from '../../../../features/product-vide
                   <span class="hl-label">+Curtidos</span>
                 </button>
                 <button type="button" class="highlight-card chef" [class.selected]="itemForm.highlightType === 'chef'" (click)="itemForm.highlightType = 'chef'">
-                  <span class="hl-icon">⭐</span>
+                  <span class="hl-icon"><img src="/icons_chef_hat.webp" alt="" /></span>
                   <span class="hl-label">Prato Chefe</span>
                 </button>
                 <button type="button" class="highlight-card combo" [class.selected]="itemForm.highlightType === 'combo'" (click)="itemForm.highlightType = 'combo'">
-                  <span class="hl-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M17 9l1 11a1.5 1.5 0 0 0 1.5 1.4h.8a1.5 1.5 0 0 0 1.5-1.4L23 9H17z"/>
-                      <path d="M16.5 9h7"/><path d="M20 9V5l2-2"/>
-                      <path d="M2 11c0-2.8 2.2-5 5-5s5 2.2 5 5H2z"/>
-                      <path d="M1.5 14h11"/>
-                      <path d="M2.5 17h9c0 1.8-1.5 3-3.2 3H5.7C4 20 2.5 18.8 2.5 17z"/>
-                    </svg>
-                  </span>
+                  <span class="hl-icon" [innerHTML]="getHighlightIconSvg('3d-combo')"></span>
                   <span class="hl-label">Combo</span>
                 </button>
                 <button type="button" class="highlight-card best-seller" [class.selected]="itemForm.highlightType === 'best_seller'" (click)="itemForm.highlightType = 'best_seller'">
-                  <span class="hl-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-                    </svg>
-                  </span>
+                  <span class="hl-icon" [innerHTML]="getHighlightIconSvg('3d-bestseller')"></span>
                   <span class="hl-label">Mais Vendido</span>
                 </button>
               </div>
@@ -1965,9 +1953,16 @@ import { ProductVideoUploaderComponent } from '../../../../features/product-vide
     }
     .highlight-card .hl-icon {
       font-size: 1.35rem;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    .highlight-card .hl-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     .highlight-card .hl-label {
       font-size: 0.76rem;
@@ -2065,6 +2060,7 @@ import { ProductVideoUploaderComponent } from '../../../../features/product-vide
   `]
 })
 export class MenuEditorComponent implements OnInit {
+  private highlightIconSvgCache = new Map<string, SafeHtml>();
   @Output() onToast = new EventEmitter<string>();
 
   selectedCategoryId: string | null = null;
@@ -2144,6 +2140,16 @@ export class MenuEditorComponent implements OnInit {
     if (!this.catForm.iconKey) return null;
     const icon = findCatalogIcon(this.catForm.iconKey);
     return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg) : null;
+  }
+
+  getHighlightIconSvg(key: '3d-combo' | '3d-bestseller'): SafeHtml | null {
+    const cached = this.highlightIconSvgCache.get(key);
+    if (cached) return cached;
+    const icon = findCatalogIcon(key);
+    if (!icon) return null;
+    const safeIcon = this.sanitizer.bypassSecurityTrustHtml(icon.svg.replace('<svg ', '<svg width="28" height="28" '));
+    this.highlightIconSvgCache.set(key, safeIcon);
+    return safeIcon;
   }
 
   getSafeSvg(svgStr: string): SafeHtml {

@@ -160,11 +160,23 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         }));
 
         // 4. Obter subcategorias
-        const { data: sData } = await supabaseAdmin
+        const { data: sData, error: sError } = await supabaseAdmin
           .from('subcategories')
           .select('id, category_id, name, display_order')
           .eq('business_id', businessId)
           .order('display_order', { ascending: true });
+
+        if (sError) {
+          console.error('[Data Audit]', { event: 'public_menu_subcategories_query_failed' });
+          return res.status(503).json({
+            success: false,
+            error: {
+              code: 'SERVICE_UNAVAILABLE',
+              message: 'Serviço temporariamente indisponível. Tente novamente mais tarde.',
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
 
         subcategories = (sData || []).map(s => ({
           id: s.id,
@@ -377,6 +389,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           customConfig: design.custom_config || {}
         },
         categories,
+        subcategories,
         items
       }
     });
