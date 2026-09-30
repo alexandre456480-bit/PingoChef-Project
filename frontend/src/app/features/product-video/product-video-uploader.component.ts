@@ -216,7 +216,7 @@ type UploadUiState =
                   }
                 </span>
                 <div class="media-copy">
-                  <strong>{{ statusLabel(media.status) }}</strong>
+                  <strong>{{ statusLabel(media) }}</strong>
                   <span>{{ media.durationSeconds !== null ? formatDuration(media.durationSeconds) : 'Duração sendo confirmada' }} · {{ ratioLabel(media.aspectRatio) }}</span>
                 </div>
                 <div class="media-actions">
@@ -624,7 +624,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     });
   }
 
-  statusLabel(status: ProductMediaView['status']): string {
+  statusLabel(media: ProductMediaView): string {
+    if (media.errorCode === 'MUX_TEST_ASSET_EXPIRED') return 'Vídeo de teste expirado — reenvie o arquivo';
     const labels: Record<ProductMediaView['status'], string> = {
       waiting: 'Aguardando envio',
       uploading: 'Enviando',
@@ -634,7 +635,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
       errored: 'Erro no processamento',
       pending_deletion: 'Exclusão pendente'
     };
-    return labels[status];
+    return labels[media.status];
   }
 
   formatBytes(bytes: number): string {

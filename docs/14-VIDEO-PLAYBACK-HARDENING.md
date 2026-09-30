@@ -64,6 +64,11 @@ Somente nomes; os valores devem ficar no gerenciador de secrets do ambiente:
 - `VIDEO_PLAYBACK_RATE_WINDOW_SECONDS`
 - `ACTIVATION_TOKEN_SECRET`
 
+Em produção, o backend força `MUX_TEST_MODE=false`, mesmo se a variável estiver
+definida como `true`: a Mux apaga assets de teste após 24 horas, e um ID ainda
+salvo no banco não recupera o vídeo apagado. Vídeos antigos criados nesse modo
+precisam ser reenviados e publicados novamente.
+
 ## Configuração do Mux
 
 1. Criar um access token Mux com o menor conjunto de permissões que permita gerir

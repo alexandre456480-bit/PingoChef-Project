@@ -132,7 +132,8 @@ type GallerySlide =
                 muted
                 autoplay
                 playsinline
-                (loadedmetadata)="onPlayerMetadata($event)">
+                (loadedmetadata)="onPlayerMetadata($event)"
+                (error)="onPlayerError()">
               </mux-player>
               <button type="button" class="close-video-button" aria-label="Fechar vÃ­deo" (click)="closeExpanded()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -388,6 +389,15 @@ export class ProductMediaGalleryComponent implements OnDestroy {
 
   onPlayerMetadata(event: Event): void {
     if (this.activeSlide.kind === 'video') this.applyPlayerLayout(this.activeSlide.media.aspectRatio);
+  }
+
+  onPlayerError(): void {
+    if (!this.session) return;
+    this.stopPlayback();
+    this.errorMessage = this.previewMode
+      ? 'Vídeo indisponível. Tente novamente; se o erro persistir, reenvie o vídeo e publique o cardápio.'
+      : 'Vídeo indisponível no momento. Tente novamente ou avise o estabelecimento.';
+    this.cdr.markForCheck();
   }
 
   @HostListener('document:keydown.escape')

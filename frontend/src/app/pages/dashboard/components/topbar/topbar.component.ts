@@ -8,17 +8,31 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule],
   template: `
     <header class="topbar">
+      <button
+        class="mobile-search-toggle"
+        type="button"
+        [attr.aria-label]="mobileSearchOpen ? 'Fechar pesquisa' : 'Abrir pesquisa'"
+        [attr.aria-expanded]="mobileSearchOpen"
+        aria-controls="panel-search"
+        (click)="mobileSearchOpen = !mobileSearchOpen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+
       <!-- Mobile hamburger -->
-      <button class="hamburger-btn" (click)="toggleSidebar.emit()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="hamburger-btn" type="button" aria-label="Abrir menu" (click)="toggleSidebar.emit()">
+        <svg class="hamburger-lines" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="4" y1="6" x2="20" y2="6"/>
           <line x1="4" y1="12" x2="16" y2="12"/>
           <line x1="4" y1="18" x2="12" y2="18"/>
         </svg>
+        <img class="mobile-menu-logo" src="/icon_pinguim.webp" alt="" />
       </button>
 
       <!-- Search -->
-      <div class="search-box">
+      <div id="panel-search" class="search-box" [class.mobile-open]="mobileSearchOpen">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -117,6 +131,9 @@ import { FormsModule } from '@angular/forms';
     .hamburger-btn:hover {
       background: rgba(244, 123, 32, 0.1);
       color: #F47B20;
+    }
+    .mobile-menu-logo, .mobile-search-toggle {
+      display: none;
     }
 
     /* ── Search ── */
@@ -294,12 +311,67 @@ import { FormsModule } from '@angular/forms';
     }
 
     @media (max-width: 640px) {
-      .search-box {
-        max-width: none;
-      }
       .topbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+        gap: 10px 8px;
+      }
+      .hamburger-btn {
+        grid-column: 2;
+        grid-row: 1;
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+      .hamburger-lines { display: none; }
+      .mobile-menu-logo {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+      }
+      .mobile-search-toggle {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+        align-self: center;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        background: var(--panel-surface);
+        box-shadow: var(--panel-shadow-soft);
+        color: var(--panel-text-muted);
+        cursor: pointer;
+      }
+      .mobile-search-toggle:focus-visible,
+      .hamburger-btn:focus-visible {
+        outline: 2px solid var(--panel-accent);
+        outline-offset: 2px;
+      }
+      .topbar-right {
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: end;
+        align-self: center;
         gap: 8px;
       }
+      .search-box {
+        display: none;
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+      }
+      .search-box.mobile-open { display: flex; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -308,6 +380,7 @@ import { FormsModule } from '@angular/forms';
   `]
 })
 export class TopbarComponent {
+  mobileSearchOpen = false;
   @Input() businessName = 'Seu Estabelecimento';
   @Input() logoUrl: string | null = null;
   @Input() searchQuery = '';

@@ -17,7 +17,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       <div class="sidebar-top">
         <!-- Brand -->
         <div class="sidebar-brand">
-          <img src="/pingo_chef_logo_principal.webp" alt="Pingo Chef — Cardápio Digital" class="brand-logo" />
+          <img [src]="isDarkTheme ? '/logo_principal_tema_light.webp' : '/pingo_chef_logo_principal.webp'" alt="Pingo Chef — Cardápio Digital" class="brand-logo" />
         </div>
 
         <!-- Navigation -->
@@ -388,6 +388,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
   `]
 })
 export class SidebarComponent {
+  @Input() isDarkTheme = false;
   @Input() activeSection: ActiveSection = 'dashboard';
   @Input() mobileOpen = false;
   @Output() sectionChange = new EventEmitter<ActiveSection>();

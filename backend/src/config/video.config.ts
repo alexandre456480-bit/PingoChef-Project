@@ -220,7 +220,7 @@ export function loadVideoConfig(env: NodeJS.ProcessEnv = process.env): VideoConf
     ipHashSecret: requiredSecret(env, 'VIDEO_IP_HASH_SECRET', 32),
     reconciliationSecret: requiredSecret(env, 'VIDEO_RECONCILIATION_SECRET', 32),
     allowedUploadOrigins: parseAllowedOrigins(env),
-    muxTestMode: env.MUX_TEST_MODE === 'true'
+    muxTestMode: env.NODE_ENV !== 'production' && env.VERCEL_ENV !== 'production' && env.MUX_TEST_MODE === 'true'
   };
 }
 

@@ -59,7 +59,8 @@ import { PublicMenuService } from '../../services/public-menu.service';
     .public-app-container {
       width: 100%;
       max-width: 480px;
-      min-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       background: #111114;

@@ -33,6 +33,12 @@ describe('video configuration', () => {
     })).toThrow('VIDEO_PLAYBACK_TOKEN_TTL_SECONDS');
   });
 
+  it('never creates expiring Mux test assets in production', () => {
+    expect(loadVideoConfig({ ...validEnv, MUX_TEST_MODE: 'true' }).muxTestMode).toBe(false);
+    expect(loadVideoConfig({ ...validEnv, NODE_ENV: 'development', VERCEL_ENV: 'production', MUX_TEST_MODE: 'true' }).muxTestMode).toBe(false);
+    expect(loadVideoConfig({ ...validEnv, NODE_ENV: 'development', MUX_TEST_MODE: 'true' }).muxTestMode).toBe(true);
+  });
+
   it('rejects wildcard and non-HTTPS upload origins in production', () => {
     expect(() => loadVideoConfig({
       ...validEnv,

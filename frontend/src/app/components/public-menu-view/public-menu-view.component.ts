@@ -73,13 +73,9 @@ import { MenuRevealDirective } from './menu-reveal.directive';
               <h1 class="welcome-title" [style.font-family]="headingFont + ', sans-serif'">
                 {{ businessName }}
               </h1>
-              @if (businessDescription) {
+              @if (businessDescription.trim()) {
                 <p class="welcome-tagline welcome-desc-custom">
                   {{ businessDescription }}
-                </p>
-              } @else if (welcomeTagline) {
-                <p class="welcome-tagline">
-                  {{ welcomeTagline }}
                 </p>
               }
             </div>
@@ -3679,7 +3675,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     this.stopBannerTimer();
     this.bannerTimer = setInterval(() => {
       this.nextBanner();
-    }, 10000); // 10 segundos para cada slide da hero section
+    }, 6000); // 6 segundos para cada slide da hero section
   }
 
   stopBannerTimer(): void {

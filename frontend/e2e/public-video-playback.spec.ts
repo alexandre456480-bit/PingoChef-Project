@@ -109,7 +109,7 @@ test('does not authorize or mount Mux before explicit Play', async ({ page }) =>
   expect(muxNetworkRequests).toBe(0);
   await expect(page.locator('mux-player')).toHaveCount(0);
 
-  await page.getByRole('tab', { name: /vídeo 2/i }).click();
+  await expect(page.getByRole('tab', { name: /vídeo 1/i })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('button', { name: /reproduzir vídeo/i }).click();
   await expect.poll(() => playbackRequests).toBe(1);
   await expect(page.locator('mux-player')).toHaveAttribute('preload', 'none');

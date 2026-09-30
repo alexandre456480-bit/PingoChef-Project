@@ -46,6 +46,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
       <!-- 1. Sidebar -->
       <app-sidebar
         [activeSection]="activeSection"
+        [isDarkTheme]="panelTheme === 'dark'"
         [mobileOpen]="mobileSidebarOpen"
         (sectionChange)="setSection($event)"
         (onLogout)="onLogout()"
