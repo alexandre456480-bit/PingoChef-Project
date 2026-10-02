@@ -1,5 +1,7 @@
 # 📡 09 — API e Contratos
 
+> **Atualização de implementação (30/09/2026):** `/auth/register` exige `invitationCode`; `/auth/activate` foi removido. As rotas novas `/api/v1/admin/*` usam cookie HttpOnly, Origin e CSRF, conforme [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md). Contratos antigos abaixo podem representar proposta, não endpoint implementado.
+
 > **Domínio**: Contratos HTTP REST, envelopes de resposta, DTOs TypeScript, validação de payload, códigos de erro, rate limits e documentação de endpoints.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [02-AUTENTICACAO-CADASTRO.md](./02-AUTENTICACAO-CADASTRO.md), [07-CYBERSECURITY.md](./07-CYBERSECURITY.md), [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md)  
 > **Referenciado por**: Frontend (Angular Services), Backend (Node.js Controllers & Middlewares).

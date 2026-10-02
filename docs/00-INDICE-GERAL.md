@@ -3,6 +3,8 @@
 > **Fonte de verdade estrutural do projeto.**  
 > Cada documento abaixo cobre um domínio específico. Quando um domínio depende de outro, a dependência está explicitamente referenciada dentro do arquivo.
 
+> **Estado implementado em 30/09/2026:** consulte [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md) antes dos contratos conceituais abaixo. Alguns fluxos de autenticação, publicação e banco descritos aqui ainda são propostas.
+
 ---
 
 ## Stack Tecnológica
@@ -43,6 +45,10 @@
 | `SECURITY.md`          | Modelo de ameaça vivo, segredos, auth, tenant e uploads      |
 | `TASK.md` (raiz)       | Objetivo da tarefa atual, escopo, aceite e arquivos candidatos |
 | [`14-VIDEO-PLAYBACK-HARDENING.md`](./14-VIDEO-PLAYBACK-HARDENING.md) | Playback signed, Mux, CSP, limpeza e runbook de validação |
+| [`15-ADMIN-FOUNDATION.md`](./15-ADMIN-FOUNDATION.md) | Base de segurança, convites e ciclo de vida |
+| [`16-ADMIN-PHASE1-BACKEND.md`](./16-ADMIN-PHASE1-BACKEND.md) | API Admin, assinaturas preparadas, analytics, RLS e implantação |
+| [`17-ADMIN-DASHBOARD.md`](./17-ADMIN-DASHBOARD.md) | Painel Admin, métricas, filtros, endpoints e implantação desta fase |
+| [`18-ADMIN-PHASE3-OPERATIONS.md`](./18-ADMIN-PHASE3-OPERATIONS.md) | Comércio preparado, observabilidade, purga, recuperação e riscos residuais |
 
 ---
 

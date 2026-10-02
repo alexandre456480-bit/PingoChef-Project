@@ -107,8 +107,6 @@ import { AuthService } from '../../services/auth.service';
           <div class="auth-bottom-links">
             Não tem uma conta?
             <a routerLink="/register">Cadastre-se</a>
-            <span class="separator">•</span>
-            <a routerLink="/activate">Ativar token</a>
           </div>
         </main>
 

@@ -1,5 +1,7 @@
 # 🏗️ 01 — Arquitetura Geral
 
+> **Estado implementado em 30/09/2026:** o cliente Angular usa JWT em `localStorage`; o novo Admin usa sessão própria em cookie HttpOnly. O cadastro do cliente exige convite e a elegibilidade pública passa pela regra central do banco. Consulte [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md). Diagramas antigos abaixo representam a arquitetura planejada.
+
 > **Domínio**: Visão macro do sistema, estrutura do repositório, separação de camadas e princípios de design.  
 > **Depende de**: Nenhum (base para todos os outros documentos).  
 > **Referenciado por**: Todos os demais documentos.

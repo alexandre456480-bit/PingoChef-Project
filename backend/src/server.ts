@@ -14,8 +14,15 @@ import businessRoutes from './routes/business.routes';
 import productVideoRoutes from './routes/product-video.routes';
 import muxWebhookRoutes from './routes/mux-webhook.routes';
 import videoInternalRoutes from './routes/video-internal.routes';
+import adminRoutes from './routes/admin.routes';
+import { adminOrigins } from './middleware/admin.middleware';
+import billingWebhookRoutes from './routes/billing-webhook.routes';
+import internalOperationsRoutes from './routes/internal-operations.routes';
+import { apiTelemetry,apiRouteGroup } from './middleware/api-telemetry.middleware';
+import { validateDeploymentEnvironment } from './config/deployment.config';
 
 dotenv.config();
+validateDeploymentEnvironment(process.env);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -26,6 +33,7 @@ app.use((_req, res, next) => {
   res.setHeader('X-Request-Id', requestId);
   next();
 });
+app.use(apiTelemetry);
 
 // Trust only the explicitly configured number of reverse-proxy hops. A broad
 // unconditional trust lets callers spoof X-Forwarded-For and evade IP quotas.
@@ -42,18 +50,19 @@ app.use(helmet());
 const allowedOrigins = (process.env.FRONTEND_ORIGINS || 'http://localhost:4200,http://127.0.0.1:4200')
   .split(',')
   .map(o => o.trim())
-  .filter(Boolean);
+  .filter(o => Boolean(o) && o !== '*')
+  .concat(adminOrigins());
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Origem não permitida pela política de CORS.'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   credentials: true
 };
 
@@ -62,6 +71,7 @@ app.use(cors(corsOptions));
 // Mux signatures cover the exact raw bytes. This route must stay before every
 // JSON/body parser; moving it below express.json() breaks cryptographic checks.
 app.use('/api/v1/webhooks/mux', muxWebhookRoutes);
+app.use('/api/v1/webhooks/billing', billingWebhookRoutes);
 
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
@@ -72,7 +82,7 @@ const standardRateLimitHandler = (message: string) => (req: express.Request, res
     event: 'rate_limit_exceeded',
     requestId: res.locals?.requestId,
     method: req.method,
-    path: req.path
+    routeGroup: apiRouteGroup(req.originalUrl)
   });
   res.status(429).json({
     success: false,
@@ -104,24 +114,24 @@ app.use(globalLimiter);
 
 // Rotas da API REST
 app.use('/api/v1/auth', authLimiter, authRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/subcategories', subcategoryRoutes);
 app.use('/api/v1/items', productVideoRoutes);
 app.use('/api/v1/items', itemRoutes);
 app.use('/api/v1/internal/videos', videoInternalRoutes);
+app.use('/api/v1/internal/operations', internalOperationsRoutes);
 app.use('/api/v1/design', designRoutes);
 app.use('/api/v1/business', businessRoutes);
 app.use('/api/v1/public', publicRoutes);
 
 // Health Check Endpoint
-app.get('/api/v1/health', (req, res) => {
+app.get('/api/v1/health', (_req, res) => {
+  res.setHeader('Cache-Control','no-store');
   res.status(200).json({
     success: true,
-    data: {
-      status: 'UP',
-      service: 'Cardapio Digital SaaS Backend API',
-      timestamp: new Date().toISOString()
-    }
+    data: { status: 'UP' }
   });
 });
 
@@ -158,7 +168,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     code: typeof err.code === 'string' ? err.code : 'UNHANDLED_ERROR',
     status: statusCode,
     method: req.method,
-    path: req.path
+    routeGroup: apiRouteGroup(req.originalUrl)
   });
   const sanitizedMessage = statusCode >= 500 && isProduction
     ? 'Ocorreu um erro interno no servidor.'

@@ -355,7 +355,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         <span class="badge-promo-fire">🔥</span>
                         <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Promoções & Ofertas</h3>
                       </div>
-                      <span class="block-sub-badge" [style.color]="accentColor">Tempo Limitado</span>
                     </div>
 
                     <div class="promo-items-scroll">
@@ -417,7 +416,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         <span class="badge-heart">❤️</span>
                         <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Os Mais Curtidos</h3>
                       </div>
-                      <span class="block-sub-badge" [style.color]="textSecondary">Pelos clientes</span>
                     </div>
 
                     <div class="liked-ranking-list">
@@ -457,7 +455,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         </span>
                         <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Pratos do Chef & Especialidades</h3>
                       </div>
-                      <span class="block-sub-badge" [style.color]="accentColor">Sugestão Especial</span>
                     </div>
 
                     <div class="featured-chef-grid">
@@ -512,7 +509,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         </span>
                         <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Combos Especiais</h3>
                       </div>
-                      <span class="block-sub-badge" [style.color]="accentColor">Mais Vantajosos</span>
                     </div>
 
                     <div class="combos-scroll-track">
@@ -586,7 +582,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         </span>
                         <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Mais Vendidos</h3>
                       </div>
-                      <span class="block-sub-badge" [style.color]="accentColor">Preferência Geral</span>
+
                     </div>
 
                     <div class="best-sellers-grid">

@@ -9,11 +9,8 @@ export interface RegisterRequest {
   fullName: string;
   businessName: string;
   slug: string;
+  invitationCode: string;
   phone?: string;
-}
-
-export interface ActivateRequest {
-  token: string;
 }
 
 export interface LoginRequest {
@@ -38,10 +35,6 @@ export class AuthService {
 
   register(data: RegisterRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, data);
-  }
-
-  activate(data: ActivateRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/activate`, data);
   }
 
   login(data: LoginRequest): Observable<any> {
@@ -79,6 +72,10 @@ export class AuthService {
         }
       })
     );
+  }
+
+  publishBusinessMenu(): Observable<any> {
+    return this.http.post(`${this.businessApiUrl}/publish`, {}, this.getAuthHeaders());
   }
 
   updateBusiness(data: any): Observable<any> {

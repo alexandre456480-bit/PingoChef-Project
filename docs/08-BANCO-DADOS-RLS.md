@@ -1,5 +1,7 @@
 # 🗄️ 08 — Banco de Dados e RLS
 
+> **Atualização de implementação (30/09/2026):** a migration `20260930000000_admin_foundation.sql` adiciona estado administrativo separado, convite, identidade e sessão Admin, UNIQUE por dono e função central de elegibilidade. `subscriptions` e `menu_publications` abaixo ainda não existem no banco. Consulte [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md).
+
 > **Domínio**: Modelo de dados, tabelas, constraints, índices, RLS, multi-tenant, migrations e chaves.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [07-CYBERSECURITY.md](./07-CYBERSECURITY.md)  
 > **Referenciado por**: Todos os documentos que envolvem dados.

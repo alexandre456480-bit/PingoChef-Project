@@ -4,6 +4,28 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
 
+export const publishBusinessMenuController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.businessId || !req.userId) return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED' } });
+    if (isDemoMode()) {
+      const hasProduct = localDb.items.some(item => item.business_id === req.businessId);
+      return hasProduct ? res.json({ success: true, data: { published: true } })
+        : res.status(400).json({ success: false, error: { code: 'MENU_NEEDS_PRODUCT' } });
+    }
+    if (!isSupabaseConfigured) return res.status(503).json({ success: false, error: { code: 'SERVICE_UNAVAILABLE' } });
+    const { data, error } = await supabaseAdmin.rpc('publish_business_menu', {
+      p_business_id: req.businessId, p_owner_id: req.userId
+    });
+    if (error) {
+      if (String(error.message).includes('Menu needs a product'))
+        return res.status(400).json({ success: false, error: { code: 'MENU_NEEDS_PRODUCT' } });
+      throw error;
+    }
+    return data ? res.status(200).json({ success: true, data: { published: true } })
+      : res.status(403).json({ success: false, error: { code: 'ACCOUNT_NOT_ACTIVE' } });
+  } catch (error) { next(error); }
+};
+
 const hexColorSchema = z
   .string()
   .trim()

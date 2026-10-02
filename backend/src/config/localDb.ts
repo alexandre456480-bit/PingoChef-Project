@@ -35,15 +35,6 @@ export interface LocalBusiness {
   welcome_bg_color?: string | null;
 }
 
-export interface LocalActivationToken {
-  id: string;
-  /** Armazena HMAC do token, não o token em si */
-  tokenHash: string;
-  business_id: string;
-  is_used: boolean;
-  expires_at: string;
-}
-
 export interface LocalCategory {
   id: string;
   business_id: string;
@@ -94,7 +85,6 @@ export function hashPassword(password: string): string {
 class LocalDatabase {
   users: LocalUser[] = [];
   businesses: LocalBusiness[] = [];
-  activationTokens: LocalActivationToken[] = [];
   categories: LocalCategory[] = [];
   subcategories: LocalSubcategory[] = [];
   items: LocalItem[] = [];
@@ -146,15 +136,6 @@ class LocalDatabase {
       welcome_bg_type: 'image',
       welcome_bg_image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
       welcome_bg_color: '#0F0F12'
-    });
-
-    // Token de ativação (hash HMAC, não texto puro)
-    this.activationTokens.push({
-      id: 'tok_01',
-      tokenHash: crypto.createHmac('sha256', 'demo-secret').update('ACT-DEMO-001').digest('hex'),
-      business_id: defaultBizId,
-      is_used: true,
-      expires_at: new Date(Date.now() + 86400000).toISOString()
     });
 
     this.seedBusinessMenu(defaultBizId);

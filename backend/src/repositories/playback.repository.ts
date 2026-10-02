@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
+import { businessEligibility } from '../services/business-eligibility.service';
 
 export interface PlaybackAccessRecord {
   playbackId: string;
@@ -16,14 +17,7 @@ export class SupabasePlaybackRepository implements PlaybackRepository {
     itemId: string,
     mediaId: string
   ): Promise<PlaybackAccessRecord | null> {
-    const { data: business, error: businessError } = await supabaseAdmin
-      .from('businesses')
-      .select('id')
-      .eq('slug', slug)
-      .eq('status', 'ACTIVE')
-      .maybeSingle();
-
-    if (businessError) throw new Error('PLAYBACK_DATABASE_UNAVAILABLE');
+    const business = await businessEligibility.findPublicBusinessBySlug(slug, 'id');
     if (!business) return null;
 
     const { data: item, error: itemError } = await supabaseAdmin

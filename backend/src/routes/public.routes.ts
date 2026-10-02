@@ -2,6 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { getPublicMenuController, likeItemController } from '../controllers/public.controller';
 import { createPublicPlaybackController } from '../controllers/product-playback.controller';
+import { apiRouteGroup } from '../middleware/api-telemetry.middleware';
 
 const router = Router();
 
@@ -20,7 +21,7 @@ const playbackLimiter = rateLimit({
       event: 'playback_rate_limit_exceeded',
       requestId: res.locals?.requestId,
       method: req.method,
-      path: req.path
+      routeGroup: apiRouteGroup(req.originalUrl)
     });
     return res.status(429).json({
       success: false,
@@ -43,7 +44,7 @@ const likeLimiter = rateLimit({
       event: 'like_rate_limit_exceeded',
       requestId: res.locals?.requestId,
       method: req.method,
-      path: req.path
+      routeGroup: apiRouteGroup(req.originalUrl)
     });
     return res.status(429).json({
       success: false,

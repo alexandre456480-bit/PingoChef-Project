@@ -27,7 +27,8 @@
             ],
             "styles": [
               "src/styles.css",
-              "src/panel-theme.css"
+              "src/panel-theme.css",
+              "src/admin.css"
             ]
           },
           "configurations": {

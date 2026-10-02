@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
+import { businessEligibility } from '../services/business-eligibility.service';
 
 const slugParamSchema = z.string().trim().regex(/^[a-z0-9-]+$/, 'Slug inválido');
 
@@ -75,14 +76,11 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
     if (isSupabaseConfigured) {
       try {
         // 1. Obter estabelecimento no Supabase
-        const { data: bData, error: bError } = await supabaseAdmin
-          .from('businesses')
-          .select('id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color, status, phone, whatsapp')
-          .eq('slug', slug)
-          .eq('status', 'ACTIVE')
-          .maybeSingle();
-
-        if (bError) {
+        let bData: any;
+        try {
+          bData = await businessEligibility.findPublicBusinessBySlug(slug,
+            'id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color, phone, whatsapp');
+        } catch {
           console.error('[Data Audit]', { event: 'public_menu_business_query_failed' });
           return res.status(503).json({
             success: false,
@@ -253,7 +251,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         });
       }
 
-      business = localDb.businesses.find(b => b.slug === slug && b.status === 'ACTIVE');
+      business = await businessEligibility.findPublicBusinessBySlug(slug, '*');
       if (!business) {
         return res.status(404).json({
           success: false,
@@ -406,14 +404,10 @@ export const likeItemController = async (req: Request, res: Response, next: Next
     let businessId: string | null = null;
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabaseAdmin
-        .from('businesses')
-        .select('id')
-        .eq('slug', slug)
-        .eq('status', 'ACTIVE')
-        .maybeSingle();
-
-      if (error) {
+      let data: { id: string } | null;
+      try {
+        data = await businessEligibility.findPublicBusinessBySlug(slug, 'id');
+      } catch {
         return res.status(503).json({
           success: false,
           error: { code: 'SERVICE_UNAVAILABLE', message: 'Serviço temporariamente indisponível.', timestamp: new Date().toISOString() }
@@ -430,7 +424,7 @@ export const likeItemController = async (req: Request, res: Response, next: Next
           error: { code: 'SERVICE_UNAVAILABLE', message: 'Banco de dados principal não está configurado.', timestamp: new Date().toISOString() }
         });
       }
-      const localBiz = localDb.businesses.find(b => b.slug === slug && b.status === 'ACTIVE');
+      const localBiz = await businessEligibility.findPublicBusinessBySlug(slug, 'id');
       if (localBiz) {
         businessId = localBiz.id;
       }

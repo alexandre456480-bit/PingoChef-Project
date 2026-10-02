@@ -1,5 +1,7 @@
 # 🛡️ 07 — Cybersecurity
 
+> **Atualização de implementação (30/09/2026):** o Admin tem `requireAdmin` próprio, sessão revogável em cookie e proteção Origin/CSRF. O cliente ainda guarda JWT em `localStorage`; esta dívida não foi refatorada nesta fase. Detalhes e limites em [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md).
+
 > **Domínio**: Threat model, controles de segurança, testes de ataque, headers, secrets, logs e checklist de segurança.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [02-AUTENTICACAO-CADASTRO.md](./02-AUTENTICACAO-CADASTRO.md)  
 > **Referenciado por**: Todos os documentos (segurança é transversal).
@@ -353,6 +355,8 @@ Todos devem passar antes de merge.
 ---
 
 ## Documentos Relacionados
+
+→ [18-ADMIN-PHASE3-OPERATIONS.md](./18-ADMIN-PHASE3-OPERATIONS.md) — Controles Admin implementados, purga, observabilidade e riscos residuais
 
 → [02-AUTENTICACAO-CADASTRO.md](./02-AUTENTICACAO-CADASTRO.md) — Detalhes de auth e token  
 → [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md) — RLS policies e grants  

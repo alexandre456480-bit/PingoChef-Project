@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { getBusinessController, updateBusinessController } from '../controllers/business.controller';
+import { getBusinessController, updateBusinessController,
+  publishBusinessMenuController } from '../controllers/business.controller';
 import { authenticateJwt } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -9,5 +10,6 @@ router.use(authenticateJwt as any);
 
 router.get('/', getBusinessController as any);
 router.put('/', updateBusinessController as any);
+router.post('/publish', publishBusinessMenuController as any);
 
 export default router;

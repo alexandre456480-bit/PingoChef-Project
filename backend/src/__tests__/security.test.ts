@@ -1,7 +1,6 @@
 import request from 'supertest';
 import app from '../server';
 import { localDb } from '../config/localDb';
-import { hashActivationToken } from '../controllers/auth.controller';
 import { isSupabaseConfigured } from '../config/supabase';
 
 describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () => {
@@ -131,49 +130,42 @@ describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () 
   });
 
   // --------------------------------------------------------------------------
-  // Caso 5: Race condition na ativação (segunda chamada deve falhar com 400)
+  // Caso 5: O fluxo legado de ativação não pode continuar acessível
   // --------------------------------------------------------------------------
-  describe('5. Prevenção de Race Condition na ativação', () => {
-    it('deve impedir que o mesmo token de ativação seja usado mais de uma vez', async () => {
-      process.env.APP_MODE = 'demo';
-      const rawToken = 'ACT-TEST-RACE';
-      const tokenHash = hashActivationToken(rawToken);
-
-      localDb.businesses.push({
-        id: 'biz_test_race',
-        owner_user_id: 'usr_alexandre_01',
-        name: 'Biz Race',
-        slug: 'biz-race',
-        status: 'PENDING_ACTIVATION'
+  describe('5. Migração para convites', () => {
+    it('remove a ativação antiga e exige convite no cadastro', async () => {
+      const legacy = await request(app).post('/api/v1/auth/activate').send({ token: 'ACT-TEST-RACE' });
+      expect(legacy.status).toBe(404);
+      const registration = await request(app).post('/api/v1/auth/register').send({
+        email: 'cliente@example.com', password: 'SenhaForte123!', fullName: 'Cliente Teste',
+        businessName: 'Café Teste', slug: 'cafe-teste'
       });
-
-      localDb.activationTokens.push({
-        id: 'tok_race_01',
-        tokenHash,
-        business_id: 'biz_test_race',
-        is_used: false,
-        expires_at: new Date(Date.now() + 86400000).toISOString()
-      });
-
-      // 1ª Ativação -> deve ter sucesso
-      const res1 = await request(app)
-        .post('/api/v1/auth/activate')
-        .send({ token: rawToken });
-
-      expect(res1.status).toBe(200);
-      expect(res1.body.success).toBe(true);
-      expect(res1.body.data.status).toBe('ACTIVE');
-
-      // 2ª Ativação com o mesmo token -> deve falhar com TOKEN_ALREADY_USED
-      const res2 = await request(app)
-        .post('/api/v1/auth/activate')
-        .send({ token: rawToken });
-
-      expect(res2.status).toBe(400);
-      expect(res2.body.success).toBe(false);
-      expect(res2.body.error.code).toBe('TOKEN_ALREADY_USED');
-      delete process.env.APP_MODE;
+      expect(registration.status).toBe(400);
+      expect(registration.body.error.code).toBe('VALIDATION_ERROR');
     });
+
+    it('não aceita login administrativo sem origem autorizada', async () => {
+      const res = await request(app).post('/api/v1/admin/auth/login')
+        .send({ email: 'admin@example.com', password: 'SenhaForte123!' });
+      expect(res.status).toBe(403);
+    });
+  });
+
+  it('nega login de estabelecimento suspenso no modo demo', async () => {
+    process.env.APP_MODE = 'demo';
+    const userId = 'usr_suspended_login_test';
+    const businessId = 'biz_suspended_login_test';
+    localDb.users.push({ id: userId, email: 'suspended-login@example.test',
+      passwordHash: localDb.hashPassword('SenhaForte123!'), fullName: 'Suspenso' });
+    localDb.businesses.push({ id: businessId, owner_user_id: userId, name: 'Suspenso',
+      slug: 'suspended-login-test', status: 'SUSPENDED' });
+    const response = await request(app).post('/api/v1/auth/login')
+      .send({ email: 'suspended-login@example.test', password: 'SenhaForte123!' });
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe('ACCOUNT_NOT_ACTIVE');
+    localDb.businesses = localDb.businesses.filter(b => b.id !== businessId);
+    localDb.users = localDb.users.filter(u => u.id !== userId);
+    delete process.env.APP_MODE;
   });
 
   // --------------------------------------------------------------------------

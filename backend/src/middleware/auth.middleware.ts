@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
+import { businessEligibility } from '../services/business-eligibility.service';
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -82,7 +83,7 @@ export const authenticateJwt = async (req: AuthenticatedRequest, res: Response, 
         });
       }
 
-      if (biz.status !== 'ACTIVE') {
+      if (!(await businessEligibility.isAccountActive(biz.id))) {
         return res.status(403).json({
           success: false,
           error: {
@@ -131,7 +132,7 @@ export const authenticateJwt = async (req: AuthenticatedRequest, res: Response, 
         });
       }
 
-      if (biz.status !== 'ACTIVE') {
+      if (!(await businessEligibility.isAccountActive(biz.id))) {
         return res.status(403).json({
           success: false,
           error: {
@@ -140,6 +141,23 @@ export const authenticateJwt = async (req: AuthenticatedRequest, res: Response, 
             timestamp: new Date().toISOString()
           }
         });
+      }
+
+      // Supabase JWTs are stateless. The cutoff blocks already-issued access
+      // tokens after a privileged session revocation.
+      const { data: accountState, error: stateError } = await supabaseAdmin
+        .from('business_account_state').select('sessions_revoked_at')
+        .eq('business_id', biz.id).single();
+      if (stateError || !accountState) throw stateError || new Error('Account state unavailable');
+      if (accountState.sessions_revoked_at) {
+        let issuedAt = 0;
+        try {
+          const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+          issuedAt = Number(claims.iat) || 0;
+        } catch { /* A verified token without a usable iat must fail closed. */ }
+        if (issuedAt * 1000 <= new Date(accountState.sessions_revoked_at).getTime()) {
+          return res.status(401).json({ success: false, error: { code: 'SESSION_REVOKED' } });
+        }
       }
 
       req.userId = user.id;

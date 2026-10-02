@@ -540,6 +540,7 @@ export class DashboardComponent implements OnInit {
       design: this.designService.saveDesign(),
       media: this.productPlaybackService.publishReadyMedia()
     }).pipe(
+      switchMap(() => this.authService.publishBusinessMenu()),
       switchMap(() => this.menuService.loadItems()),
       finalize(() => {
         this.isPublishing = false;

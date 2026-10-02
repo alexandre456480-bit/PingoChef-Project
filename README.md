@@ -1,6 +1,6 @@
 # PingoChef
 
-SaaS de cardápio digital com painel administrativo, experiência pública,
+SaaS de cardápio digital com painel do estabelecimento, experiência pública,
 Supabase e processamento seguro de vídeos pelo Mux.
 
 ## Estrutura
@@ -9,6 +9,22 @@ Supabase e processamento seguro de vídeos pelo Mux.
 - `backend/`: API Express/TypeScript.
 - `supabase/`: migrations e testes de segurança/RLS.
 - `docs/`: arquitetura, contratos e decisões técnicas.
+
+A fundação de segurança e a API administrativa estão em
+[`docs/15-ADMIN-FOUNDATION.md`](docs/15-ADMIN-FOUNDATION.md) e
+[`docs/16-ADMIN-PHASE1-BACKEND.md`](docs/16-ADMIN-PHASE1-BACKEND.md). As duas
+migrations correspondentes devem ser aplicadas **antes** de implantar esta API.
+
+O painel Admin e a migration adicional de analytics estão documentados em
+[`docs/17-ADMIN-DASHBOARD.md`](docs/17-ADMIN-DASHBOARD.md). Aplique
+`20261001000000_admin_dashboard_analytics.sql` após as duas migrations Admin
+anteriores, antes de implantar esta versão.
+
+A preparação comercial, observabilidade e purga da fase 3 estão em
+[`docs/18-ADMIN-PHASE3-OPERATIONS.md`](docs/18-ADMIN-PHASE3-OPERATIONS.md).
+Aplique também, nesta ordem, `20261002000000_admin_phase3_commercial_ops.sql` e
+`20261002010000_admin_phase3_purge.sql` antes de publicar o backend atualizado.
+Gateway e backup ainda dependem de configuração operacional.
 
 ## Desenvolvimento local
 

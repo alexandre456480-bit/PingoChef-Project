@@ -106,6 +106,15 @@ import { AuthService } from '../../services/auth.service';
               </div>
             </div>
 
+            <div class="form-group">
+              <label class="form-label" for="reg-invitation">Código do convite</label>
+              <div class="form-input-wrapper">
+                <input type="text" id="reg-invitation" class="form-input-capsule"
+                  [(ngModel)]="formData.invitationCode" name="invitationCode"
+                  placeholder="Código enviado pelo PingoChef" required autocomplete="off" spellcheck="false" />
+              </div>
+            </div>
+
             <!-- Senha + Confirmação -->
             <div class="form-row">
               <div class="form-group">
@@ -210,6 +219,7 @@ export class RegisterComponent {
     slug: '',
     email: '',
     password: '',
+    invitationCode: '',
     phone: ''
   };
   confirmPassword = '';
@@ -267,9 +277,7 @@ export class RegisterComponent {
       next: (res) => {
         this.isLoading = false;
         if (res.success) {
-          this.router.navigate(['/activate'], {
-            queryParams: { token: res.data.activationToken }
-          });
+          this.router.navigate(['/login']);
         }
       },
       error: (err) => {
