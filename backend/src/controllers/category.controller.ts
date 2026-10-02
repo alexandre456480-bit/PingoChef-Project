@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
+import { entitlements, mapEntitlementDatabaseError } from '../services/entitlement.service';
 
 const categorySchema = z.object({
   name: z.string().trim().min(2, 'Nome da categoria deve ter no mínimo 2 caracteres').max(100, 'Nome muito longo'),
@@ -111,6 +112,8 @@ export const createCategoryController = async (req: AuthenticatedRequest, res: R
     const data = categorySchema.parse(req.body);
     const finalIconKey = data.iconKey || data.icon || null;
 
+    if (!isDemoMode()) await entitlements.assertCanCreateCategory(businessId);
+
     if (isSupabaseConfigured) {
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       const { data: maxCat } = await client
@@ -141,6 +144,8 @@ export const createCategoryController = async (req: AuthenticatedRequest, res: R
         .single();
 
       if (error || !newCat) {
+        const capacityError = mapEntitlementDatabaseError(error);
+        if (capacityError) throw capacityError;
         return res.status(500).json({
           success: false,
           error: { code: 'INSERT_FAILED', message: 'Falha ao criar categoria.', timestamp: new Date().toISOString() }

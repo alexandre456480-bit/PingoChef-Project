@@ -1,6 +1,6 @@
 # 🔐 02 — Autenticação e Cadastro
 
-> **Atualização de implementação (30/09/2026):** o cadastro real agora exige convite prévio e `/auth/activate` foi removido. A sessão do cliente ainda usa JWT em `localStorage`; o Admin usa cookie HttpOnly. Consulte [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md). As seções antigas abaixo são histórico de especificação.
+> **Atualização de implementação (02/10/2026):** o proprietário usa sessão BFF por cookie HttpOnly. Cadastro público Free e convites exigem confirmação Supabase Auth e compartilham provisionamento idempotente. Contratos, transição e configurações obrigatórias estão em [19 — Fase 1 do proprietário](./19-OWNER-PHASE1-FOUNDATION.md). As seções abaixo são histórico de especificação.
 
 > **Domínio**: Login, registro com token de ativação, sessão BFF, logout, estados de autenticação e validações.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [07-CYBERSECURITY.md](./07-CYBERSECURITY.md), [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md)  

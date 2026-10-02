@@ -54,7 +54,7 @@ const updateBusinessSchema = z.object({
   welcome_bg_color: hexColorSchema.optional().nullable(),
   phone: z.string().trim().max(30).optional().nullable(),
   whatsapp: z.string().trim().max(30).optional().nullable()
-});
+}).strict();
 
 /**
  * Consulta os dados do estabelecimento do usuário autenticado

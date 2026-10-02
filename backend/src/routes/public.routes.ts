@@ -3,8 +3,20 @@ import rateLimit from 'express-rate-limit';
 import { getPublicMenuController, likeItemController } from '../controllers/public.controller';
 import { createPublicPlaybackController } from '../controllers/product-playback.controller';
 import { apiRouteGroup } from '../middleware/api-telemetry.middleware';
+import { collectMenuAnalytics } from '../controllers/menu-analytics.controller';
+import { qrService } from '../services/qr.service';
+import { z } from 'zod';
+import { ownerError } from '../services/owner-session.service';
 
 const router = Router();
+router.get('/qr/:identifier', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  void (async () => {
+    if (Object.keys(req.query).length) throw ownerError(400, 'INVALID_QR_QUERY');
+    const identifier = z.string().uuid().parse(req.params.identifier);
+    return res.json({ success: true, data: await qrService.resolve(identifier) });
+  })().catch(next);
+});
 
 function boundedEnvInteger(name: string, fallback: number, min: number, max: number): number {
   const parsed = Number(process.env[name] ?? fallback);
@@ -59,6 +71,7 @@ const likeLimiter = rateLimit({
 
 // Endpoints abertos sem autenticação para o cardápio público do cliente final
 router.get('/menu/:slug', getPublicMenuController as any);
+router.post('/menu/:slug/events', rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false }), collectMenuAnalytics);
 router.post('/menu/:slug/like/:itemId', likeLimiter, likeItemController as any);
 router.post(
   '/menus/:slug/items/:itemId/media/:mediaId/playback',

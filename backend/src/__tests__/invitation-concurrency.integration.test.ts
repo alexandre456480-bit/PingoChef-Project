@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
-// Explicit opt-in: run only against an isolated database with both admin migrations.
+// Explicit opt-in: isolated Supabase database with all migrations through owner phase 1.
 const enabled = process.env.RUN_DISPOSABLE_DB_TESTS === '1'
   && Boolean(process.env.TEST_SUPABASE_URL && process.env.TEST_SUPABASE_SERVICE_ROLE_KEY
     && process.env.TEST_ADMIN_ACTOR_ID);
@@ -20,8 +20,10 @@ const enabled = process.env.RUN_DISPOSABLE_DB_TESTS === '1'
     if (insertError || !invitation) throw insertError || new Error('Invitation setup failed');
     try {
       const results = await Promise.all([
-        client.rpc('reserve_customer_invitation', { p_code_hash: codeHash, p_email: email }),
-        client.rpc('reserve_customer_invitation', { p_code_hash: codeHash, p_email: email })
+        client.rpc('start_owner_registration', { p_email: email, p_full_name: 'Race Owner', p_business_name: 'Race Business',
+          p_slug: `race-${randomUUID()}`, p_phone: null, p_plan_code: 'FREE', p_invitation_hash: codeHash }),
+        client.rpc('start_owner_registration', { p_email: email, p_full_name: 'Race Owner', p_business_name: 'Race Business',
+          p_slug: `race-${randomUUID()}`, p_phone: null, p_plan_code: 'FREE', p_invitation_hash: codeHash })
       ]);
       expect(results.every(result => !result.error)).toBe(true);
       expect(results.filter(result => result.data !== null)).toHaveLength(1);

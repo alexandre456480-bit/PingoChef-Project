@@ -26,13 +26,8 @@ export const adminCookieOptions = () => ({
 export const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
 function cookie(req: Request, name: string): string | undefined {
-  for (const part of (req.headers.cookie || '').split(';')) {
-    const separator = part.indexOf('=');
-    if (separator > 0 && part.slice(0, separator).trim() === name) {
-      return part.slice(separator + 1).trim();
-    }
-  }
-  return undefined;
+  const values=(req.headers.cookie||'').split(';').map(v=>v.trim()).filter(v=>v.startsWith(`${name}=`));
+  return values.length===1 ? values[0].slice(name.length+1) : undefined;
 }
 
 export function requireAdminOrigin(req: Request, res: Response, next: NextFunction) {
@@ -53,7 +48,7 @@ export async function requireAdmin(req: AdminRequest, res: Response, next: NextF
     const requestOrigin = req.get('origin');
     if ((requestOrigin && !adminOrigins().includes(requestOrigin))
       || (!requestOrigin && req.method !== 'GET' && req.method !== 'HEAD')
-      || (!requestOrigin && req.get('sec-fetch-site') === 'cross-site')) {
+      || req.get('sec-fetch-site') === 'cross-site') {
       return res.status(403).json({ success: false, error: { code: 'ADMIN_ORIGIN_DENIED' } });
     }
     const sessionHash = sha256(token);
@@ -86,9 +81,11 @@ export async function requireAdmin(req: AdminRequest, res: Response, next: NextF
         return res.status(403).json({ success: false, error: { code: 'ADMIN_CSRF_DENIED' } });
       }
     }
-    const { error: touchError } = await supabaseAdmin.from('admin_sessions')
-      .update({ last_seen_at: new Date().toISOString() }).eq('session_hash', sessionHash);
+    const { data: touched, error: touchError } = await supabaseAdmin.from('admin_sessions')
+      .update({ last_seen_at: new Date().toISOString() }).eq('session_hash', sessionHash)
+      .is('revoked_at',null).gt('expires_at',new Date().toISOString()).select('session_hash').maybeSingle();
     if (touchError) throw touchError;
+    if (!touched) return res.status(401).json({success:false,error:{code:'ADMIN_SESSION_REVOKED'}});
     req.adminUserId = session.user_id;
     req.adminSessionHash = sessionHash;
     req.adminReauthenticatedAt = session.reauthenticated_at || session.created_at;

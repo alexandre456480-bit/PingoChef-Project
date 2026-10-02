@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { supabaseAdmin, isSupabaseConfigured, createPasswordAuthClient,
   createAuditedAdminClient } from '../config/supabase';
 import { adminCookieName, adminCookieOptions, type AdminRequest, sha256 } from '../middleware/admin.middleware';
+import { enforceSharedRequest } from '../middleware/shared-rate-limit.middleware';
 
 const loginSchema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(1).max(128) }).strict();
 const reauthSchema = z.object({ password: z.string().min(1).max(128) }).strict();
@@ -22,6 +23,7 @@ export async function adminLogin(req: Request, res: Response, next: NextFunction
   try {
     if (!isSupabaseConfigured) return res.status(503).json({ success: false, error: { code: 'SERVICE_UNAVAILABLE' } });
     const body = loginSchema.parse(req.body);
+    await enforceSharedRequest('admin-login-ip',`ip:${req.ip || 'unknown'}`,30,900);
     const email = body.email.toLowerCase();
     const hash = emailHash(email);
     const { data: attemptId, error: attemptError } = await supabaseAdmin.rpc('reserve_admin_login_attempt', {

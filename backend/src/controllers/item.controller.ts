@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
+import { entitlements, mapEntitlementDatabaseError } from '../services/entitlement.service';
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
 
 // Validação segura de imagem: bloqueia SVG para evitar Stored XSS e valida mime types e tamanho Base64
@@ -207,6 +208,7 @@ export const createItemController = async (req: AuthenticatedRequest, res: Respo
     }
 
     const data = itemSchema.parse(req.body);
+    if (!isDemoMode()) await entitlements.assertCanCreateProduct(businessId);
     const effectiveHighlight = data.highlightType || (data.isHighlighted ? 'chef' : 'none');
     const isHigh = effectiveHighlight !== 'none';
 
@@ -243,6 +245,8 @@ export const createItemController = async (req: AuthenticatedRequest, res: Respo
         .single();
 
       if (error || !newItem) {
+        const capacityError = mapEntitlementDatabaseError(error);
+        if (capacityError) throw capacityError;
         return res.status(500).json({
           success: false,
           error: { code: 'INSERT_FAILED', message: 'Falha ao criar item no cardápio.', timestamp: new Date().toISOString() }

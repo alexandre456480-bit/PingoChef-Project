@@ -1,6 +1,6 @@
 # 📡 09 — API e Contratos
 
-> **Atualização de implementação (30/09/2026):** `/auth/register` exige `invitationCode`; `/auth/activate` foi removido. As rotas novas `/api/v1/admin/*` usam cookie HttpOnly, Origin e CSRF, conforme [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md). Contratos antigos abaixo podem representar proposta, não endpoint implementado.
+> **Atualização de implementação (02/10/2026):** `/api/v1/auth` usa cookie BFF, `/auth/register` aceita cadastro público Free e convite opcional, com confirmação obrigatória. Os endpoints e contratos atuais estão em [19 — Fase 1 do proprietário](./19-OWNER-PHASE1-FOUNDATION.md). Contratos antigos abaixo podem representar proposta.
 
 > **Domínio**: Contratos HTTP REST, envelopes de resposta, DTOs TypeScript, validação de payload, códigos de erro, rate limits e documentação de endpoints.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [02-AUTENTICACAO-CADASTRO.md](./02-AUTENTICACAO-CADASTRO.md), [07-CYBERSECURITY.md](./07-CYBERSECURITY.md), [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md)  

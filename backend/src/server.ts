@@ -20,6 +20,13 @@ import billingWebhookRoutes from './routes/billing-webhook.routes';
 import internalOperationsRoutes from './routes/internal-operations.routes';
 import { apiTelemetry,apiRouteGroup } from './middleware/api-telemetry.middleware';
 import { validateDeploymentEnvironment } from './config/deployment.config';
+import { mapEntitlementDatabaseError } from './services/entitlement.service';
+import analyticsRoutes from './routes/analytics.routes';
+import { requireAnalyticsJson } from './controllers/menu-analytics.controller';
+import qrRoutes from './routes/qr.routes';
+import { sharedRateLimit } from './middleware/shared-rate-limit.middleware';
+import { ownerError, ownerCookie } from './services/owner-session.service';
+import { securityAudit } from './services/security-audit.service';
 
 dotenv.config();
 validateDeploymentEnvironment(process.env);
@@ -73,12 +80,9 @@ app.use(cors(corsOptions));
 app.use('/api/v1/webhooks/mux', muxWebhookRoutes);
 app.use('/api/v1/webhooks/billing', billingWebhookRoutes);
 
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ limit: '15mb', extended: true }));
-
 // Rate Limiters
 const standardRateLimitHandler = (message: string) => (req: express.Request, res: express.Response) => {
-  console.warn('[Security Audit]', {
+  securityAudit('warn', {
     event: 'rate_limit_exceeded',
     requestId: res.locals?.requestId,
     method: req.method,
@@ -88,6 +92,7 @@ const standardRateLimitHandler = (message: string) => (req: express.Request, res
     success: false,
     error: {
       code: 'TOO_MANY_REQUESTS',
+      requestId: res.locals?.requestId,
       message,
       timestamp: new Date().toISOString()
     }
@@ -112,8 +117,32 @@ const authLimiter = rateLimit({
 
 app.use(globalLimiter);
 
+app.use('/api/v1/public/menu/:slug/events', requireAnalyticsJson, express.json({ limit: '16kb' }));
+app.use('/api/v1/auth', (req, _res, next) => {
+  if (['POST', 'PUT', 'PATCH'].includes(req.method) && !req.is('application/json')) throw ownerError(415, 'AUTH_JSON_REQUIRED');
+  next();
+}, express.json({ limit: '16kb' }));
+app.use('/api/v1/qr', (req, _res, next) => {
+  if (['POST', 'PUT'].includes(req.method) && !req.is('application/json')) throw ownerError(415, 'QR_JSON_REQUIRED');
+  next();
+}, express.json({ limit: '64kb' }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ limit: '15mb', extended: true }));
+
+
+// Shared quotas supplement process-local filters across serverless/multiple instances.
+app.use('/api/v1/auth', (req, res, next) => {
+  // Credential/email flows already reserve durable per-email AND per-IP budgets.
+  if (!/^\/(plan-intents(?:\/|$)|confirm-email$|recover$|recovery-session$|reset-password$|complete-registration$|migrate-session$|change-password$|delete-account$)/.test(req.path)) return next();
+  if (/^\/(recovery-session|reset-password|complete-registration|change-password|delete-account)$/.test(req.path) && !ownerCookie(req)) return next();
+  return sharedRateLimit('owner-auth-http', 100, 900)(req, res, next);
+});
+app.use('/api/v1/public/qr', sharedRateLimit('qr-resolve', 60));
+
 // Rotas da API REST
-app.use('/api/v1/auth', authLimiter, authRoutes);
+app.use(['/api/v1/auth/login','/api/v1/auth/register','/api/v1/auth/forgot-password',
+  '/api/v1/auth/resend-confirmation','/api/v1/auth/migrate-session'], authLimiter);
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/v1/categories', categoryRoutes);
@@ -125,6 +154,8 @@ app.use('/api/v1/internal/operations', internalOperationsRoutes);
 app.use('/api/v1/design', designRoutes);
 app.use('/api/v1/business', businessRoutes);
 app.use('/api/v1/public', publicRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/qr', qrRoutes);
 
 // Health Check Endpoint
 app.get('/api/v1/health', (_req, res) => {
@@ -137,12 +168,14 @@ app.get('/api/v1/health', (_req, res) => {
 
 // Middleware Padrão de Tratativa de Erro Sanitizado (RFC 7807)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  err = mapEntitlementDatabaseError(err) || err;
 
   if (err.message === 'Origem não permitida pela política de CORS.') {
     return res.status(403).json({
       success: false,
       error: {
         code: 'CORS_ERROR',
+        requestId: res.locals?.requestId,
         message: err.message,
         timestamp: new Date().toISOString()
       }
@@ -154,6 +187,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
+        requestId: res.locals?.requestId,
         message: 'Dados enviados são inválidos.',
         details: err.errors,
         timestamp: new Date().toISOString()
@@ -163,7 +197,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
   const statusCode = typeof err.status === 'number' && err.status >= 400 && err.status < 600 ? err.status : 500;
   const isProduction = process.env.NODE_ENV === 'production';
-  console.error('[Error Audit]', {
+  securityAudit('error', {
+    event: 'request_failed',
     requestId: res.locals?.requestId,
     code: typeof err.code === 'string' ? err.code : 'UNHANDLED_ERROR',
     status: statusCode,
@@ -177,8 +212,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(statusCode).json({
     success: false,
     error: {
+      requestId: res.locals?.requestId,
       code: err.code || (statusCode >= 500 ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST'),
       message: sanitizedMessage,
+      ...(err.code === 'LIMIT_EXCEEDED' && err.metadata ? { metadata: err.metadata } : {}),
       timestamp: new Date().toISOString()
     }
   });

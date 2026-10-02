@@ -103,12 +103,13 @@ describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () 
       delete process.env.APP_MODE;
       const res = await request(app)
         .post('/api/v1/auth/login')
+        .set('Origin', 'http://localhost:4200')
         .send({ email: 'inexistente@qualquer.com', password: 'senha' });
 
       // Em produção sem Supabase funcional, deve falhar com 503 ou 401 sem recorrer ao demo local
       expect([503, 401]).toContain(res.status);
       if (res.status === 503) {
-        expect(res.body.error.code).toBe('SERVICE_UNAVAILABLE');
+        expect(['SESSION_CONFIGURATION_ERROR','AUTH_SERVICE_UNAVAILABLE','SERVICE_UNAVAILABLE']).toContain(res.body.error.code);
       }
     });
   });
@@ -133,12 +134,12 @@ describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () 
   // Caso 5: O fluxo legado de ativação não pode continuar acessível
   // --------------------------------------------------------------------------
   describe('5. Migração para convites', () => {
-    it('remove a ativação antiga e exige convite no cadastro', async () => {
+    it('remove a ativação antiga e rejeita mass assignment no cadastro', async () => {
       const legacy = await request(app).post('/api/v1/auth/activate').send({ token: 'ACT-TEST-RACE' });
       expect(legacy.status).toBe(404);
-      const registration = await request(app).post('/api/v1/auth/register').send({
+      const registration = await request(app).post('/api/v1/auth/register').set('Origin', 'http://localhost:4200').send({
         email: 'cliente@example.com', password: 'SenhaForte123!', fullName: 'Cliente Teste',
-        businessName: 'Café Teste', slug: 'cafe-teste'
+        businessName: 'Café Teste', slug: 'cafe-teste', plan_id: 'forged-paid-plan'
       });
       expect(registration.status).toBe(400);
       expect(registration.body.error.code).toBe('VALIDATION_ERROR');
@@ -151,7 +152,7 @@ describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () 
     });
   });
 
-  it('nega login de estabelecimento suspenso no modo demo', async () => {
+  it('permite consultar a conta suspensa sem liberar operações do estabelecimento', async () => {
     process.env.APP_MODE = 'demo';
     const userId = 'usr_suspended_login_test';
     const businessId = 'biz_suspended_login_test';
@@ -160,9 +161,13 @@ describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () 
     localDb.businesses.push({ id: businessId, owner_user_id: userId, name: 'Suspenso',
       slug: 'suspended-login-test', status: 'SUSPENDED' });
     const response = await request(app).post('/api/v1/auth/login')
+      .set('Origin', 'http://localhost:4200')
       .send({ email: 'suspended-login@example.test', password: 'SenhaForte123!' });
-    expect(response.status).toBe(403);
-    expect(response.body.error.code).toBe('ACCOUNT_NOT_ACTIVE');
+    expect(response.status).toBe(200);
+    expect(response.body.data.accountActive).toBe(false);
+    const restricted = await request(app).get('/api/v1/categories').set('Cookie', response.headers['set-cookie'][0].split(';')[0]);
+    expect(restricted.status).toBe(403);
+    expect(restricted.body.error.code).toBe('ACCOUNT_NOT_ACTIVE');
     localDb.businesses = localDb.businesses.filter(b => b.id !== businessId);
     localDb.users = localDb.users.filter(u => u.id !== userId);
     delete process.env.APP_MODE;

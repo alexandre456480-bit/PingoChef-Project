@@ -1,7 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'preview' | 'likes';
+export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'preview' | 'likes' | 'analytics' | 'qr';
 
 @Component({
   selector: 'app-sidebar',
@@ -10,14 +10,14 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
   template: `
     <!-- Mobile overlay -->
     @if (mobileOpen) {
-      <div class="sidebar-overlay" (click)="closeMobile()" @fadeIn></div>
+      <div class="sidebar-overlay" (click)="closeMobile()"></div>
     }
 
     <aside class="sidebar" [class.mobile-open]="mobileOpen">
       <div class="sidebar-top">
         <!-- Brand -->
         <div class="sidebar-brand">
-          <img [src]="isDarkTheme ? '/logo_principal_tema_light.webp' : '/pingo_chef_logo_principal.webp'" alt="Pingo Chef — Cardápio Digital" class="brand-logo" />
+          <img src="/logo_principal_tema_light.webp" alt="PingoChef — Cardápio Digital" class="brand-logo" />
         </div>
 
         <!-- Navigation -->
@@ -26,12 +26,15 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
             <button
               class="nav-item"
               [class.active]="activeSection === item.section"
+              [attr.aria-current]="activeSection === item.section ? 'page' : null"
               (click)="navigate(item.section)"
               [style.animation-delay]="(i * 60) + 'ms'">
               <span class="nav-glow"></span>
               <span class="nav-icon-wrap">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   @switch (item.section) {
+                    @case ('analytics') { <path d="M3 3v18h18M7 14l4-4 4 2 5-7"/> }
+                    @case ('qr') { <rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><path d="M15 15h3v3h3v3h-6z"/> }
                     @case ('dashboard') {
                       <rect width="7" height="7" x="3" y="3" rx="1"/>
                       <rect width="7" height="7" x="14" y="3" rx="1"/>
@@ -65,6 +68,9 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
                 </svg>
               </span>
               <span class="nav-label">{{ item.label }}</span>
+              @if ((item.section==='analytics'&&!analyticsEnabled)||(item.section==='qr'&&!qrEnabled)) {
+                <svg aria-label="Não incluído no plano" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              }
               @if (activeSection === item.section) {
                 <span class="active-dot"></span>
               }
@@ -88,7 +94,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
 
       <!-- Bottom actions -->
       <div class="sidebar-bottom">
-        <button class="icon-round-btn" title="Configurações (Em breve)" (click)="onToast.emit('Configurações em desenvolvimento')">
+        <button class="icon-round-btn" title="Configurações" aria-label="Abrir configurações" (click)="settingsOpen.emit(); mobileClose.emit()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -113,7 +119,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
     }
 
     .sidebar {
-      background: linear-gradient(180deg, #141416 0%, #111113 100%);
+      background: linear-gradient(180deg, #2C1024 0%, #1D0A18 100%);
       border-right: 1px solid rgba(255, 255, 255, 0.04);
       display: flex;
       flex-direction: column;
@@ -121,7 +127,8 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       padding: 24px 0 24px 0;
       z-index: 100;
       position: relative;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     /* Decorative gradient accent on the right edge */
@@ -160,8 +167,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       width: 132px;
       height: 92px;
       object-fit: contain;
-      filter: drop-shadow(0 4px 12px rgba(244, 123, 32, 0.3));
-      animation: floatLogo 3s ease-in-out infinite;
+      filter: none;
     }
 
     .brand-text {
@@ -195,7 +201,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       gap: 14px;
       background: transparent;
       border: none;
-      color: #71717A;
+      color: #CEBBC4;
       padding: 11px 16px 11px 20px;
       font-family: 'Inter', sans-serif;
       font-size: 0.88rem;
@@ -203,7 +209,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       cursor: pointer;
       border-radius: 0 16px 16px 0;
       position: relative;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 180ms ease-out, opacity 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
       text-align: left;
       overflow: hidden;
       animation: navItemIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
@@ -252,7 +258,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       height: 36px;
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.04);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 180ms ease-out, opacity 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
       flex-shrink: 0;
     }
 
@@ -292,6 +298,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
 
     /* ── Bottom ── */
     .sidebar-bottom {
+      flex-shrink:0;
       display: flex;
       gap: 12px;
       padding: 0 20px;
@@ -309,7 +316,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 180ms ease-out, opacity 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
     }
 
     .icon-round-btn:hover {
@@ -355,17 +362,19 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
     @media (max-width: 1024px) {
       .sidebar {
         position: fixed;
-        left: -280px;
+        left: 0;
+        transform: translateX(-100%);
         top: 0;
         width: 260px;
-        height: 100vh;
-        transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100dvh;
+        transition: transform 250ms ease-out;
         box-shadow: none;
       }
       .sidebar.mobile-open {
-        left: 0;
+        transform: translateX(0);
         box-shadow: 20px 0 60px rgba(0, 0, 0, 0.5);
       }
+      .sidebar:not(.mobile-open){visibility:hidden}
       .sidebar-overlay {
         display: block;
       }
@@ -375,6 +384,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .sidebar,.nav-item,.nav-icon-wrap,.icon-round-btn{transition:none!important}
       .nav-item,
       .sidebar-brand,
       .sidebar-bottom,
@@ -388,6 +398,9 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
   `]
 })
 export class SidebarComponent {
+  @Input() analyticsEnabled=false;
+  @Input() qrEnabled=false;
+  @Output() settingsOpen=new EventEmitter<void>();
   @Input() isDarkTheme = false;
   @Input() activeSection: ActiveSection = 'dashboard';
   @Input() mobileOpen = false;
@@ -401,8 +414,8 @@ export class SidebarComponent {
     { section: 'menu', label: 'Menu' },
     { section: 'empresa', label: 'Empresa' },
     { section: 'design', label: 'Design' },
-    { section: 'preview', label: 'Preview' },
-    { section: 'likes', label: 'Likes' }
+    { section: 'analytics', label: 'Analytics' },
+    { section: 'qr', label: 'QR Code' }
   ];
 
   navigate(section: ActiveSection): void {
@@ -413,4 +426,5 @@ export class SidebarComponent {
   closeMobile(): void {
     this.mobileClose.emit();
   }
+  @HostListener('document:keydown.escape') onEscape(){if(this.mobileOpen)this.closeMobile();}
 }

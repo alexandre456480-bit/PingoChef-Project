@@ -3,6 +3,7 @@ import { NEVER, of } from 'rxjs';
 import { ProductMediaGalleryComponent } from './product-media-gallery.component';
 import { ProductPlaybackService } from '../../services/product-playback.service';
 import { MuxPlayerLoaderService } from '../../services/mux-player-loader.service';
+import { PublicAnalyticsService } from '../../services/public-analytics.service';
 
 class PlaybackServiceStub {
   requestPlayback = vi.fn().mockReturnValue(NEVER);
@@ -21,7 +22,8 @@ describe('ProductMediaGalleryComponent', () => {
       imports: [ProductMediaGalleryComponent],
       providers: [
         { provide: ProductPlaybackService, useClass: PlaybackServiceStub },
-        { provide: MuxPlayerLoaderService, useClass: PlayerLoaderStub }
+        { provide: MuxPlayerLoaderService, useClass: PlayerLoaderStub },
+        { provide: PublicAnalyticsService, useValue: { record: vi.fn() } }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(ProductMediaGalleryComponent);
@@ -95,6 +97,31 @@ describe('ProductMediaGalleryComponent', () => {
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
     const gallery = (fixture.nativeElement as HTMLElement).querySelector('.media-gallery');
     expect(gallery?.getAttribute('tabindex')).toBe('0');
+  });
+
+  it('records actual playback and watched coverage; a seek to the end cannot complete a video', async () => {
+    playback.requestPlayback.mockReturnValueOnce(of({ data: { playbackId: 'test', playbackToken: 'signed', videoTitle: 'Produto' } }));
+    const slide = fixture.componentInstance.activeSlide;
+    if (slide.kind !== 'video') throw new Error('video required');
+    await fixture.componentInstance.play(slide.media);
+    const tracker = TestBed.inject(PublicAnalyticsService);
+    expect(tracker.record).not.toHaveBeenCalled();
+    fixture.componentInstance.onPlaying();
+    expect(tracker.record).toHaveBeenCalledWith('loja-teste', 'VIDEO_PLAY', expect.objectContaining({ itemId: 'item-1', mediaId: 'media-1' }));
+    const progress = (watched: number, ended = false) => {
+      const event = new Event('timeupdate');
+      Object.defineProperty(event, 'target', { value: { duration: 12, media: { played: { length: 1, start: () => 0, end: () => watched } } } });
+      fixture.componentInstance.onVideoProgress(event, ended);
+    };
+    progress(1, true);
+    expect((tracker.record as any).mock.calls.map((c:any[])=>c[1])).toEqual(['VIDEO_PLAY']);
+    progress(6); progress(12, true);
+    expect(tracker.record).toHaveBeenCalledWith('loja-teste', 'VIDEO_100', expect.any(Object));
+    const playId = (tracker.record as any).mock.calls[0][2].playId;
+    expect((tracker.record as any).mock.calls.every((c:any[])=>c[2].playId===playId)).toBe(true);
+    fixture.componentRef.setInput('previewMode', true);
+    (tracker.record as any).mockClear(); fixture.componentInstance.onPlaying(); progress(12,true);
+    expect(tracker.record).not.toHaveBeenCalled();
   });
 
   it('uses the selected portrait ratio without overflowing the phone layout', () => {

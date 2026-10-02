@@ -13,6 +13,7 @@ import {
   HomeBlock
 } from '../../services/design.service';
 import { PublicMenuService, PublicBusiness } from '../../services/public-menu.service';
+import { PublicAnalyticsService } from '../../services/public-analytics.service';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { findCatalogIcon } from '../../constants/icon-catalog';
@@ -3633,7 +3634,8 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     private publicMenuService: PublicMenuService,
     public cartService: CartService,
     private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private analytics: PublicAnalyticsService
   ) { }
 
   ngOnInit(): void {
@@ -4168,6 +4170,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   filterCategory(catId: string | null): void {
     if (this.activeCatId === catId && !this.searchFilter) return;
+    if (!this.isPhonePreview && catId) this.analytics.record(this.publicSlug, 'CATEGORY_VIEW', { categoryId: catId });
     if (this.categoryFrame) cancelAnimationFrame(this.categoryFrame);
     this.categoryTransitioning = false;
     this.activeCatId = catId;
@@ -4186,6 +4189,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   openProductDetail(item: MenuItem): void {
+    if (!this.isPhonePreview) this.analytics.record(this.publicSlug, 'PRODUCT_VIEW', { itemId: item.id });
     this.selectedProduct = item;
     this.productVideoExpanded = false;
     this.modalItemQuantity = 1;

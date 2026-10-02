@@ -8,6 +8,7 @@ import {
   SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Subscription, timer, switchMap } from 'rxjs';
 import {
   ProductMediaView,
@@ -37,7 +38,7 @@ type UploadUiState =
 @Component({
   selector: 'app-product-video-uploader',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,RouterLink],
   template: `
     <section class="video-panel" aria-labelledby="video-panel-title">
       <div class="video-heading">
@@ -196,7 +197,7 @@ type UploadUiState =
         @if ((state === 'error' || state === 'rejected') && errorMessage) {
           <div class="state-card mascot danger" role="alert">
             <img src="/icons_chef_hat.webp" alt="" />
-            <div><strong>{{ state === 'rejected' ? 'Vídeo rejeitado' : 'Não foi possível enviar' }}</strong><span>{{ errorMessage }}</span></div>
+            <div><strong>{{ state === 'rejected' ? 'Vídeo rejeitado' : 'Não foi possível enviar' }}</strong><span>{{ errorMessage }}</span>@if(planLimitReached){<a routerLink="/plans">Comparar planos</a>}</div>
           </div>
         }
 
@@ -412,6 +413,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   loadingMedia = false;
   dragging = false;
   errorMessage = '';
+  planLimitReached=false;
   deletingMediaId: string | null = null;
   replacementMediaId: string | null = null;
   pendingDeleteMedia: ProductMediaView | null = null;
@@ -552,9 +554,10 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
           error: () => this.handleUploadError('O envio foi interrompido. Verifique sua conexão e tente novamente.')
         });
       },
-      error: error => this.handleUploadError(
-        error?.error?.error?.message || 'Não foi possível iniciar o upload.'
-      )
+      error: error => {
+        this.planLimitReached=error?.error?.error?.code==='LIMIT_EXCEEDED';
+        this.handleUploadError(this.planLimitReached?'Limite de vídeos do plano atingido. Você pode substituir um vídeo existente ou comparar planos.':'Não foi possível iniciar o envio. Confira sua conexão e tente novamente.');
+      }
     });
   }
 
@@ -750,6 +753,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   }
 
   private resetSelection(emitBusy = true): void {
+    this.planLimitReached=false;
     this.selectedVideo = null;
     this.activeMediaId = null;
     this.errorMessage = '';

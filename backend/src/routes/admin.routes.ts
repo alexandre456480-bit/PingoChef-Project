@@ -2,15 +2,25 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { adminLogin, adminLogout, adminSession, adminReauthenticate } from '../controllers/admin-auth.controller';
 import { changeBusinessLifecycle, createInvitation, revokeInvitation,
-  lifecycleAction, grantFreePeriod, cancelBusinessDeletion, revokeCustomerSessions } from '../controllers/admin-operations.controller';
+  lifecycleAction, grantFreePeriod, cancelBusinessDeletion, revokeCustomerSessions, assignBusinessPlan } from '../controllers/admin-operations.controller';
 import { getOverview, getDashboard, listBusinesses, getBusiness, listInvitations,
   listAuditLogs, listMedia } from '../controllers/admin-read.controller';
-import { requireAdmin, requireAdminOrigin, requireRecentAdmin } from '../middleware/admin.middleware';
+import { requireAdmin as authenticateAdmin, requireAdminOrigin, requireRecentAdmin, AdminRequest } from '../middleware/admin.middleware';
+import { sharedRateLimit } from '../middleware/shared-rate-limit.middleware';
+import type { RequestHandler } from 'express';
 import { getCommercialReport, getInfrastructureReport, getPurgeJobs } from '../controllers/admin-phase3-read.controller';
 
 const router = Router();
+const requireAdmin: RequestHandler = (req, res, next) => {
+  void authenticateAdmin(req, res, () => {
+    const read = ['GET', 'HEAD'].includes(req.method);
+    sharedRateLimit(read ? 'admin-read' : 'admin-write', read ? 180 : 30, read ? 60 : 900,
+      request => `admin:${(request as AdminRequest).adminUserId!}`)(req, res, next);
+  });
+};
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false });
 const criticalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
+router.post('/businesses/:id/plan', criticalLimiter, requireAdmin, requireRecentAdmin, assignBusinessPlan);
 router.post('/auth/login', loginLimiter, requireAdminOrigin, adminLogin);
 router.get('/auth/session', requireAdmin, adminSession);
 router.post('/auth/logout', requireAdmin, adminLogout);

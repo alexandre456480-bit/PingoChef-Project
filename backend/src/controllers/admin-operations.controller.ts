@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { createAuditedAdminClient } from '../config/supabase';
-import { hashInvitationCode } from './invitation-registration.controller';
+import { hashInvitationCode } from '../services/invitation-hash.service';
 import type { AdminRequest } from '../middleware/admin.middleware';
 
 const inviteSchema = z.object({
@@ -16,6 +16,23 @@ const lifecycleSchema = z.object({
   retentionDays: z.number().int().min(1).max(365).default(30)
 }).strict();
 const uuid = z.string().uuid();
+
+export async function assignBusinessPlan(req: AdminRequest, res: Response, next: NextFunction) {
+  try {
+    const businessId = uuid.parse(req.params.id);
+    const body = z.object({ planCode: z.enum(['FREE', 'BASIC', 'MEDIUM', 'PRO']),
+      reason: z.string().trim().min(3).max(500) }).strict().parse(req.body);
+    const { data, error } = await createAuditedAdminClient(req, res).rpc('admin_assign_business_plan', {
+      p_actor: req.adminUserId!, p_business_id: businessId, p_plan_code: body.planCode, p_reason: body.reason
+    });
+    if (error) {
+      if (error.message === 'BILLING_MANAGED_SUBSCRIPTION') return res.status(409).json({ success: false, error: { code: 'BILLING_MANAGED_SUBSCRIPTION' } });
+      throw error;
+    }
+    return data ? res.json({ success: true, data: { businessId, planCode: body.planCode } })
+      : res.status(404).json({ success: false, error: { code: 'BUSINESS_NOT_FOUND' } });
+  } catch (error) { next(error); }
+}
 
 export async function createInvitation(req: AdminRequest, res: Response, next: NextFunction) {
   try {

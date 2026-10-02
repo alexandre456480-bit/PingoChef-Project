@@ -4,6 +4,8 @@ import { ActivatedRoute } from '@angular/router';
 import { PingoLoaderComponent } from '../../components/pingo-loader/pingo-loader.component';
 import { PublicMenuViewComponent } from '../../components/public-menu-view/public-menu-view.component';
 import { PublicMenuService } from '../../services/public-menu.service';
+import { PublicAnalyticsService } from '../../services/public-analytics.service';
+import { Subject, switchMap, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-public-menu',
@@ -123,23 +125,30 @@ import { PublicMenuService } from '../../services/public-menu.service';
 })
 export class PublicMenuComponent implements OnInit, OnDestroy {
   slug: string = '';
+  private readonly destroyed = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
-    public publicMenuService: PublicMenuService
+    public publicMenuService: PublicMenuService,
+    private analytics: PublicAnalyticsService
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(takeUntil(this.destroyed), tap(params => {
+      this.analytics.endPage();
       this.slug = params.get('slug') || 'sapatolandia-gourmet';
-      this.publicMenuService.loadPublicMenu(this.slug).subscribe(() => {
+    }), switchMap(() => this.publicMenuService.loadPublicMenu(this.slug))).subscribe(data => {
+        if (!data || this.publicMenuService.error()) return;
         const businessLogo = this.publicMenuService.menuData()?.business.logoUrl;
         if (businessLogo) this.setFavicon(businessLogo);
-      });
+        this.analytics.startPage(this.slug, { source: this.route.snapshot.queryParamMap.get('source'),
+          utm_source: this.route.snapshot.queryParamMap.get('utm_source'), qr: this.route.snapshot.queryParamMap.get('qr') });
     });
   }
 
   ngOnDestroy(): void {
+    this.destroyed.next(); this.destroyed.complete();
+    this.analytics.endPage();
     this.setFavicon('/icon_pinguim.webp', 'image/webp');
   }
 

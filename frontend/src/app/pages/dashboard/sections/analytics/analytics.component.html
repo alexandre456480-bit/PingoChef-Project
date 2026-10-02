@@ -1,0 +1,477 @@
+<section class="analytics" aria-labelledby="analytics-title">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">CARDÁPIO PÚBLICO · {{ options()?.tier || 'Analytics' }}</span>
+      <h1 id="analytics-title">Analytics do cardápio</h1>
+      <p>Entenda como seu cardápio é acessado e quais produtos despertam interesse.</p>
+    </div>
+    @if (options()?.complete) {
+      <div class="export-actions">
+        <label
+          >Exportar<select [(ngModel)]="exportSection" aria-label="Conteúdo do CSV">
+            <option value="series">Evolução do período</option>
+            <option value="products">Produtos visualizados</option>
+            <option value="likes">Produtos curtidos</option>
+            <option value="categories">Categorias</option>
+            <option value="sources">Origens</option>
+            <option value="qr">Entradas por QR</option>
+          </select></label
+        >
+        <button class="primary" (click)="exportCsv()" [disabled]="exporting() || !report()">
+          {{ exporting() ? 'Exportando…' : 'Baixar CSV' }}
+        </button>
+      </div>
+    }
+  </header>
+  @if (exportError()) {
+    <p class="error" role="alert">{{ exportError() }}</p>
+  }
+  @if (options(); as opts) {
+    <form class="filters clay" (ngSubmit)="apply()">
+      <div class="filter-grid">
+        <label
+          >Período<select
+            name="preset"
+            aria-label="Período"
+            [(ngModel)]="preset"
+            (ngModelChange)="selectPreset()"
+          >
+            @for (p of presets; track p.value) {
+              @if (!p.advanced || opts.advanced) {
+                <option [value]="p.value">{{ p.label }}</option>
+              }
+            }
+          </select></label
+        >
+        @if (preset === 'day') {
+          <label
+            >Dia<input
+              name="day"
+              type="date"
+              [(ngModel)]="day"
+              [min]="opts.minDate"
+              [max]="opts.today"
+          /></label>
+        }
+        @if (preset === 'specificMonth') {
+          <label
+            >Mês<input name="month" type="month" [(ngModel)]="month" [max]="opts.today.slice(0, 7)"
+          /></label>
+        }
+        @if (preset === 'specificYear') {
+          <label
+            >Ano<input
+              name="year"
+              type="number"
+              min="2000"
+              [max]="opts.today.slice(0, 4)"
+              [(ngModel)]="year"
+          /></label>
+        }
+        @if (preset === 'custom') {
+          <label
+            >De<input
+              name="start"
+              type="date"
+              [(ngModel)]="start"
+              [min]="opts.minDate"
+              [max]="opts.today" /></label
+          ><label
+            >Até<input
+              name="end"
+              type="date"
+              [(ngModel)]="end"
+              [min]="start || opts.minDate"
+              [max]="opts.today"
+          /></label>
+        }
+        @if (opts.advanced) {
+          <label
+            >Comparar com<select
+              name="comparison"
+              aria-label="Comparar com"
+              [(ngModel)]="comparison"
+            >
+              <option value="none">Sem comparação</option>
+              <option value="previous">Período anterior</option>
+              @if (opts.complete) {
+                <option value="year">Mesmo período no ano anterior</option>
+                <option value="custom">Outro intervalo</option>
+              }
+            </select></label
+          >
+          <label
+            >Origem<select name="source" aria-label="Origem" [(ngModel)]="source">
+              <option value="">Todas as origens</option>
+              @for (
+                s of [
+                  'direct',
+                  'qr',
+                  'instagram',
+                  'facebook',
+                  'google',
+                  'whatsapp',
+                  'other',
+                  'unattributed',
+                ];
+                track s
+              ) {
+                <option [value]="s">{{ sourceName(s) }}</option>
+              }
+            </select></label
+          >
+        }
+        <button class="primary apply" type="submit">Aplicar filtros</button>
+      </div>
+      @if (comparison === 'custom') {
+        <div class="comparison-inputs">
+          <label
+            >Comparação de<input
+              name="comparisonStart"
+              type="date"
+              [(ngModel)]="comparisonStart"
+              [min]="opts.minDate"
+              [max]="opts.today" /></label
+          ><label
+            >Comparação até<input
+              name="comparisonEnd"
+              type="date"
+              [(ngModel)]="comparisonEnd"
+              [min]="comparisonStart || opts.minDate"
+              [max]="opts.today"
+          /></label>
+        </div>
+      }
+      <p class="filter-hint">
+        Timezone: <strong>{{ opts.timezone }}</strong> · Histórico de
+        {{ opts.historyDays | number: '1.0-0' : 'pt-BR' }} dias, desde {{ date(opts.minDate) }}.
+        Datas do início e fim incluídas.
+      </p>
+      @if (qrId) {
+        <button type="button" class="quiet" (click)="qrId = ''; apply()">
+          Remover filtro por QR
+        </button>
+      }
+    </form>
+  }
+  @if (error()) {
+    <div class="error-state clay" role="alert">
+      <h2>Não foi possível exibir os dados</h2>
+      <p>{{ error() }}</p>
+      @if (forbidden()) {
+        <a routerLink="/plans" class="primary">Comparar planos</a>
+      } @else if (options()) {
+        <button class="primary" (click)="apply()">Tentar novamente</button>
+      }
+    </div>
+  }
+  @if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <span class="loading-dot"></span> Carregando Analytics…
+    </div>
+    <div class="kpis skeleton" aria-hidden="true">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  }
+  @if (report(); as data) {
+    <div class="period-line">
+      <strong>{{ date(data.range.start) }} → {{ date(data.range.end) }}</strong
+      ><span>{{ data.range.days }} {{ data.range.days === 1 ? 'dia' : 'dias' }}</span>
+      @if (data.comparison; as c) {
+        <span
+          >vs. {{ date(c.range.start) }} → {{ date(c.range.end) }} ({{ c.range.days }} dias)</span
+        >
+      }
+    </div>
+    <div class="kpis">
+      @for (kpi of kpis; track kpi.key) {
+        <article class="kpi clay">
+          <div class="kpi-label">
+            {{ kpi.name
+            }}<button
+              class="info"
+              type="button"
+              [attr.aria-label]="'Definição de ' + kpi.name"
+              [attr.aria-describedby]="'definition-' + kpi.key"
+            >
+              i<span role="tooltip" [id]="'definition-' + kpi.key">{{ kpi.definition }}</span>
+            </button>
+          </div>
+          <strong class="kpi-value">{{ data.summary[kpi.key] | number: '1.0-0' : 'pt-BR' }}</strong>
+          @if (data.comparison; as comparisonData) {
+            <div class="delta">
+              <span
+                >Anterior:
+                {{ comparisonData.deltas[kpi.key].previous | number: '1.0-0' : 'pt-BR' }}</span
+              ><strong
+                >{{ signed(comparisonData.deltas[kpi.key].absolute) }}
+                @if (comparisonData.deltas[kpi.key].percent !== null) {
+                  ({{ signed(comparisonData.deltas[kpi.key].percent!) }}%)
+                } @else {
+                  <small>Sem base percentual</small>
+                }
+              </strong>
+            </div>
+          } @else {
+            <span class="kpi-caption">No período selecionado</span>
+          }
+        </article>
+      }
+    </div>
+    <article class="clay chart-card">
+      <div class="card-header">
+        <div>
+          <h2>Evolução dos acessos</h2>
+          <p>
+            Por
+            {{
+              data.range.bucket === 'hour'
+                ? 'hora'
+                : data.range.bucket === 'week'
+                  ? 'semana'
+                  : data.range.bucket === 'month'
+                    ? 'mês'
+                    : 'dia'
+            }}
+            · visitantes únicos em cada ponto
+          </p>
+        </div>
+        <label class="metric-select"
+          >Métrica<select [ngModel]="metric()" (ngModelChange)="metric.set($event)">
+            @for (k of kpis; track k.key) {
+              <option [value]="k.key">{{ k.name }}</option>
+            }
+          </select></label
+        >
+      </div>
+      <app-analytics-chart [title]="metricName()" [points]="chartPoints()"></app-analytics-chart>
+      @if (data.summary.menuViews === 0) {
+        <p class="empty-note">Nenhuma visualização registrada neste período e filtros.</p>
+      }
+    </article>
+    <div class="rankings">
+      @for (
+        panel of [
+          { metric: 'product_views', title: 'Produtos mais visualizados' },
+          { metric: 'likes', title: 'Produtos mais curtidos' },
+        ];
+        track panel.metric
+      ) {
+        <article class="clay ranking">
+          <h2>{{ panel.title }}</h2>
+          <p>
+            {{
+              panel.metric === 'likes'
+                ? 'Curtidas confirmadas no período, sem atribuição de origem ou QR.'
+                : 'Aberturas do detalhe no período.'
+            }}
+          </p>
+          @if (panel.metric === 'likes' && !data.likesAttributed) {
+            <p class="empty-note">
+              Curtidas não têm atribuição de origem/QR. Remova esses filtros para consultar o total
+              do período.
+            </p>
+          } @else if (rankings()[panel.metric]; as rank) {
+            <ol [attr.start]="((rank.page || 1) - 1) * 5 + 1">
+              @for (row of rank.rows; track row.id) {
+                <li>
+                  <div>
+                    @if (options()?.advanced && panel.metric === 'product_views' && !row.removed) {
+                      <button
+                        type="button"
+                        class="row-link"
+                        (click)="showTrend(row)"
+                        [attr.aria-label]="'Ver tendência de ' + row.name"
+                      >
+                        {{ row.name }}
+                      </button>
+                    } @else {
+                      <span>{{ row.name }}</span>
+                    }
+                    @if (row.removed) {
+                      <small>Registro removido</small>
+                    }
+                  </div>
+                  <strong>{{ row.value | number: '1.0-0' : 'pt-BR' }}</strong>
+                </li>
+              }
+            </ol>
+            @if (!rank.rows.length) {
+              <p class="empty-note">Nenhum evento registrado.</p>
+            }
+            <div class="pagination">
+              <button
+                (click)="page(panel.metric, -1)"
+                [disabled]="rank.page === 1 || !!rankingBusy()"
+                [attr.aria-label]="'Página anterior de ' + panel.title"
+              >
+                Anterior</button
+              ><span
+                >{{ rank.total ? rank.page : 0 }} / {{ pages(rank.total) }} ·
+                {{ rank.total }} produtos</span
+              ><button
+                (click)="page(panel.metric, 1)"
+                [disabled]="(rank.page || 1) * 5 >= rank.total || !!rankingBusy()"
+                [attr.aria-label]="'Próxima página de ' + panel.title"
+              >
+                Próxima
+              </button>
+            </div>
+          }
+        </article>
+      }
+    </div>
+    @if (rankingError()) {
+      <p role="alert" class="error">{{ rankingError() }}</p>
+    }
+    @if (options()?.advanced) {
+      <div class="advanced-grid">
+        <article class="clay ranking">
+          <h2>Categorias mais vistas</h2>
+          <p>Seleções explícitas de categoria, uma por categoria em cada navegação.</p>
+          @if (rankings()['categories']; as rank) {
+            <ol [attr.start]="((rank.page || 1) - 1) * 5 + 1">
+              @for (row of rank.rows; track row.id) {
+                <li>
+                  <span>{{ row.name }}</span
+                  ><strong>{{ row.value | number: '1.0-0' : 'pt-BR' }}</strong>
+                </li>
+              }
+            </ol>
+            @if (!rank.rows.length) {
+              <p class="empty-note">Nenhuma seleção registrada.</p>
+            }
+            <div class="pagination">
+              <button
+                (click)="page('categories', -1)"
+                [disabled]="rank.page === 1 || !!rankingBusy()"
+                aria-label="Página anterior de categorias"
+              >
+                Anterior</button
+              ><span>{{ rank.total }} categorias</span
+              ><button
+                (click)="page('categories', 1)"
+                [disabled]="(rank.page || 1) * 5 >= rank.total || !!rankingBusy()"
+                aria-label="Próxima página de categorias"
+              >
+                Próxima
+              </button>
+            </div>
+          }
+        </article>
+        <article class="clay ranking">
+          <h2>Origens dos acessos</h2>
+          <p>Classificação por parâmetro da URL ou domínio de referência; sem armazenar a URL.</p>
+          <ul>
+            @for (row of data.sources; track row.name) {
+              <li>
+                <span>{{ sourceName(row.name) }}</span
+                ><strong>{{ row.value | number: '1.0-0' : 'pt-BR' }}</strong>
+              </li>
+            }
+          </ul>
+          @if (!data.sources?.length) {
+            <p class="empty-note">Nenhuma origem registrada.</p>
+          }
+        </article>
+        <article class="clay hours-card">
+          <h2>Horários de maior acesso</h2>
+          <p>Total de visualizações por hora em {{ data.timezone }}.</p>
+          <div class="hours-grid">
+            @for (hour of data.hours; track hour.hour) {
+              <div class="hour-row">
+                <span>{{ hour.hour }}h</span>
+                <div class="bar-track"><span [style.width.%]="hourWidth(hour.value)"></span></div>
+                <strong>{{ hour.value | number: '1.0-0' : 'pt-BR' }}</strong>
+              </div>
+            }
+          </div>
+        </article>
+        <article class="clay qr-card">
+          <h2>Tráfego por QR</h2>
+          <strong class="qr-total">{{ data.summary.qrEntries | number: '1.0-0' : 'pt-BR' }}</strong>
+          <p>Entradas que declaram origem QR. Esta fase ainda não gera códigos QR.</p>
+          @if (options()?.complete) {
+            <ul>
+              @for (row of data.qr; track $index) {
+                <li>
+                  @if (row.id) {
+                    <button class="row-link" (click)="selectQr(row.id)">{{ row.name }}</button>
+                  } @else {
+                    <span>{{ row.name }}</span>
+                  }
+                  <strong>{{ row.value | number: '1.0-0' : 'pt-BR' }}</strong>
+                </li>
+              }
+            </ul>
+            @if (!data.qr?.length) {
+              <p class="empty-note">Nenhuma entrada por QR no período.</p>
+            }
+            <p class="small">
+              A identificação individual usa códigos registrados no backend. Entradas sem
+              identificação aparecem agrupadas.
+            </p>
+          }
+        </article>
+      </div>
+      @if (trendName()) {
+        <article class="clay chart-card" aria-live="polite">
+          <h2>Tendência · {{ trendName() }}</h2>
+          <p>Visualizações do detalhe; agrupadas por dia, semana ou mês conforme o intervalo.</p>
+          @if (trendBusy()) {
+            <p role="status">Carregando tendência…</p>
+          }
+          @if (trendError()) {
+            <p role="alert" class="error">{{ trendError() }}</p>
+          }
+          @if (trend()) {
+            <app-analytics-chart
+              [title]="'Visualizações de ' + trendName()"
+              [points]="trendPoints()"
+            ></app-analytics-chart>
+          }
+        </article>
+      }
+      <article class="clay video-completion">
+        <h2>Consumo dos vídeos</h2>
+        <p>
+          Marcos de duração efetivamente assistida por reprodução. Avançar a posição não conta como
+          assistir.
+        </p>
+        <div>
+          <span
+            >25% assistido
+            <strong>{{ data.summary.video25 | number: '1.0-0' : 'pt-BR' }}</strong></span
+          ><span
+            >50% assistido
+            <strong>{{ data.summary.video50 | number: '1.0-0' : 'pt-BR' }}</strong></span
+          ><span
+            >Concluído
+            <strong>{{ data.summary.video100 | number: '1.0-0' : 'pt-BR' }}</strong></span
+          >
+        </div>
+      </article>
+    }
+    <footer class="definitions">
+      <h2>Como ler estes dados</h2>
+      <p>
+        Visitantes são identidades anônimas de sessão. Recarregar gera outra visualização, mantendo
+        a sessão; outras abas ou dispositivos podem representar outra identidade, e uma aba
+        duplicada pode herdar a sessão. Visitantes por dia, hora ou origem não devem ser somados
+        para obter visitantes únicos do período.
+      </p>
+      <p>
+        A coleta começou em {{ collectionDate() }}. Não há reconstrução de acessos anteriores.
+        Bloqueadores, preferência de privacidade, rede e filtros de segurança podem impedir a
+        coleta. Origens e QR são declarados pelo navegador e não comprovam atribuição de venda.
+      </p>
+      <p>
+        Comparações exibem diferença absoluta e percentual. Quando o período anterior é zero, o
+        percentual fica sem base. Os intervalos comparados e suas durações aparecem acima.
+      </p>
+    </footer>
+  }
+</section>

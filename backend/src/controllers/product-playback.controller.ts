@@ -6,6 +6,7 @@ import { SupabasePlaybackRepository } from '../repositories/playback.repository'
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
 import { getMuxVideoProvider } from '../services/mux-video.service';
 import { PlaybackDeniedError, ProductPlaybackService } from '../services/product-playback.service';
+import { enforceSharedRequest } from '../middleware/shared-rate-limit.middleware';
 
 const uuid = z.string().uuid();
 const slug = z.string().trim().regex(/^[a-z0-9-]+$/);
@@ -39,6 +40,7 @@ export async function createPublicPlaybackController(
     const parsedSlug = slug.parse(req.params.slug);
     const itemId = uuid.parse(req.params.itemId);
     const mediaId = uuid.parse(req.params.mediaId);
+    await enforceSharedRequest('public-playback', `ip:${req.ip || req.socket.remoteAddress || 'unknown'}`, 30);
     const data = await service().createPublicSession(
       parsedSlug,
       itemId,

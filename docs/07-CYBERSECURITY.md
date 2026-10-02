@@ -1,6 +1,6 @@
 # 🛡️ 07 — Cybersecurity
 
-> **Atualização de implementação (30/09/2026):** o Admin tem `requireAdmin` próprio, sessão revogável em cookie e proteção Origin/CSRF. O cliente ainda guarda JWT em `localStorage`; esta dívida não foi refatorada nesta fase. Detalhes e limites em [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md).
+> **Atualização de implementação (02/10/2026):** Admin e proprietário possuem sessões separadas por cookie HttpOnly e controles Origin/CSRF. Tokens Supabase do proprietário ficam cifrados no servidor; o Angular remove registros antigos e possui importação temporária opcional. Limites concorrentes, revogação e riscos residuais estão em [19 — Fase 1 do proprietário](./19-OWNER-PHASE1-FOUNDATION.md). As seções seguintes incluem especificações históricas.
 
 > **Domínio**: Threat model, controles de segurança, testes de ataque, headers, secrets, logs e checklist de segurança.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [02-AUTENTICACAO-CADASTRO.md](./02-AUTENTICACAO-CADASTRO.md)  

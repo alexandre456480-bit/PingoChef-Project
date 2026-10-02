@@ -18,6 +18,8 @@ import {
   ProductPlaybackService
 } from '../../services/product-playback.service';
 import { MuxPlayerLoaderService } from '../../services/mux-player-loader.service';
+import { PublicAnalyticsService, PublicAnalyticsEvent } from '../../services/public-analytics.service';
+import type MuxPlayerElement from '@mux/mux-player';
 
 type GallerySlide =
   | { key: string; kind: 'image'; imageUrl: string }
@@ -106,7 +108,7 @@ type GallerySlide =
             class="video-lightbox"
             role="dialog"
             aria-modal="true"
-            [attr.aria-label]="'VÃ­deo de ' + productName"
+            [attr.aria-label]="'Vídeo de ' + productName"
             (click)="closeExpanded()">
             <div
               class="expanded-player-shell"
@@ -115,9 +117,9 @@ type GallerySlide =
               (click)="$event.stopPropagation()">
               <div class="expanded-player-topbar">
                 <span>{{ productName }}</span>
-                <span class="muted-label" aria-label="ReproduÃ§Ã£o sem Ã¡udio">
+                <span class="muted-label" aria-label="Reprodução sem áudio">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
-                  Sem Ã¡udio
+                  Sem áudio
                 </span>
               </div>
               <mux-player
@@ -133,9 +135,12 @@ type GallerySlide =
                 autoplay
                 playsinline
                 (loadedmetadata)="onPlayerMetadata($event)"
+                (playing)="onPlaying()"
+                (timeupdate)="onVideoProgress($event)"
+                (ended)="onVideoProgress($event, true)"
                 (error)="onPlayerError()">
               </mux-player>
-              <button type="button" class="close-video-button" aria-label="Fechar vÃ­deo" (click)="closeExpanded()">
+              <button type="button" class="close-video-button" aria-label="Fechar vídeo" (click)="closeExpanded()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>
             </div>
@@ -325,11 +330,14 @@ export class ProductMediaGalleryComponent implements OnDestroy {
   playerAspectRatio = '16 / 9';
   expandedPlayerWidth = 'min(92vw, 960px)';
   private touchStartX: number | null = null;
+  private analyticsPlayId: string | null = null;
+  private playStarted = false;
 
   constructor(
     private readonly playback: ProductPlaybackService,
     private readonly playerLoader: MuxPlayerLoaderService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly analytics: PublicAnalyticsService
   ) {}
 
   get slides(): GallerySlide[] {
@@ -367,6 +375,8 @@ export class ProductMediaGalleryComponent implements OnDestroy {
       ));
       await this.playerLoader.load();
       this.activeMediaId = media.id;
+      this.analyticsPlayId = crypto.randomUUID();
+      this.playStarted = false;
       this.session = response.data;
       this.expandedChange.emit(true);
     } catch {
@@ -389,6 +399,29 @@ export class ProductMediaGalleryComponent implements OnDestroy {
 
   onPlayerMetadata(event: Event): void {
     if (this.activeSlide.kind === 'video') this.applyPlayerLayout(this.activeSlide.media.aspectRatio);
+  }
+
+  onPlaying(): void {
+    this.playStarted = true;
+    this.videoEvent('VIDEO_PLAY');
+  }
+
+  onVideoProgress(event: Event, ended = false): void {
+    const player = event.target as MuxPlayerElement;
+    // Mux Player 3 exposes the underlying media; it does not proxy HTMLMediaElement.played.
+    const played = player.media?.played;
+    if (!this.playStarted || !played || !Number.isFinite(player.duration) || player.duration <= 0) return;
+    let watched = 0;
+    for (let i = 0; i < played.length; i++) watched += played.end(i) - played.start(i);
+    const fraction = watched / player.duration;
+    if (fraction >= .25) this.videoEvent('VIDEO_25');
+    if (fraction >= .5) this.videoEvent('VIDEO_50');
+    if (ended && fraction >= .95) this.videoEvent('VIDEO_100');
+  }
+
+  private videoEvent(eventName: PublicAnalyticsEvent): void {
+    if (this.previewMode || !this.activeMediaId || !this.analyticsPlayId || !this.session) return;
+    this.analytics.record(this.publicSlug, eventName, { itemId: this.itemId, mediaId: this.activeMediaId, playId: this.analyticsPlayId });
   }
 
   onPlayerError(): void {
@@ -429,6 +462,8 @@ export class ProductMediaGalleryComponent implements OnDestroy {
     this.player?.nativeElement.pause?.();
     this.session = null;
     this.activeMediaId = null;
+    this.analyticsPlayId = null;
+    this.playStarted = false;
     this.errorMessage = null;
     this.playerAspectRatio = '16 / 9';
     this.expandedPlayerWidth = 'min(92vw, 960px)';

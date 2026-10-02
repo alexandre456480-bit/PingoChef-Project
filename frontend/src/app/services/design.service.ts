@@ -362,13 +362,7 @@ export class DesignService {
   constructor(private http: HttpClient) { }
 
   private getAuthHeaders(): { headers: HttpHeaders } {
-    const token = localStorage.getItem('access_token') || '';
-    return {
-      headers: new HttpHeaders({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      })
-    };
+    return { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
   }
 
   // ── MUTAÇÕES DO RASCUNHO ──

@@ -1,0 +1,333 @@
+:host {
+  display: block;
+  color: var(--panel-text);
+  font-family: Inter, sans-serif;
+}
+.qr-section {
+  max-width: 1200px;
+  margin: auto;
+}
+.qr-heading {
+  margin-bottom: 24px;
+}
+.eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  font-weight: 750;
+  color: var(--panel-text-muted);
+}
+h1,
+h2 {
+  font-family: Outfit, sans-serif;
+  margin: 8px 0;
+}
+h1 {
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+}
+h2 {
+  font-size: 1.1rem;
+}
+.qr-heading p,
+.hint {
+  color: var(--panel-text-soft);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.qr-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(220px, 0.95fr);
+  gap: 24px;
+  align-items: start;
+}
+.config-card,
+.preview-card {
+  background: var(--panel-surface);
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--panel-shadow-soft);
+}
+.config-card {
+  display: grid;
+  gap: 18px;
+}
+.card-heading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-heading span {
+  font-size: 0.73rem;
+  color: var(--panel-text-soft);
+  white-space: nowrap;
+}
+.selector-row {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+.selector-row label {
+  min-width: 0;
+  flex: 1;
+}
+label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+input:not([type='checkbox']),
+select {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border-strong);
+  background: var(--panel-surface-inset);
+  color: var(--panel-text);
+  font: inherit;
+}
+input[type='file'] {
+  font-size: 0.72rem;
+  padding: 9px 6px;
+}
+input[type='color'] {
+  width: 64px;
+  min-width: 64px;
+  padding: 5px;
+}
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+}
+.hint {
+  margin: 0;
+  font-size: 0.74rem;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+legend {
+  font-family: Outfit, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 650;
+  margin-bottom: 14px;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.5;
+}
+.checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #691525;
+}
+button {
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 750;
+  cursor: pointer;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 12px 18px;
+  transition:
+    background-color 150ms,
+    color 150ms,
+    box-shadow 150ms;
+}
+.primary {
+  background: #f47b20;
+  color: #29101e;
+  border: 1px solid #f47b20;
+}
+.primary:hover:not(:disabled) {
+  background: #ff983e;
+}
+.secondary {
+  background: var(--panel-surface-inset);
+  border: 1px solid var(--panel-border-strong);
+  color: var(--panel-text);
+}
+.small {
+  padding: 10px;
+  white-space: nowrap;
+}
+.text-button {
+  background: none;
+  border: 0;
+  padding: 2px;
+  text-decoration: underline;
+  color: var(--panel-text);
+  justify-self: start;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--panel-accent);
+  outline-offset: 3px;
+}
+.preview-column {
+  display: grid;
+  gap: 18px;
+}
+.preview-card {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 18px;
+  text-align: center;
+  min-height: 320px;
+}
+.qr-image {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  aspect-ratio: auto;
+  border-radius: 10px;
+}
+.preview-card strong {
+  font-family: Outfit, sans-serif;
+  word-break: break-word;
+}
+.status-label {
+  font-size: 0.75rem;
+  color: var(--panel-text-soft);
+}
+.empty-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 24px;
+}
+.empty-preview svg {
+  width: 100px;
+  color: var(--panel-text-muted);
+}
+.empty-preview p {
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--panel-text-soft);
+}
+.download-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.download-row button {
+  flex: 1;
+}
+.menu-link {
+  font-size: 0.8rem;
+  color: var(--panel-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  justify-self: start;
+}
+.notice {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  padding: 14px 18px;
+  border: 1px solid var(--panel-border-strong);
+  border-left: 4px solid var(--panel-accent);
+  border-radius: 12px;
+  background: var(--panel-surface);
+  margin: 0 0 20px;
+}
+.notice button {
+  display: block;
+  margin-top: 12px;
+  background: var(--panel-surface-inset);
+  color: var(--panel-text);
+  border: 1px solid var(--panel-border-strong);
+}
+.error strong {
+  display: block;
+}
+.error,
+.invalid {
+  color: var(--panel-text);
+  font-weight: 650;
+}
+.error {
+  border-left-color: var(--panel-wine);
+}
+.safety {
+  padding: 0 4px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1500px) {
+  .qr-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .preview-card {
+    min-height: 260px;
+  }
+}
+@media (min-width: 1600px) {
+  .qr-layout {
+    grid-template-columns: minmax(240px, 1fr) minmax(220px, 0.95fr);
+  }
+}
+@media (max-width: 640px) {
+  .config-card,
+  .preview-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+  .qr-layout {
+    gap: 18px;
+  }
+  .selector-row {
+    flex-wrap: wrap;
+  }
+  .selector-row label {
+    flex-basis: 100%;
+  }
+  .card-heading {
+    align-items: start;
+  }
+  .qr-heading p {
+    font-size: 0.79rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+:host .qr-section .menu-link {
+  color: var(--panel-text) !important;
+  text-decoration-color: var(--panel-accent);
+}

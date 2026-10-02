@@ -30,13 +30,19 @@ describe('Admin phase 3 hardening',()=>{
       ADMIN_ORIGINS:'https://admin-staging.pingochef.com',INTERNAL_JOBS_SECRET:'x'.repeat(32),
       SUPABASE_SERVICE_ROLE_KEY:'x'.repeat(32),SUPABASE_ANON_KEY:'x'.repeat(32),
       INVITATION_HASH_SECRET:'x'.repeat(32),ADMIN_LOGIN_HASH_SECRET:'x'.repeat(32),
-      PURGE_STORAGE_BUCKET:'media',API_TELEMETRY_ENABLED:'true'} as NodeJS.ProcessEnv;
+      PURGE_STORAGE_BUCKET:'media',API_TELEMETRY_ENABLED:'true',
+      PUBLIC_MENU_ORIGIN:'https://app-staging.pingochef.com',
+      OWNER_SESSION_ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64'),
+      OWNER_AUTH_CALLBACK_URL:'https://app-staging.pingochef.com/api/v1/auth/confirm-email'} as NodeJS.ProcessEnv;
     expect(()=>validateDeploymentEnvironment(base)).toThrow('Staging cannot use');
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123'})).not.toThrow();
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
       SUPABASE_URL:'https://productionref123.supabase.co'})).toThrow('does not match');
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
       ADMIN_LOGIN_HASH_SECRET:''})).toThrow('ADMIN_LOGIN_HASH_SECRET is not configured');
+    expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
+      OWNER_AUTH_CALLBACK_URL:'https://wrong-origin.example.test/api/v1/auth/confirm-email'}))
+      .toThrow('must use an allowed owner application origin');
   });
 
   it('never puts tenant identifiers or query strings into API telemetry route groups',()=>{

@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuService, Category, MenuItem, Subcategory } from '../../../../services/menu.service';
 import { ICON_CATALOG, ICON_GROUPS, CatalogIcon, findCatalogIcon } from '../../../../constants/icon-catalog';
 import { ProductVideoUploaderComponent } from '../../../../features/product-video/product-video-uploader.component';
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-menu-editor',
@@ -2111,6 +2112,7 @@ export class MenuEditorComponent implements OnInit {
 
   constructor(
     public menuService: MenuService,
+    private auth:AuthService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -2219,6 +2221,7 @@ export class MenuEditorComponent implements OnInit {
 
   // ── Categories ──
   openCategoryModal(cat?: Category): void {
+    if(!cat && this.auth.account()?.usage?.categories >= this.auth.account()?.entitlements?.MAX_CATEGORIES){this.onToast.emit('Limite de categorias atingido. Compare os planos acima ou edite uma categoria existente.');return;}
     this.editingCategoryId = cat?.id || null;
     this.iconSearchQuery = '';
     this.iconFilterType = 'all';
@@ -2272,11 +2275,11 @@ export class MenuEditorComponent implements OnInit {
         this.onToast.emit('Categoria atualizada com sucesso!');
       });
     } else {
-      this.menuService.createCategory(payload).subscribe(() => {
+      this.menuService.createCategory(payload).subscribe({next:() => {
         this.menuService.loadCategories().subscribe();
         this.showCategoryModal = false;
         this.onToast.emit('Categoria criada com sucesso!');
-      });
+      },error:e=>this.onToast.emit(e?.error?.error?.code==='LIMIT_EXCEEDED'?'Limite de categorias atingido. Compare os planos acima.':'Não foi possível criar a categoria. Confira sua conexão e tente novamente.')});
     }
   }
 
@@ -2362,6 +2365,7 @@ export class MenuEditorComponent implements OnInit {
   }
 
   openItemModal(item?: MenuItem): void {
+    if(!item && this.auth.account()?.usage?.products >= this.auth.account()?.entitlements?.MAX_PRODUCTS){this.onToast.emit('Limite de produtos atingido. Compare os planos acima ou edite um produto existente.');return;}
     this.videoUploadBlocksSave = false;
     if (item) {
       this.editingItemId = item.id;
@@ -2437,7 +2441,7 @@ export class MenuEditorComponent implements OnInit {
         },
         error: (err) => {
           console.error('[MenuEditor] Erro ao criar produto:', err);
-          const msg = err?.error?.error?.message || 'Erro ao adicionar produto. Verifique a imagem ou conexão.';
+          const msg = err?.error?.error?.code==='LIMIT_EXCEEDED'?'Limite de produtos atingido. Compare os planos acima.':'Não foi possível adicionar o produto. Verifique os dados e sua conexão.';
           this.onToast.emit(msg);
         }
       });

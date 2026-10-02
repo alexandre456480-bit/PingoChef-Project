@@ -1,0 +1,237 @@
+<section class="qr-section" aria-labelledby="qr-title">
+  <header class="qr-heading">
+    <div>
+      <span class="eyebrow">SEU CARDÁPIO, AO ALCANCE</span>
+      <h1 id="qr-title">QR Code do cardápio</h1>
+      <p>Compartilhe um endereço permanente e acompanhe as entradas no Analytics.</p>
+    </div>
+  </header>
+  @if (loading()) {
+    <p role="status">Carregando seus QR Codes…</p>
+  }
+  @if (error()) {
+    <div class="notice error" role="alert">
+      <strong>Não foi possível concluir.</strong> {{ error() }}
+      <button type="button" (click)="load()" [disabled]="busy()">Recarregar lista</button>
+    </div>
+  }
+  @if (notice()) {
+    <p class="notice" role="status">{{ notice() }}</p>
+  }
+  @if (data(); as data) {
+    @if (!data.publicAvailable) {
+      <p class="notice">
+        O cardápio ainda não está disponível ao público. Publique-o na seção Preview para que o QR
+        funcione.
+      </p>
+    }
+    <div class="qr-layout">
+      <form class="config-card" (ngSubmit)="save()" aria-label="Configurar QR Code">
+        <div class="card-heading">
+          <h2>Configurações</h2>
+          <span>{{ data.rows.length }} / {{ data.limit }} códigos</span>
+        </div>
+        @if (data.rows.length) {
+          <div class="selector-row">
+            <label
+              >QR salvo<select
+                aria-label="QR salvo"
+                [ngModel]="selected()?.id || ''"
+                (ngModelChange)="select($event)"
+                name="selected"
+                [disabled]="busy()"
+              >
+                <option value="" disabled>Novo QR Code</option>
+                @for (row of data.rows; track row.id) {
+                  <option [value]="row.id">
+                    {{ row.name }} · {{ row.status === 'ACTIVE' ? 'Ativo' : 'Pausado' }}
+                  </option>
+                }
+              </select></label
+            ><button
+              class="secondary small"
+              type="button"
+              (click)="newCode()"
+              [disabled]="busy() || data.rows.length >= data.limit"
+            >
+              Novo QR
+            </button>
+          </div>
+        }
+        <label
+          >Nome do QR<input
+            name="name"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            maxlength="120"
+            required
+            [disabled]="busy()"
+            placeholder="QR Principal, Mesa 1, Balcão…"
+        /></label>
+        <fieldset [disabled]="busy() || !data.customization">
+          <legend>Personalização</legend>
+          <label
+            >Cor principal
+            <div class="color-row">
+              <input
+                type="color"
+                name="color"
+                aria-label="Cor principal"
+                [ngModel]="config().color"
+                (ngModelChange)="edit('color', $event)"
+              /><span>{{ config().color }}</span>
+            </div></label
+          >
+          <p class="hint" [class.invalid]="contrast() < 7" aria-live="polite">
+            Contraste {{ contrast() | number: '1.1-1' }}:1 · mínimo 7:1 sobre branco.
+            {{ contrast() < 7 ? 'Escolha uma cor mais escura.' : 'Cor adequada.' }}
+          </p>
+          <label
+            >Moldura<select
+              name="frame"
+              [ngModel]="config().frame"
+              (ngModelChange)="edit('frame', $event)"
+            >
+              <option value="card">Cartão com moldura</option>
+              <option value="none">Sem moldura</option>
+            </select></label
+          >
+          <label
+            >Texto curto<input
+              name="caption"
+              [ngModel]="config().caption"
+              (ngModelChange)="edit('caption', $event)"
+              maxlength="40"
+              aria-describedby="caption-help"
+          /></label>
+          <p id="caption-help" class="hint">
+            Até 40 caracteres: letras latinas, acentos e pontuação comum. O texto fica fora da área
+            de leitura.
+          </p>
+          <label
+            >Logo opcional<input
+              type="file"
+              accept="image/png"
+              (change)="logo($event)"
+              aria-describedby="logo-help"
+          /></label>
+          <p id="logo-help" class="hint">
+            PNG RGB/RGBA, de 16 a 128 pixels por lado, até 24 KB. A área do logo é limitada para
+            preservar a leitura.
+          </p>
+          @if (config().logoPng) {
+            <button type="button" class="text-button" (click)="edit('logoPng', null)">
+              Remover logo
+            </button>
+          }
+        </fieldset>
+        @if (!data.customization) {
+          <p class="hint">O seu plano permite gerar QR com a aparência padrão.</p>
+        }
+        @if (selected()) {
+          <label class="checkbox"
+            ><input
+              type="checkbox"
+              name="active"
+              [ngModel]="active()"
+              (ngModelChange)="active.set($event)"
+              [disabled]="busy()"
+            />QR ativo para visitantes</label
+          >
+        }
+        <button
+          class="primary"
+          type="submit"
+          [disabled]="
+            busy() || !valid() || !dirty() || (!selected() && data.rows.length >= data.limit)
+          "
+        >
+          {{ busy() ? 'Aguarde…' : selected() ? 'Atualizar QR Code' : 'Gerar QR Code' }}
+        </button>
+        <p class="hint">
+          Até {{ data.limit }} códigos por estabelecimento, incluindo pausados. Nomes e textos
+          aceitam apenas texto simples.
+        </p>
+      </form>
+      <div class="preview-column">
+        <div class="preview-card">
+          <span class="eyebrow">PRÉVIA DA VERSÃO SALVA</span>
+          @if (rendering()) {
+            <p role="status">Preparando o QR…</p>
+          } @else if (imageUrl()) {
+            <img
+              class="qr-image"
+              [src]="imageUrl()"
+              alt="QR Code salvo apontando para o cardápio público"
+            />
+          } @else {
+            <div class="empty-preview">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <rect x="3" y="3" width="6" height="6" />
+                <rect x="15" y="3" width="6" height="6" />
+                <rect x="3" y="15" width="6" height="6" />
+                <path d="M15 15h3v3h3M15 21v-3M21 12v3M12 3v9H3M12 15v6" />
+              </svg>
+              <p>
+                {{
+                  selected()
+                    ? 'A prévia não está disponível.'
+                    : 'Configure e gere seu primeiro QR Code.'
+                }}
+              </p>
+              @if (selected()) {
+                <button type="button" class="secondary" (click)="preview()">
+                  Tentar prévia novamente
+                </button>
+              }
+            </div>
+          }
+          @if (selected(); as row) {
+            <strong>{{ row.name }}</strong
+            ><span class="status-label">{{
+              row.status === 'ACTIVE' ? 'Ativo' : 'Pausado: visitantes não poderão acessar este QR.'
+            }}</span>
+          }
+        </div>
+        @if (selected(); as row) {
+          @if (dirty()) {
+            <p class="hint" role="status">
+              Você tem alterações. Atualize o QR para renovar a prévia e os arquivos.
+            </p>
+          }
+          <div class="download-row">
+            <button
+              type="button"
+              class="primary"
+              (click)="download('png')"
+              [disabled]="busy() || dirty()"
+            >
+              Baixar PNG</button
+            ><button
+              type="button"
+              class="secondary"
+              (click)="download('svg')"
+              [disabled]="busy() || dirty()"
+            >
+              Baixar SVG
+            </button>
+          </div>
+          <a class="menu-link" [href]="row.publicUrl" target="_blank" rel="noopener noreferrer"
+            >Abrir cardápio deste QR <span aria-hidden="true">↗</span
+            ><span class="sr-only"> (nova aba)</span></a
+          >
+        }
+        <p class="hint safety">
+          Correção de erros H, margem de 4 módulos e fundo branco. Teste a leitura no celular e na
+          impressão final. Entradas repetidas na mesma sessão e QR, em 30 minutos, contam uma vez.
+        </p>
+      </div>
+    </div>
+  }
+</section>

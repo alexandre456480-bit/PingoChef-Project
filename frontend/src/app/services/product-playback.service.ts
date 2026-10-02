@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../constants/api';
 
@@ -32,11 +32,9 @@ export class ProductPlaybackService {
     previewMode: boolean
   ): Observable<{ success: boolean; data: PlaybackSession }> {
     if (previewMode) {
-      const token = localStorage.getItem('access_token') || '';
       return this.http.post<{ success: boolean; data: PlaybackSession }>(
         `${this.apiUrl}/items/${encodeURIComponent(itemId)}/media/${encodeURIComponent(mediaId)}/playback`,
-        {},
-        { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+        {}
       );
     }
 
@@ -48,11 +46,9 @@ export class ProductPlaybackService {
   }
 
   publishReadyMedia(): Observable<{ success: boolean; data: { publishedCount: number } }> {
-    const token = localStorage.getItem('access_token') || '';
     return this.http.post<{ success: boolean; data: { publishedCount: number } }>(
       `${this.apiUrl}/items/media/publish-ready`,
-      {},
-      { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+      {}
     );
   }
 }

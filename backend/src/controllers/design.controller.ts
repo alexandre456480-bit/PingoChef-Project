@@ -45,7 +45,7 @@ const designSchema = z.object({
     })
   ).default([]),
   custom_config: z.record(z.unknown()).optional()
-});
+}).strict();
 
 export const getDesignController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {

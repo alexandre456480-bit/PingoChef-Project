@@ -525,13 +525,23 @@ export class DashboardHomeComponent implements OnInit {
   @Output() onToast = new EventEmitter<string>();
 
   businessName = 'Seu Estabelecimento';
-  totalCategories = 0;
-  totalItems = 0;
-  menuStatus = 'Rascunho';
+  get totalCategories(){return this.menuService.categories().length;}
+  get totalItems(){return this.menuService.items().length;}
+  get menuStatus(){return this.authService.account()?.isPublished?'Publicado':'Rascunho';}
   publicLink = 'Não configurado';
   hasPublicLink = false;
 
-  checklistItems: { label: string; route: ActiveSection; done: boolean }[] = [];
+  get checklistItems(): { label: string; route: ActiveSection; done: boolean }[] {
+    const biz=this.authService.currentBusiness();
+    return [
+      { label: 'Cadastrar dados da empresa', route: 'empresa', done: !!biz?.name },
+      { label: 'Enviar logo do estabelecimento', route: 'empresa', done: !!biz?.logo_url },
+      { label: 'Criar primeira categoria', route: 'menu', done: this.totalCategories > 0 },
+      { label: 'Criar primeiro produto', route: 'menu', done: this.totalItems > 0 },
+      { label: 'Personalizar design do cardápio', route: 'design', done: this.authService.account()?.onboarding?.designConfigured===true },
+      { label: 'Publicar cardápio online', route: 'preview', done: this.authService.account()?.isPublished===true }
+    ];
+  }
 
   constructor(
     private authService: AuthService,
@@ -543,20 +553,8 @@ export class DashboardHomeComponent implements OnInit {
     this.businessName = biz?.name || 'Seu Estabelecimento';
     const slug = biz?.slug || '';
 
-    this.totalCategories = this.menuService.categories().length;
-    this.totalItems = this.menuService.items().length;
     this.hasPublicLink = !!slug;
     this.publicLink = slug ? buildPublicMenuUrl(slug) : 'Não configurado';
-    this.menuStatus = this.totalItems > 0 ? 'Publicado' : 'Rascunho';
-
-    this.checklistItems = [
-      { label: 'Cadastrar dados da empresa', route: 'empresa', done: !!biz?.name },
-      { label: 'Enviar logo do estabelecimento', route: 'empresa', done: !!biz?.logo_url },
-      { label: 'Criar primeira categoria', route: 'menu', done: this.totalCategories > 0 },
-      { label: 'Criar primeiro produto', route: 'menu', done: this.totalItems > 0 },
-      { label: 'Personalizar design do cardápio', route: 'design', done: false },
-      { label: 'Publicar cardápio online', route: 'preview', done: false }
-    ];
   }
 
   get completedSteps(): number {

@@ -5,6 +5,14 @@
 
 > **Estado implementado em 30/09/2026:** consulte [15 — Fundação do Admin](./15-ADMIN-FOUNDATION.md) antes dos contratos conceituais abaixo. Alguns fluxos de autenticação, publicação e banco descritos aqui ainda são propostas.
 
+> **Fundação do proprietário implementada em 02/10/2026:** os contratos atuais de sessão por cookie, confirmação, cadastro público, planos e limites estão em [19 — Fase 1 do proprietário](./19-OWNER-PHASE1-FOUNDATION.md).
+>
+> **Jornada comercial e painel do proprietário:** planos, cadastro por intenção, confirmação, configurações, uso e feature gates estão em [20 — Fase 2 do proprietário](./20-OWNER-PHASE2-COMMERCIAL-UI.md).
+>
+> **Analytics real do cardápio:** coleta em todos os planos, relatórios por entitlement, privacidade, agregação, retenção e testes em [21 — Fase 3 do proprietário](./21-OWNER-PHASE3-MENU-ANALYTICS.md).
+>
+> **QR e entrega consolidada:** PNG/SVG Medium/Pro, deduplicação, quotas compartilhadas, revisão adversarial e configurações de produção em [22 — Fase 4 do proprietário](./22-OWNER-PHASE4-QR-SECURITY-DELIVERY.md).
+
 ---
 
 ## Stack Tecnológica
@@ -49,6 +57,9 @@
 | [`16-ADMIN-PHASE1-BACKEND.md`](./16-ADMIN-PHASE1-BACKEND.md) | API Admin, assinaturas preparadas, analytics, RLS e implantação |
 | [`17-ADMIN-DASHBOARD.md`](./17-ADMIN-DASHBOARD.md) | Painel Admin, métricas, filtros, endpoints e implantação desta fase |
 | [`18-ADMIN-PHASE3-OPERATIONS.md`](./18-ADMIN-PHASE3-OPERATIONS.md) | Comércio preparado, observabilidade, purga, recuperação e riscos residuais |
+| [`19-OWNER-PHASE1-FOUNDATION.md`](./19-OWNER-PHASE1-FOUNDATION.md) | Sessão BFF do proprietário, cadastro confirmado, planos, quotas, migração e testes reais |
+| [`20-OWNER-PHASE2-COMMERCIAL-UI.md`](./20-OWNER-PHASE2-COMMERCIAL-UI.md) | Jornada comercial, configurações, uso e demonstrações |
+| [`21-OWNER-PHASE3-MENU-ANALYTICS.md`](./21-OWNER-PHASE3-MENU-ANALYTICS.md) | Eventos públicos, Analytics por plano, agregação, retenção, filtros, CSV e validação |
 
 ---
 

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -18,6 +18,13 @@ import { BusinessEditorComponent } from './sections/business-editor/business-edi
 import { DesignEditorComponent } from './sections/design-editor/design-editor.component';
 import { PreviewSectionComponent } from './sections/preview-section/preview-section.component';
 import { LikesSectionComponent } from './sections/likes-section/likes-section.component';
+import { CommercialService } from '../../services/commercial.service';
+import { SettingsComponent } from './components/settings/settings.component';
+import { FeaturePreviewComponent } from './sections/feature-preview/feature-preview.component';
+import { PlanUsageComponent } from '../../components/plan-usage/plan-usage.component';
+import { OwnerSessionState } from '../../services/owner-session-state.service';
+import { AnalyticsComponent } from './sections/analytics/analytics.component';
+import { QrComponent } from './sections/qr/qr.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -33,7 +40,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
     DesignEditorComponent,
     PreviewSectionComponent,
     LikesSectionComponent,
-    PingoLoaderComponent
+    PingoLoaderComponent, SettingsComponent, FeaturePreviewComponent, PlanUsageComponent, AnalyticsComponent, QrComponent
   ],
   template: `
     <div class="dashboard-shell" [attr.data-panel-theme]="panelTheme">
@@ -45,6 +52,10 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
 
       <!-- 1. Sidebar -->
       <app-sidebar
+        [attr.inert]="settingsVisible ? '' : null"
+        [analyticsEnabled]="commercial.analytics()"
+        [qrEnabled]="commercial.qr()"
+        (settingsOpen)="settingsVisible = true"
         [activeSection]="activeSection"
         [isDarkTheme]="panelTheme === 'dark'"
         [mobileOpen]="mobileSidebarOpen"
@@ -55,7 +66,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
       </app-sidebar>
 
       <!-- 2. Main Content Area -->
-      <div class="main-viewport">
+      <div class="main-viewport" [attr.inert]="settingsVisible ? '' : null">
         <!-- Topbar -->
         <app-topbar
           [businessName]="businessName"
@@ -72,12 +83,14 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
         <main class="content-canvas">
           @switch (activeSection) {
             @case ('dashboard') {
+              <app-plan-usage (compare)="comparePlans()"></app-plan-usage>
               <app-dashboard-home
                 (navigateTo)="setSection($event)"
                 (onToast)="showToast($event)">
               </app-dashboard-home>
             }
             @case ('menu') {
+              <app-plan-usage (compare)="comparePlans()"></app-plan-usage>
               <app-menu-editor
                 (onToast)="showToast($event)">
               </app-menu-editor>
@@ -100,12 +113,20 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
             @case ('likes') {
               <app-likes-section></app-likes-section>
             }
+            @case ('analytics') {
+              @if (commercial.analytics()) { <app-owner-analytics></app-owner-analytics> }
+              @else { <app-feature-preview feature="analytics"></app-feature-preview> }
+            }
+            @case ('qr') {
+              @if (commercial.qr()) { <app-owner-qr></app-owner-qr> }
+              @else { <app-feature-preview feature="qr"></app-feature-preview> }
+            }
           }
         </main>
       </div>
 
       <!-- 3. Right Panel: Phone Preview (Desktop Column) -->
-      <aside class="preview-panel" [class.preview-hidden]="!showDesktopPreview">
+      <aside class="preview-panel" [class.preview-hidden]="!showDesktopPreview" [attr.inert]="settingsVisible ? '' : null">
         <div class="preview-panel-header">
           <div class="header-badge">
             <span class="pulse-dot"></span>
@@ -133,7 +154,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
           <div class="mobile-preview-modal" (click)="$event.stopPropagation()">
             <div class="modal-bar">
               <div class="modal-handle"></div>
-              <button class="close-btn" (click)="mobilePreviewOpen = false">
+              <button class="close-btn" aria-label="Fechar preview do cardápio" (click)="mobilePreviewOpen = false">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -145,6 +166,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
       }
 
       <!-- 5. Floating Toast Notification -->
+      @if(settingsVisible){<app-owner-settings [theme]="panelTheme" (close)="settingsVisible=false"></app-owner-settings>}
       @if (toastMessage) {
         <div class="toast-floating" role="alert">
           <div class="toast-icon">
@@ -217,7 +239,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
       position: relative;
       overflow: hidden;
       border-left: 1px solid rgba(255, 255, 255, 0.04);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 180ms ease-out, opacity 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
     }
 
     .preview-panel-header {
@@ -272,7 +294,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: transform 180ms ease-out, opacity 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
     }
 
     .preview-minimize-btn:hover {
@@ -444,7 +466,7 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
       }
     }
 
-    @media (max-width: 820px) {
+    @media (max-width: 1024px) {
       .dashboard-shell {
         grid-template-columns: 1fr;
       }
@@ -452,9 +474,18 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
         padding: 16px 14px 40px 14px;
       }
     }
+    .dashboard-shell{--pc-surface:#281320;--pc-text:#fff7f2;--pc-muted:#cebbc4;--pc-border:#ffffff20;--pc-link:#ffab66;--pc-track:#513348;background:#180b15}
+    .main-viewport{background:radial-gradient(circle at 50% 0%,#281320,#180b15 75%)}
+    .dashboard-shell[data-panel-theme=light]{--pc-surface:#fff9f4;--pc-text:#2d1b2e;--pc-muted:#725f68;--pc-border:#ddcccf;--pc-link:#691525;--pc-track:#eadbdc;background:#f7eee7}
+    .dashboard-shell[data-panel-theme=light] .main-viewport{background:#f7eee7}
+    @media(max-width:1100px){.dashboard-shell:has(.preview-hidden){grid-template-columns:220px 1fr 0}}
+    @media(max-width:1024px){.dashboard-shell:has(.preview-hidden){grid-template-columns:minmax(0,1fr)}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  settingsVisible=false;
+  private refreshTimer?:ReturnType<typeof setTimeout>;
   activeSection: ActiveSection = 'dashboard';
   searchQuery = '';
   toastMessage: string | null = null;
@@ -473,8 +504,20 @@ export class DashboardComponent implements OnInit {
     public designService: DesignService,
     private productPlaybackService: ProductPlaybackService,
     private cdr: ChangeDetectorRef,
-    private router: Router
-  ) {}
+    private router: Router,
+    public commercial: CommercialService,
+    state:OwnerSessionState
+  ) {
+    effect(()=>{
+      if(state.sessionExpired())this.router.navigate(['/login'],{queryParams:{session:'expired'}});
+    });
+    effect(()=>{
+      const version=state.usageVersion();
+      if(version>0){clearTimeout(this.refreshTimer);this.refreshTimer=setTimeout(()=>this.authService.restore().subscribe({error:()=>this.showToast('Não foi possível atualizar o uso do plano. Tente novamente.')}),250);}
+    });
+  }
+  ngOnDestroy(){clearTimeout(this.refreshTimer);}
+  comparePlans(){this.router.navigate(['/plans']);}
 
   ngOnInit(): void {
     try {
@@ -486,13 +529,13 @@ export class DashboardComponent implements OnInit {
     // Carrega dados iniciais essenciais para alimentar os componentes e o phone-preview em tempo real
     this.menuService.loadCategories()
       .pipe(finalize(() => this.completeInitialRequest()))
-      .subscribe();
+      .subscribe({error:()=>this.showToast('Não foi possível carregar as categorias. Confira sua conexão.')});
     this.menuService.loadItems()
       .pipe(finalize(() => this.completeInitialRequest()))
-      .subscribe();
+      .subscribe({error:()=>this.showToast('Não foi possível carregar os produtos. Confira sua conexão.')});
     this.designService.loadDesign()
       .pipe(finalize(() => this.completeInitialRequest()))
-      .subscribe();
+      .subscribe({error:()=>this.showToast('Não foi possível carregar o design. Confira sua conexão.')});
   }
 
   get businessName(): string {
@@ -528,8 +571,10 @@ export class DashboardComponent implements OnInit {
   }
 
   onLogout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+    this.authService.logout().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.showToast('Não foi possível encerrar a sessão. Tente novamente.')
+    });
   }
 
   publishMenu(): void {

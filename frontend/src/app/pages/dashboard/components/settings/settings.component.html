@@ -1,0 +1,182 @@
+<div class="settings-backdrop" (click)="!busy && close.emit()">
+  <section
+    class="settings-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settings-title"
+    tabindex="-1"
+    appDialogFocus
+    (dialogEscape)="!busy && close.emit()"
+    (click)="$event.stopPropagation()"
+    [attr.data-theme]="theme"
+  >
+    <header>
+      <h1 id="settings-title">Configurações</h1>
+      <button
+        class="close-button"
+        aria-label="Fechar configurações"
+        [disabled]="busy"
+        (click)="close.emit()"
+      >
+        ×
+      </button>
+    </header>
+    <div class="settings-body">
+      <nav aria-label="Seções de configurações">
+        @for (item of sections; track item.id) {
+          <button
+            [class.active]="section === item.id"
+            [attr.aria-current]="section === item.id ? 'page' : null"
+            [disabled]="busy"
+            (click)="select(item.id)"
+          >
+            {{ item.label }}
+          </button>
+        }
+      </nav>
+      <main>
+        @if (loading) {
+          <p role="status">Atualizando sua conta…</p>
+        }
+        @if (error) {
+          <p class="error" role="alert">{{ error }}</p>
+        }
+        @switch (section) {
+          @case ('profile') {
+            <h2>Sua conta</h2>
+            <dl>
+              <dt>Nome</dt>
+              <dd>{{ auth.currentUser()?.name || 'Não informado' }}</dd>
+              <dt>E-mail</dt>
+              <dd>{{ auth.currentUser()?.email }}</dd>
+              <dt>Verificação</dt>
+              <dd>
+                {{ auth.account()?.emailVerified ? 'E-mail verificado' : 'Confirmação pendente' }}
+              </dd>
+              <dt>Estabelecimento</dt>
+              <dd>{{ auth.currentBusiness()?.name }}</dd>
+            </dl>
+            <p>Os dados do estabelecimento podem ser ajustados na seção Empresa do painel.</p>
+          }
+          @case ('plan') {
+            <app-plan-usage (compare)="compare()"></app-plan-usage>
+            <h2>Recursos do seu plano</h2>
+            <ul>
+              <li>
+                Analytics: {{ commercial.analytics() ? 'Incluído no plano' : 'Não incluído' }}
+              </li>
+              <li>QR Code: {{ commercial.qr() ? 'Incluído no plano' : 'Não incluído' }}</li>
+              <li>
+                Envio de vídeos:
+                {{
+                  auth.account()?.entitlements?.VIDEO_UPLOAD === true ? 'Incluído' : 'Não incluído'
+                }}
+              </li>
+            </ul>
+            <p>
+              Analytics está disponível a partir do Basic. QR Codes reais estão disponíveis
+              nos planos Medium e Pro. Os recursos não incluídos mostram uma demonstração.
+            </p>
+            <button class="button primary" (click)="compare()">Comparar planos</button>
+          }
+          @case ('security') {
+            <h2>Segurança</h2>
+            <p>
+              Ao trocar a senha, todas as sessões serão encerradas. Você precisará entrar novamente.
+            </p>
+            <form (ngSubmit)="changePassword()" #passwordForm="ngForm">
+              <label
+                >Senha atual<input
+                  name="currentPassword"
+                  type="password"
+                  [(ngModel)]="currentPassword"
+                  autocomplete="current-password"
+                  required
+                  maxlength="128" /></label
+              ><label
+                >Nova senha<input
+                  name="newPassword"
+                  type="password"
+                  [(ngModel)]="password"
+                  autocomplete="new-password"
+                  required
+                  minlength="8"
+                  maxlength="128" /></label
+              ><label
+                >Confirmar nova senha<input
+                  name="confirmPassword"
+                  type="password"
+                  [(ngModel)]="confirmation"
+                  autocomplete="new-password"
+                  required
+                  maxlength="128" /></label
+              ><button class="button primary" [disabled]="busy || passwordForm.invalid">
+                {{ busy ? 'Atualizando…' : 'Alterar senha' }}
+              </button>
+            </form>
+            <div class="security-action">
+              <h3>Sessões da conta</h3>
+              <p>Encerre o acesso em todos os dispositivos, incluindo este.</p>
+              <button class="button" [disabled]="busy" (click)="logout(true)">
+                Sair de todos os dispositivos
+              </button>
+            </div>
+          }
+          @case ('support') {
+            <h2>Estamos por aqui.</h2>
+            <p>Precisa de ajuda com sua conta, plano ou cardápio?</p>
+            <a class="button primary" href="mailto:pingochef@gmail.com">pingochef&#64;gmail.com</a>
+            <p>Nunca envie sua senha ou dados de acesso ao suporte.</p>
+          }
+          @case ('manage') {
+            <h2>Gerenciar conta</h2>
+            <button class="button" [disabled]="busy" (click)="logout()">Sair desta conta</button>
+            <div class="danger-zone">
+              <h3>Excluir conta</h3>
+              <p>
+                Seu cardápio será retirado do ar imediatamente e suas sessões serão encerradas. A
+                exclusão dos dados e mídias será agendada para daqui a 30 dias, pelo processo de
+                limpeza do sistema.
+              </p>
+              <p>
+                Para dúvidas ou cancelamento durante a retenção, fale com
+                <a href="mailto:pingochef@gmail.com">pingochef&#64;gmail.com</a>.
+              </p>
+              <form (ngSubmit)="deleteAccount()" #deleteForm="ngForm">
+                <label
+                  >Sua senha atual<input
+                    name="deletePassword"
+                    type="password"
+                    [(ngModel)]="deletePassword"
+                    required
+                    maxlength="128"
+                    autocomplete="current-password" /></label
+                ><label
+                  >Digite EXCLUIR para confirmar<input
+                    name="deleteConfirmation"
+                    [(ngModel)]="deleteConfirmation"
+                    required
+                    autocomplete="off" /></label
+                ><label class="check-label"
+                  ><input
+                    name="confirmDelete"
+                    type="checkbox"
+                    [(ngModel)]="confirmDelete"
+                    required
+                  />Entendo que o cardápio sairá do ar e a exclusão será agendada.</label
+                ><button
+                  class="button danger"
+                  [disabled]="
+                    busy || deleteForm.invalid || deleteConfirmation !== 'EXCLUIR' || !confirmDelete
+                  "
+                >
+                  {{ busy ? 'Agendando…' : 'Agendar exclusão da conta' }}
+                </button>
+              </form>
+            </div>
+          }
+        }
+      </main>
+    </div>
+  </section>
+</div>

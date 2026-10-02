@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
+import { mapEntitlementDatabaseError } from '../services/entitlement.service';
 
 export type ProductMediaStatus =
   | 'waiting'
@@ -142,7 +143,7 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
       p_replaces_media_id: input.replacesMediaId
     });
 
-    if (error) throw databaseError('reservar');
+    if (error) throw mapEntitlementDatabaseError(error) || databaseError('reservar');
     const row = Array.isArray(data) ? data[0] : data;
     return {
       mediaId: row?.reserved_media_id ?? null,

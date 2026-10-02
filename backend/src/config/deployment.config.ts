@@ -24,6 +24,8 @@ export function validateDeploymentEnvironment(env:NodeJS.ProcessEnv):void{
   }
   if(!env.INTERNAL_JOBS_SECRET||env.INTERNAL_JOBS_SECRET.length<32)
     throw new Error('INTERNAL_JOBS_SECRET is not configured');
+  if(env.ANALYTICS_HASH_SECRET && env.ANALYTICS_HASH_SECRET.length<32)
+    throw new Error('ANALYTICS_HASH_SECRET requires at least 32 random characters');
   for(const name of ['SUPABASE_SERVICE_ROLE_KEY','SUPABASE_ANON_KEY',
     'INVITATION_HASH_SECRET','ADMIN_LOGIN_HASH_SECRET']){
     if(!env[name]||env[name]!.length<32)throw new Error(`${name} is not configured`);
@@ -32,4 +34,24 @@ export function validateDeploymentEnvironment(env:NodeJS.ProcessEnv):void{
     throw new Error('PURGE_STORAGE_BUCKET is not configured');
   if(env.API_TELEMETRY_ENABLED!=='true')
     throw new Error('API_TELEMETRY_ENABLED must be true for deployment');
+  if(!/^[A-Za-z0-9+/]{43}=$/.test(env.OWNER_SESSION_ENCRYPTION_KEY||'')
+    ||Buffer.from(env.OWNER_SESSION_ENCRYPTION_KEY||'','base64').length!==32)
+    throw new Error('OWNER_SESSION_ENCRYPTION_KEY must encode 32 random bytes');
+  let callback:URL;
+  try{callback=new URL(env.OWNER_AUTH_CALLBACK_URL||'');}catch{throw new Error('OWNER_AUTH_CALLBACK_URL is not configured');}
+  if(callback.protocol!=='https:'||callback.search||callback.hash||callback.username||callback.password
+    ||!callback.pathname.endsWith('/api/v1/auth/confirm-email'))
+    throw new Error('OWNER_AUTH_CALLBACK_URL requires the HTTPS email callback');
+  let menuOrigin:URL;
+  try{menuOrigin=new URL(env.PUBLIC_MENU_ORIGIN||'');}catch{throw new Error('PUBLIC_MENU_ORIGIN is not configured');}
+  if(menuOrigin.protocol!=='https:' || menuOrigin.href!==`${menuOrigin.origin}/` || menuOrigin.origin.length>140
+    || !(env.FRONTEND_ORIGINS||'').split(',').map(value=>value.trim()).includes(menuOrigin.origin))
+    throw new Error('PUBLIC_MENU_ORIGIN must be an allowed HTTPS owner application origin');
+  if(!(env.FRONTEND_ORIGINS||'').split(',').map(value=>value.trim()).includes(callback.origin))
+    throw new Error('OWNER_AUTH_CALLBACK_URL must use an allowed owner application origin');
+  if(env.OWNER_LEGACY_TOKEN_ACCEPT_UNTIL){
+    const cutoff=Date.parse(env.OWNER_LEGACY_TOKEN_ACCEPT_UNTIL);
+    if(!Number.isFinite(cutoff)||cutoff>Date.now()+14*86400000)
+      throw new Error('Legacy migration must close within 14 days');
+  }
 }

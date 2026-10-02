@@ -28,7 +28,7 @@ import { AuthService } from '../../services/auth.service';
         <header class="auth-header-section">
           <img src="/pingo_chef_logo_principal.webp" alt="Pingo Chef" class="auth-logo-center" />
           <h1 class="auth-page-title">Cadastre-se</h1>
-          <p class="auth-page-subtitle">Crie sua conta em poucos segundos</p>
+          <p class="auth-page-subtitle">Comece no Free e confirme seu e-mail para ativar a conta</p>
         </header>
 
         <!-- Corpo do Formulário -->
@@ -107,11 +107,11 @@ import { AuthService } from '../../services/auth.service';
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="reg-invitation">Código do convite</label>
+              <label class="form-label" for="reg-invitation">Código do convite (opcional)</label>
               <div class="form-input-wrapper">
                 <input type="text" id="reg-invitation" class="form-input-capsule"
                   [(ngModel)]="formData.invitationCode" name="invitationCode"
-                  placeholder="Código enviado pelo PingoChef" required autocomplete="off" spellcheck="false" />
+                  placeholder="Código enviado pelo PingoChef" autocomplete="off" spellcheck="false" />
               </div>
             </div>
 
@@ -277,7 +277,7 @@ export class RegisterComponent {
       next: (res) => {
         this.isLoading = false;
         if (res.success) {
-          this.router.navigate(['/login']);
+          this.router.navigate(['/login'], { queryParams: { confirmation: 'sent' } });
         }
       },
       error: (err) => {

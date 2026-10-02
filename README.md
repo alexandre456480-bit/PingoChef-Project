@@ -26,9 +26,17 @@ Aplique também, nesta ordem, `20261002000000_admin_phase3_commercial_ops.sql` e
 `20261002010000_admin_phase3_purge.sql` antes de publicar o backend atualizado.
 Gateway e backup ainda dependem de configuração operacional.
 
+A fundação de autenticação do proprietário, cadastro público confirmado e limites
+está em [`docs/19-OWNER-PHASE1-FOUNDATION.md`](docs/19-OWNER-PHASE1-FOUNDATION.md).
+Aplique as duas migrations `20261003000000` e `20261003010000` após as anteriores,
+configure a chave de sessão e os templates Auth antes de implantar esta versão.
+O preflight preserva contas e conteúdo existente; o caso atual de 13 produtos no
+Free está documentado no relatório.
+
 ## Desenvolvimento local
 
-Requisitos: Node.js 20+ e um projeto Supabase configurado.
+Requisitos: Node compatível com as dependências instaladas e um projeto Supabase
+configurado. Ambiente validado nesta fase: Node.js 24.19.0.
 
 ```powershell
 cd backend
@@ -45,20 +53,30 @@ npm ci
 npm start
 ```
 
-O frontend utiliza `http://localhost:3000/api/v1` durante o desenvolvimento.
+O frontend utiliza `/api/v1` na própria origem; o proxy local aponta para
+`http://localhost:3000`. Configure `OWNER_SESSION_ENCRYPTION_KEY` somente no backend.
 Nunca versione `.env`, chaves privadas, tokens Mux ou a service role do Supabase.
 
 ## Verificações
+
+Analytics do cardápio está implementado na [Fase 3](docs/21-OWNER-PHASE3-MENU-ANALYTICS.md):
+coleta em todos os planos, consultas por entitlement, agregados SQL, filtros e CSV Pro.
+QR PNG/SVG, integração com Analytics e revisão de segurança estão na
+[Fase 4](docs/22-OWNER-PHASE4-QR-SECURITY-DELIVERY.md). Free/Basic mantêm a demo;
+Medium/Pro geram QR real pelo backend. Aplique as migrations pendentes, configure
+`PUBLIC_MENU_ORIGIN`, a fonte/backend nativo e os jobs descritos no relatório antes do deploy.
 
 ```powershell
 cd backend
 npm test -- --runInBand
 npm run build
+npm run test:database
 
 cd ../frontend
 npm test -- --watch=false
 npm run build
 npm run security:scan
+npx playwright test --config playwright.phase4.config.ts
 ```
 
 ## Publicação na Vercel
@@ -80,9 +98,9 @@ Depois que o backend possuir uma URL HTTPS estável:
 2. Crie no Mux um webhook para
    `https://<backend>/api/v1/webhooks/mux`.
 3. Salve o signing secret como `MUX_WEBHOOK_SIGNING_SECRET` no backend.
-4. Configure o frontend para utilizar a URL publicada da API antes de sua
-   implantação. O endereço permanece local enquanto o backend público ainda
-   não foi definido.
+4. Configure o proxy `/api` do frontend para o backend do ambiente e mantenha
+   `OWNER_AUTH_CALLBACK_URL` sob a origem pública da aplicação. Confira allowlists
+   e templates de confirmação/recuperação conforme o relatório da fase 1.
 
 As migrations em `supabase/migrations` devem ser aplicadas em ordem antes da
 primeira implantação do backend.

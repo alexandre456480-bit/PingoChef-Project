@@ -1,15 +1,18 @@
-import { Component } from '@angular/core';
+import { finalize } from 'rxjs';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
+  changeDetection:ChangeDetectionStrategy.Default,
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="auth-page">
+    @if(checking){<div class="auth-page" role="status">Verificando sua sessão…</div>}
+    @else {<div class="auth-page">
       <div class="auth-card-wave">
         <!-- Onda Decorativa Superior -->
         <div class="wave-top-wrapper">
@@ -40,6 +43,7 @@ import { AuthService } from '../../services/auth.service';
             </div>
           }
 
+          @if (notice) { <p role="status">{{ notice }}</p> }
           <form (ngSubmit)="onLogin()">
             <!-- E-mail -->
             <div class="form-group">
@@ -102,11 +106,13 @@ import { AuthService } from '../../services/auth.service';
               }
             </button>
           </form>
+          <div class="auth-bottom-links"><a routerLink="/forgot-password">Esqueci minha senha</a></div>
+          <div class="auth-bottom-links"><button type="button" (click)="resend()" [disabled]="isLoading || !email">Reenviar confirmação</button></div>
 
           <!-- Links de Rodapé -->
           <div class="auth-bottom-links">
             Não tem uma conta?
-            <a routerLink="/register">Cadastre-se</a>
+            <a routerLink="/plans">Escolha seu plano</a>
           </div>
         </main>
 
@@ -127,17 +133,40 @@ import { AuthService } from '../../services/auth.service';
           </svg>
         </div>
       </div>
-    </div>
+    </div>}
   `
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
+  checking=true;
   email = '';
   password = '';
   showPassword = false;
   isLoading = false;
   errorMessage = '';
+  notice = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, route: ActivatedRoute,private cdr:ChangeDetectorRef) {
+    const status = route.snapshot.queryParamMap.get('confirmation');
+    this.notice = status === 'sent' ? 'Confira seu e-mail para confirmar o cadastro.'
+      : status === 'success' ? 'E-mail confirmado. Entre para continuar.'
+      : status === 'pending' ? 'E-mail confirmado. Entre para concluir os dados do cadastro.'
+      : status === 'invalid_or_used' ? 'Este link expirou ou já foi usado. Tente entrar ou reenvie a confirmação.' : '';
+    if (route.snapshot.queryParamMap.get('account') === 'unavailable') this.notice = 'Sua conta está indisponível. Entre em contato com o suporte.';
+    if (route.snapshot.queryParamMap.get('account') === 'deletion-scheduled') this.notice = 'Exclusão agendada para daqui a 30 dias. Seu cardápio foi retirado do ar. Para ajuda, fale com pingochef@gmail.com.';
+    if (route.snapshot.queryParamMap.get('password') === 'changed') this.notice = 'Senha atualizada e sessões encerradas. Entre com sua nova senha.';
+    const session=route.snapshot.queryParamMap.get('session');
+    if(session==='expired')this.notice='Sua sessão expirou. Entre novamente para continuar.';
+    if(session==='all-ended')this.notice='Todas as sessões foram encerradas.';
+  }
+  ngOnInit(){this.authService.restore().pipe(finalize(()=>this.cdr.markForCheck())).subscribe({next:r=>{this.checking=false;if(r.data.provisioningRequired)this.router.navigate(['/complete-registration']);else if(r.data.accountActive)this.router.navigate(['/dashboard']);},error:e=>{this.checking=false;if(e.status!==401)this.errorMessage='Não foi possível verificar sua sessão. Confira sua conexão e tente entrar.';}});}
+  resend(): void {
+    if (!this.email || this.isLoading) return;
+    this.isLoading = true;
+    this.authService.resendConfirmation(this.email).pipe(finalize(()=>this.cdr.markForCheck())).subscribe({
+      next: () => { this.isLoading = false; this.notice = 'Se necessário, enviaremos instruções para esse e-mail.'; },
+      error: () => { this.isLoading = false; this.errorMessage = 'Não foi possível enviar agora. Tente novamente.'; }
+    });
+  }
 
   onLogin(): void {
     if (!this.email || !this.password) return;
@@ -145,16 +174,18 @@ export class LoginComponent {
     this.errorMessage = '';
     this.isLoading = true;
 
-    this.authService.login({ email: this.email, password: this.password }).subscribe({
+    this.authService.login({ email: this.email, password: this.password }).pipe(finalize(()=>this.cdr.markForCheck())).subscribe({
       next: (res) => {
         this.isLoading = false;
         if (res.success) {
-          this.router.navigate(['/dashboard']);
+          if (res.data.provisioningRequired) this.router.navigate(['/complete-registration']);
+          else if (res.data.accountActive) this.router.navigate(['/dashboard']);
+          else this.errorMessage = 'Esta conta está indisponível. Entre em contato com o suporte.';
         }
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.error?.message || 'Credenciais inválidas. Verifique e-mail e senha.';
+        this.errorMessage = err.status===0?'Não foi possível conectar. Confira sua conexão e tente novamente.':err.status===429?'Aguarde alguns minutos antes de tentar novamente.':'Verifique e-mail, senha e a confirmação do endereço.';
       }
     });
   }
