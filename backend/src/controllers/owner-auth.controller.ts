@@ -87,6 +87,10 @@ export const ownerLogin = handler(async (req, res) => {
     session = { access_token: `local_jwt_${local.id}_${Date.now()}`, refresh_token: '', expires_at: Math.floor(Date.now() / 1000) + 3600 } as Session;
   } else {
     const { data, error } = await createPasswordAuthClient().auth.signInWithPassword({ email, password });
+    if (error && !['invalid_credentials', 'email_not_confirmed', 'user_banned'].includes(error.code || '')) {
+      if (error.status === 429) throw ownerError(429, 'TOO_MANY_REQUESTS');
+      throw ownerError(503, 'AUTH_SERVICE_UNAVAILABLE', 'O serviço de login está temporariamente indisponível.');
+    }
     if (error || !data.session || !data.user.email_confirmed_at) {
       // Do not reveal whether a credential or an unconfirmed email caused rejection.
       throw ownerError(401, 'INVALID_CREDENTIALS', 'Verifique e-mail, senha e a confirmação do endereço.');

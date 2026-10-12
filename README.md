@@ -130,7 +130,7 @@ O domínio público atual é `https://pingochef-web-drab.vercel.app`; a API é
 `https://pingochef-api.vercel.app`. Mantenha `PUBLIC_MENU_ORIGIN`, as allowlists,
 o callback de e-mail e os links do painel alinhados ao domínio público.
 `backend/vercel.json` inclui a fonte usada para exportar QR PNG/SVG. O endpoint
-autenticado `GET /api/v1/internal/operations/ready` verifica banco e renderização PNG.
+autenticado `GET /api/v1/internal/operations/ready` verifica banco, Supabase Auth e renderização PNG.
 
 Em produção, configure também `DEPLOYMENT_ENV=production`,
 `EXPECTED_SUPABASE_PROJECT_REF`, `ADMIN_ORIGINS`, `INVITATION_HASH_SECRET`,

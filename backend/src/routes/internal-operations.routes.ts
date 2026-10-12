@@ -43,6 +43,12 @@ router.get('/ready',async (_req,res)=>{
     const {error}=await supabaseAdmin.from('commercial_settings').select('singleton').limit(1);
     if(error)throw error;
     renderQr(publicMenuOrigin(), defaultQrConfiguration, 'png');
+    const auth = await fetch(new URL('/auth/v1/settings', process.env.SUPABASE_URL), {
+      headers: { apikey: process.env.SUPABASE_ANON_KEY! },
+      redirect: 'error', signal: AbortSignal.timeout(5000)
+    });
+    await auth.body?.cancel();
+    if (!auth.ok) return res.status(503).json({success:false,error:{code:'AUTH_DEPENDENCY_UNAVAILABLE'}});
     return res.json({success:true,data:{status:'ready'}});
   }catch{return res.status(503).json({success:false,error:{code:'DEPENDENCY_UNAVAILABLE'}});}
 });

@@ -124,6 +124,18 @@ describe('Owner BFF session and authentication boundaries',()=>{
     (supabaseAdmin.rpc as jest.Mock).mockResolvedValueOnce({data:false,error:null});
     const {result}=await login(app());expect(result.status).toBe(429);expect(provider.signInWithPassword).not.toHaveBeenCalled();
   });
+  it('provider configuration and outages are not reported as wrong credentials',async()=>{
+    for (const error of [{status:401,message:'Invalid API key'}, {status:500,code:'unexpected_failure'}, {status:0,name:'AuthRetryableFetchError'}]) {
+      provider.signInWithPassword.mockResolvedValue({data:{user:null,session:null},error});
+      const {result}=await login(app());
+      expect(result.status).toBe(503);
+      expect(result.body.error.code).toBe('AUTH_SERVICE_UNAVAILABLE');
+      expect(result.headers['set-cookie']).toBeUndefined();
+      expect(rows.size).toBe(0);
+    }
+    provider.signInWithPassword.mockResolvedValue({data:{user:null,session:null},error:{status:429,code:'over_request_rate_limit'}});
+    expect((await login(app())).result.status).toBe(429);
+  });
   it('login rejects missing Origin, suffix spoofing and cross-site fetch metadata',async()=>{
     for(const invalidOrigin of ['',origin+'.evil.test']){
       const attempt=request(app()).post('/api/v1/auth/login');if(invalidOrigin)attempt.set('Origin',invalidOrigin);
