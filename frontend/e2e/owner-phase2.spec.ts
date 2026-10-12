@@ -345,11 +345,10 @@ test(`video upload updates without another click when PUT response is ${uploadRe
   await page.addInitScript(() => {
     const src = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'src')!;
     Object.defineProperty(HTMLMediaElement.prototype, 'src', { ...src, set(value: string) {
-      src.set!.call(this, value);
       if (value.startsWith('blob:')) {
         Object.defineProperty(this, 'duration', { configurable: true, value: 8 });
         setTimeout(() => this.dispatchEvent(new Event('loadedmetadata')), 10);
-      }
+      } else src.set!.call(this, value);
     } });
   });
   await page.goto('/dashboard');
@@ -384,9 +383,20 @@ test(`video upload updates without another click when PUT response is ${uploadRe
   await page.screenshot({ path: testInfo.outputPath('video-ready.png') });
   await save.click();
   await expect(page.locator('app-menu-editor .modal-card.large')).toHaveCount(0);
-  await navigation(page, 'Início');
-  await page.locator('app-dashboard-home .quick-btn').filter({ hasText: 'Preview' }).click();
-  await page.getByRole('button', { name: 'Publicar Cardápio', exact: true }).click();
+  const publishButton = page.locator('.publication-toolbar').getByRole('button', { name: 'Publicar Cardápio', exact: true });
+  await expect(publishButton).toBeVisible();
+  if (uploadResponse === 'normal') {
+    for (const width of [1920, 1366, 1180, 820, 390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      const box = (await publishButton.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(width);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+    await page.screenshot({ path: testInfo.outputPath('publish-mobile.png') });
+  }
+  await publishButton.click();
   await expect(page.getByText('Cardápio publicado com sucesso na versão online!', { exact: true })).toBeVisible();
   expect(published).toBe(true);
 });
