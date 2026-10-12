@@ -125,3 +125,22 @@ Depois que o backend possuir uma URL HTTPS estável:
 
 As migrations em `supabase/migrations` devem ser aplicadas em ordem antes da
 primeira implantação do backend.
+
+O domínio público atual é `https://pingochef-web-drab.vercel.app`; a API é
+`https://pingochef-api.vercel.app`. Mantenha `PUBLIC_MENU_ORIGIN`, as allowlists,
+o callback de e-mail e os links do painel alinhados ao domínio público.
+`backend/vercel.json` inclui a fonte usada para exportar QR PNG/SVG. O endpoint
+autenticado `GET /api/v1/internal/operations/ready` verifica banco e renderização PNG.
+
+Em produção, configure também `DEPLOYMENT_ENV=production`,
+`EXPECTED_SUPABASE_PROJECT_REF`, `ADMIN_ORIGINS`, `INVITATION_HASH_SECRET`,
+`ADMIN_LOGIN_HASH_SECRET`, `OWNER_SESSION_ENCRYPTION_KEY`, `INTERNAL_JOBS_SECRET`,
+`PURGE_STORAGE_BUCKET` e `API_TELEMETRY_ENABLED=true`, além dos valores Supabase/Mux.
+Preserve as chaves já utilizadas pelo banco; uma troca pode invalidar sessões e convites.
+`ANALYTICS_HASH_SECRET` é opcional: na ausência dele, a API deriva uma chave da
+chave de sessões. Segredos permanecem apenas no backend.
+
+Agende os endpoints de manutenção autenticados descritos nas fases 3 e 4.
+Deploys sem configuração de scheduler não executam esses jobs automaticamente.
+O bucket `menu-images` está reservado para mídias em Storage; antes de usá-lo,
+crie as políticas por estabelecimento. As imagens atuais não dependem desse bucket.

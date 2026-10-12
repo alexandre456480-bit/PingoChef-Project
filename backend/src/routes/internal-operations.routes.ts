@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from '../config/supabase';
 import { requireInternalJob } from '../middleware/internal-job-auth';
 import { runAccountPurgeOnce } from '../services/account-purge.service';
+import { renderQr, publicMenuOrigin, defaultQrConfiguration } from '../services/qr.service';
 
 const router=Router();
 router.use(rateLimit({windowMs:15*60*1000,limit:30,standardHeaders:true,legacyHeaders:false}));
@@ -41,6 +42,7 @@ router.get('/ready',async (_req,res)=>{
   try{
     const {error}=await supabaseAdmin.from('commercial_settings').select('singleton').limit(1);
     if(error)throw error;
+    renderQr(publicMenuOrigin(), defaultQrConfiguration, 'png');
     return res.json({success:true,data:{status:'ready'}});
   }catch{return res.status(503).json({success:false,error:{code:'DEPENDENCY_UNAVAILABLE'}});}
 });

@@ -216,8 +216,12 @@ export function renderQr(
     (width - 48) / Math.max(1, c.caption.length * 0.65),
   );
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#FFFFFF"/>${c.frame === "card" ? `<rect x="4" y="4" width="${width - 8}" height="${height - 8}" rx="20" fill="none" stroke="${c.color}" stroke-width="3"/>` : ""}<path d="${modules}" fill="${c.color}"/>${image}${c.caption ? `<text x="${width / 2}" y="${width + 16}" text-anchor="middle" font-family="Outfit" font-size="${fontSize}" fill="${c.color}">${xml(c.caption)}</text>` : ""}</svg>`;
-  const fontPath = resolve(__dirname, "../../assets/fonts/Outfit.ttf");
-  if (!existsSync(fontPath)) throw ownerError(503, "QR_FONT_UNAVAILABLE");
+  const fontPath = [
+    resolve(__dirname, "../../assets/fonts/Outfit.ttf"),
+    resolve(process.cwd(), "assets/fonts/Outfit.ttf"),
+    resolve(process.cwd(), "backend/assets/fonts/Outfit.ttf"),
+  ].find(path => existsSync(path));
+  if (!fontPath) throw ownerError(503, "QR_FONT_UNAVAILABLE");
   const renderer = new Resvg(svg, {
     font: {
       loadSystemFonts: false,
