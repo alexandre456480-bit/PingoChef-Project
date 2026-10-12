@@ -108,7 +108,6 @@ export class PublicMenuService {
         fontBody: 'Inter',
         fontPair: 'modern_clean',
         categoryStyle: 'icon_name',
-        motion: 'fade',
         heroBanners: [
           'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
           'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=80',

@@ -1,10 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
+import { vi } from 'vitest';
 import { ProductVideoUploaderComponent } from './product-video-uploader.component';
-import { ProductMediaDeletionStatus, VideoUploadService } from '../../services/video-upload.service';
+import { DirectUploadProgress, ProductMediaDeletionStatus, VideoUploadService } from '../../services/video-upload.service';
 
 class VideoUploadServiceStub {
   readonly deletedMediaIds: string[] = [];
+  readonly directUpload = new Subject<DirectUploadProgress>();
+  createUploadIntent() { return of({ mediaId: 'media-new', uploadUrl: 'https://storage.example.test/upload' }); }
+  uploadDirect() { return this.directUpload; }
 
   listProductMedia(): Observable<never[]> { return of([]); }
   deleteProductMedia(_itemId: string, mediaId: string): Observable<ProductMediaDeletionStatus> {
@@ -137,5 +141,75 @@ describe('ProductVideoUploaderComponent', () => {
 
     expect(component.state).toBe('error');
     expect(component.errorMessage).toBe('O Mux não conseguiu processar este vídeo.');
+  });
+
+  it('refreshes an OnPush view after an asynchronous status response without another user click', async () => {
+    const updates = new Subject<any[]>();
+    vi.spyOn(TestBed.inject(VideoUploadService), 'listProductMedia').mockReturnValue(updates);
+    fixture.componentRef.setInput('itemId', 'item-1');
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.media-skeleton')).not.toBeNull();
+
+    await Promise.resolve();
+    updates.next([readyMedia('media-1')]);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.media-skeleton')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.media-row')?.textContent).toContain('Pronto');
+    updates.complete();
+  });
+
+  it('allows saving during provider processing and offers status retry without deleting the video', () => {
+    const component = fixture.componentInstance;
+    const service = TestBed.inject(VideoUploadService) as unknown as VideoUploadServiceStub;
+    component.itemId = 'item-1';
+    const busy: boolean[] = [];
+    component.busyChange.subscribe(value => busy.push(value));
+    (component as any).applyMedia([{ ...readyMedia('media-1'), status: 'processing' }]);
+    expect(busy.at(-1)).toBe(false);
+    (component as any).pausePolling();
+    fixture.detectChanges();
+
+    expect(component.state).toBe('error');
+    expect(fixture.nativeElement.textContent).toContain('Verificar status do vídeo');
+    expect(service.deletedMediaIds).toEqual([]);
+    expect(busy.at(-1)).toBe(false);
+  });
+
+  it('checks provider readiness while the PUT response is pending and stops the transfer observer when ready', () => {
+    const component = fixture.componentInstance;
+    const service = TestBed.inject(VideoUploadService) as unknown as VideoUploadServiceStub;
+    component.itemId = 'item-1';
+    component.state = 'selected';
+    component.selectedVideo = { file: new File(['video'], 'prato.mp4', { type: 'video/mp4' }), mimeType: 'video/mp4', durationSeconds: 8 };
+    component.startUpload();
+    (component as any).applyMedia([{ ...readyMedia('media-new'), status: 'uploading' }]);
+    expect(component.state).toBe('uploading');
+    expect(service.directUpload.observed).toBe(true);
+
+    (component as any).applyMedia([readyMedia('media-new')]);
+
+    expect(component.state).toBe('ready');
+    expect(component.uploadProgress).toBe(100);
+    expect(service.directUpload.observed).toBe(false);
+    expect(service.deletedMediaIds).toEqual([]);
+  });
+
+  it('preserves a successfully received video when the direct upload response fails', () => {
+    const component = fixture.componentInstance;
+    const service = TestBed.inject(VideoUploadService) as unknown as VideoUploadServiceStub;
+    component.itemId = 'item-1';
+    component.state = 'selected';
+    component.selectedVideo = { file: new File(['video'], 'prato.mp4', { type: 'video/mp4' }), mimeType: 'video/mp4', durationSeconds: 8 };
+    component.startUpload();
+    service.directUpload.error(new Error('browser response lost'));
+    expect(component.state).toBe('error');
+    expect(service.deletedMediaIds).toEqual([]);
+
+    (component as any).applyMedia([readyMedia('media-new')]);
+
+    expect(component.state).toBe('ready');
+    expect(service.deletedMediaIds).toEqual([]);
   });
 });

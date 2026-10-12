@@ -88,6 +88,11 @@ export class AdminApiService {
   reauthenticate(password: string): Observable<void> {
     return this.http.post<void>(`${this.base}/auth/reauthenticate`, { password }, this.writeOptions());
   }
+  assignPlan(id: string, planCode: 'FREE' | 'BASIC' | 'MEDIUM' | 'PRO', reason: string) {
+    return this.http.post<AdminEnvelope<{businessId:string;planCode:string}>>(
+      `${this.base}/businesses/${encodeURIComponent(id)}/plan`,
+      { planCode, reason }, this.writeOptions());
+  }
   dashboard(filter: AdminFilter): Observable<AdminDashboard> {
     const { preset: _preset, ...query } = filter;
     return this.http.get<AdminEnvelope<AdminDashboard>>(`${this.base}/dashboard`,

@@ -37,7 +37,7 @@ import { AuthService } from '../../services/auth.service';
         <!-- Corpo do Formulário -->
         <main class="auth-form-section">
           @if (errorMessage) {
-            <div class="alert-capsule alert-capsule-error">
+            <div class="alert-capsule alert-capsule-error" role="alert">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               <span>{{ errorMessage }}</span>
             </div>
@@ -47,7 +47,7 @@ import { AuthService } from '../../services/auth.service';
           <form (ngSubmit)="onLogin()">
             <!-- E-mail -->
             <div class="form-group">
-              <label class="form-label" for="login-email">E-mail ou usuário</label>
+              <label class="form-label" for="login-email">E-mail</label>
               <div class="form-input-wrapper">
                 <input
                   type="email"
@@ -161,10 +161,23 @@ export class LoginComponent implements OnInit {
   ngOnInit(){this.authService.restore().pipe(finalize(()=>this.cdr.markForCheck())).subscribe({next:r=>{this.checking=false;if(r.data.provisioningRequired)this.router.navigate(['/complete-registration']);else if(r.data.accountActive)this.router.navigate(['/dashboard']);},error:e=>{this.checking=false;if(e.status!==401)this.errorMessage='Não foi possível verificar sua sessão. Confira sua conexão e tente entrar.';}});}
   resend(): void {
     if (!this.email || this.isLoading) return;
+    this.errorMessage = '';
+    this.notice = '';
+    const email = this.email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.errorMessage = 'Informe o e-mail cadastrado para reenviar a confirmação.';
+      return;
+    }
     this.isLoading = true;
-    this.authService.resendConfirmation(this.email).pipe(finalize(()=>this.cdr.markForCheck())).subscribe({
+    this.authService.resendConfirmation(email).pipe(finalize(()=>this.cdr.markForCheck())).subscribe({
       next: () => { this.isLoading = false; this.notice = 'Se necessário, enviaremos instruções para esse e-mail.'; },
-      error: () => { this.isLoading = false; this.errorMessage = 'Não foi possível enviar agora. Tente novamente.'; }
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = err.status === 400 ? 'Informe um e-mail válido para reenviar a confirmação.'
+          : err.status === 429 ? 'Aguarde alguns minutos antes de reenviar a confirmação.'
+          : err.status >= 500 ? 'O serviço de confirmação está temporariamente indisponível. Tente novamente em instantes.'
+          : 'Não foi possível enviar agora. Confira sua conexão e tente novamente.';
+      }
     });
   }
 
@@ -185,7 +198,7 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.status===0?'Não foi possível conectar. Confira sua conexão e tente novamente.':err.status===429?'Aguarde alguns minutos antes de tentar novamente.':'Verifique e-mail, senha e a confirmação do endereço.';
+        this.errorMessage = err.status===0?'Não foi possível conectar. Confira sua conexão e tente novamente.':err.status===429?'Aguarde alguns minutos antes de tentar novamente.':err.status>=500?'O serviço de login está temporariamente indisponível. Tente novamente em instantes.':'Verifique e-mail, senha e a confirmação do endereço.';
       }
     });
   }

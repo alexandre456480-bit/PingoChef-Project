@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -28,7 +28,7 @@ import { AuthService } from '../../../../services/auth.service';
 
         <div class="categories-scroll">
           <!-- All filter -->
-          <button class="cat-chip" [class.active]="!selectedCategoryId" (click)="filterBy(null)">
+          <button type="button" class="cat-chip" [class.active]="!selectedCategoryId" [attr.aria-pressed]="!selectedCategoryId" (click)="filterBy(null)">
             <div class="chip-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </div>
@@ -37,7 +37,8 @@ import { AuthService } from '../../../../services/auth.service';
           </button>
 
           @for (cat of menuService.categories(); track cat.id; let i = $index) {
-            <button class="cat-chip" [class.active]="selectedCategoryId === cat.id" (click)="filterBy(cat.id)" [style.animation-delay]="(i * 50 + 100) + 'ms'">
+            <div class="cat-chip" role="group" [attr.aria-label]="'Categoria ' + cat.name" [class.active]="selectedCategoryId === cat.id" [style.animation-delay]="(i * 50 + 100) + 'ms'">
+              <button type="button" class="cat-filter-btn" [attr.aria-label]="cat.name" [attr.aria-pressed]="selectedCategoryId === cat.id" (click)="filterBy(cat.id)">
               @if (cat.iconType === 'image' && cat.imageUrl) {
                 <div class="chip-icon img-wrap">
                   <img [src]="cat.imageUrl" [alt]="cat.name" class="chip-custom-img" />
@@ -46,21 +47,22 @@ import { AuthService } from '../../../../services/auth.service';
                 <div class="chip-icon svg-wrap" [innerHTML]="getCategoryIconSvg(cat)"></div>
               }
               <span class="chip-label">{{ cat.name }}</span>
-              <div class="chip-actions" (click)="$event.stopPropagation()">
-                <button class="chip-action-btn" (click)="openCategoryModal(cat)" title="Editar">
+              </button>
+              <div class="chip-actions">
+                <button type="button" class="chip-action-btn" (click)="openCategoryModal(cat)" title="Editar" [attr.aria-label]="'Editar categoria ' + cat.name">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                 </button>
-                <button class="chip-action-btn danger" (click)="deleteCategory(cat.id)" title="Excluir">
+                <button type="button" class="chip-action-btn danger" (click)="deleteCategory(cat.id)" title="Excluir" [attr.aria-label]="'Excluir categoria ' + cat.name">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
                 </button>
               </div>
-            </button>
+            </div>
           }
         </div>
       </section>
 
       <!-- 1.5 Subcategories Management -->
-      @if (selectedCategoryId && categorySubcategories.length > 0 || selectedCategoryId) {
+      @if (selectedCategoryId) {
         <section class="section-block subcategories-section" style="--i:0.5">
           <div class="section-header">
             <div>
@@ -622,13 +624,19 @@ import { AuthService } from '../../../../services/auth.service';
     }
   `,
   styles: [`
+    :host { display: block; min-width: 0; }
     .menu-container {
       display: flex;
       flex-direction: column;
-      gap: 32px;
+      gap: 24px;
+      min-width: 0;
     }
 
     .section-block {
+      min-width: 0;
+      padding: 24px;
+      border-radius: 20px;
+      box-sizing: border-box;
       animation: sectionIn 0.5s calc(var(--i, 0) * 120ms) cubic-bezier(0.4, 0, 0.2, 1) both;
     }
 
@@ -636,6 +644,7 @@ import { AuthService } from '../../../../services/auth.service';
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
+      gap: 16px;
       margin-bottom: 18px;
     }
     .section-title {
@@ -694,7 +703,9 @@ import { AuthService } from '../../../../services/auth.service';
       display: flex;
       gap: 10px;
       overflow-x: auto;
-      padding-bottom: 6px;
+      padding: 6px 2px 12px;
+      min-width: 0;
+      max-width: 100%;
       scrollbar-width: thin;
       scrollbar-color: #3F3F46 transparent;
     }
@@ -705,6 +716,7 @@ import { AuthService } from '../../../../services/auth.service';
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-shrink: 0;
       background: #1A1A1E;
       border: 1px solid rgba(255, 255, 255, 0.05);
       padding: 9px 14px;
@@ -746,6 +758,13 @@ import { AuthService } from '../../../../services/auth.service';
       font-size: 0.86rem;
       font-weight: 600;
     }
+    .cat-filter-btn {
+      display: flex; align-items: center; gap: 10px; min-width: 0;
+      padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer;
+    }
+    .cat-filter-btn:focus-visible, .cat-chip:focus-visible, .chip-action-btn:focus-visible {
+      outline: 2px solid var(--panel-accent, #F47B20); outline-offset: 3px;
+    }
     .chip-count {
       font-size: 0.72rem;
       background: rgba(255, 255, 255, 0.05);
@@ -763,7 +782,11 @@ import { AuthService } from '../../../../services/auth.service';
       border: none;
       color: #52525B;
       cursor: pointer;
-      padding: 3px;
+      padding: 6px;
+      min-width: 30px;
+      min-height: 30px;
+      align-items: center;
+      justify-content: center;
       border-radius: 4px;
       display: flex;
       transition: color 0.15s;
@@ -774,11 +797,13 @@ import { AuthService } from '../../../../services/auth.service';
     /* ── Products Grid ── */
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
       gap: 16px;
     }
 
     .product-card {
+      min-width: 0;
+      box-sizing: border-box;
       background: #1A1A1E;
       border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 20px;
@@ -848,6 +873,7 @@ import { AuthService } from '../../../../services/auth.service';
       align-items: center;
     }
     .product-name {
+      overflow-wrap: anywhere;
       font-family: 'Outfit', sans-serif;
       font-size: 1rem;
       font-weight: 700;
@@ -855,6 +881,7 @@ import { AuthService } from '../../../../services/auth.service';
       margin: 0;
     }
     .product-category {
+      overflow-wrap: anywhere;
       font-size: 0.74rem;
       color: #52525B;
       margin-top: 3px;
@@ -896,6 +923,9 @@ import { AuthService } from '../../../../services/auth.service';
       align-items: center;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       padding-top: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: auto;
     }
 
     .status-tag {
@@ -1143,6 +1173,7 @@ import { AuthService } from '../../../../services/auth.service';
 
     /* ── Responsive ── */
     @media (max-width: 640px) {
+      .section-block { padding: 18px; }
       .products-grid {
         grid-template-columns: 1fr;
       }
@@ -1829,12 +1860,14 @@ import { AuthService } from '../../../../services/auth.service';
     }
     .subcat-add-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       align-items: center;
       margin-bottom: 12px;
     }
     .subcat-input {
       flex: 1;
+      min-width: 140px;
       height: 42px;
     }
     .subcat-list {
@@ -1844,6 +1877,7 @@ import { AuthService } from '../../../../services/auth.service';
     }
     .subcat-item {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 12px;
       padding: 10px 14px;
@@ -1869,19 +1903,24 @@ import { AuthService } from '../../../../services/auth.service';
       justify-content: center;
     }
     .subcat-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
       font-weight: 600;
       font-size: 0.92rem;
       color: #F4F4F5;
-      flex: 1;
+      flex: 1 1 160px;
     }
     .subcat-edit-input {
-      flex: 1;
+      flex: 1 1 160px;
+      min-width: 140px;
       height: 36px;
       padding: 4px 10px;
       font-size: 0.88rem;
     }
     .subcat-actions {
       display: flex;
+      margin-left: auto;
+      flex-shrink: 0;
       gap: 6px;
       align-items: center;
     }
@@ -2113,7 +2152,8 @@ export class MenuEditorComponent implements OnInit {
   constructor(
     public menuService: MenuService,
     private auth:AuthService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -2308,6 +2348,8 @@ export class MenuEditorComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
+    input.value = '';
+    const form = this.itemForm;
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
@@ -2324,6 +2366,7 @@ export class MenuEditorComponent implements OnInit {
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
+        if (this.itemForm !== form) return;
         const maxDimension = 1200;
         let width = img.width;
         let height = img.height;
@@ -2350,13 +2393,14 @@ export class MenuEditorComponent implements OnInit {
           this.itemForm.imageUrl = reader.result as string;
           this.onToast.emit('Foto carregada com sucesso!');
         }
+        this.cdr.markForCheck();
       };
       img.onerror = () => {
-        this.itemForm.imageUrl = reader.result as string;
-        this.onToast.emit('Foto carregada com sucesso!');
+        if (this.itemForm === form) this.onToast.emit('Não foi possível abrir a imagem. Escolha outro arquivo JPG, PNG ou WebP.');
       };
       img.src = e.target?.result as string;
     };
+    reader.onerror = () => this.onToast.emit('Não foi possível ler a foto. Tente selecionar o arquivo novamente.');
     reader.readAsDataURL(file);
   }
 

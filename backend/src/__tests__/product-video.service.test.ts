@@ -62,6 +62,7 @@ function repositoryMock(): jest.Mocked<ProductMediaRepository> {
     findById: jest.fn(),
     findOwned: jest.fn(),
     listOwnedForItem: jest.fn(),
+    claimPendingProviderSync: jest.fn().mockResolvedValue(null),
     listGalleryMedia: jest.fn(),
     publishReadyForBusiness: jest.fn(),
     markProcessing: jest.fn(),
@@ -92,6 +93,82 @@ function providerMock(): jest.Mocked<MuxVideoProvider> {
 }
 
 describe('ProductVideoService security boundaries', () => {
+  const pendingView = {
+    id: 'media-1', media_type: 'video' as const, source: 'mux' as const,
+    position: 0, status: 'uploading' as const, is_published: false,
+    duration_seconds: null, aspect_ratio: '16:9' as const, last_error_code: null,
+    created_at: '2026-10-11T10:00:00.000Z', updated_at: '2026-10-11T10:00:00.000Z'
+  };
+
+  it('recovers a completed upload and ready asset when both webhooks were missed', async () => {
+    const repository = repositoryMock();
+    const provider = providerMock();
+    repository.listOwnedForItem.mockResolvedValueOnce([pendingView]).mockResolvedValueOnce([
+      { ...pendingView, status: 'ready', duration_seconds: 8 }
+    ]);
+    repository.claimPendingProviderSync.mockResolvedValue(media({ status: 'uploading', mux_asset_id: null }));
+    provider.retrieveUpload.mockResolvedValue({ id: 'upload-1', status: 'asset_created', asset_id: 'asset-1' } as any);
+    repository.markProcessing.mockResolvedValue(media());
+    provider.retrieveAsset.mockResolvedValue({ id: 'asset-1', status: 'ready', duration: 8, playback_ids: [{ id: 'signed-1', policy: 'signed' }] } as any);
+
+    const result = await new ProductVideoService(repository, provider, config).listOwnedMedia('business-1', 'item-1');
+
+    expect(repository.claimPendingProviderSync).toHaveBeenCalledWith('business-1', 'item-1', 'media-1');
+    expect(repository.markReady).toHaveBeenCalledWith('media-1', 'asset-1', 8, 'signed-1');
+    expect(repository.publishReadyForBusiness).not.toHaveBeenCalled();
+    expect(result[0]).toMatchObject({ status: 'ready', durationSeconds: 8, isPublished: false });
+    expect(JSON.stringify(result)).not.toMatch(/signed-1|asset-1|upload-1/);
+  });
+
+  it('leaves an unexpired waiting upload alone and respects the shared sync cooldown', async () => {
+    const repository = repositoryMock();
+    const provider = providerMock();
+    repository.listOwnedForItem.mockResolvedValue([pendingView]);
+    repository.claimPendingProviderSync.mockResolvedValueOnce(media({ status: 'uploading', mux_asset_id: null, upload_expires_at: new Date(Date.now() + 900_000).toISOString() })).mockResolvedValue(null);
+    provider.retrieveUpload.mockResolvedValue({ id: 'upload-1', status: 'waiting' } as any);
+    const service = new ProductVideoService(repository, provider, config);
+
+    await service.listOwnedMedia('business-1', 'item-1');
+    await service.listOwnedMedia('business-1', 'item-1');
+
+    expect(provider.retrieveUpload).toHaveBeenCalledTimes(1);
+    expect(provider.cancelUpload).not.toHaveBeenCalled();
+    expect(repository.markErrored).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [16, [{ id: 'signed-1', policy: 'signed' }], 'DURATION_LIMIT_EXCEEDED'],
+    [8, [{ id: 'public-1', policy: 'public' }], 'SIGNED_PLAYBACK_MISSING']
+  ])('keeps duration and signed playback checks during fallback (%s seconds)', async (duration, playbackIds, code) => {
+    const repository = repositoryMock();
+    const provider = providerMock();
+    repository.listOwnedForItem.mockResolvedValue([pendingView]);
+    repository.claimPendingProviderSync.mockResolvedValue(media());
+    provider.retrieveAsset.mockResolvedValue({ id: 'asset-1', status: 'ready', duration, playback_ids: playbackIds } as any);
+
+    await new ProductVideoService(repository, provider, config).listOwnedMedia('business-1', 'item-1');
+
+    expect(repository.markRejected).toHaveBeenCalledWith('media-1', 'asset-1', duration, code);
+    expect(provider.deleteAsset).toHaveBeenCalledWith('asset-1');
+    expect(repository.markReady).not.toHaveBeenCalled();
+  });
+
+  it('does not query the provider for media outside the owner item and preserves rows on provider failure', async () => {
+    const repository = repositoryMock();
+    const provider = providerMock();
+    const service = new ProductVideoService(repository, provider, config);
+    repository.listOwnedForItem.mockResolvedValue([]);
+    await expect(service.listOwnedMedia('other-business', 'item-1')).resolves.toEqual([]);
+    expect(provider.retrieveAsset).not.toHaveBeenCalled();
+    repository.listOwnedForItem.mockResolvedValue([pendingView]);
+    repository.claimPendingProviderSync.mockResolvedValue(media());
+    provider.retrieveAsset.mockRejectedValue(new Error('private provider error'));
+
+    await expect(service.listOwnedMedia('business-1', 'item-1')).rejects.toMatchObject({ status: 503, code: 'VIDEO_STATUS_UNAVAILABLE' });
+    expect(repository.markErrored).not.toHaveBeenCalled();
+    expect(repository.deleteMedia).not.toHaveBeenCalled();
+  });
+
   it('projects owner status without exposing Mux administrative identifiers', async () => {
     const repository = repositoryMock();
     const provider = providerMock();

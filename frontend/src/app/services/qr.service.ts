@@ -51,4 +51,7 @@ export class QrService {
   image(id: string, format: 'png' | 'svg' = 'png') {
     return this.http.get(`${this.base}/${id}/image`, { params: { format }, responseType: 'blob' });
   }
+  remove(row: OwnerQr) {
+    return this.http.delete<void>(`${this.base}/${row.id}`, { body: { revision: row.revision } });
+  }
 }

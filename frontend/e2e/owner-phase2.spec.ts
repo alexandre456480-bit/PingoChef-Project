@@ -120,7 +120,7 @@ async function mockApi(
     if (path === 'business')
       return route.fulfill({ json: { success: true, data: account.business } });
     if (path === 'design') return route.fulfill({ json: { success: true, data: {} } });
-    if (path === 'qr') return route.fulfill({json:{success:true,data:{rows:[],limit:20,customization:qr,publicAvailable:false}}});
+    if (path === 'qr') return route.fulfill({json:{success:true,data:{rows:[],limit:3,customization:qr,publicAvailable:false}}});
     if (path === 'analytics/options')
       return route.fulfill({ json: { success: true, data: analyticsOptions(code) } });
     if (path === 'analytics')
@@ -133,17 +133,15 @@ async function mockApi(
 }
 async function navigation(page: Page, label: string) {
   const button = page.locator('app-sidebar .nav-item').filter({ hasText: label });
-  if (!(await button.isVisible())) {
-    await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
-  } else {
-    const box = await button.boundingBox();
-    if (box && box.x < 0)
-      await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
-  }
+  await expect(button).toBeAttached();
+  const hamburger = page.getByRole('button', { name: 'Abrir menu', exact: true });
+  const box = await button.boundingBox();
+  if (await hamburger.isVisible() && (!(await button.isVisible()) || (box && box.x < 0)))
+    await hamburger.click();
   await button.click();
 }
 async function settings(page: Page) {
-  const gear = page.getByRole('button', { name: 'Abrir configurações', includeHidden: true });
+  const gear = page.locator('app-sidebar').getByRole('button', { name: 'Abrir configurações', includeHidden: true });
   const box = await gear.boundingBox();
   if (!box || box.x < 0)
     await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
@@ -213,10 +211,10 @@ for (const code of Object.keys(matrix) as (keyof typeof matrix)[]) {
     const { account } = await mockApi(page, code);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/dashboard');
-    await expect(page.locator('app-plan-usage').first()).toContainText(
-      `${matrix[code][0]} / ${matrix[code][0]}`,
-    );
-    await expect(page.locator('app-plan-usage').first()).toContainText('Limite atingido');
+    await expect(page.locator('app-plan-usage')).toHaveCount(0);
+    await navigation(page, 'Menu');
+    await expect(page.locator('app-menu-editor')).toBeVisible();
+    await expect(page.locator('app-plan-usage')).toHaveCount(0);
     await expect(page.locator('app-sidebar .nav-label')).toHaveText([
       'Início',
       'Menu',
@@ -256,6 +254,144 @@ for (const code of Object.keys(matrix) as (keyof typeof matrix)[]) {
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 }
+test('menu containers fit narrow screens, category actions are independent and mobile controls share the neutral style', async ({ page }, testInfo) => {
+  await mockApi(page, 'PRO');
+  const categoryName = 'Pratos artesanais preparados com ingredientes selecionados';
+  await page.route('**/api/v1/categories', route => route.fulfill({ json: { success: true, data: [
+    { id: 'category-a', name: categoryName, iconType: 'none', displayOrder: 0, isActive: true }
+  ] } }));
+  await page.route('**/api/v1/subcategories**', route => route.fulfill({ json: { success: true, data: [
+    { id: 'sub-a', categoryId: 'category-a', name: 'Especialidades para compartilhar com a família e os amigos', displayOrder: 0 }
+  ] } }));
+  await page.route('**/api/v1/items', route => route.fulfill({ json: { success: true, data: [
+    { id: 'item-a', categoryId: 'category-a', subcategoryId: 'sub-a', categoryName, name: 'Um prato com um nome bastante longo para testar o layout', description: 'Ingredientes frescos e preparo artesanal.', price: 42, isAvailable: true }
+  ] } }));
+  await page.goto('/dashboard');
+  await navigation(page, 'Menu');
+  const editor = page.locator('app-menu-editor');
+  await editor.getByRole('button', { name: categoryName, exact: true }).click();
+  await expect(editor.locator('.subcat-item')).toBeVisible();
+  await expect(editor.locator('button button')).toHaveCount(0);
+  for (const width of [1440, 1180, 820, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    const overflow = await editor.evaluate(element => Array.from(element.querySelectorAll('.products-grid, .product-card, .subcat-item, .subcat-add-row')).filter(node => {
+      const rect = node.getBoundingClientRect(), bounds = node.closest('.section-block')!.getBoundingClientRect();
+      return rect.left < bounds.left - 1 || rect.right > bounds.right + 1;
+    }).map(node => node.className));
+    expect(overflow).toEqual([]);
+    expect((await editor.locator('.subcat-name').boundingBox())!.height).toBeLessThan(110);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  const controls = await page.locator('app-topbar').evaluate(element => ['.mobile-settings-toggle', '.preview-toggle-btn'].map(selector => {
+    const style = getComputedStyle(element.querySelector(selector)!);
+    return { color: style.color, background: style.backgroundColor, border: style.borderColor };
+  }));
+  expect(controls[0]).toEqual(controls[1]);
+  const theme = await page.locator('.dashboard-shell').evaluate(element => ({
+    main: getComputedStyle(element.querySelector('.main-viewport')!).getPropertyValue('--panel-surface').trim(),
+    right: getComputedStyle(element.querySelector('.preview-panel')!).getPropertyValue('--panel-surface').trim(),
+    sidebar: getComputedStyle(element.querySelector('.sidebar')!).getPropertyValue('--panel-surface').trim()
+  }));
+  expect(theme.main).toBe(theme.right);
+  expect(theme.main).not.toBe(theme.sidebar);
+  await page.screenshot({ path: testInfo.outputPath('menu-mobile.png') });
+  await editor.locator('button.cat-chip').click();
+  await expect(editor.locator('.subcategories-section')).toHaveCount(0);
+  await editor.getByRole('button', { name: `Editar categoria ${categoryName}`, exact: true }).click();
+  await expect(editor.locator('.category-modal')).toBeVisible();
+  await expect(editor.locator('.cat-filter-btn')).toHaveAttribute('aria-pressed', 'false');
+});
+
+for (const uploadResponse of ['normal', 'delayed', 'failed']) {
+test(`video upload updates without another click when PUT response is ${uploadResponse} and can be saved and published`, async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await mockApi(page, 'PRO');
+  const categoryId = '11111111-1111-4111-8111-111111111111';
+  const itemId = '22222222-2222-4222-8222-222222222222';
+  const mediaId = '33333333-3333-4333-8333-333333333333';
+  const item = { id: itemId, categoryId, name: 'Prato com vídeo', description: 'Preparo artesanal.', price: 42, isAvailable: true, showPrice: true, highlightType: 'none', media: [] as any[] };
+  let uploaded = false, published = false, polls = 0, deletions = 0;
+  const media = { id: mediaId, mediaType: 'video', source: 'mux', position: 0, status: 'ready', isPublished: false, durationSeconds: 8, aspectRatio: '16:9', errorCode: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  await page.route('**/api/v1/categories', route => route.fulfill({ json: { success: true, data: [{ id: categoryId, name: 'Pratos', iconType: 'none', displayOrder: 0, isActive: true }] } }));
+  await page.route('**/api/v1/items', route => route.fulfill({ json: { success: true, data: [item] } }));
+  await page.route(`**/api/v1/items/${itemId}`, route => route.fulfill({ json: { success: true, data: item } }));
+  await page.route(`**/api/v1/items/${itemId}/media`, async route => {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    return route.fulfill({ json: { success: true, data: uploaded ? [{ ...media, status: ++polls === 1 ? 'processing' : 'ready' }] : [] } });
+  });
+  await page.route(`**/api/v1/items/${itemId}/media/video/upload-intent`, route => route.fulfill({ status: 201, json: { success: true, data: { mediaId, uploadUrl: 'https://storage.googleapis.com/pingo-upload-test', expiresAt: new Date(Date.now() + 900000).toISOString(), maxFileSizeBytes: 52428800, maxDurationSeconds: 15 } } }));
+  await page.route(`**/api/v1/items/${itemId}/media/${mediaId}`, route => {
+    if (route.request().method() === 'DELETE') deletions++;
+    return route.fulfill({ status: 204 });
+  });
+  await page.route('https://storage.googleapis.com/pingo-upload-test', async route => {
+    const headers = route.request().headers();
+    expect(headers.authorization).toBeUndefined();
+    expect(headers['x-csrf-token']).toBeUndefined();
+    expect(headers.cookie).toBeUndefined();
+    uploaded = true;
+    if (uploadResponse === 'failed') return route.abort('failed');
+    await new Promise(resolve => setTimeout(resolve, uploadResponse === 'delayed' ? 12000 : 150));
+    await route.fulfill({ status: 200, body: '' }).catch(() => undefined);
+  });
+  await page.route('**/api/v1/items/media/publish-ready', route => {
+    expect(polls).toBeGreaterThan(1);
+    published = true;
+    item.media = [{ id: mediaId, mediaType: 'video', source: 'mux', position: 0, durationSeconds: 8, aspectRatio: '16:9' }];
+    return route.fulfill({ json: { success: true, data: { publishedCount: 1 } } });
+  });
+  await page.route('**/api/v1/business/publish', route => route.fulfill({ json: { success: true, data: {} } }));
+  // Only local file metadata is stubbed: external bytes and API responses are test fixtures.
+  await page.addInitScript(() => {
+    const src = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'src')!;
+    Object.defineProperty(HTMLMediaElement.prototype, 'src', { ...src, set(value: string) {
+      src.set!.call(this, value);
+      if (value.startsWith('blob:')) {
+        Object.defineProperty(this, 'duration', { configurable: true, value: 8 });
+        setTimeout(() => this.dispatchEvent(new Event('loadedmetadata')), 10);
+      }
+    } });
+  });
+  await page.goto('/dashboard');
+  const sidebarStyle = await page.locator('app-sidebar').evaluate(element => {
+    const button = element.querySelector('.nav-item')!;
+    return { button: getComputedStyle(button).boxShadow, icon: getComputedStyle(button.querySelector('.nav-icon-wrap')!).boxShadow, glyph: getComputedStyle(button.querySelector('svg')!).filter };
+  });
+  expect(sidebarStyle.icon).toBe('none');
+  expect(sidebarStyle.glyph).toBe('none');
+  if (uploadResponse === 'normal') await page.screenshot({ path: testInfo.outputPath('sidebar-restored.png') });
+  await navigation(page, 'Menu');
+  await page.locator('.product-card button[title="Editar"]').click();
+  if (uploadResponse === 'normal') {
+    await page.locator('app-menu-editor input[type=file][accept*="image/png"]').setInputFiles({ name: 'prato.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64') });
+    await expect(page.locator('.item-img-preview')).toBeVisible();
+  }
+  const uploader = page.locator('app-product-video-uploader');
+  await uploader.locator('input[type=file]').setInputFiles({ name: 'prato.mp4', mimeType: 'video/mp4', buffer: Buffer.from('video-fixture') });
+  await expect(uploader.getByRole('button', { name: 'Enviar vídeo', exact: true })).toBeVisible();
+  await uploader.getByRole('button', { name: 'Enviar vídeo', exact: true }).click();
+  await expect(uploader.getByText('Vídeo pronto', { exact: true })).toBeVisible();
+  expect(deletions).toBe(0);
+  const save = page.getByRole('button', { name: 'Salvar Produto', exact: true });
+  await expect(save).toBeEnabled();
+  const appearance = await save.evaluate(element => {
+    const style = getComputedStyle(element);
+    return { color: style.backgroundColor, gradient: style.backgroundImage, shadow: style.boxShadow };
+  });
+  expect(appearance.color).toBe('rgb(139, 21, 40)');
+  expect(appearance.gradient).toBe('none');
+  expect(appearance.shadow).toContain('inset');
+  await page.screenshot({ path: testInfo.outputPath('video-ready.png') });
+  await save.click();
+  await expect(page.locator('app-menu-editor .modal-card.large')).toHaveCount(0);
+  await navigation(page, 'Início');
+  await page.locator('app-dashboard-home .quick-btn').filter({ hasText: 'Preview' }).click();
+  await page.getByRole('button', { name: 'Publicar Cardápio', exact: true }).click();
+  await expect(page.getByText('Cardápio publicado com sucesso na versão online!', { exact: true })).toBeVisible();
+  expect(published).toBe(true);
+});
+}
+
 test('settings traps keyboard focus and logout-all sends session CSRF then leaves dashboard', async ({
   page,
 }) => {

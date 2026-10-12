@@ -23,7 +23,7 @@ async function mock(
   await page.route('**/api/v1/**', async (route) => {
     const req = route.request(),
       path = new URL(req.url()).pathname.replace('/api/v1/', '');
-    const body = ['POST', 'PUT'].includes(req.method()) ? req.postDataJSON() : null;
+    const body = ['POST', 'PUT', 'DELETE'].includes(req.method()) ? req.postDataJSON() : null;
     requests.push({ path, method: req.method(), body, headers: req.headers() });
     if (path === 'auth/me' && !loggedIn)
       return route.fulfill({ status: 401, json: { error: { code: 'UNAUTHORIZED' } } });
@@ -64,7 +64,7 @@ async function mock(
       return route.fulfill({
         json: {
           success: true,
-          data: { rows: row ? [row] : [], limit: 20, customization: true, publicAvailable: true },
+          data: { rows: row ? [row] : [], limit: 3, customization: true, publicAvailable: true },
         },
       });
     if (
@@ -88,6 +88,10 @@ async function mock(
         status: req.method() === 'POST' ? 201 : 200,
         json: { success: true, data: row },
       });
+    }
+    if (path === `qr/${qrId}` && req.method() === 'DELETE') {
+      row = null;
+      return route.fulfill({ status: 204 });
     }
     if (path === `qr/${qrId}/image`) {
       if (new URL(req.url()).searchParams.get('format') === 'svg')
@@ -142,6 +146,85 @@ async function qrSection(page: Page) {
   if (await menu.isVisible()) await menu.click();
   await nav.click();
 }
+test('three saved QR codes disable creation while allowing deletion', async ({ page }) => {
+  await mock(page, 'PRO');
+  await page.route('**/api/v1/qr', (route) =>
+    route.fulfill({
+      json: {
+        success: true,
+        data: {
+          limit: 3,
+          customization: true,
+          publicAvailable: true,
+          rows: [1, 2, 3].map((n) => ({
+            id: n === 1 ? qrId : `44444444-4444-4444-8444-44444444444${n}`,
+            name: `Mesa ${n}`,
+            revision: 1,
+            publicIdentifier: publicId,
+            publicUrl: `/q/${publicId}`,
+            status: n === 2 ? 'PAUSED' : 'ACTIVE',
+            configuration: defaultConfig,
+          })),
+        },
+      },
+    }),
+  );
+  await page.goto('/dashboard');
+  await qrSection(page);
+  await expect(page.locator('.qr-code-choice')).toHaveCount(3);
+  await expect(page.getByRole('button', { name: 'Novo QR Code', exact: true })).toBeDisabled();
+  await expect(page.locator('.qr-code-choice').nth(1)).toContainText('Pausado');
+  await expect(page.getByRole('button', { name: 'Excluir QR Code', exact: true })).toBeEnabled();
+});
+test('QR deletion requires confirmation and frees the saved slot', async ({ page }) => {
+  const requests = await mock(page, 'PRO');
+  await page.goto('/dashboard');
+  await qrSection(page);
+  await page.getByRole('button', { name: 'Gerar QR Code', exact: true }).click();
+  await expect(page.locator('.qr-image')).toBeVisible();
+  await page.getByRole('button', { name: 'Excluir QR Code', exact: true }).click();
+  const dialog = page.getByRole('alertdialog');
+  await expect(dialog.getByRole('button', { name: 'Cancelar', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
+  expect(requests.filter((r) => r.method === 'DELETE')).toHaveLength(0);
+  await page.getByRole('button', { name: 'Excluir QR Code', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Confirmar exclusão', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.locator('.qr-image')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Gerar QR Code', exact: true })).toBeEnabled();
+  const deletion = requests.find((r) => r.method === 'DELETE');
+  expect(deletion?.path).toBe(`qr/${qrId}`);
+  expect(deletion?.body).toEqual({ revision: 1 });
+  expect(deletion?.headers['x-csrf-token']).toBe('a'.repeat(64));
+});
+test('mobile search and settings buttons have equal size and open settings', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'phase4-mobile', 'Mobile layout');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await mock(page, 'PRO');
+  await page.goto('/dashboard');
+  const topbar = page.locator('app-topbar');
+  const search = topbar.getByRole('button', { name: 'Abrir pesquisa', exact: true });
+  const settings = topbar.getByRole('button', { name: 'Abrir configurações', exact: true });
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(settings).toBeVisible();
+    const a = (await search.boundingBox())!,
+      b = (await settings.boundingBox())!;
+    expect(a.width).toBeCloseTo(44, 2);
+    expect(b.width).toBeCloseTo(a.width, 2);
+    expect(b.height).toBeCloseTo(a.height, 2);
+    expect(Math.abs(a.y - b.y)).toBeLessThan(1);
+    expect(b.x).toBeGreaterThan(a.x + a.width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await settings.click();
+  await expect(page.getByRole('dialog', { name: 'Configurações', exact: true })).toBeVisible();
+});
 for (const plan of ['FREE', 'BASIC'] as const)
   test(`${plan}: demo makes no real QR request, including DevTools local plan storage`, async ({
     page,
@@ -234,6 +317,54 @@ for (const plan of ['MEDIUM', 'PRO'] as const)
         fullPage: true,
       });
   });
+test('a larger rectangular PNG is fitted into a transparent 128-pixel logo', async ({ page }) => {
+  const requests = await mock(page, 'PRO');
+  await page.goto('/dashboard');
+  await qrSection(page);
+  const base64 = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const context = canvas.getContext('2d')!;
+    const pixels = context.createImageData(canvas.width, canvas.height);
+    let seed = 0x12345678;
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      seed ^= seed << 13;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5;
+      pixels.data[i] = seed & 255;
+      pixels.data[i + 1] = (seed >>> 8) & 255;
+      pixels.data[i + 2] = (seed >>> 16) & 255;
+      pixels.data[i + 3] = 255;
+    }
+    context.putImageData(pixels, 0, 0);
+    return canvas.toDataURL('image/png').split(',')[1];
+  });
+  const source = Buffer.from(base64, 'base64');
+  expect(source.length).toBeGreaterThan(24576);
+  await page.getByLabel('Logo opcional').setInputFiles({
+    name: 'logo-maior.png',
+    mimeType: 'image/png',
+    buffer: source,
+  });
+  await expect(page.getByRole('button', { name: 'Remover logo' })).toBeVisible();
+  await page.getByRole('button', { name: 'Gerar QR Code', exact: true }).click();
+  const logoPng = requests.find((r) => r.path === 'qr' && r.method === 'POST')!.body.configuration
+    .logoPng;
+  const normalized = Buffer.from(logoPng.slice(22), 'base64');
+  expect([normalized.readUInt32BE(16), normalized.readUInt32BE(20)]).toEqual([128, 128]);
+  const alpha = await page.evaluate(async (dataUrl: string) => {
+    const image = new Image();
+    image.src = dataUrl;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 128;
+    const context = canvas.getContext('2d')!;
+    context.drawImage(image, 0, 0);
+    return [context.getImageData(64, 0, 1, 1).data[3], context.getImageData(64, 64, 1, 1).data[3]];
+  }, logoPng);
+  expect(alpha).toEqual([0, 255]);
+});
 test('conflict is clear and unsaved changes cannot download an obsolete file', async ({ page }) => {
   await mock(page, 'PRO', { conflict: true });
   await page.goto('/dashboard');
@@ -281,7 +412,7 @@ test('owner login is keyboard accessible and restores the server account without
 }) => {
   const requests = await mock(page, 'FREE', { login: true });
   await page.goto('/login');
-  await page.getByLabel('E-mail ou usuário', { exact: true }).fill('maria@example.test');
+  await page.getByLabel('E-mail', { exact: true }).fill('maria@example.test');
   await page.getByLabel('Senha', { exact: true }).fill('StrongPassword123!');
   const enter = page.getByRole('button', { name: 'Entrar', exact: true });
   await enter.focus();
@@ -296,4 +427,31 @@ test('owner login is keyboard accessible and restores the server account without
   expect(await page.evaluate(() => localStorage.getItem('access_token'))).toBeNull();
   expect(await page.evaluate(() => localStorage.getItem('refresh_token'))).toBeNull();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('confirmation validates the email and clears a previous service error after a successful retry', async ({
+  page,
+}) => {
+  await mock(page, 'FREE', { login: true });
+  const emails: string[] = [];
+  await page.route('**/api/v1/auth/resend-confirmation', async (route) => {
+    emails.push(route.request().postDataJSON().email);
+    return route.fulfill({
+      status: emails.length === 1 ? 503 : 202,
+      json:
+        emails.length === 1 ? { error: { code: 'EMAIL_DELIVERY_UNAVAILABLE' } } : { success: true },
+    });
+  });
+  await page.goto('/login');
+  await page.getByLabel('E-mail', { exact: true }).fill('usuario');
+  await page.getByRole('button', { name: 'Reenviar confirmação', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Informe o e-mail cadastrado');
+  expect(emails).toHaveLength(0);
+  await page.getByLabel('E-mail', { exact: true }).fill('maria@example.test');
+  await page.getByRole('button', { name: 'Reenviar confirmação', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('temporariamente indisponível');
+  await page.getByRole('button', { name: 'Reenviar confirmação', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Se necessário, enviaremos instruções');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  expect(emails).toEqual(['maria@example.test', 'maria@example.test']);
 });

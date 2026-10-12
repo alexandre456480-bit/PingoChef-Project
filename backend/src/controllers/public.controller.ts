@@ -132,7 +132,6 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           font_body: 'Inter',
           font_pair: 'modern_clean',
           category_style: 'icon_name',
-          motion: 'fade',
           home_blocks: [],
           custom_config: {}
         };
@@ -283,7 +282,6 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         font_body: 'Inter',
         font_pair: 'modern_clean',
         category_style: 'icon_name',
-        motion: 'fade',
         home_blocks: [],
         custom_config: {}
       };
@@ -379,7 +377,6 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           fontHeading: design.font_heading || 'Outfit',
           fontBody: design.font_body || 'Inter',
           categoryStyle: design.category_style || 'icon_name',
-          motion: design.motion || 'fade',
           homeBlocks: mergedBlocks,
           heroBanners: design.custom_config?.hero_banners || design.hero_banners || [],
           heroScope: design.custom_config?.hero_scope || 'all',

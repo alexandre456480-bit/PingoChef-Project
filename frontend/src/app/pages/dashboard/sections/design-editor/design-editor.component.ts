@@ -8,15 +8,16 @@ import {
   AVAILABLE_HEADING_FONTS,
   AVAILABLE_BODY_FONTS,
   AVAILABLE_FONT_PAIRS,
-  TemplateConfig,
+  colorLuminance,
   PaletteConfig,
   PaletteColors,
   FontOption,
   FontPairPreset,
-  HomeBlock,
-  DesignSettings
+  HomeBlock
 } from '../../../../services/design.service';
 import { MenuService } from '../../../../services/menu.service';
+
+type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
 
 @Component({
   selector: 'app-design-editor',
@@ -28,8 +29,8 @@ import { MenuService } from '../../../../services/menu.service';
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── 1. TEMPLATES DO CARDÁPIO (APENAS ESTRUTURA) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:0">
-        <div class="section-head">
+      <details class="design-section" open>
+        <summary class="section-head">
           <div class="head-icon tmpl">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect width="18" height="7" x="3" y="3" rx="1"/>
@@ -44,13 +45,16 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
             <p class="section-sub">Define a posição dos elementos, estilo visual (Claymorphism, Glassmorphism, Flat) e formato da Hero Section.</p>
           </div>
-        </div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="section-content">
 
         <div class="templates-grid">
           @for (tmpl of templates; track tmpl.key; let i = $index) {
-            <div
+            <button type="button"
               class="template-card"
               [class.selected]="designService.draft().templateKey === tmpl.key"
+              [attr.aria-pressed]="designService.draft().templateKey === tmpl.key"
               (click)="selectTemplate(tmpl.key)"
               [style.--ti]="i">
 
@@ -103,16 +107,17 @@ import { MenuService } from '../../../../services/menu.service';
                   </svg>
                 </div>
               }
-            </div>
+            </button>
           }
         </div>
-      </section>
+        </div>
+      </details>
 
       <!-- ═════════════════════════════════════════════════════ -->
-      <!-- ── 2. PALETA DE CORES (7 PALETAS + CUSTOMIZÁVEL) ── -->
+      <!-- ── 2. PALETA DE CORES ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:1">
-        <div class="section-head">
+      <details class="design-section">
+        <summary class="section-head">
           <div class="head-icon palette">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
@@ -124,16 +129,28 @@ import { MenuService } from '../../../../services/menu.service';
           </div>
           <div>
             <h2 class="section-title">Paleta de Cores</h2>
-            <p class="section-sub">7 paletas harmônicas com alto contraste ou personalize cada uma das 7 cores individualmente.</p>
+            <p class="section-sub">{{ palettes.length }} paletas harmônicas em temas claros e escuros, ou personalize as 7 cores do seu cardápio.</p>
           </div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="section-content">
+
+        <div class="design-filters" role="group" aria-label="Filtrar paletas por tema">
+          @for (filter of paletteFilters; track filter.key) {
+            <button type="button" class="filter-chip" [class.active]="paletteFilter === filter.key"
+              [attr.aria-pressed]="paletteFilter === filter.key" (click)="paletteFilter = filter.key">{{ filter.label }}</button>
+          }
         </div>
+        <p class="selection-summary">Paleta atual: <strong>{{ designService.draft().palette.name }}</strong></p>
 
         <!-- Grade de Paletas Curadas -->
         <div class="palettes-grid">
-          @for (pal of palettes; track pal.key; let i = $index) {
-            <div
+          @for (pal of filteredPalettes; track pal.key; let i = $index) {
+            <button type="button"
               class="palette-card"
+              [attr.aria-label]="pal.name"
               [class.selected]="!designService.draft().palette.isCustom && designService.draft().palette.key === pal.key"
+              [attr.aria-pressed]="!designService.draft().palette.isCustom && designService.draft().palette.key === pal.key"
               (click)="selectPalette(pal)"
               [style.--pi]="i">
 
@@ -155,13 +172,15 @@ import { MenuService } from '../../../../services/menu.service';
                   <span class="theme-chip light-chip">Light</span>
                 }
               </div>
-            </div>
+            </button>
           }
 
           <!-- Card de Paleta Personalizada -->
-          <div
+          <button type="button"
             class="palette-card custom-card"
+            aria-label="Paleta personalizada"
             [class.selected]="designService.draft().palette.isCustom"
+              [attr.aria-pressed]="designService.draft().palette.isCustom"
             (click)="enableCustomPalette()">
             <div class="palette-swatches-7">
               <span [style.background]="designService.draft().palette.colors.primary"></span>
@@ -173,10 +192,10 @@ import { MenuService } from '../../../../services/menu.service';
               <span [style.background]="designService.draft().palette.colors.textSecondary"></span>
             </div>
             <div class="pal-info-row">
-              <span class="palette-name">Personalizada ✨</span>
+              <span class="palette-name">Personalizada</span>
               <span class="theme-chip custom-chip">7 Cores</span>
             </div>
-          </div>
+          </button>
         </div>
 
         <!-- Painel Interativo de Personalização das 7 Cores -->
@@ -219,13 +238,14 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
           </div>
         }
-      </section>
+        </div>
+      </details>
 
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── 3. TIPOGRAFIA (ESCOLHA DE ATÉ 2 FONTES) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:2">
-        <div class="section-head">
+      <details class="design-section">
+        <summary class="section-head">
           <div class="head-icon fonts">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="4 7 4 4 20 4 20 7"/>
@@ -240,17 +260,27 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
             <p class="section-sub">Personalize uma fonte com personalidade para os Títulos e outra ergonômica para o Corpo.</p>
           </div>
-        </div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="section-content">
 
         <!-- 3.1 Presets Rápidos Recomendados (1 Clique) -->
         <div class="font-presets-row">
           <span class="presets-kicker">Combinações Harmoniosas:</span>
+          <div class="design-filters" role="group" aria-label="Filtrar combinações por estilo">
+            @for (filter of filtersFor('pair'); track filter.key) {
+              <button type="button" class="filter-chip" [class.active]="pairFilter === filter.key"
+                [attr.aria-pressed]="pairFilter === filter.key" (click)="pairFilter = filter.key">{{ filter.label }}</button>
+            }
+          </div>
           <div class="presets-scroll">
-            @for (pair of fontPairs; track pair.key) {
+            @for (pair of filteredFontPairs; track pair.key) {
               <button
                 type="button"
                 class="btn-preset-pill"
                 [class.active]="designService.draft().fontHeading === pair.heading && designService.draft().fontBody === pair.body"
+                [attr.aria-pressed]="designService.draft().fontHeading === pair.heading && designService.draft().fontBody === pair.body"
+                [title]="pair.idealFor"
                 (click)="applyPreset(pair)">
                 <strong>{{ pair.name }}</strong> ({{ pair.heading }} + {{ pair.body }})
               </button>
@@ -269,11 +299,18 @@ import { MenuService } from '../../../../services/menu.service';
             <span class="current-font-pill">{{ designService.draft().fontHeading }}</span>
           </div>
 
+          <div class="design-filters" role="group" aria-label="Filtrar fontes de títulos">
+            @for (filter of filtersFor('heading'); track filter.key) {
+              <button type="button" class="filter-chip" [class.active]="headingFilter === filter.key"
+                [attr.aria-pressed]="headingFilter === filter.key" (click)="headingFilter = filter.key">{{ filter.label }}</button>
+            }
+          </div>
           <div class="fonts-selection-grid">
-            @for (f of headingFonts; track f.key) {
-              <div
+            @for (f of filteredHeadingFonts; track f.key) {
+              <button type="button"
                 class="font-select-card"
                 [class.selected]="designService.draft().fontHeading === f.family"
+              [attr.aria-pressed]="designService.draft().fontHeading === f.family"
                 (click)="selectHeadingFont(f.family)">
                 <div class="font-preview-heading">
                   <span class="font-big-sample" [style.font-family]="f.family + ', sans-serif'">
@@ -289,7 +326,7 @@ import { MenuService } from '../../../../services/menu.service';
                     <span class="active-check">✓ Ativa</span>
                   }
                 </div>
-              </div>
+              </button>
             }
           </div>
         </div>
@@ -305,11 +342,18 @@ import { MenuService } from '../../../../services/menu.service';
             <span class="current-font-pill">{{ designService.draft().fontBody }}</span>
           </div>
 
+          <div class="design-filters" role="group" aria-label="Filtrar fontes de leitura">
+            @for (filter of filtersFor('body'); track filter.key) {
+              <button type="button" class="filter-chip" [class.active]="bodyFilter === filter.key"
+                [attr.aria-pressed]="bodyFilter === filter.key" (click)="bodyFilter = filter.key">{{ filter.label }}</button>
+            }
+          </div>
           <div class="fonts-selection-grid">
-            @for (f of bodyFonts; track f.key) {
-              <div
+            @for (f of filteredBodyFonts; track f.key) {
+              <button type="button"
                 class="font-select-card"
                 [class.selected]="designService.draft().fontBody === f.family"
+              [attr.aria-pressed]="designService.draft().fontBody === f.family"
                 (click)="selectBodyFont(f.family)">
                 <div class="font-preview-body">
                   <span class="font-body-title" [style.font-family]="f.family + ', sans-serif'">
@@ -325,45 +369,20 @@ import { MenuService } from '../../../../services/menu.service';
                     <span class="active-check">✓ Ativa</span>
                   }
                 </div>
-              </div>
+              </button>
             }
           </div>
         </div>
-      </section>
-
-      <!-- ═════════════════════════════════════════════════════ -->
-      <!-- ── 4. ANIMAÇÕES & TRANSIÇÕES ── -->
-      <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:3">
-        <div class="section-head">
-          <div class="head-icon motion">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-            </svg>
-          </div>
-          <div>
-            <h2 class="section-title">Animações</h2>
-            <p class="section-sub">Transições visuais ao navegar e interagir com o cardápio.</p>
-          </div>
         </div>
+      </details>
 
-        <div class="motion-grid">
-          @for (m of motionOptions; track m.key) {
-            <button class="motion-option" [class.selected]="designService.draft().motion === m.key" (click)="selectMotion(m.key)">
-              <div class="motion-demo" [attr.data-motion]="m.key">
-                <div class="motion-bar"></div>
-              </div>
-              <span class="motion-label">{{ m.label }}</span>
-            </button>
-          }
-        </div>
-      </section>
+
 
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── 5. BLOCOS DA PÁGINA INICIAL ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:4">
-        <div class="section-head">
+      <details class="design-section">
+        <summary class="section-head">
           <div class="head-icon blocks">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect width="7" height="7" x="3" y="3" rx="1"/>
@@ -376,7 +395,9 @@ import { MenuService } from '../../../../services/menu.service';
             <h2 class="section-title">Blocos da Página</h2>
             <p class="section-sub">Ative ou desative seções e organize a ordem exata das vitrines de produtos na página principal.</p>
           </div>
-        </div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="section-content">
 
         <!-- 1. Estrutura Fixa da Página -->
         <div class="blocks-subgroup">
@@ -516,13 +537,14 @@ import { MenuService } from '../../../../services/menu.service';
             }
           </div>
         </div>
-      </section>
+        </div>
+      </details>
 
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── 5.5 RECURSOS DO CARDÁPIO (CURTIDAS & CARRINHO) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:4.5">
-        <div class="section-head">
+      <details class="design-section">
+        <summary class="section-head">
           <div class="head-icon features">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -533,7 +555,9 @@ import { MenuService } from '../../../../services/menu.service';
             <h2 class="section-title">Recursos do Cardápio</h2>
             <p class="section-sub">Personalize se os clientes podem curtir produtos e fazer pedidos via carrinho.</p>
           </div>
-        </div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="section-content">
 
         <div class="features-cards-grid">
           <!-- Recurso 1: Curtidas -->
@@ -592,13 +616,14 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
           </div>
         </div>
-      </section>
+        </div>
+      </details>
 
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── 6. DESCRIÇÃO DE APRESENTAÇÃO (TOPO DO CARDÁPIO) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:5">
-        <div class="section-head">
+      <details class="design-section">
+        <summary class="section-head">
           <div class="head-icon intro">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
@@ -615,7 +640,9 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
             <p class="section-sub">Uma caixa elegante translúcida (Glassmorphism) com bordas arredondadas exibida no topo do cardápio inicial, acima da Hero Section. Acompanha a paleta de cores e tipografia selecionadas e se oculta automaticamente nas categorias.</p>
           </div>
-        </div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="section-content">
 
         <div class="intro-editor-grid">
           <!-- Coluna 1: Campos de Edição -->
@@ -719,13 +746,14 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
           </div>
         </div>
-      </section>
+        </div>
+      </details>
 
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── 7. BANNERS DA HERO SECTION (CARROSSEL DINÂMICO) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <section class="design-section" style="--i:5.5">
-        <div class="section-head">
+      <details class="design-section">
+        <summary class="section-head">
           <div class="head-icon banners">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
@@ -740,7 +768,9 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
             <p class="section-sub">Configure até 5 banners que alternam com transição automática a cada 4.5 segundos no topo do cardápio.</p>
           </div>
-        </div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="section-content">
 
         <!-- Bento Card: Dicas de Resolução e Proporção -->
         <div class="banner-tips-bento">
@@ -948,7 +978,8 @@ import { MenuService } from '../../../../services/menu.service';
             </div>
           }
         </div>
-      </section>
+        </div>
+      </details>
 
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── BARRA FIXA DE AÇÕES INFERIOR ── -->
@@ -987,7 +1018,7 @@ import { MenuService } from '../../../../services/menu.service';
     .design-container {
       display: flex;
       flex-direction: column;
-      gap: 36px;
+      gap: 20px;
       padding-bottom: 90px;
     }
 
@@ -998,15 +1029,38 @@ import { MenuService } from '../../../../services/menu.service';
       border-radius: 20px;
       padding: 24px;
       animation: sectionIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
-      animation-delay: calc(var(--i) * 60ms);
     }
 
     .section-head {
       display: flex;
       align-items: flex-start;
       gap: 14px;
-      margin-bottom: 22px;
+      margin: 0;
+      cursor: pointer;
+      list-style: none;
     }
+    .section-head::-webkit-details-marker { display: none; }
+    .section-head > div:not(.head-icon) { flex: 1; min-width: 0; }
+    .section-chevron { flex-shrink: 0; margin-top: 10px; color: var(--panel-text-soft, #A1A1AA); transition: transform 0.2s ease; }
+    .design-section[open] > .section-head .section-chevron { transform: rotate(180deg); }
+    .section-content { padding-top: 22px; }
+    .section-head:focus-visible, .filter-chip:focus-visible,
+    .template-card:focus-visible, .palette-card:focus-visible,
+    .font-select-card:focus-visible, .btn-preset-pill:focus-visible {
+      outline: 3px solid var(--panel-accent, #F47B20); outline-offset: 4px;
+    }
+    .template-card, .palette-card, .font-select-card { font: inherit; text-align: left; width: 100%; min-width: 0; }
+    .design-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filter-chip {
+      font: inherit; font-size: 0.8rem; font-weight: 600; min-height: 40px; padding: 8px 14px;
+      border-radius: 999px; cursor: pointer;
+      color: var(--panel-text-soft, #D4D4D8); background: var(--panel-surface-inset, #27272A);
+      border: 1px solid var(--panel-border, #3F3F46);
+    }
+    .filter-chip:hover { border-color: var(--panel-accent, #F47B20); }
+    .filter-chip.active { color: var(--panel-text, #FFF); border-color: var(--panel-accent, #F47B20); background: var(--panel-fill, #3F3F46); box-shadow: inset 0 -2px var(--panel-accent, #F47B20); }
+    .selection-summary { color: var(--panel-text-muted, #A1A1AA); font-size: 0.82rem; margin: 0 0 16px; }
+    @media (prefers-reduced-motion: reduce) { .section-chevron { transition: none; } }
 
     .title-with-pill {
       display: flex;
@@ -1038,7 +1092,6 @@ import { MenuService } from '../../../../services/menu.service';
     .head-icon.tmpl { background: rgba(244, 123, 32, 0.12); color: #F47B20; }
     .head-icon.palette { background: rgba(139, 92, 246, 0.12); color: #A78BFA; }
     .head-icon.fonts { background: rgba(59, 130, 246, 0.12); color: #60A5FA; }
-    .head-icon.motion { background: rgba(236, 72, 153, 0.12); color: #F472B6; }
     .head-icon.blocks { background: rgba(16, 185, 129, 0.12); color: #34D399; }
     .head-icon.intro { background: rgba(244, 123, 32, 0.14); color: #F47B20; }
 
@@ -1463,6 +1516,7 @@ import { MenuService } from '../../../../services/menu.service';
     }
     .presets-scroll {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 4px;
@@ -1475,7 +1529,9 @@ import { MenuService } from '../../../../services/menu.service';
       padding: 6px 12px;
       border-radius: 20px;
       cursor: pointer;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: left;
+      min-height: 40px;
       transition: all 0.2s ease;
     }
     .btn-preset-pill:hover {
@@ -1499,6 +1555,7 @@ import { MenuService } from '../../../../services/menu.service';
 
     .typo-block-header {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 12px;
       margin-bottom: 16px;
@@ -1615,53 +1672,8 @@ import { MenuService } from '../../../../services/menu.service';
     }
 
     /* ══════════════════════════════════════════════════ */
-    /* ── 4. ANIMAÇÕES & BLOCOS ── */
+    /* ── 4. BLOCOS ── */
     /* ══════════════════════════════════════════════════ */
-    .motion-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-    .motion-option {
-      background: #18181D;
-      border: 1.5px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
-      padding: 14px;
-      cursor: pointer;
-      color: #FFF;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.2s ease;
-    }
-    .motion-option:hover {
-      border-color: rgba(244, 123, 32, 0.35);
-    }
-    .motion-option.selected {
-      border-color: #F47B20;
-      background: #1D1815;
-    }
-    .motion-demo {
-      width: 44px;
-      height: 28px;
-      background: #27272A;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .motion-bar {
-      width: 20px;
-      height: 12px;
-      background: #F47B20;
-      border-radius: 3px;
-    }
-    .motion-demo[data-motion="fade"] .motion-bar { animation: motionFade 2s infinite; }
-    .motion-demo[data-motion="slide"] .motion-bar { animation: motionSlide 2s infinite; }
-    .motion-demo[data-motion="scale"] .motion-bar { animation: motionScale 2s infinite; }
-
     .blocks-list {
       display: flex;
       flex-direction: column;
@@ -2029,9 +2041,6 @@ import { MenuService } from '../../../../services/menu.service';
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes motionFade { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-    @keyframes motionSlide { 0%, 100% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
-    @keyframes motionScale { 0%, 100% { transform: scale(0.85); } 50% { transform: scale(1.1); } }
 
     /* ── Hero Banners & Tips Bento ── */
     .head-icon.banners {
@@ -2733,7 +2742,6 @@ import { MenuService } from '../../../../services/menu.service';
       .palettes-grid { grid-template-columns: 1fr; }
       .color-tokens-grid { grid-template-columns: 1fr; }
       .fonts-selection-grid { grid-template-columns: 1fr; }
-      .motion-grid { grid-template-columns: repeat(2, 1fr); }
       .banners-current-grid { grid-template-columns: 1fr; }
     }
   `]
@@ -2746,6 +2754,51 @@ export class DesignEditorComponent {
   headingFonts = AVAILABLE_HEADING_FONTS;
   bodyFonts = AVAILABLE_BODY_FONTS;
   fontPairs = AVAILABLE_FONT_PAIRS;
+  paletteFilter: 'all' | 'light' | 'dark' = 'all';
+  headingFilter: FontFilter = 'all';
+  bodyFilter: FontFilter = 'all';
+  pairFilter: FontFilter = 'all';
+  paletteFilters = [
+    { key: 'all' as const, label: 'Todas' },
+    { key: 'light' as const, label: 'Claras / Light' },
+    { key: 'dark' as const, label: 'Escuras / Dark' }
+  ];
+  fontFilters: { key: FontFilter; label: string }[] = [
+    { key: 'all', label: 'Todas' },
+    { key: 'modern', label: 'Modernas' },
+    { key: 'classic', label: 'Clássicas / Serifadas' },
+    { key: 'impact', label: 'Impacto / Condensadas' },
+    { key: 'rounded', label: 'Arredondadas' }
+  ];
+
+  get filteredPalettes(): PaletteConfig[] {
+    return this.palettes.filter(p => this.paletteFilter === 'all' || this.isDarkPalette(p) === (this.paletteFilter === 'dark'));
+  }
+
+  private matchesFont(font: FontOption, filter: FontFilter): boolean {
+    if (filter === 'all') return true;
+    if (filter === 'classic') return font.category === 'Serifada';
+    if (filter === 'impact') return font.category === 'Condensada';
+    if (filter === 'rounded') return font.category === 'Arredondada';
+    return font.category === 'Sans-serif' || font.category === 'Display / Moderna';
+  }
+
+  filtersFor(scope: 'heading' | 'body' | 'pair') {
+    const fonts = scope === 'body' ? this.bodyFonts : this.headingFonts;
+    return this.fontFilters.filter(filter => fonts.some(f => this.matchesFont(f, filter.key)));
+  }
+
+  get filteredHeadingFonts(): FontOption[] {
+    return this.headingFonts.filter(f => this.matchesFont(f, this.headingFilter));
+  }
+
+  get filteredBodyFonts(): FontOption[] {
+    return this.bodyFonts.filter(f => this.matchesFont(f, this.bodyFilter));
+  }
+
+  get filteredFontPairs(): FontPairPreset[] {
+    return this.fontPairs.filter(pair => this.headingFonts.some(f => f.family === pair.heading && this.matchesFont(f, this.pairFilter)));
+  }
 
   colorTokenList: { key: keyof PaletteColors; label: string; description: string }[] = [
     { key: 'primary', label: 'Cor Primária', description: 'Botões de ação e identidade' },
@@ -2755,13 +2808,6 @@ export class DesignEditorComponent {
     { key: 'surface', label: 'Fundo dos Cards', description: 'Superfície dos produtos e modais' },
     { key: 'textPrimary', label: 'Texto Principal', description: 'Nomes dos pratos e títulos' },
     { key: 'textSecondary', label: 'Texto Secundário', description: 'Descrições e textos de apoio' }
-  ];
-
-  motionOptions = [
-    { key: 'fade' as const, label: 'Fade Suave' },
-    { key: 'slide' as const, label: 'Slide Lateral' },
-    { key: 'scale' as const, label: 'Scale Pop' },
-    { key: 'none' as const, label: 'Instantâneo' }
   ];
 
   constructor(
@@ -2814,10 +2860,6 @@ export class DesignEditorComponent {
   applyPreset(preset: FontPairPreset): void {
     this.designService.setFontPair(preset.key);
     this.onToast.emit(`Combinação aplicada: ${preset.heading} + ${preset.body}`);
-  }
-
-  selectMotion(key: 'fade' | 'slide' | 'scale' | 'none'): void {
-    this.designService.setMotion(key);
   }
 
   toggleBlock(blockId: string): void {
@@ -3061,8 +3103,7 @@ export class DesignEditorComponent {
   }
 
   isDarkPalette(pal: PaletteConfig): boolean {
-    const bg = pal.colors.background.toLowerCase();
-    return bg.startsWith('#0') || bg.startsWith('#1');
+    return colorLuminance(pal.colors.background) < 0.179;
   }
 
   // ── Controle do Bloco de Apresentação ──

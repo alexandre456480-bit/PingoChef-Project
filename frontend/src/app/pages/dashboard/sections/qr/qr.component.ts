@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DialogFocusDirective } from '../../../../components/dialog-focus.directive';
 import { Subject, finalize, takeUntil } from 'rxjs';
 import { OwnerQr, OwnerQrList, QrConfiguration, QrService } from '../../../../services/qr.service';
 
@@ -13,7 +14,7 @@ const defaults = (): QrConfiguration => ({
 @Component({
   selector: 'app-owner-qr',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DialogFocusDirective],
   templateUrl: './qr.component.html',
   styleUrl: './qr.component.css',
 })
@@ -23,6 +24,7 @@ export class QrComponent implements OnInit, OnDestroy {
   private imageCancelled = new Subject<void>();
   data = signal<OwnerQrList | null>(null);
   selected = signal<OwnerQr | null>(null);
+  deleting = signal<OwnerQr | null>(null);
   name = signal('QR Principal');
   config = signal(defaults());
   active = signal(true);
@@ -81,6 +83,7 @@ export class QrComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.data.set(data);
           if (data.rows.length) this.select(data.rows[0].id);
+          else this.newCode();
         },
         error: (e) => this.fail(e),
       });
@@ -110,29 +113,83 @@ export class QrComponent implements OnInit, OnDestroy {
   edit<K extends keyof QrConfiguration>(key: K, value: QrConfiguration[K]) {
     this.config.update((c) => ({ ...c, [key]: value }));
   }
+  cancelDelete() {
+    if (!this.busy()) this.deleting.set(null);
+  }
+  remove() {
+    const row = this.deleting();
+    if (!row || this.busy()) return;
+    this.busy.set(true);
+    this.error.set('');
+    this.service
+      .remove(row)
+      .pipe(
+        takeUntil(this.destroyed),
+        finalize(() => this.busy.set(false)),
+      )
+      .subscribe({
+        next: () => {
+          this.deleting.set(null);
+          this.data.update((data) =>
+            data ? { ...data, rows: data.rows.filter((r) => r.id !== row.id) } : data,
+          );
+          this.newCode();
+          const next = this.data()?.rows[0];
+          if (next) this.select(next.id);
+          this.notice.set('QR Code excluído. Seu link foi desativado e uma vaga está disponível.');
+        },
+        error: (e) => {
+          this.deleting.set(null);
+          this.fail(e);
+        },
+      });
+  }
   async logo(event: Event) {
     const input = event.target as HTMLInputElement,
       file = input.files?.[0];
     if (!file) return;
-    if (file.type !== 'image/png' || file.size > 24576) {
-      this.error.set('Use um logo PNG de até 24 KB e 128 × 128 pixels.');
+    if ((file.type && file.type !== 'image/png') || file.size > 8 * 1024 * 1024) {
+      this.error.set('Escolha um PNG de até 8 MB. O ajuste para 128 × 128 pixels é automático.');
       input.value = '';
       return;
     }
     try {
       const data = new Uint8Array(await file.arrayBuffer());
-      if (
-        data.length < 33 ||
-        new DataView(data.buffer).getUint32(16) > 128 ||
-        new DataView(data.buffer).getUint32(20) > 128
-      )
+      const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+      if (data.length < 33 || !signature.every((byte, index) => data[index] === byte))
         throw new Error();
-      let binary = '';
-      for (const byte of data) binary += String.fromCharCode(byte);
-      this.edit('logoPng', `data:image/png;base64,${btoa(binary)}`);
+      const header = new DataView(data.buffer);
+      const width = header.getUint32(16),
+        height = header.getUint32(20);
+      if (!width || !height || width > 4096 || height > 4096) throw new Error();
+      const bitmap = await createImageBitmap(file);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 128;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error();
+        const scale = Math.min(128 / bitmap.width, 128 / bitmap.height);
+        const drawWidth = bitmap.width * scale,
+          drawHeight = bitmap.height * scale;
+        context.clearRect(0, 0, 128, 128);
+        context.drawImage(
+          bitmap,
+          (128 - drawWidth) / 2,
+          (128 - drawHeight) / 2,
+          drawWidth,
+          drawHeight,
+        );
+        const normalized = canvas.toDataURL('image/png');
+        if (normalized.length > 140000) throw new Error();
+        this.edit('logoPng', normalized);
+      } finally {
+        bitmap.close();
+      }
       this.error.set('');
     } catch {
-      this.error.set('Não foi possível ler o logo. Use PNG de 16 a 128 pixels.');
+      this.error.set(
+        'Não foi possível ajustar o logo. Use um PNG válido de até 8 MB e 4096 pixels por lado.',
+      );
     }
     input.value = '';
   }
@@ -237,7 +294,8 @@ export class QrComponent implements OnInit, OnDestroy {
         'Este QR foi alterado em outra sessão. Recarregue a lista antes de atualizar.',
       QR_CAPACITY_REACHED: 'Você atingiu o limite de QR Codes deste estabelecimento.',
       QR_LOW_CONTRAST: 'Escolha uma cor mais escura. O contraste mínimo é 7:1 sobre branco.',
-      QR_INVALID_LOGO: 'Use PNG RGB/RGBA de 16 a 128 pixels, até 24 KB, sem animação.',
+      QR_INVALID_LOGO:
+        'Não foi possível usar o logo PNG ajustado. Escolha outro arquivo e tente novamente.',
       QR_CUSTOMIZATION_NOT_ENTITLED: 'A personalização não está incluída no seu plano.',
       SHARED_RATE_LIMITED: 'Muitas solicitações. Aguarde um minuto e tente novamente.',
     };

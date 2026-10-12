@@ -29,11 +29,13 @@ describe('Owner cookie session', () => {
   });
   it('legacy import is attempted once and removes old tokens even when migration is closed',()=>{
     localStorage.setItem('access_token','legacy-access');localStorage.setItem('refresh_token','legacy-refresh');
-    auth.restore().subscribe({error:()=>{}});
+    let failureStatus = 0;
+    auth.restore().subscribe({error:error=>{failureStatus=error.status;}});
     const me=http.expectOne('/api/v1/auth/me');expect(localStorage.getItem('access_token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();me.flush({}, {status:401,statusText:'Unauthorized'});
     const migration=http.expectOne('/api/v1/auth/migrate-session');expect(migration.request.headers.get('Authorization')).toBe('Bearer legacy-access');
     expect(migration.request.body).toEqual({});migration.flush({}, {status:410,statusText:'Gone'});
+    expect(failureStatus).toBe(401);
     auth.restore().subscribe({error:()=>{}});http.expectOne('/api/v1/auth/me').flush({}, {status:401,statusText:'Unauthorized'});
     http.expectNone('/api/v1/auth/migrate-session');
   });

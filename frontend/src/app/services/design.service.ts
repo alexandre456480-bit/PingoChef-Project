@@ -22,6 +22,24 @@ export interface PaletteConfig {
   colors: PaletteColors;
 }
 
+export function colorLuminance(hex: string): number {
+  const value = hex.slice(1);
+  const rgb = value.length === 3 ? value.split('').map(c => c + c).join('') : value;
+  const channels = [0, 2, 4].map(i => {
+    const channel = parseInt(rgb.slice(i, i + 2), 16) / 255;
+    return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+  });
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+}
+
+/** Escolhe o maior contraste mínimo, inclusive nos dois extremos de um gradiente. */
+export function contrastTextColor(...backgrounds: string[]): '#000000' | '#FFFFFF' {
+  const values = backgrounds.map(colorLuminance);
+  const blackContrast = (Math.min(...values) + 0.05) / 0.05;
+  const whiteContrast = 1.05 / (Math.max(...values) + 0.05);
+  return blackContrast >= whiteContrast ? '#000000' : '#FFFFFF';
+}
+
 // ── Interfaces de Estrutura de Templates ──
 
 export interface TemplateConfig {
@@ -44,7 +62,7 @@ export interface FontOption {
   key: string;
   name: string;
   family: string;
-  category: 'Serifada' | 'Sans-serif' | 'Display / Moderna' | 'Condensada';
+  category: 'Serifada' | 'Sans-serif' | 'Display / Moderna' | 'Condensada' | 'Arredondada';
   sample: string;
 }
 
@@ -83,7 +101,6 @@ export interface DesignSettings {
   fontBody: string;
   fontPair?: string;
   categoryStyle: 'icon' | 'name' | 'icon_name';
-  motion: 'fade' | 'slide' | 'scale' | 'none';
   homeBlocks: HomeBlock[];
   heroBanners: string[]; // Até 5 banners dinâmicos na Hero Section
   heroScope?: 'all' | 'home_only'; // 'all': vale para todas as categorias; 'home_only': vale apenas para o início
@@ -149,7 +166,7 @@ export const AVAILABLE_TEMPLATES: TemplateConfig[] = [
   }
 ];
 
-// ── 2. 7 Paletas de Cores Profissionais Curadas com 7 Tokens Cada ──
+// ── 2. Paletas de Cores Profissionais com 7 Tokens Cada ──
 
 export const AVAILABLE_PALETTES: PaletteConfig[] = [
   {
@@ -242,6 +259,76 @@ export const AVAILABLE_PALETTES: PaletteConfig[] = [
       textPrimary: '#FAFAFA',  // Off-White Iluminado
       textSecondary: '#A19BA5' // Prata Quente
     }
+  },
+  {
+    key: 'terracotta_table', name: 'Mesa Terracota',
+    colors: {
+      primary: '#9A432F', secondary: '#B77750', accent: '#A65A17',
+      background: '#FBF4ED', surface: '#FFFFFF', textPrimary: '#34241E', textSecondary: '#756055'
+    }
+  },
+  {
+    key: 'olive_garden', name: 'Jardim de Oliva',
+    colors: {
+      primary: '#4C5E30', secondary: '#79845B', accent: '#9F551E',
+      background: '#F7F8EF', surface: '#FFFFFF', textPrimary: '#293021', textSecondary: '#626A54'
+    }
+  },
+  {
+    key: 'coastal_blue', name: 'Azul Mediterrâneo',
+    colors: {
+      primary: '#175B78', secondary: '#4D8797', accent: '#B65432',
+      background: '#F0F7FA', surface: '#FFFFFF', textPrimary: '#19313C', textSecondary: '#536B77'
+    }
+  },
+  {
+    key: 'rose_patisserie', name: 'Rosa Confeitaria',
+    colors: {
+      primary: '#9A3F62', secondary: '#C37C92', accent: '#925620',
+      background: '#FFF4F7', surface: '#FFFFFF', textPrimary: '#3C2430', textSecondary: '#795C6A'
+    }
+  },
+  {
+    key: 'coffee_cream', name: 'Café com Creme',
+    colors: {
+      primary: '#654332', secondary: '#98745A', accent: '#A55224',
+      background: '#FAF6EF', surface: '#FFFFFF', textPrimary: '#33261E', textSecondary: '#756356'
+    }
+  },
+  {
+    key: 'amber_smoke', name: 'Âmbar & Brasa',
+    colors: {
+      primary: '#F3B35C', secondary: '#78573C', accent: '#FFCF86',
+      background: '#191411', surface: '#29211B', textPrimary: '#FFF5E9', textSecondary: '#C0AEA0'
+    }
+  },
+  {
+    key: 'deep_ocean', name: 'Oceano Profundo',
+    colors: {
+      primary: '#72D3D0', secondary: '#30596A', accent: '#F1BC79',
+      background: '#0D1B23', surface: '#182D38', textPrimary: '#EDF8FA', textSecondary: '#ABC2CC'
+    }
+  },
+  {
+    key: 'plum_velvet', name: 'Ameixa Aveludada',
+    colors: {
+      primary: '#D9A6DC', secondary: '#694265', accent: '#F2BD82',
+      background: '#211623', surface: '#322236', textPrimary: '#FFF1FC', textSecondary: '#CBB3CC'
+    }
+  },
+  {
+    key: 'forest_night', name: 'Floresta Noturna',
+    colors: {
+      primary: '#A4CF91', secondary: '#46614D', accent: '#E8BB78',
+      background: '#122019', surface: '#203329', textPrimary: '#F0F8EC', textSecondary: '#B2C6B5'
+    }
+  },
+  {
+    key: 'graphite_copper', name: 'Grafite & Cobre',
+    colors: {
+      primary: '#E8AE8C', secondary: '#62626C', accent: '#F8D3B1',
+      background: '#202024', surface: '#303036', textPrimary: '#F9F5F1', textSecondary: '#C0B9B3'
+    }
   }
 ];
 
@@ -256,17 +343,26 @@ export const AVAILABLE_HEADING_FONTS: FontOption[] = [
   { key: 'plus_jakarta', name: 'Plus Jakarta Sans', family: 'Plus Jakarta Sans', category: 'Sans-serif', sample: 'Minimalismo Cosmopolita' },
   { key: 'bebas_neue', name: 'Bebas Neue', family: 'Bebas Neue', category: 'Condensada', sample: 'IMPACTO & FORÇA VISUAL' },
   { key: 'merriweather', name: 'Merriweather', family: 'Merriweather', category: 'Serifada', sample: 'Tradição & Acolhimento' },
-  { key: 'syne', name: 'Syne', family: 'Syne', category: 'Display / Moderna', sample: 'Vanguarda & Coquetelaria' }
+  { key: 'syne', name: 'Syne', family: 'Syne', category: 'Display / Moderna', sample: 'Vanguarda & Coquetelaria' },
+  { key: 'montserrat', name: 'Montserrat', family: 'Montserrat', category: 'Sans-serif', sample: 'Cozinha Urbana & Criativa' },
+  { key: 'oswald', name: 'Oswald', family: 'Oswald', category: 'Condensada', sample: 'SABOR EM GRANDE ESTILO' },
+  { key: 'cormorant', name: 'Cormorant Garamond', family: 'Cormorant Garamond', category: 'Serifada', sample: 'Delicadeza & Alta Cozinha' },
+  { key: 'fraunces', name: 'Fraunces', family: 'Fraunces', category: 'Serifada', sample: 'Da Horta à Mesa' },
+  { key: 'fredoka', name: 'Fredoka', family: 'Fredoka', category: 'Arredondada', sample: 'Uma Pausa Mais Doce' }
 ];
 
 export const AVAILABLE_BODY_FONTS: FontOption[] = [
   { key: 'inter', name: 'Inter', family: 'Inter', category: 'Sans-serif', sample: 'Legibilidade máxima e clareza perfeita para preços e descrições.' },
   { key: 'dm_sans', name: 'DM Sans', family: 'DM Sans', category: 'Sans-serif', sample: 'Linhas contemporâneas, geométricas e suaves aos olhos.' },
   { key: 'lora', name: 'Lora', family: 'Lora', category: 'Serifada', sample: 'Estilo literário refinado para descrições detalhadas dos pratos.' },
-  { key: 'nunito', name: 'Nunito', family: 'Nunito', category: 'Sans-serif', sample: 'Curvas amigáveis, acolhedoras e altamente legíveis.' },
+  { key: 'nunito', name: 'Nunito', family: 'Nunito', category: 'Arredondada', sample: 'Curvas amigáveis, acolhedoras e altamente legíveis.' },
   { key: 'plus_jakarta_body', name: 'Plus Jakarta Sans', family: 'Plus Jakarta Sans', category: 'Sans-serif', sample: 'Equilíbrio primoroso entre técnica moderna e ergonomia de leitura.' },
   { key: 'space_grotesk', name: 'Space Grotesk', family: 'Space Grotesk', category: 'Display / Moderna', sample: 'Personalidade marcante e proporções equilibradas.' },
-  { key: 'quicksand', name: 'Quicksand', family: 'Quicksand', category: 'Sans-serif', sample: 'Leveza e frescor moderno para ambientes descontraídos.' }
+  { key: 'quicksand', name: 'Quicksand', family: 'Quicksand', category: 'Arredondada', sample: 'Leveza e frescor moderno para ambientes descontraídos.' },
+  { key: 'manrope', name: 'Manrope', family: 'Manrope', category: 'Sans-serif', sample: 'Clareza e equilíbrio para ingredientes, preços e descrições.' },
+  { key: 'source_sans', name: 'Source Sans 3', family: 'Source Sans 3', category: 'Sans-serif', sample: 'Leitura confortável, mesmo nas descrições mais detalhadas.' },
+  { key: 'open_sans', name: 'Open Sans', family: 'Open Sans', category: 'Sans-serif', sample: 'Uma escolha familiar e versátil para todos os sabores.' },
+  { key: 'libre_baskerville', name: 'Libre Baskerville', family: 'Libre Baskerville', category: 'Serifada', sample: 'Receitas de família com tradição e cuidado em cada detalhe.' }
 ];
 
 export const AVAILABLE_FONT_PAIRS: FontPairPreset[] = [
@@ -276,7 +372,12 @@ export const AVAILABLE_FONT_PAIRS: FontPairPreset[] = [
   { key: 'artisan_bistro', name: 'Bistrô Artesanal', heading: 'DM Serif Display', body: 'Nunito', idealFor: 'Padarias artesanais e cantinas italianas' },
   { key: 'urban_burger', name: 'Urban Burger & Pub', heading: 'Bebas Neue', body: 'Inter', idealFor: 'Hamburguerias artesanais e chopeiras' },
   { key: 'retro_vibe', name: 'Retrô & Descontraído', heading: 'Righteous', body: 'Quicksand', idealFor: 'Docerias, sorveterias e lanches' },
-  { key: 'avant_garde', name: 'Vanguarda & Autoral', heading: 'Syne', body: 'Plus Jakarta Sans', idealFor: 'Lounge bars e gastronomia autoral' }
+  { key: 'avant_garde', name: 'Vanguarda & Autoral', heading: 'Syne', body: 'Plus Jakarta Sans', idealFor: 'Lounge bars e gastronomia autoral' },
+  { key: 'urban_fresh', name: 'Urbana & Fresca', heading: 'Montserrat', body: 'Manrope', idealFor: 'Pokés, saladas e restaurantes contemporâneos' },
+  { key: 'bold_street', name: 'Impacto & Street Food', heading: 'Oswald', body: 'Source Sans 3', idealFor: 'Hamburguerias, food trucks e grelhados' },
+  { key: 'classic_table', name: 'Clássica & Refinada', heading: 'Cormorant Garamond', body: 'Open Sans', idealFor: 'Bistrôs, adegas e alta gastronomia' },
+  { key: 'farm_table', name: 'Orgânica & Artesanal', heading: 'Fraunces', body: 'Libre Baskerville', idealFor: 'Cafés, padarias e cozinha de origem' },
+  { key: 'sweet_round', name: 'Doce & Acolhedora', heading: 'Fredoka', body: 'Nunito', idealFor: 'Confeitarias, sorveterias e cardápios infantis' }
 ];
 
 // ── 4. Blocos da Página Inicial ──
@@ -322,7 +423,6 @@ export class DesignService {
     fontBody: 'Inter',
     fontPair: 'modern_clean',
     categoryStyle: 'icon_name',
-    motion: 'fade',
     homeBlocks: [...DEFAULT_HOME_BLOCKS],
     heroBanners: [...DEFAULT_HERO_BANNERS],
     heroScope: 'all',
@@ -551,10 +651,6 @@ export class DesignService {
     this.draft.update(d => ({ ...d, categoryStyle: style }));
   }
 
-  setMotion(motion: DesignSettings['motion']): void {
-    this.draft.update(d => ({ ...d, motion }));
-  }
-
   toggleHomeBlock(blockId: string): void {
     this.draft.update(d => ({
       ...d,
@@ -671,7 +767,6 @@ export class DesignService {
             fontBody: res.data.font_body || 'Inter',
             fontPair: res.data.font_pair || 'modern_clean',
             categoryStyle: res.data.category_style || 'icon_name',
-            motion: res.data.motion || 'fade',
             homeBlocks: mergedBlocks,
             heroBanners,
             heroScope,
@@ -709,7 +804,6 @@ export class DesignService {
       font_body: d.fontBody,
       font_pair: d.fontPair || 'custom',
       category_style: d.categoryStyle,
-      motion: d.motion,
       home_blocks: d.homeBlocks,
       custom_config: customConfig
     };

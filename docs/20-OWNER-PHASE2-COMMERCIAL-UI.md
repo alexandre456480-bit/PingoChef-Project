@@ -91,6 +91,8 @@ Todos os endpoints abaixo estão sob `/api/v1/auth`. O backend valida objetos es
 
 A sidebar apresenta **Início, Menu, Empresa, Design, Analytics e QR Code**, além de Sair e da engrenagem. Preview e Likes deixaram a navegação visível; seus componentes e recursos não foram removidos. O preview do telefone, publicação e acesso pelo checklist continuam disponíveis.
 
+Atualização visual de 11/10/2026: Início e Menu não exibem mais o cartão de plano/uso; os dados continuam em Configurações e os limites permanecem aplicados pela UI e pelo backend. No tema escuro, somente o centro e a área do preview usam fundos neutros pretos/cinzas; a sidebar mantém suas cores. O Menu tem containers responsivos e ações de categoria separadas do filtro, sem botões aninhados. O preview mobile usa o estilo neutro dos demais controles. No cardápio, categorias compartilham a elevação dos itens; emblemas de destaque foram removidos da apresentação, e as curtidas ficam fora das fotos. Os tipos de destaque, preços, ordenação e permissões não mudam. Não há alteração de contrato da API ou migração de banco para esta atualização.
+
 Configurações utiliza diálogo central no desktop, tela inteira no mobile e navegação interna horizontal nas telas pequenas:
 
 - **Conta:** nome, e-mail, verificação e estabelecimento.

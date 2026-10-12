@@ -1,5 +1,6 @@
 import {
   Component,
+  ChangeDetectorRef,
   EventEmitter,
   Input,
   OnChanges,
@@ -9,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subscription, timer, switchMap } from 'rxjs';
+import { Subscription, timer, exhaustMap } from 'rxjs';
 import {
   ProductMediaView,
   VideoAspectRatio,
@@ -190,7 +191,7 @@ type UploadUiState =
         @if (state === 'ready') {
           <div class="state-card mascot success" role="status" aria-live="polite">
             <img src="/icons_chef_hat.webp" alt="" />
-            <div><strong>Vídeo pronto</strong><span>O processamento terminou com sucesso.</span></div>
+            <div><strong>Vídeo pronto</strong><span>Salve o produto e publique o cardápio.</span></div>
           </div>
         }
 
@@ -199,6 +200,9 @@ type UploadUiState =
             <img src="/icons_chef_hat.webp" alt="" />
             <div><strong>{{ state === 'rejected' ? 'Vídeo rejeitado' : 'Não foi possível enviar' }}</strong><span>{{ errorMessage }}</span>@if(planLimitReached){<a routerLink="/plans">Comparar planos</a>}</div>
           </div>
+          @if (hasPendingMedia || canRetryStatus) {
+            <button type="button" class="keep-button" (click)="retryStatus()">Verificar status do vídeo</button>
+          }
         }
 
         @if (loadingMedia) {
@@ -424,8 +428,10 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   private pollingSubscription?: Subscription;
   private pollingRetryTimer?: number;
   private destroyed = false;
+  private pollingStartedAt = 0;
+  private pollingErrors = 0;
 
-  constructor(private readonly videoService: VideoUploadService) {}
+  constructor(private readonly videoService: VideoUploadService, private readonly cdr: ChangeDetectorRef) {}
 
   get hasPendingMedia(): boolean {
     return this.videoMedia.some(media => ['waiting', 'uploading', 'processing'].includes(media.status));
@@ -433,6 +439,10 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
 
   get hasReadyVideo(): boolean {
     return this.videoMedia.some(media => media.status === 'ready');
+  }
+
+  get canRetryStatus(): boolean {
+    return this.state === 'error' && this.activeMediaId !== null;
   }
 
   get isVideoBusy(): boolean {
@@ -526,6 +536,8 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   startUpload(): void {
     if (!this.itemId || !this.selectedVideo || this.state !== 'selected') return;
     const selection = this.selectedVideo;
+    this.pollingStartedAt = 0;
+    this.pollingErrors = 0;
     this.uploadProgress = 0;
     this.setState('requesting');
     this.intentSubscription = this.videoService.createUploadIntent(
@@ -545,14 +557,22 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
         ).subscribe({
           next: event => {
             this.uploadProgress = event.progress;
+            this.cdr.markForCheck();
             if (event.complete) {
               this.selectedVideo = null;
               this.setState('processing');
               this.loadMedia(true);
             }
           },
-          error: () => this.handleUploadError('O envio foi interrompido. Verifique sua conexão e tente novamente.')
+          error: () => {
+            this.selectedVideo = null;
+            this.errorMessage = 'A conexão não confirmou o envio. Estamos verificando o vídeo; ele será preservado se já tiver chegado.';
+            this.setState('error');
+            this.startPolling();
+          }
         });
+        // The provider may finish while the browser is still waiting for the PUT response.
+        this.startPolling();
       },
       error: error => {
         this.planLimitReached=error?.error?.error?.code==='LIMIT_EXCEEDED';
@@ -660,10 +680,11 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
       next: media => {
         this.loadingMedia = false;
         this.applyMedia(media);
-        if (startPollingAfter || this.hasPendingMedia) this.startPolling();
+        if (this.hasPendingMedia || (startPollingAfter && this.state === 'processing')) this.startPolling();
       },
       error: () => {
         this.loadingMedia = false;
+        this.cdr.markForCheck();
         if (this.state === 'processing') this.startPolling();
       }
     });
@@ -672,19 +693,44 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   private startPolling(): void {
     if (this.destroyed || !this.itemId || (this.pollingSubscription && !this.pollingSubscription.closed)) return;
     const itemId = this.itemId;
+    if (!this.pollingStartedAt) this.pollingStartedAt = Date.now();
     this.pollingSubscription = timer(1200, 2500).pipe(
-      switchMap(() => this.videoService.listProductMedia(itemId))
+      exhaustMap(() => this.videoService.listProductMedia(itemId))
     ).subscribe({
-      next: media => this.applyMedia(media),
+      next: media => {
+        this.pollingErrors = 0;
+        this.applyMedia(media);
+        if (this.hasPendingMedia && Date.now() - this.pollingStartedAt >= 10 * 60_000) this.pausePolling();
+      },
       error: () => {
         this.pollingSubscription = undefined;
-        this.pollingRetryTimer = window.setTimeout(() => this.startPolling(), 3000);
+        if (++this.pollingErrors >= 3 || Date.now() - this.pollingStartedAt >= 10 * 60_000) {
+          this.pausePolling();
+        } else {
+          this.pollingRetryTimer = window.setTimeout(() => this.startPolling(), 3000);
+        }
       }
     });
   }
 
+  retryStatus(): void {
+    this.pollingStartedAt = 0;
+    this.pollingErrors = 0;
+    this.errorMessage = '';
+    this.setState('processing');
+    this.startPolling();
+  }
+
+  private pausePolling(): void {
+    this.pollingSubscription?.unsubscribe();
+    this.pollingSubscription = undefined;
+    this.errorMessage = 'A confirmação do vídeo está demorando. Verifique o status novamente em instantes; você pode salvar o produto enquanto isso.';
+    this.setState('error');
+  }
+
   private applyMedia(media: ProductMediaView[]): void {
     this.videoMedia = media.filter(entry => entry.mediaType === 'video');
+    this.cdr.markForCheck();
     const active = this.activeMediaId
       ? this.videoMedia.find(entry => entry.id === this.activeMediaId)
       : this.videoMedia.find(entry => ['waiting', 'uploading', 'processing'].includes(entry.status));
@@ -692,17 +738,27 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     if (active) {
       this.activeMediaId = active.id;
       if (['waiting', 'uploading', 'processing'].includes(active.status)) {
-        this.setState('processing');
+        if (active.status === 'processing') {
+          this.directUploadSubscription?.unsubscribe();
+          this.selectedVideo = null;
+          this.uploadProgress = 100;
+          this.setState('processing');
+        } else if (!['uploading', 'error'].includes(this.state)) {
+          this.setState('processing');
+        }
         return;
       }
       if (active.status === 'ready') {
+        this.directUploadSubscription?.unsubscribe();
+        this.selectedVideo = null;
+        this.uploadProgress = 100;
         this.pollingSubscription?.unsubscribe();
         this.pollingSubscription = undefined;
         const completedReplacement = Boolean(this.replacementMediaId && this.replacementMediaId !== active.id);
         this.replacementMediaId = null;
         this.activeMediaId = null;
         this.setState('ready');
-        this.onToast.emit(completedReplacement ? 'Vídeo trocado com sucesso.' : 'Vídeo pronto para a próxima etapa!');
+        this.onToast.emit(completedReplacement ? 'Vídeo trocado com sucesso.' : 'Vídeo pronto para publicar.');
         this.mediaChanged.emit();
         this.loadMedia();
         return;
@@ -761,13 +817,16 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
     this.selectedAspectRatio = '16:9';
     this.replacementMediaId = null;
     this.pendingDeleteMedia = null;
+    this.pollingStartedAt = 0;
+    this.pollingErrors = 0;
     this.state = 'selecting';
     if (emitBusy) this.busyChange.emit(false);
   }
 
   private setState(state: UploadUiState): void {
     this.state = state;
-    this.busyChange.emit(['validating', 'selected', 'requesting', 'uploading', 'processing', 'replacing', 'cancelling'].includes(state));
+    this.cdr.markForCheck();
+    this.busyChange.emit(['validating', 'selected', 'requesting', 'uploading', 'replacing', 'cancelling'].includes(state));
   }
 
   private stopRequests(): void {

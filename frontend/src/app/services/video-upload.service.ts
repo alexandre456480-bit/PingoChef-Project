@@ -5,7 +5,7 @@ import {
   HttpHeaders,
   HttpRequest
 } from '@angular/common/http';
-import { Observable, filter, map } from 'rxjs';
+import { Observable, filter, map, timeout } from 'rxjs';
 import type { AllowedVideoMimeType } from '../features/product-video/video-file-validation';
 import { API_BASE_URL } from '../constants/api';
 
@@ -66,7 +66,7 @@ export class VideoUploadService {
       `${this.apiUrl}/items/${encodeURIComponent(itemId)}/media/video/upload-intent`,
       { fileSizeBytes, mimeType, aspectRatio, replacesMediaId },
       this.authOptions()
-    ).pipe(map(response => response.data));
+    ).pipe(timeout(30_000), map(response => response.data));
   }
 
   uploadDirect(uploadUrl: string, file: File, mimeType: AllowedVideoMimeType): Observable<DirectUploadProgress> {
@@ -79,6 +79,7 @@ export class VideoUploadService {
     // Deliberately no PingoChef Authorization header here: this request goes
     // from the browser directly to the short-lived Mux URL.
     return this.http.request(request).pipe(
+      timeout({ each: 60_000 }),
       filter(event => event.type === HttpEventType.UploadProgress || event.type === HttpEventType.Response),
       map(event => {
         if (event.type === HttpEventType.Response) {
@@ -97,7 +98,7 @@ export class VideoUploadService {
     return this.http.get<{ success: true; data: ProductMediaView[] }>(
       `${this.apiUrl}/items/${encodeURIComponent(itemId)}/media`,
       this.authOptions()
-    ).pipe(map(response => response.data));
+    ).pipe(timeout(20_000), map(response => response.data));
   }
 
   deleteProductMedia(itemId: string, mediaId: string): Observable<ProductMediaDeletionStatus> {

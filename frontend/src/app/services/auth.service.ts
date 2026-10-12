@@ -41,7 +41,9 @@ export class AuthService {
         return this.http.get(`${this.apiUrl}/me`).pipe(catchError(error => {
           if (error.status === 401 && oldToken) return this.http.post(`${this.apiUrl}/migrate-session`, {}, {
             headers: new HttpHeaders({ Authorization: `Bearer ${oldToken}` })
-          });
+          }).pipe(catchError(migrationError => throwError(() =>
+            [401, 410].includes(migrationError.status) ? error : migrationError
+          )));
           return throwError(() => error);
         }));
       }).pipe(tap((res: any) => this.state.accept(res.data)), finalize(() => { this.restoreRequest = undefined; }),

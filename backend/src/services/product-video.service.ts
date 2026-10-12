@@ -198,7 +198,20 @@ export class ProductVideoService {
   }
 
   async listOwnedMedia(businessId: string, menuItemId: string): Promise<Array<Record<string, unknown>>> {
-    const rows: OwnerMediaView[] = await this.repository.listOwnedForItem(businessId, menuItemId);
+    let rows: OwnerMediaView[] = await this.repository.listOwnedForItem(businessId, menuItemId);
+    let synchronized = false;
+    for (const row of rows) {
+      if (row.source !== 'mux' || !['waiting', 'uploading', 'processing'].includes(row.status)) continue;
+      const media = await this.repository.claimPendingProviderSync(businessId, menuItemId, row.id);
+      if (!media) continue;
+      try {
+        await this.syncPendingMedia(media);
+        synchronized = true;
+      } catch {
+        throw new VideoHttpError(503, 'VIDEO_STATUS_UNAVAILABLE', 'Não foi possível confirmar o status do vídeo agora. Tente novamente.');
+      }
+    }
+    if (synchronized) rows = await this.repository.listOwnedForItem(businessId, menuItemId);
     return rows.map(row => ({
       id: row.id,
       mediaType: row.media_type,
@@ -212,6 +225,33 @@ export class ProductVideoService {
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
+  }
+
+  private async syncPendingMedia(media: ProductMediaRecord): Promise<void> {
+    let current = media;
+    if (!current.mux_asset_id && current.mux_upload_id) {
+      const upload = await this.mux.retrieveUpload(current.mux_upload_id);
+      if (upload.asset_id) {
+        const processing = await this.repository.markProcessing(current.id, current.mux_upload_id, upload.asset_id);
+        if (!processing) return; // A webhook or deletion already advanced the row.
+        current = processing;
+      } else {
+        if (['errored', 'cancelled', 'timed_out'].includes(upload.status)) {
+          await this.repository.markErrored(current.id, 'UPLOAD_EXPIRED');
+        } else if (current.upload_expires_at && Date.parse(current.upload_expires_at) < Date.now()) {
+          await this.cancelUploadBestEffort(current.mux_upload_id);
+          await this.repository.markErrored(current.id, 'UPLOAD_EXPIRED');
+        }
+        return;
+      }
+    }
+    if (!current.mux_asset_id) return;
+    const asset = await this.mux.retrieveAsset(current.mux_asset_id);
+    if (asset.status === 'ready') {
+      await this.finalizeReadyAsset(current, asset.id, asset.duration, asset.playback_ids);
+    } else if (asset.status === 'errored') {
+      await this.repository.markErrored(current.id, 'MUX_ASSET_ERRORED', asset.id);
+    }
   }
 
   async reconcile(): Promise<{ inspected: number; repaired: number; pending: number }> {

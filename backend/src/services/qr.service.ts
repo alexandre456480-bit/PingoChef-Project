@@ -29,7 +29,7 @@ export const qrConfigurationSchema = z
         ),
       "Use letras latinas, acentos e pontuação comum.",
     ),
-    logoPng: z.string().max(44000).nullable(),
+    logoPng: z.string().max(140000).nullable(),
   })
   .strict();
 export const qrCreateSchema = z
@@ -116,7 +116,7 @@ export function sanitizeQrConfiguration(
     // Check the IHDR BEFORE inflation: bounded pixels and bytes, no SVG, remote URL, APNG or interlacing.
     if (
       bytes.length < 33 ||
-      bytes.length > 24576 ||
+      bytes.length > 96 * 1024 ||
       !bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex")) ||
       bytes.readUInt32BE(8) !== 13 ||
       bytes.toString("ascii", 12, 16) !== "IHDR" ||
@@ -133,7 +133,7 @@ export function sanitizeQrConfiguration(
       throw ownerError(
         400,
         "QR_INVALID_LOGO",
-        "Use PNG RGB/RGBA, 8 bits, de 16 a 128 pixels, até 24 KB.",
+        "Use PNG RGB/RGBA, 8 bits, de 16 a 128 pixels, até 96 KB.",
       );
     try {
       for (let offset = 8; offset + 12 <= bytes.length;) {
@@ -148,7 +148,7 @@ export function sanitizeQrConfiguration(
       }
       const decoded = PNG.sync.read(bytes, { checkCRC: true });
       const normalized = PNG.sync.write(decoded, { colorType: 6 });
-      if (normalized.length > 24576) throw new Error();
+      if (normalized.length > 96 * 1024) throw new Error();
       c.logoPng = `data:image/png;base64,${normalized.toString("base64")}`;
     } catch {
       throw ownerError(
@@ -279,6 +279,7 @@ export const qrService = {
         .from("analytics_qr_refs")
         .select(fields)
         .eq("business_id", business)
+        .is("deleted_at", null)
         .order("created_at")
         .limit(100),
       supabaseAdmin
@@ -303,6 +304,7 @@ export const qrService = {
       .select(fields)
       .eq("business_id", business)
       .eq("id", id)
+      .is("deleted_at", null)
       .maybeSingle();
     qrDatabaseError(error);
     if (!data) throw ownerError(404, "QR_NOT_FOUND");
@@ -327,12 +329,22 @@ export const qrService = {
     if (!data) throw ownerError(503, "QR_SERVICE_UNAVAILABLE");
     return dto(data as QrRow);
   },
+  async remove(business: string, id: string, revision: number) {
+    await this.authorize(business);
+    const { error } = await supabaseAdmin.rpc("delete_business_qr", {
+      p_business: business,
+      p_id: id,
+      p_revision: revision,
+    });
+    qrDatabaseError(error);
+  },
   async resolve(identifier: string) {
     const { data, error } = await supabaseAdmin
       .from("analytics_qr_refs")
       .select("id,business_id")
       .eq("public_identifier", identifier)
       .eq("active", true)
+      .is("deleted_at", null)
       .maybeSingle();
     qrDatabaseError(error);
     if (

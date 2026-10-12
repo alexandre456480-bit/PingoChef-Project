@@ -24,6 +24,11 @@ export async function verifyOwnerDatabase(pool) {
   await check('automatic active Free subscription without provider',async()=>{
     assert.equal(await value("SELECT count(*)::int value FROM subscriptions s JOIN plans p ON p.id=s.plan_id WHERE p.code='FREE' AND s.status='active' AND provider IS NULL"),2);
   });
+  await check('session RPC accepts the JWT issue time and removes the old signature',async()=>{
+    assert.equal(await value("SELECT count(*)::int value FROM pg_proc WHERE proname='create_owner_session' AND pronamespace='public'::regnamespace AND pronargs=8"),1);
+    assert.equal(await value("SELECT count(*)::int value FROM pg_proc WHERE proname='create_owner_session' AND pronamespace='public'::regnamespace AND pronargs=7"),0);
+    assert.equal(await value("SELECT create_owner_session($1,$2,'owner','diagnostic',now()-interval '2 minutes',now()-interval '1 minute',NULL,$3) value",[randomBytes(32).toString('hex'),user,Math.floor(Date.now()/1000)]),false);
+  });
   await check('exact plan matrix',async()=>{
     const expected={FREE:[10,4,1,false,false,false,false,false],BASIC:[30,10,7,true,false,false,false,false],MEDIUM:[70,25,25,true,true,false,true,true],PRO:[150,40,40,true,true,true,true,true]};
     for(const [code,values] of Object.entries(expected)){

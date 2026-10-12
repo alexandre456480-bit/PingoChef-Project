@@ -39,6 +39,73 @@ h2 {
   gap: 24px;
   align-items: start;
 }
+.qr-library {
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 20px;
+  background: var(--panel-surface);
+}
+.qr-code-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 10px;
+}
+.qr-code-choice {
+  flex: 1 1 160px;
+  min-width: 0;
+  text-align: left;
+  background: var(--panel-surface-inset);
+  color: var(--panel-text);
+  border: 1px solid var(--panel-border-strong);
+}
+.qr-code-choice strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.qr-code-choice span {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: var(--panel-text-soft);
+}
+.qr-code-choice[aria-pressed='true'] {
+  border-color: var(--panel-accent);
+  box-shadow: inset 0 0 0 1px var(--panel-accent);
+}
+.danger {
+  color: var(--panel-text);
+  background: var(--panel-surface);
+  border: 1px solid var(--panel-border-strong);
+}
+.danger:hover {
+  border-color: #c65c6d;
+}
+.delete-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: 20px;
+  background: rgba(29, 10, 24, 0.75);
+  display: grid;
+  place-items: center;
+}
+.delete-dialog {
+  width: min(100%, 440px);
+  padding: 24px;
+  box-sizing: border-box;
+  border-radius: 24px;
+  border: 1px solid var(--panel-border-strong);
+  background: var(--panel-surface);
+  color: var(--panel-text);
+  box-shadow: var(--panel-shadow-soft);
+}
+.delete-dialog p {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--panel-text-soft);
+}
 .config-card,
 .preview-card {
   background: var(--panel-surface);
@@ -61,15 +128,6 @@ h2 {
   font-size: 0.73rem;
   color: var(--panel-text-soft);
   white-space: nowrap;
-}
-.selector-row {
-  display: flex;
-  gap: 10px;
-  align-items: end;
-}
-.selector-row label {
-  min-width: 0;
-  flex: 1;
 }
 label {
   display: grid;
@@ -305,12 +363,6 @@ a:focus-visible {
   }
   .qr-layout {
     gap: 18px;
-  }
-  .selector-row {
-    flex-wrap: wrap;
-  }
-  .selector-row label {
-    flex-basis: 100%;
   }
   .card-heading {
     align-items: start;

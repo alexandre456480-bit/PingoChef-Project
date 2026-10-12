@@ -89,6 +89,7 @@ export interface ProductMediaRepository {
   findById(mediaId: string): Promise<ProductMediaRecord | null>;
   findOwned(businessId: string, menuItemId: string, mediaId: string): Promise<ProductMediaRecord | null>;
   listOwnedForItem(businessId: string, menuItemId: string): Promise<OwnerMediaView[]>;
+  claimPendingProviderSync(businessId: string, menuItemId: string, mediaId: string): Promise<ProductMediaRecord | null>;
   listGalleryMedia(businessId: string, itemIds: string[], publishedOnly: boolean): Promise<GalleryMediaView[]>;
   publishReadyForBusiness(businessId: string): Promise<number>;
   markProcessing(mediaId: string, uploadId: string, assetId: string): Promise<ProductMediaRecord | null>;
@@ -238,6 +239,24 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
       .order('created_at', { ascending: true });
     if (error) throw databaseError('consultar');
     return (data ?? []) as OwnerMediaView[];
+  }
+
+  async claimPendingProviderSync(businessId: string, menuItemId: string, mediaId: string): Promise<ProductMediaRecord | null> {
+    const now = new Date();
+    const stale = new Date(now.getTime() - 15_000).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from('product_media')
+      .update({ last_provider_sync_at: now.toISOString() })
+      .eq('business_id', businessId)
+      .eq('menu_item_id', menuItemId)
+      .eq('id', mediaId)
+      .eq('source', 'mux')
+      .in('status', ['waiting', 'uploading', 'processing'])
+      .or(`last_provider_sync_at.is.null,last_provider_sync_at.lt.${stale}`)
+      .select(MEDIA_SELECT)
+      .maybeSingle();
+    if (error) throw databaseError('sincronizar');
+    return data as ProductMediaRecord | null;
   }
 
   async listGalleryMedia(

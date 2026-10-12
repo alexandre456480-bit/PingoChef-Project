@@ -129,9 +129,10 @@ export async function getBusiness(req: AdminRequest, res: Response, next: NextFu
       .eq('id', id).maybeSingle();
     if (error) throw error;
     if (!business) return res.status(404).json({ success: false, error: { code: 'BUSINESS_NOT_FOUND' } });
-    const [state, subscription, adjustments, owner, categories, products, media, activity, audit] = await Promise.all([
+    const [state, subscription, planSnapshot, adjustments, owner, categories, products, media, activity, audit] = await Promise.all([
       supabaseAdmin.from('business_account_state').select('*').eq('business_id', id).single(),
       supabaseAdmin.from('subscriptions').select('*').eq('business_id', id).maybeSingle(),
+      supabaseAdmin.rpc('business_entitlement_snapshot', { p_business_id: id }),
       supabaseAdmin.from('subscription_adjustments')
         .select('id,type,value,reason,starts_at,ends_at,created_by_admin,created_at')
         .eq('business_id', id).order('created_at', { ascending: false }).limit(20),
@@ -147,12 +148,13 @@ export async function getBusiness(req: AdminRequest, res: Response, next: NextFu
       supabaseAdmin.from('admin_audit_log').select('action,details,created_at,actor_user_id')
         .eq('target_type','business').eq('target_id',id).order('created_at', { ascending: false }).limit(20)
     ]);
-    const failure = [state,subscription,adjustments,owner,categories,products,media,activity,audit]
+    const failure = [state,subscription,planSnapshot,adjustments,owner,categories,products,media,activity,audit]
       .find(result => result.error)?.error;
     if (failure) throw failure;
     return res.json({ success: true, data: { ...business, accountState: state.data,
       email: owner.data?.user?.email || null,
-      subscription: subscription.data, recentAdjustments: adjustments.data,
+      subscription: subscription.data, plan: planSnapshot.data?.plan || null,
+      recentAdjustments: adjustments.data,
       categories: { total: categories.count || 0, rows: categories.data || [] },
       products: { total: products.count || 0, rows: products.data || [] },
       media: { total: media.count || 0, rows: media.data || [] },

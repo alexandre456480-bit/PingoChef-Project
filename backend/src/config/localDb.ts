@@ -166,7 +166,6 @@ class LocalDatabase {
       font_body: 'Inter',
       font_pair: 'modern_clean',
       category_style: 'icon_name',
-      motion: 'fade',
       home_blocks: [
         { id: 'block_hero', type: 'hero', label: 'Hero / Capa', enabled: true, position: 0 },
         { id: 'block_categories', type: 'categories', label: 'Categorias', enabled: true, position: 1 },

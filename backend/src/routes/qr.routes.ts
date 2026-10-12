@@ -48,16 +48,14 @@ router.post(
   handle(async (req, res) => {
     if (Object.keys(req.query).length)
       throw ownerError(400, "INVALID_QR_QUERY");
-    return res
-      .status(201)
-      .json({
-        success: true,
-        data: await qrService.save(
-          req.businessId!,
-          null,
-          qrCreateSchema.parse(req.body),
-        ),
-      });
+    return res.status(201).json({
+      success: true,
+      data: await qrService.save(
+        req.businessId!,
+        null,
+        qrCreateSchema.parse(req.body),
+      ),
+    });
   }),
 );
 router.put(
@@ -104,6 +102,21 @@ router.get(
     return res
       .type(format === "png" ? "image/png" : "image/svg+xml")
       .send(image);
+  }),
+);
+router.delete(
+  "/:id",
+  sharedRateLimit("qr-write", 10, 60, tenant),
+  handle(async (req, res) => {
+    if (Object.keys(req.query).length)
+      throw ownerError(400, "INVALID_QR_QUERY");
+    const id = z.string().uuid().parse(req.params.id);
+    const { revision } = z
+      .object({ revision: z.number().int().min(1).max(2147483646) })
+      .strict()
+      .parse(req.body);
+    await qrService.remove(req.businessId!, id, revision);
+    return res.status(204).send();
   }),
 );
 export default router;

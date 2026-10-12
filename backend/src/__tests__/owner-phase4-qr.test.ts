@@ -1,6 +1,6 @@
 import express from "express";
 import request from "supertest";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
 import { Resvg } from "@resvg/resvg-js";
@@ -50,8 +50,9 @@ function row(id = qr, tenant = business) {
     id,
     business_id: tenant,
     label: "QR Mesa 1",
-    public_identifier: identifier,
+    public_identifier: tenant === business ? identifier : otherQr,
     active: true,
+    deleted_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     revision: 1,
@@ -60,7 +61,7 @@ function row(id = qr, tenant = business) {
 }
 function app() {
   const api = express();
-  api.use(express.json({ limit: "64kb" }));
+  api.use(express.json({ limit: "256kb" }));
   api.use("/qr", qrRoutes);
   api.use("/public", publicRoutes);
   api.use((e: any, _req: any, res: any, _next: any) =>
@@ -70,6 +71,34 @@ function app() {
   );
   return api;
 }
+it("deletion is tenant scoped and revision checked, hides the QR and disables its public link", async () => {
+  const api = app();
+  const remove = (id: string, payload: any) =>
+    request(api)
+      .delete(`/qr/${id}`)
+      .set("x-test-actor", business)
+      .send(payload);
+  expect((await remove(otherQr, { revision: 1 })).status).toBe(404);
+  expect((await remove(qr, { revision: 2 })).status).toBe(409);
+  expect((await remove(qr, { revision: 1, businessId: other })).status).toBe(
+    400,
+  );
+  expect((await remove(qr, { revision: 1 })).status).toBe(204);
+  const listed = await request(api).get("/qr").set("x-test-actor", business);
+  expect(listed.body.data.rows).toEqual([]);
+  expect(listed.body.data.limit).toBe(3);
+  expect(
+    (await request(api).get(`/qr/${qr}/image`).set("x-test-actor", business))
+      .status,
+  ).toBe(404);
+  expect((await request(api).get(`/public/qr/${identifier}`)).status).toBe(404);
+  expect((await remove(qr, { revision: 2 })).status).toBe(404);
+  expect(rows.find((r) => r.id === qr)).toMatchObject({
+    active: false,
+    revision: 2,
+    deleted_at: expect.any(String),
+  });
+});
 beforeEach(() => {
   tier = "MEDIUM";
   quota = true;
@@ -94,13 +123,17 @@ beforeEach(() => {
         filters[k] = v;
         return chain;
       },
+      is: (k: string, v: any) => {
+        filters[k] = v;
+        return chain;
+      },
       order: () => chain,
       limit: () => chain,
     };
     const result = () => ({
       data:
         table === "qr_settings"
-          ? { max_codes_per_business: 20 }
+          ? { max_codes_per_business: 3 }
           : table === "businesses"
             ? { slug: "novo-bistro" }
             : rows.filter((r) =>
@@ -135,6 +168,23 @@ beforeEach(() => {
           },
           error: null,
         };
+      if (name === "delete_business_qr") {
+        const found = rows.find(
+          (r) =>
+            r.id === args.p_id &&
+            r.business_id === args.p_business &&
+            !r.deleted_at,
+        );
+        if (!found) return { data: null, error: { message: "QR_NOT_FOUND" } };
+        if (found.revision !== args.p_revision)
+          return { data: null, error: { message: "QR_VERSION_CONFLICT" } };
+        Object.assign(found, {
+          active: false,
+          deleted_at: new Date().toISOString(),
+          revision: found.revision + 1,
+        });
+        return { data: null, error: null };
+      }
       if (name === "manage_business_qr") {
         const found = args.p_id
           ? rows.find(
@@ -164,6 +214,7 @@ it.each(["FREE", "BASIC"])(
       ["get", "/qr", null],
       ["post", "/qr", body()],
       ["put", `/qr/${qr}`, { ...body(), active: true, revision: 1 }],
+      ["delete", `/qr/${qr}`, { revision: 1 }],
       ["get", `/qr/${qr}/image`, null],
     ] as const) {
       const r = await request(api)
@@ -323,6 +374,36 @@ it("enforces contrast, rejects remote/SVG logos and checks image dimensions befo
       logoPng: `data:image/png;base64,${bomb.toString("base64")}`,
     }),
   ).toThrow();
+});
+it("accepts a normalized 128-pixel PNG above the former 24 KB limit through the HTTP API", async () => {
+  const logo = new PNG({ width: 128, height: 128 });
+  randomBytes(logo.data.length).copy(logo.data);
+  const bytes = PNG.sync.write(logo);
+  expect(bytes.length).toBeGreaterThan(24576);
+  expect(bytes.length).toBeLessThan(96 * 1024);
+  const normalized = sanitizeQrConfiguration({
+    ...defaultQrConfiguration,
+    logoPng: `data:image/png;base64,${bytes.toString("base64")}`,
+  });
+  const decoded = PNG.sync.read(
+    Buffer.from(normalized.logoPng!.slice(22), "base64"),
+  );
+  expect([decoded.width, decoded.height]).toEqual([128, 128]);
+  const response = await request(app())
+    .post("/qr")
+    .set("x-test-actor", business)
+    .send({
+      name: "QR Logo",
+      configuration: {
+        ...defaultQrConfiguration,
+        logoPng: `data:image/png;base64,${bytes.toString("base64")}`,
+      },
+    });
+  expect(response.status).toBe(201);
+  expect(
+    calls.find((call) => call.name === "manage_business_qr")?.args
+      .p_configuration.logoPng,
+  ).toMatch(/^data:image\/png;base64,/);
 });
 it("origin is fixed and hashes hide subjects with separated scopes", () => {
   expect(qrPublicUrl(identifier)).toBe(`${origin}/q/${identifier}`);

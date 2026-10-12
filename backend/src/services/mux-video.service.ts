@@ -92,11 +92,11 @@ export class OfficialMuxVideoProvider implements MuxVideoProvider {
   }
 
   retrieveUpload(uploadId: string): Promise<Upload> {
-    return this.client.video.uploads.retrieve(uploadId);
+    return this.client.video.uploads.retrieve(uploadId, { timeout: 8000, maxRetries: 0 });
   }
 
   retrieveAsset(assetId: string): Promise<Asset> {
-    return this.client.video.assets.retrieve(assetId);
+    return this.client.video.assets.retrieve(assetId, { timeout: 8000, maxRetries: 0 });
   }
 
   async listRecentUploads(limit: number): Promise<ProviderUploadRecord[]> {

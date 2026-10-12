@@ -33,7 +33,8 @@ const designSchema = z.object({
   font_body: fontNameSchema.default('Inter'),
   font_pair: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/).default('modern_clean'),
   category_style: z.enum(['icon', 'name', 'icon_name']).default('icon_name'),
-  motion: z.enum(['fade', 'slide', 'scale', 'none']).default('fade'),
+  // Aceita clientes antigos durante a atualização, sem persistir a preferência removida.
+  motion: z.enum(['fade', 'slide', 'scale', 'none']).optional(),
   home_blocks: z.array(
     z.object({
       id: z.string(),
@@ -102,7 +103,6 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
             font_body: data.font_body || 'Inter',
             font_pair: data.font_pair || 'modern_clean',
             category_style: data.category_style || 'icon_name',
-            motion: data.motion || 'fade',
             home_blocks: mergedBlocks,
             custom_config: data.custom_config || {}
           }
@@ -136,7 +136,6 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
       font_body: 'Inter',
       font_pair: 'modern_clean',
       category_style: 'icon_name',
-      motion: 'fade',
       home_blocks: [
         { id: 'block_hero', type: 'hero', label: 'Hero / Capa', enabled: true, position: 0 },
         { id: 'block_categories', type: 'categories', label: 'Categorias', enabled: true, position: 1 },
@@ -177,7 +176,7 @@ export const saveDesignController = async (req: AuthenticatedRequest, res: Respo
       });
     }
 
-    const validatedData = designSchema.parse(req.body);
+    const { motion: _legacyMotion, ...validatedData } = designSchema.parse(req.body);
 
     // Sanitização e validação de segurança para o bloco de apresentação
     if (validatedData.custom_config && validatedData.custom_config.intro_card) {
@@ -199,7 +198,6 @@ export const saveDesignController = async (req: AuthenticatedRequest, res: Respo
           font_body: validatedData.font_body,
           font_pair: validatedData.font_pair,
           category_style: validatedData.category_style,
-          motion: validatedData.motion,
           home_blocks: validatedData.home_blocks,
           custom_config: validatedData.custom_config || {},
           updated_at: new Date().toISOString()

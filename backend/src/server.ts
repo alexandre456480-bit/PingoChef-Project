@@ -125,7 +125,7 @@ app.use('/api/v1/auth', (req, _res, next) => {
 app.use('/api/v1/qr', (req, _res, next) => {
   if (['POST', 'PUT'].includes(req.method) && !req.is('application/json')) throw ownerError(415, 'QR_JSON_REQUIRED');
   next();
-}, express.json({ limit: '64kb' }));
+}, express.json({ limit: '256kb' }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 

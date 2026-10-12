@@ -30,8 +30,24 @@ A fundação de autenticação do proprietário, cadastro público confirmado e 
 está em [`docs/19-OWNER-PHASE1-FOUNDATION.md`](docs/19-OWNER-PHASE1-FOUNDATION.md).
 Aplique as duas migrations `20261003000000` e `20261003010000` após as anteriores,
 configure a chave de sessão e os templates Auth antes de implantar esta versão.
+Se o Supabase já recebeu uma versão anterior da função `create_owner_session`,
+aplique também `20261004000000_owner_session_rpc_upgrade.sql`. O backend atual
+envia `p_auth_issued_at`; a função antiga com sete parâmetros faz o login
+retornar `503 SESSION_CREATION_FAILED` mesmo após a senha ser aceita.
 O preflight preserva contas e conteúdo existente; o caso atual de 13 produtos no
 Free está documentado no relatório.
+
+## Atualização de QR e itens (11/10/2026)
+
+Antes de publicar o backend atualizado, aplique no SQL Editor a migration
+[`20261011000000_qr_capacity_and_deletion.sql`](supabase/migrations/20261011000000_qr_capacity_and_deletion.sql), após as migrations anteriores.
+Ela limita a criação a três QR por estabelecimento (incluindo pausados), adiciona
+exclusão com conferência de revisão e preserva o histórico do Analytics. QR excluído
+deixa de resolver, não pode ser reativado e libera uma vaga. Códigos antigos acima
+do limite não são apagados automaticamente; novas criações ficam bloqueadas.
+O SQL usa transação e limites de espera para não manter bloqueios prolongados.
+O painel usa agora a relação explícita `menu_items_category_tenant_fk` para evitar
+a ambiguidade entre produtos e categorias, mantendo o escopo do proprietário.
 
 ## Desenvolvimento local
 
@@ -57,6 +73,10 @@ O frontend utiliza `/api/v1` na própria origem; o proxy local aponta para
 `http://localhost:3000`. Configure `OWNER_SESSION_ENCRYPTION_KEY` somente no backend.
 Nunca versione `.env`, chaves privadas, tokens Mux ou a service role do Supabase.
 
+Durante o desenvolvimento, mantenha a API com `npm run dev` para recarregar o código.
+O `npm start` do backend recompila antes de iniciar, evitando executar um `dist` antigo.
+Recompilar arquivos não atualiza um processo `node dist/server.js` que já esteja em execução.
+
 ## Verificações
 
 Analytics do cardápio está implementado na [Fase 3](docs/21-OWNER-PHASE3-MENU-ANALYTICS.md):
@@ -65,6 +85,7 @@ QR PNG/SVG, integração com Analytics e revisão de segurança estão na
 [Fase 4](docs/22-OWNER-PHASE4-QR-SECURITY-DELIVERY.md). Free/Basic mantêm a demo;
 Medium/Pro geram QR real pelo backend. Aplique as migrations pendentes, configure
 `PUBLIC_MENU_ORIGIN`, a fonte/backend nativo e os jobs descritos no relatório antes do deploy.
+Para logos PNG maiores, aplique também `20261004010000_qr_logo_limits.sql` antes de usar o painel atualizado.
 
 ```powershell
 cd backend

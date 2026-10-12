@@ -124,13 +124,14 @@ Medium mostra tráfego QR agregado/origem; Pro mantém filtro e detalhe por QR. 
 
 `analytics_qr_refs` foi estendida em vez de duplicar o registro da fase 3. Campos: ID interno UUID, business, label/nome, public_identifier UUIDv4, active/status ACTIVE ou PAUSED, configuração JSON, created/updated e revisão. Identificador público imprevisível dificulta enumeração trivial; **não é credencial de autenticação**.
 
-Cada business pode ter até 20 códigos, incluindo pausados, configurável no singleton `qr_settings` até 100. Criação utiliza lock compartilhado com subscriptions. Atualização exige revisão e retorna 409 diante de conflito; não altera a URL pública. V1 permite múltiplos códigos e não oferece exclusão/reutilização de identidade.
+Atualização de 11/10/2026: cada business pode criar até três códigos, incluindo pausados. Criação e exclusão utilizam o lock compartilhado com subscriptions. Atualização e exclusão exigem revisão e retornam 409 diante de conflito. Exclusão registra `deleted_at`, desativa o link, libera uma vaga e mantém a identidade para o histórico do Analytics; não permite reativação. Códigos antigos acima do limite são preservados, com novas criações bloqueadas. Aplique `20261011000000_qr_capacity_and_deletion.sql` antes de publicar o backend atualizado.
 
 | Endpoint sob `/api/v1` | Função | Controle |
 | --- | --- | --- |
 | GET `/qr` | Lista, limite, customization e disponibilidade pública | Cookie owner + QR_GENERATOR + tenant |
 | POST `/qr` | Nome e configuração; cria identidade | Origin/CSRF + QR_GENERATOR + quota + lock SQL |
 | PUT `/qr/:id` | Atualiza aparência/status por revisão | Mesmos controles + filtro business/id |
+| DELETE `/qr/:id` | Exclui com `{revision}`, desativa o link e libera uma vaga | Origin/CSRF + gate + quota + tenant + lock SQL |
 | GET `/qr/:id/image?format=png\|svg` | Preview/download | Gate novamente + quota de render + no-store |
 | GET `/public/qr/:identifier` | Retorna apenas slug atual e ID QR | Público, status/eligibilidade e quota IP |
 
@@ -144,7 +145,7 @@ Regras de confiabilidade:
 - Correção de erros H e quiet zone de quatro módulos. Essa margem segue a orientação da [DENSO WAVE](https://www.qrcode.com/en/howto/code.html); a correção é descrita na [documentação técnica do QR](https://www.qrcode.com/en/about/error_correction.html). H não garante leitura em qualquer condição de impressão ou dano.
 - Matriz com módulos quadrados, escala inteira, sem gradiente/inversão ou ajuste arbitrário do tamanho.
 - Logo limitado a cerca de 15% da largura da matriz; módulos funcionais reservados cobertos por essa área são redesenhados acima do logo.
-- Logo somente PNG RGB/RGBA de 8 bits, não interlaçado, não animado, 16–128 pixels por lado, até 24 KB. Cabeçalho/dimensões são verificados antes da inflação; decoder não interlaçado possui saída limitada ao tamanho da imagem. CRC é validado e a imagem é reencodada para remover metadados.
+- O painel aceita PNG de entrada de até 8 MB e 4096 pixels por lado, ajusta proporcionalmente para uma tela transparente de 128 × 128 pixels e envia somente o PNG normalizado. A API aceita o PNG normalizado RGB/RGBA de 8 bits, não interlaçado, não animado, 16–128 pixels por lado, até 96 KB. Cabeçalho/dimensões são verificados antes da inflação; CRC é validado e a imagem é reencodada para remover metadados.
 - URLs externas, SVG enviado, JPEG, APNG e imagens grandes não são aceitos como logo. Não há download de mídia externa pelo renderizador: reduz SSRF e evita arquivos arbitrários.
 - Moldura e texto ficam fora da quiet zone. Texto de até 40 caracteres com letras latinas, acentos e pontuação comum; nome até 120. Marcação HTML e controles são rejeitados; texto no SVG é escapado.
 - Fonte Outfit e licença OFL incluídas em `backend/assets/fonts`. SVG converte texto em paths e não depende de fonte externa. Asset de fonte ausente retorna falha; produção precisa incluir arquivo e binário nativo no artefato.
@@ -313,9 +314,12 @@ Conferir `supabase_migrations.schema_migrations` no ambiente alvo. Aplicar **som
 20 20261003020000_owner_commercial_journey.sql
 21 20261003030000_menu_analytics.sql
 22 20261003040000_qr_and_shared_security.sql
+23 20261004000000_owner_session_rpc_upgrade.sql
+24 20261004010000_qr_logo_limits.sql
+25 20261011000000_qr_capacity_and_deletion.sql
 ```
 
-Executar o preflight de proprietário antes das migrations 18–22. Revalidar relações, assinatura, e-mail confirmado e contas acima dos limites. Testar o conjunto primeiro em staging isolado e preservar backup com restauração verificada. Os testes locais criam dados descartáveis, não aplicam correções automáticas na produção.
+Executar o preflight de proprietário antes das migrations 18–24. Revalidar relações, assinatura, e-mail confirmado e contas acima dos limites. Testar o conjunto primeiro em staging isolado e preservar backup com restauração verificada. Os testes locais criam dados descartáveis, não aplicam correções automáticas na produção.
 
 ### Variáveis do backend
 

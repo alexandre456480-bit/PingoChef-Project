@@ -1,4 +1,4 @@
-<section class="qr-section" aria-labelledby="qr-title">
+<section class="qr-section" aria-labelledby="qr-title" [attr.inert]="deleting() ? '' : null">
   <header class="qr-heading">
     <div>
       <span class="eyebrow">SEU CARDÁPIO, AO ALCANCE</span>
@@ -25,39 +25,50 @@
         funcione.
       </p>
     }
+    <div class="qr-library">
+      <div class="card-heading">
+        <div>
+          <h2>Seus QR Codes</h2>
+          <p class="hint">
+            {{ data.rows.length }} de {{ data.limit }} vagas utilizadas · pausados também ocupam uma
+            vaga
+          </p>
+        </div>
+        <button
+          type="button"
+          class="secondary"
+          (click)="newCode()"
+          [disabled]="busy() || data.rows.length >= data.limit"
+        >
+          Novo QR Code
+        </button>
+      </div>
+      <div class="qr-code-list" role="group" aria-label="Selecionar QR Code">
+        @for (row of data.rows; track row.id) {
+          <button
+            class="qr-code-choice"
+            type="button"
+            [attr.aria-pressed]="selected()?.id === row.id"
+            (click)="select(row.id)"
+            [disabled]="busy()"
+          >
+            <strong>{{ row.name }}</strong
+            ><span>{{ row.status === 'ACTIVE' ? 'Ativo' : 'Pausado' }}</span>
+          </button>
+        }
+      </div>
+      @if (data.rows.length >= data.limit) {
+        <p class="hint" role="status">
+          Limite atingido. Exclua um QR que não utiliza para liberar uma vaga.
+        </p>
+      }
+    </div>
     <div class="qr-layout">
       <form class="config-card" (ngSubmit)="save()" aria-label="Configurar QR Code">
         <div class="card-heading">
-          <h2>Configurações</h2>
+          <h2>1. Personalize seu QR</h2>
           <span>{{ data.rows.length }} / {{ data.limit }} códigos</span>
         </div>
-        @if (data.rows.length) {
-          <div class="selector-row">
-            <label
-              >QR salvo<select
-                aria-label="QR salvo"
-                [ngModel]="selected()?.id || ''"
-                (ngModelChange)="select($event)"
-                name="selected"
-                [disabled]="busy()"
-              >
-                <option value="" disabled>Novo QR Code</option>
-                @for (row of data.rows; track row.id) {
-                  <option [value]="row.id">
-                    {{ row.name }} · {{ row.status === 'ACTIVE' ? 'Ativo' : 'Pausado' }}
-                  </option>
-                }
-              </select></label
-            ><button
-              class="secondary small"
-              type="button"
-              (click)="newCode()"
-              [disabled]="busy() || data.rows.length >= data.limit"
-            >
-              Novo QR
-            </button>
-          </div>
-        }
         <label
           >Nome do QR<input
             name="name"
@@ -116,8 +127,8 @@
               aria-describedby="logo-help"
           /></label>
           <p id="logo-help" class="hint">
-            PNG RGB/RGBA, de 16 a 128 pixels por lado, até 24 KB. A área do logo é limitada para
-            preservar a leitura.
+            Escolha um PNG de até 8 MB e 4096 pixels por lado. A imagem é ajustada proporcionalmente
+            para 128 × 128 pixels, com espaço transparente quando necessário.
           </p>
           @if (config().logoPng) {
             <button type="button" class="text-button" (click)="edit('logoPng', null)">
@@ -155,7 +166,7 @@
       </form>
       <div class="preview-column">
         <div class="preview-card">
-          <span class="eyebrow">PRÉVIA DA VERSÃO SALVA</span>
+          <span class="eyebrow">2. BAIXE E COMPARTILHE · VERSÃO SALVA</span>
           @if (rendering()) {
             <p role="status">Preparando o QR…</p>
           } @else if (imageUrl()) {
@@ -226,12 +237,43 @@
             >Abrir cardápio deste QR <span aria-hidden="true">↗</span
             ><span class="sr-only"> (nova aba)</span></a
           >
+          <button class="danger" type="button" (click)="deleting.set(row)" [disabled]="busy()">
+            Excluir QR Code
+          </button>
         }
         <p class="hint safety">
-          Correção de erros H, margem de 4 módulos e fundo branco. Teste a leitura no celular e na
-          impressão final. Entradas repetidas na mesma sessão e QR, em 30 minutos, contam uma vez.
+          Teste a leitura no celular antes de imprimir. Atualizar a aparência mantém o mesmo
+          endereço do QR.
         </p>
       </div>
     </div>
   }
 </section>
+@if (deleting(); as row) {
+  <div class="delete-backdrop" (click)="cancelDelete()">
+    <div
+      class="delete-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-qr-title"
+      aria-describedby="delete-qr-description"
+      appDialogFocus
+      (dialogEscape)="cancelDelete()"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 id="delete-qr-title">Excluir “{{ row.name }}”?</h2>
+      <p id="delete-qr-description">
+        O link deste QR deixará de funcionar, inclusive em materiais impressos. O histórico de
+        Analytics será preservado e uma vaga ficará disponível. Esta ação não pode ser desfeita.
+      </p>
+      <div class="download-row">
+        <button class="secondary" type="button" (click)="cancelDelete()" [disabled]="busy()">
+          Cancelar
+        </button>
+        <button class="danger" type="button" (click)="remove()" [disabled]="busy()">
+          {{ busy() ? 'Excluindo…' : 'Confirmar exclusão' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

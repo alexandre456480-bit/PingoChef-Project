@@ -21,7 +21,6 @@ import { LikesSectionComponent } from './sections/likes-section/likes-section.co
 import { CommercialService } from '../../services/commercial.service';
 import { SettingsComponent } from './components/settings/settings.component';
 import { FeaturePreviewComponent } from './sections/feature-preview/feature-preview.component';
-import { PlanUsageComponent } from '../../components/plan-usage/plan-usage.component';
 import { OwnerSessionState } from '../../services/owner-session-state.service';
 import { AnalyticsComponent } from './sections/analytics/analytics.component';
 import { QrComponent } from './sections/qr/qr.component';
@@ -40,7 +39,7 @@ import { QrComponent } from './sections/qr/qr.component';
     DesignEditorComponent,
     PreviewSectionComponent,
     LikesSectionComponent,
-    PingoLoaderComponent, SettingsComponent, FeaturePreviewComponent, PlanUsageComponent, AnalyticsComponent, QrComponent
+    PingoLoaderComponent, SettingsComponent, FeaturePreviewComponent, AnalyticsComponent, QrComponent
   ],
   template: `
     <div class="dashboard-shell" [attr.data-panel-theme]="panelTheme">
@@ -75,6 +74,7 @@ import { QrComponent } from './sections/qr/qr.component';
           [isDarkTheme]="panelTheme === 'dark'"
           (searchChange)="searchQuery = $event"
           (themeToggle)="togglePanelTheme()"
+          (settingsOpen)="settingsVisible = true"
           (toggleSidebar)="mobileSidebarOpen = !mobileSidebarOpen"
           (togglePreview)="mobilePreviewOpen = !mobilePreviewOpen">
         </app-topbar>
@@ -83,14 +83,12 @@ import { QrComponent } from './sections/qr/qr.component';
         <main class="content-canvas">
           @switch (activeSection) {
             @case ('dashboard') {
-              <app-plan-usage (compare)="comparePlans()"></app-plan-usage>
               <app-dashboard-home
                 (navigateTo)="setSection($event)"
                 (onToast)="showToast($event)">
               </app-dashboard-home>
             }
             @case ('menu') {
-              <app-plan-usage (compare)="comparePlans()"></app-plan-usage>
               <app-menu-editor
                 (onToast)="showToast($event)">
               </app-menu-editor>
@@ -205,6 +203,7 @@ import { QrComponent } from './sections/qr/qr.component';
     /* ── Main Viewport ── */
     .main-viewport {
       display: flex;
+      min-width: 0;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
@@ -401,6 +400,10 @@ import { QrComponent } from './sections/qr/qr.component';
 
     /* ── Toast Notification ── */
     .toast-floating {
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      box-sizing: border-box;
+      pointer-events: none;
       position: fixed;
       bottom: 24px;
       left: 50%;
@@ -517,7 +520,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
   ngOnDestroy(){clearTimeout(this.refreshTimer);}
-  comparePlans(){this.router.navigate(['/plans']);}
 
   ngOnInit(): void {
     try {
@@ -565,8 +567,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   showToast(msg: string): void {
     this.toastMessage = msg;
+    this.cdr.markForCheck();
     setTimeout(() => {
       this.toastMessage = null;
+      this.cdr.markForCheck();
     }, 3200);
   }
 

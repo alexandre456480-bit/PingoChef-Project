@@ -10,6 +10,7 @@ import {
   AVAILABLE_TEMPLATES,
   AVAILABLE_PALETTES,
   AVAILABLE_FONT_PAIRS,
+  contrastTextColor,
   HomeBlock
 } from '../../services/design.service';
 import { PublicMenuService, PublicBusiness } from '../../services/public-menu.service';
@@ -36,6 +37,9 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       [style.--primary-color]="primaryColor"
       [style.--secondary-color]="secondaryColor"
       [style.--accent-color]="accentColor"
+      [style.--on-primary]="primaryContrast"
+      [style.--on-accent]="accentContrast"
+      [style.--on-action]="actionContrast"
       [style.--text-primary]="textPrimary"
       [style.--text-secondary]="textSecondary"
       [style.--heading-font]="headingFont + ', sans-serif'"
@@ -353,17 +357,14 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                   <div class="showcase-block promo-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
-                        <span class="badge-promo-fire">🔥</span>
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Promoções & Ofertas</h3>
+
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true">🔥</span>Promoções & Ofertas</h3>
                       </div>
                     </div>
 
                     <div class="promo-items-scroll">
                       @for (item of promoItems; track item.id) {
                         <div class="promo-item-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
-                          <div class="promo-ribbon" [style.background]="accentColor">
-                            OFERTA
-                          </div>
 
                           <div class="promo-img-wrap">
                             @if (item.imageUrl) {
@@ -387,8 +388,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                 <span class="active-price" [style.color]="accentColor">R$ {{ item.promotionalPrice.toFixed(2) }}</span>
                               }
                             </div>
-                          </div>
-
                           @if (enableLikes) {
                             <button
                               type="button"
@@ -403,6 +402,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                               </svg>
                             </button>
                           }
+                          </div>
+
                         </div>
                       }
                     </div>
@@ -414,15 +415,15 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                   <div class="showcase-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
-                        <span class="badge-heart">❤️</span>
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Os Mais Curtidos</h3>
+
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true">❤️</span>Os Mais Curtidos</h3>
                       </div>
                     </div>
 
                     <div class="liked-ranking-list">
-                      @for (item of mostLikedItems; track item.id; let rank = $index) {
+                      @for (item of mostLikedItems; track item.id) {
                         <div class="ranking-item-row" [style.background]="surfaceColor" (click)="openProductDetail(item)">
-                          <div class="rank-pos" [class.gold]="rank === 0">#{{ rank + 1 }}</div>
+
                           <div class="ranking-img-wrap">
                             @if (item.imageUrl) {
                               <img [src]="item.imageUrl" [alt]="item.name" class="row-thumb" />
@@ -436,10 +437,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                               {{ item.showPrice === false ? 'Consulte...' : 'R$ ' + (item.promotionalPrice || item.price).toFixed(2) }}
                             </span>
                           </div>
-                          <div class="row-likes-badge" [style.color]="accentColor">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                            <span>{{ item.likesCount || 0 }}</span>
-                          </div>
+
                         </div>
                       }
                     </div>
@@ -451,10 +449,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                   <div class="showcase-block featured-chef-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
-                        <span class="badge-chef-star">
-                          <img src="/icons_chef_hat.webp" alt="Prato Chefe" class="section-chef-icon" />
-                        </span>
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Pratos do Chef & Especialidades</h3>
+
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><img class="block-title-icon" src="/icons_chef_hat.webp" alt="" />Pratos do Chef & Especialidades</h3>
                       </div>
                     </div>
 
@@ -467,9 +463,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                             } @else {
                               <div class="chef-fallback" [style.color]="accentColor">★</div>
                             }
-                            <div class="chef-star-pill" [style.background]="accentColor">
-                              Chef
-                            </div>
+
                           </div>
                           <div class="chef-card-content">
                             <h4 class="chef-card-name" [style.color]="textPrimary">{{ item.name }}</h4>
@@ -492,30 +486,14 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                   <div class="showcase-block combos-block" appMenuReveal>
                     <div class="block-header">
                       <div class="block-title-row">
-                        <span class="badge-combo-box">
-                          @if (combo3dSvg) {
-                            <div class="badge-3d-icon" [innerHTML]="combo3dSvg"></div>
-                          } @else {
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M17 9l1 11a1.5 1.5 0 0 0 1.5 1.4h.8a1.5 1.5 0 0 0 1.5-1.4L23 9H17z"/>
-                              <path d="M16.5 9h7"/>
-                              <path d="M20 9V5l2-2"/>
-                              <path d="M2 11c0-2.8 2.2-5 5-5s5 2.2 5 5H2z"/>
-                              <path d="M1.5 14h11"/>
-                              <path d="M2.5 17h9c0 1.8-1.5 3-3.2 3H5.7C4 20 2.5 18.8 2.5 17z"/>
-                              <line x1="4.5" y1="14" x2="5.5" y2="17"/>
-                              <line x1="8.5" y1="14" x2="9.5" y2="17"/>
-                            </svg>
-                          }
-                        </span>
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Combos Especiais</h3>
+
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-combo')"></span>Combos Especiais</h3>
                       </div>
                     </div>
 
                     <div class="combos-scroll-track">
                       @for (item of comboItems; track item.id) {
                         <div class="combo-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
-                          <div class="combo-card-badge" [style.background]="accentColor">COMBO</div>
 
                           <div class="combo-img-wrap">
                             @if (item.imageUrl) {
@@ -528,20 +506,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                               </div>
                             }
 
-                            @if (enableLikes) {
-                              <button
-                                type="button"
-                                class="card-like-btn"
-                                [class.liked]="isLiked(item.id)"
-                                [disabled]="isLikePending(item.id)"
-                                [attr.aria-pressed]="isLiked(item.id)"
-                                [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
-                                (click)="onLikeClick($event, item.id)">
-                                <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
-                                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                                </svg>
-                              </button>
-                            }
                           </div>
 
                           <div class="combo-card-content">
@@ -559,53 +523,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                 }
                               </div>
                               <span class="btn-combo-view" [style.background]="accentColor + '18'" [style.color]="accentColor">Ver Combo</span>
-                            </div>
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-
-                <!-- BLOCO MAIS VENDIDOS -->
-                @else if (block.type === 'best_seller' && showBestSellersBlock && bestSellerItems.length > 0) {
-                  <div class="showcase-block best-sellers-block" appMenuReveal>
-                    <div class="block-header">
-                      <div class="block-title-row">
-                        <span class="badge-trophy-gold">
-                          @if (bestSeller3dSvg) {
-                            <div class="badge-3d-icon" [innerHTML]="bestSeller3dSvg"></div>
-                          } @else {
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-                            </svg>
-                          }
-                        </span>
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">Mais Vendidos</h3>
-                      </div>
-
-                    </div>
-
-                    <div class="best-sellers-grid">
-                      @for (item of bestSellerItems; track item.id; let bIdx = $index) {
-                        <div class="best-seller-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
-                          <div class="best-seller-rank" [class.first]="bIdx === 0">
-                            @if (bIdx === 0) {
-                              <span class="rank-crown-icon">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-                                </svg>
-                              </span>
-                            }
-                            #{{ bIdx + 1 }}
-                          </div>
-                          <div class="best-seller-img-wrap">
-                            @if (item.imageUrl) {
-                              <img [src]="item.imageUrl" [alt]="item.name" class="best-seller-thumb" />
-                            } @else {
-                              <div class="thumb-fallback" [style.color]="accentColor">★</div>
-                            }
-
                             @if (enableLikes) {
                               <button
                                 type="button"
@@ -620,6 +537,36 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                 </svg>
                               </button>
                             }
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- BLOCO MAIS VENDIDOS -->
+                @else if (block.type === 'best_seller' && showBestSellersBlock && bestSellerItems.length > 0) {
+                  <div class="showcase-block best-sellers-block" appMenuReveal>
+                    <div class="block-header">
+                      <div class="block-title-row">
+
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-bestseller')"></span>Mais Vendidos</h3>
+                      </div>
+
+                    </div>
+
+                    <div class="best-sellers-grid">
+                      @for (item of bestSellerItems; track item.id) {
+                        <div class="best-seller-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
+
+                          <div class="best-seller-img-wrap">
+                            @if (item.imageUrl) {
+                              <img [src]="item.imageUrl" [alt]="item.name" class="best-seller-thumb" />
+                            } @else {
+                              <div class="thumb-fallback" [style.color]="accentColor">★</div>
+                            }
+
                           </div>
                           <div class="best-seller-info">
                             <h4 class="best-seller-name" [style.color]="textPrimary">{{ item.name }}</h4>
@@ -631,7 +578,21 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                             <button type="button" class="btn-best-seller-view" [style.background]="accentColor + '18'" [style.color]="accentColor">
                               Ver
                             </button>
-                          </div>
+                          @if (enableLikes) {
+                              <button
+                                type="button"
+                                class="card-like-btn"
+                                [class.liked]="isLiked(item.id)"
+                                [disabled]="isLikePending(item.id)"
+                                [attr.aria-pressed]="isLiked(item.id)"
+                                [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
+                                (click)="onLikeClick($event, item.id)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
+                                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                </svg>
+                              </button>
+                            }
+                            </div>
                         </div>
                       }
                     </div>
@@ -761,43 +722,16 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                     </div>
                                   }
 
-                                  <!-- Highlight badges -->
-                                  @if (item.highlightType === 'chef') {
-                                    <div class="star-badge chef-badge">
-                                      <img src="/icons_chef_hat.webp" alt="Prato Chefe" class="card-badge-chef-icon" /> Prato Chefe
-                                    </div>
-                                  } @else if (item.highlightType === 'promotion') {
-                                    <div class="star-badge promo-badge">🔥 Promoção</div>
-                                  } @else if (item.highlightType === 'most_liked' && enableLikes) {
-                                    <div class="star-badge liked-badge">❤️ +Curtido</div>
-                                  } @else if (item.highlightType === 'combo') {
-                                    <div class="star-badge combo-badge">
-                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M17 9l1 11a1.5 1.5 0 0 0 1.5 1.4h.8a1.5 1.5 0 0 0 1.5-1.4L23 9H17z"/>
-                                        <path d="M16.5 9h7"/>
-                                        <path d="M20 9V5l2-2"/>
-                                        <path d="M2 11c0-2.8 2.2-5 5-5s5 2.2 5 5H2z"/>
-                                        <path d="M1.5 14h11"/>
-                                        <path d="M2.5 17h9c0 1.8-1.5 3-3.2 3H5.7C4 20 2.5 18.8 2.5 17z"/>
-                                      </svg>
-                                      Combo
-                                    </div>
-                                  } @else if (item.highlightType === 'best_seller') {
-                                    <div class="star-badge best-seller-badge">
-                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-                                      </svg>
-                                      Mais Vendido
-                                    </div>
-                                  } @else if (item.isHighlighted) {
-                                    <div class="star-badge" [style.background]="accentColor">★ Destaque</div>
-                                  }
+                                </div>
 
-                                  <!-- Like Button Over Photo -->
-                                  @if (enableLikes) {
+                                <!-- Details -->
+                                <div class="product-card-body">
+                                  <div class="card-title-row">
+                                    <h4 class="card-item-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ item.name }}</h4>
+                                    @if (enableLikes) {
                                     <button
                                       type="button"
-                                      class="item-like-overlay-btn"
+                                      class="item-like-btn"
                                       [class.liked]="isLiked(item.id)"
                                       [disabled]="isLikePending(item.id)"
                                       [attr.aria-pressed]="isLiked(item.id)"
@@ -812,11 +746,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                       }
                                     </button>
                                   }
-                                </div>
-
-                                <!-- Details -->
-                                <div class="product-card-body">
-                                  <h4 class="card-item-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ item.name }}</h4>
+                                  </div>
                                   <p class="card-item-desc" [style.color]="textSecondary">{{ item.description || 'Preparo artesanal com os melhores ingredientes selecionados.' }}</p>
 
                                   <div class="card-bottom-row">
@@ -899,41 +829,15 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                   </div>
                                 }
 
-                                @if (item.highlightType === 'chef') {
-                                  <div class="star-badge chef-badge">
-                                    <img src="/icons_chef_hat.webp" alt="Prato Chefe" class="card-badge-chef-icon" /> Prato Chefe
-                                  </div>
-                                } @else if (item.highlightType === 'promotion') {
-                                  <div class="star-badge promo-badge">🔥 Promoção</div>
-                                } @else if (item.highlightType === 'most_liked' && enableLikes) {
-                                  <div class="star-badge liked-badge">❤️ +Curtido</div>
-                                } @else if (item.highlightType === 'combo') {
-                                  <div class="star-badge combo-badge">
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                      <path d="M17 9l1 11a1.5 1.5 0 0 0 1.5 1.4h.8a1.5 1.5 0 0 0 1.5-1.4L23 9H17z"/>
-                                      <path d="M16.5 9h7"/>
-                                      <path d="M20 9V5l2-2"/>
-                                      <path d="M2 11c0-2.8 2.2-5 5-5s5 2.2 5 5H2z"/>
-                                      <path d="M1.5 14h11"/>
-                                      <path d="M2.5 17h9c0 1.8-1.5 3-3.2 3H5.7C4 20 2.5 18.8 2.5 17z"/>
-                                    </svg>
-                                    Combo
-                                  </div>
-                                } @else if (item.highlightType === 'best_seller') {
-                                  <div class="star-badge best-seller-badge">
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-                                    </svg>
-                                    Mais Vendido
-                                  </div>
-                                } @else if (item.isHighlighted) {
-                                  <div class="star-badge" [style.background]="accentColor">★ Destaque</div>
-                                }
+                              </div>
 
-                                @if (enableLikes) {
+                              <div class="product-card-body">
+                                <div class="card-title-row">
+                                  <h4 class="card-item-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ item.name }}</h4>
+                                  @if (enableLikes) {
                                   <button
                                     type="button"
-                                    class="item-like-overlay-btn"
+                                    class="item-like-btn"
                                     [class.liked]="isLiked(item.id)"
                                     [disabled]="isLikePending(item.id)"
                                     [attr.aria-pressed]="isLiked(item.id)"
@@ -948,10 +852,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                     }
                                   </button>
                                 }
-                              </div>
-
-                              <div class="product-card-body">
-                                <h4 class="card-item-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ item.name }}</h4>
+                                </div>
                                 <p class="card-item-desc" [style.color]="textSecondary">{{ item.description || 'Preparo artesanal com os melhores ingredientes selecionados.' }}</p>
 
                                 <div class="card-bottom-row">
@@ -1010,43 +911,16 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                             </div>
                           }
 
-                          <!-- Highlight badges -->
-                          @if (item.highlightType === 'chef') {
-                            <div class="star-badge chef-badge">
-                              <img src="/icons_chef_hat.webp" alt="Prato Chefe" class="card-badge-chef-icon" /> Prato Chefe
-                            </div>
-                          } @else if (item.highlightType === 'promotion') {
-                            <div class="star-badge promo-badge">🔥 Promoção</div>
-                          } @else if (item.highlightType === 'most_liked' && enableLikes) {
-                            <div class="star-badge liked-badge">❤️ +Curtido</div>
-                          } @else if (item.highlightType === 'combo') {
-                            <div class="star-badge combo-badge">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 9l1 11a1.5 1.5 0 0 0 1.5 1.4h.8a1.5 1.5 0 0 0 1.5-1.4L23 9H17z"/>
-                                <path d="M16.5 9h7"/>
-                                <path d="M20 9V5l2-2"/>
-                                <path d="M2 11c0-2.8 2.2-5 5-5s5 2.2 5 5H2z"/>
-                                <path d="M1.5 14h11"/>
-                                <path d="M2.5 17h9c0 1.8-1.5 3-3.2 3H5.7C4 20 2.5 18.8 2.5 17z"/>
-                              </svg>
-                              Combo
-                            </div>
-                          } @else if (item.highlightType === 'best_seller') {
-                            <div class="star-badge best-seller-badge">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-                              </svg>
-                              Mais Vendido
-                            </div>
-                          } @else if (item.isHighlighted) {
-                            <div class="star-badge" [style.background]="accentColor">★ Destaque</div>
-                          }
+                        </div>
 
-                          <!-- Like Button Over Photo -->
-                          @if (enableLikes) {
+                        <!-- Details -->
+                        <div class="product-card-body">
+                          <div class="card-title-row">
+                            <h4 class="card-item-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ item.name }}</h4>
+                            @if (enableLikes) {
                             <button
                               type="button"
-                              class="item-like-overlay-btn"
+                              class="item-like-btn"
                               [class.liked]="isLiked(item.id)"
                               [disabled]="isLikePending(item.id)"
                               [attr.aria-pressed]="isLiked(item.id)"
@@ -1061,11 +935,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                               }
                             </button>
                           }
-                        </div>
-
-                        <!-- Details -->
-                        <div class="product-card-body">
-                          <h4 class="card-item-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ item.name }}</h4>
+                          </div>
                           <p class="card-item-desc" [style.color]="textSecondary">{{ item.description || 'Preparo artesanal com os melhores ingredientes selecionados.' }}</p>
 
                           <div class="card-bottom-row">
@@ -1216,7 +1086,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       @if (enableCart && cartService.isCartOpen()) {
         <div class="cart-modal-backdrop" (click)="cartService.closeCart()">
           <div class="cart-drawer-sheet" (click)="$event.stopPropagation()" [style.background]="surfaceColor">
-            
+
             <!-- Drawer Header -->
             <div class="cart-drawer-header" [style.border-bottom-color]="screenBg">
               <div class="cart-header-title">
@@ -1268,7 +1138,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                           <div class="c-thumb-fallback" [style.color]="accentColor">★</div>
                         }
                       </div>
-                      
+
                       <div class="cart-item-info">
                         <h4 class="c-item-name" [style.color]="textPrimary">{{ cItem.name }}</h4>
                         <span class="c-item-unit-price" [style.color]="textSecondary">
@@ -1927,7 +1797,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border: 1px solid rgba(0, 0, 0, 0.08);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
-    .menu-viewport[data-template="minimal"] .product-item-card {
+    .menu-viewport[data-template="minimal"] .product-item-card,
+    .menu-viewport[data-template="minimal"] .category-nav-pill:not(.active) {
       border-radius: 12px;
       border: 1px solid rgba(0, 0, 0, 0.08);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1946,7 +1817,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     }
     .menu-viewport[data-template="modern"] .category-nav-pill {
       border-radius: 18px;
-      box-shadow: 3px 3px 8px rgba(0,0,0,0.16), -2px -2px 6px rgba(255,255,255,0.08);
+      box-shadow: 6px 6px 18px rgba(0,0,0,0.18), -3px -3px 10px rgba(255,255,255,0.06), inset 1px 1px 2px rgba(255,255,255,0.12);
     }
     .menu-viewport[data-template="modern"] .product-item-card {
       border-radius: 24px;
@@ -1992,7 +1863,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border-radius: 50%;
       object-fit: cover;
     }
-    .menu-viewport[data-template="premium"] .product-item-card {
+    .menu-viewport[data-template="premium"] .product-item-card,
+    .menu-viewport[data-template="premium"] .category-nav-pill:not(.active) {
       border-radius: 16px;
       border: 1px solid rgba(0, 0, 0, 0.08);
       box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
@@ -2011,7 +1883,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border: 1px solid rgba(255, 255, 255, 0.14);
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
     }
-    .menu-viewport[data-template="dark"] .product-item-card {
+    .menu-viewport[data-template="dark"] .product-item-card,
+    .menu-viewport[data-template="dark"] .category-nav-pill:not(.active) {
       border-radius: 20px;
       background: rgba(22, 22, 34, 0.72) !important;
       backdrop-filter: blur(16px) saturate(180%);
@@ -2040,7 +1913,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       display: flex;
       gap: 10px;
       overflow-x: auto;
-      padding: 6px 2px;
+      padding: 12px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
     }
@@ -2131,17 +2004,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       display: block;
     }
     .cat-pill-label { font-size: 0.78rem; font-weight: 700; line-height: 1.2; }
-    .badge-3d-icon {
-      width: 22px;
-      height: 22px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .badge-3d-icon svg {
-      width: 100%;
-      height: 100%;
-    }
 
     /* Promo Section */
     .showcase-block {
@@ -2160,10 +2022,14 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       gap: 6px;
     }
     .block-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 0.95rem;
       font-weight: 800;
       margin: 0;
     }
+    .block-title-icon { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font: 24px/1 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; object-fit: contain; }
     .block-sub-badge {
       font-size: 0.68rem;
       font-weight: 700;
@@ -2192,17 +2058,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     .promo-item-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-    .promo-ribbon {
-      position: absolute;
-      top: 6px; left: 6px;
-      font-size: 0.52rem;
-      font-weight: 900;
-      color: #FFF;
-      padding: 2px 6px;
-      border-radius: 4px;
-      letter-spacing: 0.05em;
-      z-index: 2;
     }
     .promo-img-wrap {
       width: 100%;
@@ -2243,14 +2098,12 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       font-weight: 800;
     }
     .card-like-btn {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      background: rgba(0,0,0,0.5);
-      border: none;
-      color: #FFF;
-      width: 24px;
-      height: 24px;
+      background: var(--surface-color);
+      border: 1px solid var(--text-secondary);
+      color: var(--text-secondary);
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -2276,13 +2129,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       transition: background 0.15s;
     }
     .ranking-item-row:hover { filter: brightness(0.97); }
-    .rank-pos {
-      font-size: 0.74rem;
-      font-weight: 800;
-      color: var(--text-secondary);
-      width: 22px;
-    }
-    .rank-pos.gold { color: #F59E0B; }
     .ranking-img-wrap {
       width: 34px;
       height: 34px;
@@ -2301,31 +2147,10 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     }
     .row-name { font-size: 0.76rem; font-weight: 700; }
     .row-price { font-size: 0.72rem; font-weight: 800; }
-    .row-likes-badge {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      font-size: 0.7rem;
-      font-weight: 700;
-    }
 
     /* Featured Chef Specials Block */
     .featured-chef-block {
       margin-top: 4px;
-    }
-    .badge-chef-star {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-    .section-chef-icon {
-      width: 20px;
-      height: 20px;
-      object-fit: contain;
-      display: block;
     }
     .featured-chef-grid {
       display: grid;
@@ -2366,18 +2191,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       justify-content: center;
       font-size: 1.5rem;
       background: rgba(0,0,0,0.1);
-    }
-    .chef-star-pill {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      font-size: 0.62rem;
-      font-weight: 800;
-      color: #FFF;
-      padding: 2px 7px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .chef-card-content {
       padding: 10px 12px;
@@ -2424,40 +2237,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     }
 
     /* ── Combos Especiais & Mais Vendidos Badges (Ícones Soltos) ── */
-    .badge-combo-box {
-      width: 22px;
-      height: 22px;
-      background: transparent;
-      color: #A855F7;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      box-shadow: none;
-      padding: 0;
-      flex-shrink: 0;
-    }
-    .badge-trophy-gold {
-      width: 22px;
-      height: 22px;
-      background: transparent;
-      color: #F59E0B;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      box-shadow: none;
-      padding: 0;
-      flex-shrink: 0;
-    }
-    .badge-combo-box .badge-3d-icon,
-    .badge-trophy-gold .badge-3d-icon {
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
 
     /* ── Combos Especiais Block ── */
     .combos-block {
@@ -2491,19 +2270,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     .combo-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.22);
-    }
-    .combo-card-badge {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 5;
-      font-size: 0.62rem;
-      font-weight: 800;
-      color: #FFF;
-      padding: 3px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .combo-img-wrap {
       position: relative;
@@ -2586,37 +2352,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(0,0,0,0.18);
     }
-    .best-seller-rank {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      z-index: 5;
-      font-size: 0.65rem;
-      font-weight: 900;
-      color: #FFF;
-      background: rgba(0, 0, 0, 0.72);
-      backdrop-filter: blur(6px);
-      padding: 2.5px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      line-height: 1;
-    }
-    .best-seller-rank.first {
-      background: linear-gradient(135deg, #FFD700 0%, #F59E0B 55%, #D97706 100%);
-      color: #1A1000;
-      font-weight: 900;
-      border: 1.5px solid #FFF59D;
-      box-shadow: 0 3px 12px rgba(245, 158, 11, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.8);
-      text-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.5);
-    }
-    .rank-crown-icon {
-      display: inline-flex;
-      align-items: center;
-      color: #1A1000;
-    }
     .best-seller-img-wrap {
       position: relative;
       width: 100%;
@@ -2654,11 +2389,15 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       margin-top: auto;
     }
     .best-seller-action-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       padding: 0 8px 8px;
       width: 100%;
       box-sizing: border-box;
     }
     .btn-best-seller-view {
+      flex: 1;
       width: 100%;
       margin: 0;
       padding: 5px 0;
@@ -2787,54 +2526,12 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       align-items: center;
       justify-content: center;
     }
-    .star-badge {
-      position: absolute;
-      top: 3px; left: 3px;
-      font-size: 0.52rem;
-      font-weight: 800;
-      color: #FFF;
-      padding: 1.5px 5px;
-      border-radius: 4px;
-      line-height: 1.2;
-      display: inline-flex;
-      align-items: center;
-      gap: 2.5px;
-      z-index: 3;
-    }
-    .star-badge.combo-badge {
-      background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
-      box-shadow: 0 2px 6px rgba(109, 40, 217, 0.4);
-    }
-    .star-badge.best-seller-badge {
-      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.45);
-    }
-    .star-badge.chef-badge {
-      background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%);
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-    }
-    .card-badge-chef-icon {
-      width: 12px;
-      height: 12px;
-      object-fit: contain;
-      display: inline-block;
-      vertical-align: -1px;
-    }
-    .star-badge.promo-badge {
-      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-    }
-    .star-badge.liked-badge {
-      background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
-    }
-    .item-like-overlay-btn {
-      position: absolute;
-      bottom: 3px; right: 3px;
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(4px);
+    .item-like-btn {
+      background: transparent;
       border: none;
-      color: #FFF;
+      color: var(--text-secondary);
+      min-height: 24px;
+      flex-shrink: 0;
       border-radius: 10px;
       padding: 2px 5px;
       display: flex;
@@ -2847,6 +2544,10 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       font-size: 0.58rem;
       font-weight: 700;
     }
+
+    .card-title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .card-title-row .card-item-title { flex: 1; min-width: 0; }
+    .card-like-btn:focus-visible, .item-like-btn:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
 
     .product-card-body {
       padding: 6px 10px;
@@ -3218,39 +2919,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     }
 
     /* Highlight Badges on Cards */
-    .star-badge.chef-badge {
-      background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%) !important;
-      color: #FFF !important;
-      font-weight: 800;
-      box-shadow: 0 2px 6px rgba(236, 72, 153, 0.35);
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-    }
-    .star-badge.promo-badge {
-      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
-      color: #FFF !important;
-      font-weight: 800;
-      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
-    }
-    .star-badge.liked-badge {
-      background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%) !important;
-      color: #FFF !important;
-      font-weight: 800;
-      box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35);
-    }
-    .star-badge.combo-badge {
-      background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%) !important;
-      color: #FFF !important;
-      font-weight: 800;
-      box-shadow: 0 2px 6px rgba(109, 40, 217, 0.4);
-    }
-    .star-badge.best-seller-badge {
-      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
-      color: #FFF !important;
-      font-weight: 800;
-      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.45);
-    }
 
     /* Topo Sem Hero Section */
     .no-hero-header {
@@ -3321,17 +2989,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       transition: transform 0.2s ease;
     }
     .combo-card:hover { transform: translateY(-2px); }
-    .combo-card-badge {
-      position: absolute;
-      top: 6px; left: 6px;
-      z-index: 2;
-      font-size: 0.56rem;
-      font-weight: 800;
-      color: #FFF;
-      padding: 2px 7px;
-      border-radius: 5px;
-      letter-spacing: 0.4px;
-    }
     .combo-img-wrap {
       width: 100%;
       height: 95px;
@@ -3360,8 +3017,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       align-items: center;
       gap: 6px;
     }
-
-
 
     /* Product Sheet Actions */
     .sheet-modal-actions {
@@ -3500,7 +3155,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     }
     .empty-title { font-size: 1rem; font-weight: 700; margin: 0; }
     .empty-sub { font-size: 0.8rem; margin: 0; opacity: 0.7; }
-    
+
     .cart-list {
       display: flex;
       flex-direction: column;
@@ -3523,11 +3178,11 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     }
     .c-thumb-img { width: 100%; height: 100%; object-fit: cover; }
     .c-thumb-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-    
+
     .cart-item-info { flex: 1; }
     .c-item-name { font-size: 0.88rem; font-weight: 700; margin: 0 0 2px; }
     .c-item-unit-price { font-size: 0.76rem; opacity: 0.8; }
-    
+
     .cart-item-actions { display: flex; align-items: center; gap: 8px; }
     .cart-qty-ctrl {
       display: flex;
@@ -3565,6 +3220,10 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       cursor: pointer;
       text-align: center;
     }
+
+    .category-nav-pill.active { color: var(--on-primary); }
+    .cart-badge-count { color: var(--on-accent); }
+    .btn-enter-menu, .btn-sheet-add-cart, .btn-continue-nav { color: var(--on-action); }
 
     @media (prefers-reduced-motion: reduce) {
       .welcome-screen, .welcome-screen.anim-exit, .menu-main-shell.anim-enter, .welcome-logo-wrap, .ambient-glow, .btn-shimmer {
@@ -3875,14 +3534,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg) : null;
   }
 
-  get combo3dSvg(): SafeHtml | null {
-    const icon = findCatalogIcon('3d-combo');
-    return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg) : null;
-  }
-
-  get bestSeller3dSvg(): SafeHtml | null {
-    const icon = findCatalogIcon('3d-bestseller');
-    return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg) : null;
+  highlightTitleIcon(key: '3d-combo' | '3d-bestseller'): SafeHtml | null {
+    const icon = findCatalogIcon(key);
+    return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg.replace('<svg ', '<svg width="28" height="28" ')) : null;
   }
 
   get welcomeTagline(): string {
@@ -3989,6 +3643,10 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   get secondaryColor(): string {
     return this.design?.palette?.colors?.secondary || '#D26E2D';
   }
+
+  get primaryContrast(): string { return contrastTextColor(this.primaryColor); }
+  get accentContrast(): string { return contrastTextColor(this.accentColor); }
+  get actionContrast(): string { return contrastTextColor(this.primaryColor, this.accentColor); }
 
   get accentColor(): string {
     return this.design?.palette?.colors?.accent || '#F47B20';

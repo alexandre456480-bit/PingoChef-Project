@@ -50,12 +50,18 @@ export async function verifyQrSecurity(pool) {
       "SELECT admin_assign_business_plan($1,$2,$3,'Phase4 local test') value",
       [admin, biz, tier],
     );
-  const save = (biz, id = null, revision = null, active = true) =>
+  const save = (
+    biz,
+    id = null,
+    revision = null,
+    active = true,
+    config = configuration,
+  ) =>
     value("SELECT manage_business_qr($1,$2,$3,$4,$5,$6) value", [
       biz,
       id,
       "QR Mesa",
-      configuration,
+      config,
       active,
       revision,
     ]);
@@ -88,6 +94,19 @@ export async function verifyQrSecurity(pool) {
     },
   );
   await check(
+    "normalized QR logo configuration above 50 KB is saved and can be replaced",
+    async () => {
+      const largeLogo = {
+        ...configuration,
+        logoPng: `data:image/png;base64,${randomBytes(60 * 1024).toString("base64")}`,
+      };
+      qa = await save(a, qa.id, qa.revision, true, largeLogo);
+      assert.ok(Buffer.byteLength(JSON.stringify(qa.configuration)) > 50000);
+      qa = await save(a, qa.id, qa.revision);
+      assert.equal(qa.configuration.logoPng, null);
+    },
+  );
+  await check(
     "concurrent QR creates respect total capacity including paused codes",
     async () => {
       await query("UPDATE qr_settings SET max_codes_per_business=3");
@@ -102,7 +121,53 @@ export async function verifyQrSecurity(pool) {
         ),
         3,
       );
-      await query("UPDATE qr_settings SET max_codes_per_business=20");
+      await assert.rejects(
+        query("UPDATE qr_settings SET max_codes_per_business=4"),
+        /qr_settings_max_codes_per_business_check/,
+      );
+    },
+  );
+  await check(
+    "delete is tenant scoped, revision checked and releases capacity without removing the registry",
+    async () => {
+      const remove = (business, id, revision) =>
+        query("SELECT delete_business_qr($1,$2,$3)", [business, id, revision]);
+      await assert.rejects(remove(a, qb.id, qb.revision), /QR_NOT_FOUND/);
+      const target = (
+        await query(
+          "SELECT id,revision FROM analytics_qr_refs WHERE business_id=$1 AND id<>$2 AND deleted_at IS NULL LIMIT 1",
+          [a, qa.id],
+        )
+      ).rows[0];
+      await assert.rejects(
+        remove(a, target.id, target.revision + 1),
+        /QR_VERSION_CONFLICT/,
+      );
+      await remove(a, target.id, target.revision);
+      const tombstone = (
+        await query(
+          "SELECT active,deleted_at,revision FROM analytics_qr_refs WHERE id=$1",
+          [target.id],
+        )
+      ).rows[0];
+      assert.equal(tombstone.active, false);
+      assert.ok(tombstone.deleted_at);
+      assert.equal(tombstone.revision, target.revision + 1);
+      await assert.rejects(
+        save(a, target.id, tombstone.revision),
+        /QR_NOT_FOUND/,
+      );
+      await assert.rejects(
+        remove(a, target.id, tombstone.revision),
+        /QR_NOT_FOUND/,
+      );
+      assert.equal(
+        await value(
+          "SELECT count(*)::integer value FROM analytics_qr_refs WHERE business_id=$1 AND deleted_at IS NULL",
+          [a],
+        ),
+        2,
+      );
     },
   );
   await check(
@@ -249,7 +314,30 @@ export async function verifyQrSecurity(pool) {
       );
       assert.equal(await ingest(qa.id), 2);
       await assert.rejects(ingest(qb.id), /INVALID_ANALYTICS_RESOURCE/);
-      await save(a, qa.id, qa.revision, false);
+      qa = await save(a, qa.id, qa.revision, false);
+      await assert.rejects(ingest(qa.id), /INVALID_ANALYTICS_RESOURCE/);
+    },
+  );
+  await check(
+    "deletion retains recorded analytics and permanently disables new entry",
+    async () => {
+      const countSql =
+        "SELECT count(*)::integer value FROM analytics_events WHERE business_id=$1 AND qr_id=$2";
+      const before = await value(countSql, [a, qa.id]);
+      assert.ok(before > 0);
+      await query("SELECT delete_business_qr($1,$2,$3)", [
+        a,
+        qa.id,
+        qa.revision,
+      ]);
+      assert.equal(await value(countSql, [a, qa.id]), before);
+      assert.equal(
+        await value(
+          "SELECT count(*)::integer value FROM analytics_qr_refs WHERE id=$1",
+          [qa.id],
+        ),
+        1,
+      );
       await assert.rejects(ingest(qa.id), /INVALID_ANALYTICS_RESOURCE/);
     },
   );
@@ -276,6 +364,10 @@ export async function verifyQrSecurity(pool) {
               "Hacked",
               configuration,
             ]),
+            /permission denied/,
+          );
+          await assert.rejects(
+            client.query("SELECT delete_business_qr($1,$2,1)", [a, qa.id]),
             /permission denied/,
           );
           await assert.rejects(

@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule],
   template: `
     <header class="topbar">
-      <button
+      <div class="mobile-tools"><button
         class="mobile-search-toggle"
         type="button"
         [attr.aria-label]="mobileSearchOpen ? 'Fechar pesquisa' : 'Abrir pesquisa'"
@@ -21,6 +21,9 @@ import { FormsModule } from '@angular/forms';
         </svg>
       </button>
 
+      <button class="mobile-settings-toggle" type="button" aria-label="Abrir configurações" (click)="settingsOpen.emit()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
+      </button></div>
       <!-- Mobile hamburger -->
       <button class="hamburger-btn" type="button" aria-label="Abrir menu" (click)="toggleSidebar.emit()">
         <svg class="hamburger-lines" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -74,7 +77,7 @@ import { FormsModule } from '@angular/forms';
         </button>
 
         <!-- Mobile preview toggle -->
-        <button class="preview-toggle-btn" (click)="togglePreview.emit()" title="Preview do Cardápio">
+        <button type="button" class="preview-toggle-btn" (click)="togglePreview.emit()" title="Preview do Cardápio" aria-label="Preview do Cardápio">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
             <line x1="12" y1="18" x2="12.01" y2="18"/>
@@ -132,7 +135,7 @@ import { FormsModule } from '@angular/forms';
       background: rgba(244, 123, 32, 0.1);
       color: #F47B20;
     }
-    .mobile-menu-logo, .mobile-search-toggle {
+    .mobile-menu-logo, .mobile-tools {
       display: none;
     }
 
@@ -333,13 +336,15 @@ import { FormsModule } from '@angular/forms';
         object-fit: cover;
         border-radius: 50%;
       }
-      .mobile-search-toggle {
+      .mobile-tools { display: flex; gap: 6px; grid-column: 1; grid-row: 1; }
+      .mobile-search-toggle, .mobile-settings-toggle {
         grid-column: 1;
         grid-row: 1;
         justify-self: start;
         align-self: center;
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -352,6 +357,7 @@ import { FormsModule } from '@angular/forms';
         cursor: pointer;
       }
       .mobile-search-toggle:focus-visible,
+      .mobile-settings-toggle:focus-visible,
       .hamburger-btn:focus-visible {
         outline: 2px solid var(--panel-accent);
         outline-offset: 2px;
@@ -390,4 +396,5 @@ export class TopbarComponent {
   @Output() themeToggle = new EventEmitter<void>();
   @Output() toggleSidebar = new EventEmitter<void>();
   @Output() togglePreview = new EventEmitter<void>();
+  @Output() settingsOpen = new EventEmitter<void>();
 }

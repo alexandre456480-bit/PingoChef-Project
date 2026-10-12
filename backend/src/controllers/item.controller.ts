@@ -80,7 +80,7 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       let query = client
         .from('menu_items')
-        .select('*, categories(name)')
+        .select('*, categories!menu_items_category_tenant_fk(name)')
         .eq('business_id', businessId)
         .order('display_order', { ascending: true });
 
