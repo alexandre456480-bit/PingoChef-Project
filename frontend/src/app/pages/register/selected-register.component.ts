@@ -221,7 +221,9 @@ export class SelectedRegisterComponent implements OnInit {
               ? 'Esta escolha expirou. Volte aos planos e tente novamente.'
               : e.status === 429
                 ? 'Aguarde alguns minutos antes de tentar novamente.'
-                : 'Não foi possível criar sua conta. Verifique os dados e tente novamente.';
+                : e.status === 0 || e.status >= 500
+                  ? 'O cadastro está temporariamente indisponível. Tente novamente em alguns minutos.'
+                  : 'Não foi possível criar sua conta. Verifique os dados e tente novamente.';
         },
       });
   }

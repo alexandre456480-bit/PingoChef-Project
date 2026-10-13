@@ -85,6 +85,12 @@ beforeEach(() => {
     if(name==='reserve_shared_request') return {data:true,error:null};
     if(name==='owner_schedule_account_deletion')return args.p_confirm_business_id===business.id?{data:new Date(Date.now()+30*86400000).toISOString(),error:null}:{data:null,error:{message:'OWNER_CONFIRMATION_REQUIRED'}};
     if(name==='start_owner_registration')return {data:duplicate?null:randomUUID(),error:null};
+    if(name==='start_selected_owner_registration'){
+      const entry=selections.get(args.p_selection_id);
+      if(!entry||entry.consumed_at||Date.parse(entry.expires_at)<=Date.now())return {data:null,error:{message:'PLAN_INTENT_EXPIRED'}};
+      Object.assign(entry,{consumed_at:new Date().toISOString(),terms_version:'2026-10'});
+      return {data:duplicate?null:randomUUID(),error:null};
+    }
     if(name==='bind_owner_registration')return {data:true,error:null};
     if(name==='provision_owner_account')return deniedProvision?{data:null,error:{message:'INVALID_REGISTRATION_INTENT'}}:{data:business.id,error:null};
     if(name==='business_is_account_active')return {data:true,error:null};
@@ -211,6 +217,21 @@ describe('Owner commercial journey and account operations',()=>{
     expect((await request(api).post('/api/v1/auth/register').set('Origin',origin).send({...body,termsAccepted:true})).status).toBe(410);
     expect((await request(api).get('/api/v1/auth/plan-intents/'+intentId)).status).toBe(410);
     expect(selections.get(intentId).terms_version).toBe('2026-10');
+    expect(supabaseAdmin.rpc).toHaveBeenCalledWith('start_selected_owner_registration',expect.objectContaining({p_selection_id:intentId,p_email:body.email}));
+  });
+  it('database failure before signup leaves the plan selection available for retry',async()=>{
+    const api=app();const selected=await request(api).post('/api/v1/auth/plan-intents').set('Origin',origin).send({planCode:'FREE'});
+    const intentId=selected.body.data.id;
+    const body={email:'retry@example.test',password:'StrongPassword123!',fullName:'Owner',businessName:'Business',slug:'retry-business',intentId,termsAccepted:true};
+    const rpc=(supabaseAdmin.rpc as jest.Mock).getMockImplementation()!;
+    (supabaseAdmin.rpc as jest.Mock).mockImplementation(async(name:string,args:any)=>name==='start_selected_owner_registration'
+      ? {data:null,error:{code:'42703',message:'column unavailable'}} : rpc(name,args));
+    const failed=await request(api).post('/api/v1/auth/register').set('Origin',origin).send(body);
+    expect(failed.status).toBe(503);expect(failed.body.error.code).toBe('REGISTRATION_UNAVAILABLE');
+    expect(selections.get(intentId).consumed_at).toBeNull();expect(provider.signUp).not.toHaveBeenCalled();
+    expect((await request(api).get('/api/v1/auth/plan-intents/'+intentId)).status).toBe(200);
+    (supabaseAdmin.rpc as jest.Mock).mockImplementation(rpc);
+    expect((await request(api).post('/api/v1/auth/register').set('Origin',origin).send(body)).status).toBe(202);
   });
   it('password change requires CSRF and current password then revokes all BFF sessions',async()=>{
     const api=app();const first=await login(api),second=await login(api);

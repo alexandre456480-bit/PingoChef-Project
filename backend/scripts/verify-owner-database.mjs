@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { randomUUID, randomBytes } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 
 export async function verifyOwnerDatabase(pool) {
   let checks = 0;
@@ -182,6 +183,52 @@ export async function verifyOwnerDatabase(pool) {
     assert.equal((await Promise.all([consume(),consume()])).reduce((n,r)=>n+r.rowCount,0),1);
     const expired=(await query("INSERT INTO owner_plan_intents(plan_code,expires_at) VALUES('FREE',now()-interval '1 day') RETURNING id")).rows[0].id;
     assert.equal((await query('UPDATE owner_plan_intents SET consumed_at=now() WHERE id=$1 AND expires_at>now() RETURNING id',[expired])).rowCount,0);
+  });
+  await check('selected Free registration stores consent atomically and rejects duplicate concurrent consumption',async()=>{
+    const selection=await value("INSERT INTO owner_plan_intents(plan_code) VALUES('FREE') RETURNING id value");
+    const args=[selection,'selected@local.test','Selected Owner','Selected Business','selected-local',null,null];
+    const start=()=>value('SELECT start_selected_owner_registration($1,$2,$3,$4,$5,$6,$7) value',args);
+    const results=await Promise.allSettled([start(),start()]);
+    assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
+    assert.equal(results.find(r=>r.status==='rejected').reason.message,'PLAN_INTENT_EXPIRED');
+    const registration=(await query('SELECT * FROM registration_intents WHERE id=$1',[results.find(r=>r.status==='fulfilled').value])).rows[0];
+    assert.equal(registration.plan_selection_intent_id,selection);
+    assert.equal(registration.terms_version,'2026-10');assert.ok(registration.terms_accepted_at);
+    assert.equal(await value('SELECT consumed_at=terms_accepted_at value FROM owner_plan_intents s JOIN registration_intents i ON i.plan_selection_intent_id=s.id WHERE s.id=$1',[selection]),true);
+    await assert.rejects(asOwner(user,'SELECT start_selected_owner_registration($1,$2,$3,$4,$5,$6,$7)',args),/permission denied/);
+  });
+  await check('registration write failure rolls back selection consumption and allows retry',async()=>{
+    const selection=await value("INSERT INTO owner_plan_intents(plan_code) VALUES('FREE') RETURNING id value");
+    const args=[selection,'retry-selected@local.test','Retry Owner','Retry Business','INVALID SLUG',null,null];
+    await assert.rejects(query('SELECT start_selected_owner_registration($1,$2,$3,$4,$5,$6,$7)',args),/check constraint/);
+    assert.equal(await value('SELECT consumed_at value FROM owner_plan_intents WHERE id=$1',[selection]),null);
+    assert.equal(await value('SELECT count(*)::int value FROM registration_intents WHERE email=$1',[args[1]]),0);
+    args[4]='retry-selected';
+    assert.ok(await value('SELECT start_selected_owner_registration($1,$2,$3,$4,$5,$6,$7) value',args));
+    const expired=await value("INSERT INTO owner_plan_intents(plan_code,expires_at) VALUES('FREE',now()-interval '1 second') RETURNING id value");
+    args[0]=expired;
+    await assert.rejects(query('SELECT start_selected_owner_registration($1,$2,$3,$4,$5,$6,$7)',args),/PLAN_INTENT_EXPIRED/);
+  });
+  await check('repair releases only old interrupted public drafts and preserves identities, consent and awaiting email',async()=>{
+    const ids=[];
+    for(const kind of ['orphan','recent','identity','consent','bound']){
+      const email=`repair-${kind}@local.test`;
+      const id=await value('SELECT start_owner_registration($1,$2,$3,$4,NULL,\'FREE\',NULL) value',[email,'Repair Owner','Repair Business',`repair-${kind}`]);
+      ids.push(id);
+      if(['identity','bound'].includes(kind)){
+        const uid=randomUUID();await query('INSERT INTO auth.users(id,email) VALUES($1,$2)',[uid,email]);
+        if(kind==='bound')await query('SELECT bind_owner_registration($1,$2)',[id,uid]);
+      }
+      if(kind!=='recent')await query("UPDATE registration_intents SET created_at=now()-interval '31 minutes' WHERE id=$1",[id]);
+      if(kind==='consent')await query("UPDATE registration_intents SET terms_accepted_at=now(),terms_version='2026-10' WHERE id=$1",[id]);
+      await query("INSERT INTO owner_plan_intents(plan_code,consumed_at) SELECT 'FREE',created_at-interval '1 second' FROM registration_intents WHERE id=$1",[id]);
+    }
+    await query(await readFile(new URL('../../supabase/migrations/20261012000000_repair_free_registration.sql',import.meta.url),'utf8'));
+    for(const [index,expected] of ['EXPIRED','PENDING','PENDING','PENDING','AWAITING_EMAIL'].entries()){
+      assert.equal(await value('SELECT status value FROM registration_intents WHERE id=$1',[ids[index]]),expected);
+    }
+    assert.equal(await value("SELECT count(*)::int value FROM auth.users WHERE email IN ('repair-identity@local.test','repair-bound@local.test')"),2);
+    assert.ok(await value('SELECT start_owner_registration($1,$2,$3,$4,NULL,\'FREE\',NULL) value',['repair-orphan@local.test','Repair Owner','Repair Business','repair-orphan-retry']));
   });
   await check('every plan rejects the next product, category and video at its exact limit',async()=>{
     for(const [code,limits] of Object.entries({FREE:[10,4,1],BASIC:[30,10,7],MEDIUM:[70,25,25],PRO:[150,40,40]})){

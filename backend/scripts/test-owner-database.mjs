@@ -62,6 +62,13 @@ try {
     catch (error) { throw new Error(`Migration ${file}: ${error.message}`, { cause: error }); }
   }
   console.log('OK full migration chain (PostgreSQL 16)');
+  // Reproduce the observed partial deployment, then rerun the repair twice.
+  await pool.query(`ALTER TABLE public.registration_intents DROP COLUMN plan_selection_intent_id,
+    DROP COLUMN terms_version, DROP COLUMN terms_accepted_at`);
+  const registrationRepair = await readFile(join(migrations, '20261012000000_repair_free_registration.sql'), 'utf8');
+  await pool.query(registrationRepair);
+  await pool.query(registrationRepair);
+  console.log('OK partial registration schema repair and repeated application');
   await verifyOwnerDatabase(pool);
   await verifyMenuAnalytics(pool);
   await verifyQrSecurity(pool);

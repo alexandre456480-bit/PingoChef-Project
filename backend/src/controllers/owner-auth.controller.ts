@@ -126,31 +126,21 @@ export const ownerRegister = handler(async (req, res) => {
   if (body.planCode !== 'FREE') throw ownerError(409, 'PAID_PLAN_UNAVAILABLE', 'Cadastro público disponível no plano Free.');
   if (isDemoMode()) throw ownerError(503, 'EMAIL_CONFIRMATION_REQUIRED', 'Configure Supabase Auth para cadastrar contas.');
   const redirect = callbackUrl();
-  if (body.intentId) {
-    if (!body.termsAccepted) throw ownerError(400,'TERMS_REQUIRED');
-    const {data: selected,error: selectionError}=await supabaseAdmin.from('owner_plan_intents')
-      .update({consumed_at:new Date().toISOString(),terms_version:'2026-10'})
-      .eq('id',body.intentId).eq('plan_code','FREE').is('consumed_at',null)
-      .gt('expires_at',new Date().toISOString()).select('id').maybeSingle();
-    if(selectionError)throw ownerError(503,'REGISTRATION_UNAVAILABLE');
-    if(!selected)throw ownerError(410,'PLAN_INTENT_EXPIRED','Escolha seu plano novamente para continuar.');
-  }
-  const { data: intentId, error } = await supabaseAdmin.rpc('start_owner_registration', {
+  if (body.intentId && !body.termsAccepted) throw ownerError(400,'TERMS_REQUIRED');
+  const registration = {
     p_email: body.email, p_full_name: body.fullName, p_business_name: body.businessName,
-    p_slug: body.slug, p_phone: body.phone || null, p_plan_code: 'FREE',
+    p_slug: body.slug, p_phone: body.phone || null,
     p_invitation_hash: body.invitationCode ? hashInvitationCode(body.invitationCode) : null
-  });
+  };
+  const { data: intentId, error } = body.intentId
+    ? await supabaseAdmin.rpc('start_selected_owner_registration', { ...registration, p_selection_id: body.intentId })
+    : await supabaseAdmin.rpc('start_owner_registration', { ...registration, p_plan_code: 'FREE' });
   if (error) {
+    if (error.message === 'PLAN_INTENT_EXPIRED') throw ownerError(410, 'PLAN_INTENT_EXPIRED', 'Escolha seu plano novamente para continuar.');
     if (error.message === 'INVALID_INVITATION') return accepted(res);
     throw ownerError(503, 'REGISTRATION_UNAVAILABLE');
   }
   if (!intentId) return accepted(res);
-  if(body.intentId){
-    const {error: consentError}=await supabaseAdmin.from('registration_intents').update({
-      plan_selection_intent_id:body.intentId,terms_version:'2026-10',terms_accepted_at:new Date().toISOString()
-    }).eq('id',intentId);
-    if(consentError)throw ownerError(503,'REGISTRATION_UNAVAILABLE');
-  }
   const auth = createPasswordAuthClient();
   const { data, error: signupError } = await auth.auth.signUp({ email: body.email, password: body.password,
     options: { emailRedirectTo: redirect } });

@@ -51,6 +51,14 @@ a ambiguidade entre produtos e categorias, mantendo o escopo do proprietário.
 
 ## Desenvolvimento local
 
+Para corrigir o cadastro Free em bancos com a etapa comercial parcialmente aplicada,
+aplique [`20261012000000_repair_free_registration.sql`](supabase/migrations/20261012000000_repair_free_registration.sql)
+no SQL Editor do Supabase **antes de atualizar o backend**. A migration restaura as
+colunas de consentimento e cria a operação que registra cadastro, aceite e consumo
+do plano em uma única transação. Pode ser reaplicada. Rascunhos antigos interrompidos
+antes da criação da identidade são liberados quando correspondem a uma escolha
+consumida; contas e cadastros aguardando confirmação são preservados.
+
 Requisitos: Node compatível com as dependências instaladas e um projeto Supabase
 configurado. Ambiente validado nesta fase: Node.js 24.19.0.
 
