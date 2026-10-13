@@ -1,0 +1,44 @@
+<div class="logo-backdrop" (click)="cancelled.emit()">
+  <section class="logo-dialog" role="dialog" aria-modal="true" aria-labelledby="logo-editor-title"
+    aria-describedby="logo-editor-help" appDialogFocus (dialogEscape)="cancelled.emit()" (click)="$event.stopPropagation()">
+    <header>
+      <div><span class="eyebrow">LOGO DO QR CODE</span><h2 id="logo-editor-title">Ajuste sua imagem</h2></div>
+      <button class="close" type="button" aria-label="Fechar ajuste de imagem" (click)="cancelled.emit()">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M6 18 18 6"/></svg>
+      </button>
+    </header>
+    <p id="logo-editor-help">Arraste a imagem e ajuste o zoom. O que aparece no quadrado será usado no centro do QR.</p>
+    <div class="editor-layout">
+      <div class="canvas-wrap" [attr.aria-busy]="loading()">
+        <canvas #preview width="512" height="512" aria-label="Prévia do recorte quadrado"
+          (pointerdown)="startDrag($event)" (pointermove)="moveDrag($event)"
+          (pointerup)="endDrag()" (pointercancel)="endDrag()" (lostpointercapture)="endDrag()"></canvas>
+        @if (loading()) { <div class="canvas-status" role="status">Preparando imagem…</div> }
+      </div>
+      <div class="controls">
+        @if (pages() > 1) {
+          <label>Página do PDF <input type="number" aria-label="Página do PDF" [min]="1" [max]="pages()"
+            [ngModel]="page" (ngModelChange)="changePage(+$event)" [disabled]="loading()" /></label>
+          <p class="hint">{{ pages() }} páginas disponíveis.</p>
+        }
+        <fieldset [disabled]="loading() || !!error()">
+          <div class="fit-options" role="group" aria-label="Enquadramento">
+            <button type="button" [attr.aria-pressed]="!fill" (click)="reset(false)">Imagem inteira</button>
+            <button type="button" [attr.aria-pressed]="fill" (click)="reset(true)">Preencher quadrado</button>
+          </div>
+          <label>Zoom <span>{{ zoom.toFixed(2) }}×</span><input type="range" aria-label="Zoom da imagem" min="1" max="4" step="0.01"
+            [ngModel]="zoom" (ngModelChange)="zoom = +$event; draw()" /></label>
+          <label>Posição horizontal<input type="range" aria-label="Posição horizontal" min="-100" max="100" step="1"
+            [ngModel]="x" (ngModelChange)="x = +$event; draw()" /></label>
+          <label>Posição vertical<input type="range" aria-label="Posição vertical" min="-100" max="100" step="1"
+            [ngModel]="y" (ngModelChange)="y = +$event; draw()" /></label>
+          <div class="tools"><button type="button" (click)="rotate()">Girar 90°</button><button type="button" (click)="reset()">Centralizar</button></div>
+        </fieldset>
+        <p class="hint">O fundo quadriculado indica transparência. Confira se o logo permanece legível.</p>
+      </div>
+    </div>
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+    <footer><button type="button" (click)="cancelled.emit()">Cancelar</button>
+      <button class="confirm" type="button" (click)="confirm()" [disabled]="loading() || !!error()">Usar imagem</button></footer>
+  </section>
+</div>

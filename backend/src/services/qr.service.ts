@@ -91,22 +91,10 @@ export function publicMenuOrigin(): string {
 export function qrPublicUrl(identifier: string): string {
   return `${publicMenuOrigin()}/q/${z.string().uuid().parse(identifier)}`;
 }
-export function qrContrast(color: string): number {
-  const rgb = [1, 3, 5]
-    .map((offset) => parseInt(color.slice(offset, offset + 2), 16) / 255)
-    .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 1.05 / (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] + 0.05);
-}
 export function sanitizeQrConfiguration(
   input: QrConfiguration,
 ): QrConfiguration {
   const c = qrConfigurationSchema.parse(input);
-  if (qrContrast(c.color) < 7)
-    throw ownerError(
-      400,
-      "QR_LOW_CONTRAST",
-      "Escolha uma cor escura com contraste mínimo de 7:1 sobre branco.",
-    );
   c.color = c.color.toUpperCase();
   c.caption = c.caption.normalize("NFC");
   if (c.logoPng !== null) {
@@ -173,14 +161,37 @@ const xml = (v: string) =>
       })[ch]!,
   );
 
-// Structured renderer interface permits a future PDF adapter without accepting arbitrary SVG or URLs.
+function logoArea(code: QRCode.QRCode) {
+  const side = Math.max(5, Math.floor(code.modules.size * 0.2) | 1);
+  const start = (code.modules.size - side) / 2;
+  for (let row = start; row < start + side; row++)
+    for (let col = start; col < start + side; col++)
+      if (code.modules.isReserved(row, col)) return null;
+  return { side, start };
+}
+
+function roundedModule(x: number, y: number, size: number, corners: boolean[]) {
+  const [a, b, c, d] = corners.map(round => round ? size / 2 : 0);
+  return `M${x + a} ${y}H${x + size - b}Q${x + size} ${y} ${x + size} ${y + b}V${y + size - c}Q${x + size} ${y + size} ${x + size - c} ${y + size}H${x + d}Q${x} ${y + size} ${x} ${y + size - d}V${y + a}Q${x} ${y} ${x + a} ${y}z`;
+}
+
+// All downloads use the same raster-safe renderer and a logo area free of functional patterns.
 export function renderQr(
   url: string,
   input: QrConfiguration,
   format: "png" | "svg",
 ): Buffer {
-  const c = sanitizeQrConfiguration(input),
-    code = QRCode.create(url, { errorCorrectionLevel: "H" });
+  const c = sanitizeQrConfiguration(input);
+  let code = QRCode.create(url, { errorCorrectionLevel: "H" });
+  // Some versions have an alignment pattern exactly at the centre. Keep it intact
+  // by selecting the next version with an empty functional area, rather than covering it.
+  if (c.logoPng) {
+    while (!logoArea(code)) {
+      if (code.version === 40) throw ownerError(503, "QR_LOGO_LAYOUT_UNAVAILABLE");
+      code = QRCode.create(url, { errorCorrectionLevel: "H", version: code.version + 1 });
+    }
+  }
+  const area = c.logoPng ? logoArea(code)! : null;
   const n = code.modules.size,
     scale = 8,
     padding = 24,
@@ -188,34 +199,38 @@ export function renderQr(
   const width = (n + quiet * 2) * scale + padding * 2,
     height = width + (c.caption ? 48 : 0);
   const xy = (v: number) => padding + (quiet + v) * scale;
-  let modules = "",
-    reserved = "";
-  const logoSide = Math.max(3, Math.floor(n * 0.15)),
-    logoStart = Math.floor((n - logoSide) / 2),
-    logoEnd = logoStart + logoSide;
+  let modules = "";
+  const inLogo = (row: number, col: number) => !!area && row >= area.start && row < area.start + area.side && col >= area.start && col < area.start + area.side;
+  const darkAt = (row: number, col: number) => row >= 0 && col >= 0 && row < n && col < n && !inLogo(row, col) && !!code.modules.get(row, col);
+  const inFinder = (row: number, col: number) => (row < 7 && (col < 7 || col >= n - 7)) || (row >= n - 7 && col < 7);
   for (let row = 0; row < n; row++)
     for (let col = 0; col < n; col++) {
-      const dark = code.modules.get(row, col);
-      if (dark)
+      if (!darkAt(row, col) || inFinder(row, col)) continue;
+      if (code.modules.isReserved(row, col))
         modules += `M${xy(col)} ${xy(row)}h${scale}v${scale}h-${scale}z`;
-      if (
-        c.logoPng &&
-        row >= logoStart &&
-        row < logoEnd &&
-        col >= logoStart &&
-        col < logoEnd &&
-        code.modules.isReserved(row, col)
-      )
-        reserved += `<rect x="${xy(col)}" y="${xy(row)}" width="${scale}" height="${scale}" fill="${dark ? c.color : "#FFFFFF"}"/>`;
+      else {
+        const top = darkAt(row - 1, col), right = darkAt(row, col + 1),
+          bottom = darkAt(row + 1, col), left = darkAt(row, col - 1);
+        modules += roundedModule(xy(col), xy(row), scale, [!top && !left, !top && !right, !bottom && !right, !bottom && !left]);
+      }
     }
-  const image = c.logoPng
-    ? `<rect x="${xy(logoStart)}" y="${xy(logoStart)}" width="${logoSide * scale}" height="${logoSide * scale}" fill="#FFFFFF"/><image href="${c.logoPng}" x="${xy(logoStart) + 4}" y="${xy(logoStart) + 4}" width="${logoSide * scale - 8}" height="${logoSide * scale - 8}"/>${reserved}`
-    : "";
+  // Shade toward a darker tone so the gradient never weakens the selected contrast.
+  const endColor = '#' + [1, 3, 5].map(offset => Math.round(parseInt(c.color.slice(offset, offset + 2), 16) * .7).toString(16).padStart(2, '0')).join('');
+  const ink = 'url(#qr-ink)';
+  const finders = [[0, 0], [n - 7, 0], [0, n - 7]].map(([col, row]) =>
+    `<rect x="${xy(col)}" y="${xy(row)}" width="${7 * scale}" height="${7 * scale}" rx="${scale}" fill="${ink}"/><rect x="${xy(col + 1)}" y="${xy(row + 1)}" width="${5 * scale}" height="${5 * scale}" rx="${scale / 2}" fill="#FFFFFF"/><rect x="${xy(col + 2)}" y="${xy(row + 2)}" width="${3 * scale}" height="${3 * scale}" rx="${scale * .6}" fill="${ink}"/>`
+  ).join('');
+  let image = '', clip = '';
+  if (area) {
+    const x = xy(area.start), side = area.side * scale, inner = side - 2 * scale;
+    clip = `<clipPath id="qr-logo-clip"><rect x="${x + scale}" y="${x + scale}" width="${inner}" height="${inner}" rx="${scale}"/></clipPath>`;
+    image = `<rect x="${x}" y="${x}" width="${side}" height="${side}" rx="${scale * 2}" fill="#FFFFFF" stroke="#E7DED8" stroke-width="1"/><image href="${c.logoPng}" x="${x + scale}" y="${x + scale}" width="${inner}" height="${inner}" preserveAspectRatio="xMidYMid meet" clip-path="url(#qr-logo-clip)"/>`;
+  }
   const fontSize = Math.min(
     22,
     (width - 48) / Math.max(1, c.caption.length * 0.65),
   );
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#FFFFFF"/>${c.frame === "card" ? `<rect x="4" y="4" width="${width - 8}" height="${height - 8}" rx="20" fill="none" stroke="${c.color}" stroke-width="3"/>` : ""}<path d="${modules}" fill="${c.color}"/>${image}${c.caption ? `<text x="${width / 2}" y="${width + 16}" text-anchor="middle" font-family="Outfit" font-size="${fontSize}" fill="${c.color}">${xml(c.caption)}</text>` : ""}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><linearGradient id="qr-ink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${c.color}"/><stop offset="1" stop-color="${endColor}"/></linearGradient>${clip}</defs><rect width="100%" height="100%" fill="#FFFFFF"/>${c.frame === "card" ? `<rect x="4" y="4" width="${width - 8}" height="${height - 8}" rx="20" fill="none" stroke="${ink}" stroke-width="3"/>` : ""}<path d="${modules}" fill="${ink}"/>${finders}${image}${c.caption ? `<text x="${width / 2}" y="${width + 16}" text-anchor="middle" font-family="Outfit" font-size="${fontSize}" fill="${c.color}">${xml(c.caption)}</text>` : ""}</svg>`;
   const fontPath = [
     resolve(__dirname, "../../assets/fonts/Outfit.ttf"),
     resolve(process.cwd(), "assets/fonts/Outfit.ttf"),

@@ -1,4 +1,4 @@
-<section class="qr-section" aria-labelledby="qr-title" [attr.inert]="deleting() ? '' : null">
+<section class="qr-section" aria-labelledby="qr-title" [attr.inert]="deleting() || logoFile() ? '' : null">
   <header class="qr-heading">
     <div>
       <span class="eyebrow">SEU CARDÁPIO, AO ALCANCE</span>
@@ -93,10 +93,7 @@
               /><span>{{ config().color }}</span>
             </div></label
           >
-          <p class="hint" [class.invalid]="contrast() < 7" aria-live="polite">
-            Contraste {{ contrast() | number: '1.1-1' }}:1 · mínimo 7:1 sobre branco.
-            {{ contrast() < 7 ? 'Escolha uma cor mais escura.' : 'Cor adequada.' }}
-          </p>
+          <p class="hint">Escolha a cor que mais combina com seu logo.</p>
           <label
             >Moldura<select
               name="frame"
@@ -119,18 +116,19 @@
             Até 40 caracteres: letras latinas, acentos e pontuação comum. O texto fica fora da área
             de leitura.
           </p>
-          <label
-            >Logo opcional<input
+          <div class="logo-upload" (dragover)="$event.preventDefault()" (drop)="dropLogo($event)">
+            <label>Logo opcional<input
+              #logoInput
               type="file"
-              accept="image/png"
+              accept="image/*,application/pdf,.pdf"
               (change)="logo($event)"
               aria-describedby="logo-help"
-          /></label>
-          <p id="logo-help" class="hint">
-            Escolha um PNG de até 8 MB e 4096 pixels por lado. A imagem é ajustada proporcionalmente
-            para 128 × 128 pixels, com espaço transparente quando necessário.
-          </p>
+            /></label>
+            <p id="logo-help" class="hint">Arraste ou escolha uma imagem ou PDF de até 4 MB.
+              Ajuste o enquadramento quadrado antes de usar o logo. JPG, PNG, WebP, GIF, BMP, AVIF e SVG.</p>
+          </div>
           @if (config().logoPng) {
+            <img class="logo-thumbnail" [src]="config().logoPng" alt="Logo escolhido para o QR Code" />
             <button type="button" class="text-button" (click)="edit('logoPng', null)">
               Remover logo
             </button>
@@ -249,6 +247,9 @@
     </div>
   }
 </section>
+@if (logoFile(); as file) {
+  <app-qr-logo-editor [file]="file" (confirmed)="applyLogo($event)" (cancelled)="closeLogo()" />
+}
 @if (deleting(); as row) {
   <div class="delete-backdrop" (click)="cancelDelete()">
     <div

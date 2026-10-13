@@ -124,7 +124,9 @@ describe('ProductMediaGalleryComponent', () => {
     expect(tracker.record).not.toHaveBeenCalled();
   });
 
-  it('uses the selected portrait ratio without overflowing the phone layout', () => {
+  it.each([false, true])('keeps the portrait cover in the photo frame and expands in portrait (preview: %s)', async (previewMode) => {
+    fixture.componentRef.setInput('previewMode', previewMode);
+    fixture.componentRef.setInput('imageUrl', '/produto.webp');
     fixture.componentRef.setInput('media', [{
       id: 'media-portrait',
       mediaType: 'video',
@@ -136,7 +138,24 @@ describe('ProductMediaGalleryComponent', () => {
     fixture.detectChanges();
 
     const stage = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.media-stage');
-    expect(stage?.classList.contains('portrait-video')).toBe(true);
-    expect(stage?.style.aspectRatio).toBe('9 / 16');
+    expect(stage?.style.aspectRatio).toBe('');
+    expect(playback.requestPlayback).not.toHaveBeenCalled();
+    (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.gallery-dot')[1].click();
+    fixture.detectChanges();
+    expect(stage?.style.aspectRatio).toBe('');
+    expect(stage?.querySelector('img')).not.toBeNull();
+
+    (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.gallery-dot')[0].click();
+    playback.requestPlayback.mockReturnValueOnce(of({ data: { playbackId: 'portrait', playbackToken: 'signed', videoTitle: 'Produto' } }));
+    const slide = fixture.componentInstance.activeSlide;
+    if (slide.kind !== 'video') throw new Error('Expected portrait video');
+    await fixture.componentInstance.play(slide.media);
+    fixture.detectChanges();
+    const shell = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.expanded-player-shell');
+    expect(shell?.style.aspectRatio).toBe('9 / 16');
+    expect(playback.requestPlayback).toHaveBeenCalledWith('item-1', 'media-portrait', 'loja-teste', previewMode);
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.close-video-button')!.click();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('mux-player')).toBeNull();
   });
 });

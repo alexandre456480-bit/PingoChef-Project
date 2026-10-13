@@ -93,7 +93,7 @@
 }
 
 .dashboard-shell .sidebar {
-  background: linear-gradient(165deg, #2C1024, #1D0A18) !important;
+  background: linear-gradient(165deg, #690A1A, #410612) !important;
   border-color: rgba(255,255,255,.08) !important;
   box-shadow: 8px 0 24px rgba(74, 42, 41, 0.08) !important;
 }
@@ -152,11 +152,14 @@
 .dashboard-shell .sidebar .nav-icon-wrap,
 .dashboard-shell .sidebar .icon-round-btn {
   color: #CEBBC4 !important;
-  background: #351329 !important;
+  background: linear-gradient(145deg, #8B1A3A, #520817) !important;
   border-color: rgba(255,255,255,.1) !important;
-  box-shadow: none !important;
+  box-shadow: 0 3px 5px rgba(35,3,10,.3), inset 1px 1px 1px rgba(255,230,188,.15) !important;
 }
-.dashboard-shell .sidebar .nav-item.active .nav-icon-wrap { color:#FFAB66 !important; }
+.dashboard-shell .sidebar .nav-item.active .nav-icon-wrap {
+  color: #FFAB66 !important;
+  background: linear-gradient(145deg, #A43836, #690A1A) !important;
+}
 
 
 .dashboard-shell .theme-toggle-btn {

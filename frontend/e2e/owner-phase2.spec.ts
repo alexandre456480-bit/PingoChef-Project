@@ -468,7 +468,7 @@ test('password change and account deletion require explicit form validation', as
     confirmBusinessId: id,
   });
 });
-test('settings fit desktop, notebook, tablet and mobile in both themes', async ({ page }) => {
+test('settings fit desktop, notebook, tablet and mobile in both themes', async ({ page }, testInfo) => {
   await mockApi(page);
   await page.goto('/dashboard');
   for (const width of [1600, 1280, 900, 390]) {
@@ -485,6 +485,7 @@ test('settings fit desktop, notebook, tablet and mobile in both themes', async (
     if (width === 1600 || width === 390)
       await page.screenshot({ path: `../.tools/phase2-settings-${width}.png` });
     await page.getByRole('button', { name: 'Fechar configurações' }).click();
+    if (width === 1600) await page.locator('app-sidebar .sidebar').screenshot({ path: testInfo.outputPath('sidebar-dark.png') });
   }
   await page.getByRole('button', { name: 'Ativar tema claro' }).click();
   await settings(page);
@@ -492,8 +493,10 @@ test('settings fit desktop, notebook, tablet and mobile in both themes', async (
   await page.keyboard.press('Escape');
   const sidebar = page.locator('app-sidebar .sidebar');
   expect(await sidebar.evaluate((el) => getComputedStyle(el).backgroundImage)).toContain(
-    '44, 16, 36',
+    '105, 10, 26',
   );
+  await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
+  await sidebar.screenshot({ path: testInfo.outputPath('sidebar-mobile-light.png') });
 });
 test('password update and single-device logout finish only after server confirmation', async ({
   page,

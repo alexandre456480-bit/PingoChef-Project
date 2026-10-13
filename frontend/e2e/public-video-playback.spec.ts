@@ -58,59 +58,86 @@ const menuResponse = {
   }
 };
 
-test('does not authorize or mount Mux before explicit Play', async ({ page }) => {
-  let playbackRequests = 0;
-  let muxNetworkRequests = 0;
-  const browserIssues: string[] = [];
-  page.on('console', message => {
-    if (message.type() === 'error') browserIssues.push(message.text());
-  });
-  page.on('pageerror', error => browserIssues.push(error.message));
-  page.on('requestfailed', request => browserIssues.push(`${request.url()}: ${request.failure()?.errorText}`));
+for (const aspectRatio of ['16:9', '9:16'] as const) {
+  test(`fits the ${aspectRatio} cover to the photo frame and authorizes Mux only on Play`, async ({ page }, testInfo) => {
+    await page.addInitScript(() => localStorage.clear());
+    const response = structuredClone(menuResponse);
+    response.data.items[0].media[0].aspectRatio = aspectRatio;
+    response.data.design.customConfig.enable_likes = true;
+    let playbackRequests = 0;
+    let muxNetworkRequests = 0;
+    const browserIssues: string[] = [];
+    page.on('console', message => {
+      if (message.type() === 'error') browserIssues.push(message.text());
+    });
+    page.on('pageerror', error => browserIssues.push(error.message));
+    page.on('requestfailed', request => browserIssues.push(`${request.url()}: ${request.failure()?.errorText}`));
 
-  await page.route('**/api/v1/public/menu/pingo-teste', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    headers: { 'Access-Control-Allow-Origin': 'http://127.0.0.1:4300' },
-    body: JSON.stringify(menuResponse)
-  }));
-  await page.route('**/api/v1/public/menus/**/playback', route => {
-    playbackRequests += 1;
-    return route.fulfill({
+    await page.route('**/api/v1/public/menu/pingo-teste', route => route.fulfill({
       status: 200,
       contentType: 'application/json',
       headers: { 'Access-Control-Allow-Origin': 'http://127.0.0.1:4300' },
-      body: JSON.stringify({
-        success: true,
-        data: {
-          playbackId: 'signed-playback-test',
-          playbackToken: 'short-lived-test-token',
-          expiresAt: new Date(Date.now() + 120_000).toISOString(),
-          videoTitle: 'Produto com vídeo'
-        }
-      })
+      body: JSON.stringify(response)
+    }));
+    await page.route('**/api/v1/public/menu/pingo-teste/events', route => route.fulfill({ status: 202, json: { success: true } }));
+    await page.route('**/api/v1/public/menus/**/playback', route => {
+      playbackRequests += 1;
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': 'http://127.0.0.1:4300' },
+        body: JSON.stringify({
+          success: true,
+          data: {
+            playbackId: 'signed-playback-test',
+            playbackToken: 'short-lived-test-token',
+            expiresAt: new Date(Date.now() + 120_000).toISOString(),
+            videoTitle: 'Produto com vídeo'
+          }
+        })
+      });
     });
-  });
-  await page.route(/https:\/\/[^/]*mux\.com\/.*/, route => {
-    muxNetworkRequests += 1;
-    return route.abort();
-  });
+    // Hold provider requests until the page closes so a mocked stream cannot dismiss the player.
+    await page.route(/https:\/\/[^/]*mux\.com\/.*/, () => {
+      muxNetworkRequests += 1;
+    });
 
-  await page.goto('/m/pingo-teste');
-  const enterButton = page.getByRole('button', { name: /ver o cardápio/i });
-  await expect(enterButton).toBeVisible({ timeout: 8_000 }).catch(error => {
-    throw new Error(`${browserIssues.join('\n')}\n${error.message}`);
+    await page.goto('/m/pingo-teste');
+    const enterButton = page.getByRole('button', { name: /ver o cardápio/i });
+    await expect(enterButton).toBeVisible({ timeout: 8_000 }).catch(error => {
+      throw new Error(`${browserIssues.join('\n')}\n${error.message}`);
+    });
+    await enterButton.click();
+    await page.locator('.best-seller-card').click();
+    await expect(page.locator('.product-modal-sheet')).toBeVisible();
+
+    expect(playbackRequests).toBe(0);
+    expect(muxNetworkRequests).toBe(0);
+    await expect(page.locator('mux-player')).toHaveCount(0);
+
+    const stage = page.locator('.media-stage');
+    await expect(stage).toHaveCSS('aspect-ratio', '16 / 10');
+    const coverFrame = await stage.boundingBox();
+    const sheetWidth = await page.locator('.product-modal-sheet').evaluate(element => element.clientWidth);
+    expect(coverFrame!.width).toBeCloseTo(sheetWidth, 0);
+    await page.getByRole('tab', { name: /foto 2/i }).click();
+    const photoFrame = await stage.boundingBox();
+    expect(coverFrame!.width).toBeCloseTo(photoFrame!.width, 0);
+    expect(coverFrame!.height).toBeCloseTo(photoFrame!.height, 0);
+    await page.getByRole('tab', { name: /vídeo 1/i }).click();
+    await expect(page.locator('.sheet-like-action')).toHaveCSS('color', 'rgb(159, 18, 57)');
+    await page.route('**/api/v1/public/menu/pingo-teste/like/*', route => route.fulfill({
+      json: { success: true, data: { itemId: response.data.items[0].id, likesCount: 7, created: true } }
+    }));
+    await page.locator('.sheet-like-action').click();
+    await expect(page.locator('.sheet-like-action')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.sheet-like-action')).toContainText('7 curtidas');
+    await page.screenshot({ path: testInfo.outputPath('video-cover-and-like.png') });
+
+    await expect(page.getByRole('tab', { name: /vídeo 1/i })).toHaveAttribute('aria-selected', 'true');
+    await page.getByRole('button', { name: /reproduzir vídeo/i }).click();
+    await expect.poll(() => playbackRequests).toBe(1);
+    await expect(page.locator('mux-player')).toHaveAttribute('preload', 'none');
+    await expect(page.locator('.expanded-player-shell')).toHaveCSS('aspect-ratio', aspectRatio.replace(':', ' / '));
   });
-  await enterButton.click();
-  await page.locator('.best-seller-card').click();
-  await expect(page.locator('.product-modal-sheet')).toBeVisible();
-
-  expect(playbackRequests).toBe(0);
-  expect(muxNetworkRequests).toBe(0);
-  await expect(page.locator('mux-player')).toHaveCount(0);
-
-  await expect(page.getByRole('tab', { name: /vídeo 1/i })).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('button', { name: /reproduzir vídeo/i }).click();
-  await expect.poll(() => playbackRequests).toBe(1);
-  await expect(page.locator('mux-player')).toHaveAttribute('preload', 'none');
-});
+}

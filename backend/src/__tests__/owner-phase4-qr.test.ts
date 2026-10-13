@@ -4,13 +4,13 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
 import { Resvg } from "@resvg/resvg-js";
+import QRCode from "qrcode";
 import { supabaseAdmin } from "../config/supabase";
 import qrRoutes from "../routes/qr.routes";
 import publicRoutes from "../routes/public.routes";
 import { businessEligibility } from "../services/business-eligibility.service";
 import {
   defaultQrConfiguration,
-  qrContrast,
   renderQr,
   sanitizeQrConfiguration,
   qrPublicUrl,
@@ -350,11 +350,7 @@ it("public resolver returns a legitimate current slug, never a redirect, and ref
   eligible = false;
   expect((await request(api).get(`/public/qr/${identifier}`)).status).toBe(404);
 });
-it("enforces contrast, rejects remote/SVG logos and checks image dimensions before inflation", () => {
-  expect(qrContrast("#FFFFFF")).toBe(1);
-  expect(() =>
-    sanitizeQrConfiguration({ ...defaultQrConfiguration, color: "#F47B20" }),
-  ).toThrow(/contraste/);
+it("rejects remote/SVG logos and checks image dimensions before inflation", () => {
   for (const logoPng of [
     "https://169.254.169.254/metadata",
     'data:image/svg+xml,<svg onload="alert(1)"/>',
@@ -375,6 +371,22 @@ it("enforces contrast, rejects remote/SVG logos and checks image dimensions befo
     }),
   ).toThrow();
 });
+it.each(["#FFFFFF", "#F47B20", "#FFFF00", "#E7BB9B", "#000000"])(
+  "accepts and persists any valid color, including %s, in create and update",
+  async (color) => {
+    const api = app();
+    const configuration = { ...defaultQrConfiguration, color };
+    expect(sanitizeQrConfiguration(configuration).color).toBe(color);
+    const create = await request(api).post("/qr").set("x-test-actor", business).send({ name: "QR Colorido", configuration });
+    expect(create.status).toBe(201);
+    expect(create.body.data.configuration.color).toBe(color);
+    const update = await request(api).put(`/qr/${qr}`).set("x-test-actor", business).send({ name: "QR Colorido", configuration, active: true, revision: 1 });
+    expect(update.status).toBe(200);
+    expect(update.body.data.configuration.color).toBe(color);
+    expect(calls.filter(call => call.name === "manage_business_qr").every(call => call.args.p_configuration.color === color)).toBe(true);
+    for (const format of ["png", "svg"] as const) expect(renderQr(qrPublicUrl(identifier), configuration, format).length).toBeGreaterThan(0);
+  },
+);
 it("accepts a normalized 128-pixel PNG above the former 24 KB limit through the HTTP API", async () => {
   const logo = new PNG({ width: 128, height: 128 });
   randomBytes(logo.data.length).copy(logo.data);
@@ -472,4 +484,56 @@ it("real PNG and SVG variants decode to the exact canonical URL with logo, frame
           expect(decoded?.data).toBe(url);
         }
       }
+});
+
+it("centres an unobstructed logo and preserves every functional module", () => {
+  const logo = new PNG({ width: 128, height: 128 });
+  for (let i = 0; i < logo.data.length; i += 4) logo.data.set([0, 130, 190, 255], i);
+  const logoPng = `data:image/png;base64,${PNG.sync.write(logo).toString('base64')}`;
+  const url = qrPublicUrl(identifier);
+  const png = PNG.sync.read(renderQr(url, { ...defaultQrConfiguration, logoPng }, 'png'));
+  const pixel = (x: number, y: number) => Array.from(png.data.subarray((y * png.width + x) * 4, (y * png.width + x) * 4 + 4));
+  const centre = png.width / 2;
+  for (let x = centre - 8; x < centre + 8; x++)
+    for (let y = centre - 8; y < centre + 8; y++)
+      expect(pixel(x, y)).toEqual([0, 130, 190, 255]);
+  let minX = png.width, maxX = 0, minY = png.height, maxY = 0;
+  for (let y = 0; y < png.height; y++) for (let x = 0; x < png.width; x++) {
+    const [r, g, b] = pixel(x, y);
+    if (r === 0 && g === 130 && b === 190) {
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }
+  }
+  expect((minX + maxX + 1) / 2).toBe(centre);
+  expect((minY + maxY + 1) / 2).toBe(centre);
+  const size = (png.width - 48) / 8 - 8;
+  const code = QRCode.create(url, { errorCorrectionLevel: 'H', version: (size - 17) / 4 });
+  for (let row = 0; row < size; row++) for (let col = 0; col < size; col++) {
+    if (!code.modules.isReserved(row, col)) continue;
+    const [r, g, b] = pixel(24 + (4 + col) * 8 + 4, 24 + (4 + row) * 8 + 4);
+    expect(r + g + b < 450).toBe(!!code.modules.get(row, col));
+  }
+});
+
+it("keeps the rounded design readable at mobile sizes across canonical URL lengths", () => {
+  const logo = new PNG({ width: 128, height: 128 });
+  let seed = 12345;
+  for (let i = 0; i < logo.data.length; i++) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    logo.data[i] = seed >>> 24;
+  }
+  const logoPng = `data:image/png;base64,${PNG.sync.write(logo).toString('base64')}`;
+  for (const id of ['3398786a-5b56-4ccf-8002-306d973bf6c5', 'cf28e615-126e-452a-ae83-a2d2cf951a2e'])
+  for (const host of ['a.test', 'cardapio.exemplo.com.br', `${'x'.repeat(63)}.${'y'.repeat(63)}.test`]) {
+    const url = `https://${host}/q/${id}`;
+    for (const color of ['#2C1024', '#595959', '#713000']) {
+      const svg = renderQr(url, { ...defaultQrConfiguration, color, logoPng }, 'svg');
+      for (const width of [256, 320, 360]) {
+        const png = PNG.sync.read(new Resvg(svg, { fitTo: { mode: 'width', value: width } }).render().asPng());
+        const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height)?.data;
+        expect(decoded ?? JSON.stringify({ color, width, url })).toBe(url);
+      }
+    }
+  }
 });

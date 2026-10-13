@@ -34,7 +34,6 @@ type GallerySlide =
     @if (slides.length > 0) {
       <section
         class="media-gallery"
-        [class.phone-preview]="previewMode"
         tabindex="0"
         aria-label="Galeria do produto"
         (keydown.arrowLeft)="previous()"
@@ -43,9 +42,7 @@ type GallerySlide =
         (touchend)="onTouchEnd($event)">
         <div
           class="media-stage"
-          [class.video-stage]="activeSlide.kind === 'video'"
-          [class.portrait-video]="activeSlide.kind === 'video' && activeSlide.media.aspectRatio === '9:16'"
-          [style.aspect-ratio]="stageAspectRatio">
+          [class.video-stage]="activeSlide.kind === 'video'">
           @if (activeSlide.kind === 'image') {
             <img [src]="activeSlide.imageUrl" [alt]="productName" class="media-image" />
           } @else {
@@ -160,8 +157,6 @@ type GallerySlide =
       background: color-mix(in srgb, var(--surface-color) 82%, #000);
     }
     .media-stage.video-stage { max-width: 100%; margin-inline: auto; background: #161114; }
-    .media-stage.portrait-video { width: min(100%, 292px); max-height: min(62vh, 520px); border-radius: 0 0 18px 18px; }
-    .media-gallery.phone-preview .media-stage.portrait-video { width: min(100%, 203px); max-height: 360px; }
     .media-image, .mux-player { display: block; width: 100%; height: 100%; object-fit: cover; }
     .mux-player { --media-object-fit: cover; }
     .video-poster {
@@ -297,9 +292,7 @@ type GallerySlide =
       .close-video-button:hover { transform: scale(1.06); background: rgba(35,22,28,.9); }
     }
     @media (max-width: 640px) {
-      .media-stage { aspect-ratio: 4 / 3; touch-action: pan-y; }
-      .media-stage.video-stage { touch-action: pan-y; }
-      .media-stage.portrait-video { width: min(100%, 280px); max-height: min(60vh, 498px); }
+      .media-stage { touch-action: pan-y; }
       .nav-button { display: none; }
       .video-lightbox { padding: 14px; }
       .expanded-player-shell { max-width: 96vw; max-height: 82vh; border-radius: 18px; }
@@ -354,11 +347,6 @@ export class ProductMediaGalleryComponent implements OnDestroy {
 
   get activeSlide(): GallerySlide {
     return this.slides[Math.min(this.activeIndex, this.slides.length - 1)];
-  }
-
-  get stageAspectRatio(): string {
-    if (this.activeSlide.kind !== 'video') return '16 / 10';
-    return this.cssAspectRatio(this.activeSlide.media.aspectRatio);
   }
 
   async play(media: ProductGalleryMedia): Promise<void> {

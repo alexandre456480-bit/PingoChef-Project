@@ -41,6 +41,16 @@ Thumbs.db
 
 # Agents/AI
 .agents/
+.codex/
+
+# Local credentials and private keys
+.aws/
+.credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.dump
 
 # Local tooling and deployment state
 .tools/

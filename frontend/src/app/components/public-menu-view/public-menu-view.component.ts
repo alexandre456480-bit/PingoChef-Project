@@ -1022,10 +1022,10 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                     [attr.aria-pressed]="isLiked(selectedProduct.id)"
                     [attr.aria-label]="isLiked(selectedProduct.id) ? 'Item já curtido' : 'Curtir item'"
                     (click)="onLikeClick($event, selectedProduct.id)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="isLiked(selectedProduct.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="isLiked(selectedProduct.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" aria-hidden="true">
                       <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
                     </svg>
-                    <span>{{ selectedProduct.likesCount || 0 }} curtidas</span>
+                    <span>{{ selectedProductLikesCount }} curtidas</span>
                   </button>
                 }
               </div>
@@ -2756,15 +2756,22 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       display: flex;
       align-items: center;
       gap: 4px;
-      background: rgba(0, 0, 0, 0.05);
-      border: 1px solid rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+      min-height: 44px;
+      color: #9F1239;
+      background: #FFF1F2;
+      border: 1px solid #FDA4AF;
       border-radius: 20px;
       padding: 6px 12px;
       font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
+      transition: background-color 180ms ease, border-color 180ms ease;
     }
-    .sheet-like-action.liked { color: #E11D48; border-color: rgba(225, 29, 72, 0.3); }
+    .sheet-like-action:hover:not(:disabled), .sheet-like-action.liked { color: #BE123C; background: #FFE4E6; border-color: #FB7185; }
+    .sheet-like-action:focus-visible { outline: 2px solid #BE123C; outline-offset: 3px; }
+    .sheet-like-action:disabled { cursor: wait; }
+    @media (prefers-reduced-motion: reduce) { .sheet-like-action { transition: none; } }
     .sheet-desc { font-size: 0.82rem; line-height: 1.45; margin: 0; }
     .sheet-price-row {
       display: flex;
@@ -3882,6 +3889,10 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
       promotionalPrice: item.promotionalPrice,
       imageUrl: item.imageUrl
     }, this.modalItemQuantity);
+  }
+
+  get selectedProductLikesCount(): number {
+    return this.items.find(item => item.id === this.selectedProduct?.id)?.likesCount ?? this.selectedProduct?.likesCount ?? 0;
   }
 
   onLikeClick(event: Event, itemId: string): void {

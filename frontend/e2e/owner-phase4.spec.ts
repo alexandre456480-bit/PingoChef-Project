@@ -256,6 +256,7 @@ for (const plan of ['MEDIUM', 'PRO'] as const)
     expect(requests.filter((r) => /qr\/.+\/image/.test(r.path))).toHaveLength(0);
     await page.getByLabel('Nome do QR', { exact: true }).fill('QR Balcão');
     await page.getByLabel('Texto curto', { exact: true }).fill('Veja nosso cardápio');
+    await page.getByLabel('Cor principal', { exact: true }).fill('#F47B20');
     const generate = page.getByRole('button', { name: 'Gerar QR Code', exact: true });
     await generate.focus();
     await expect(generate).toBeFocused();
@@ -266,15 +267,18 @@ for (const plan of ['MEDIUM', 'PRO'] as const)
     expect(create.headers['x-csrf-token']).toBe('a'.repeat(64));
     expect(create.body).toEqual({
       name: 'QR Balcão',
-      configuration: { ...defaultConfig, caption: 'Veja nosso cardápio' },
+      configuration: { ...defaultConfig, color: '#f47b20', caption: 'Veja nosso cardápio' },
     });
     await expect(page.locator('.menu-link')).toHaveAttribute(
       'href',
       `http://127.0.0.1:4300/q/${publicId}`,
     );
     await page.getByLabel('Cor principal', { exact: true }).fill('#FFFFFF');
-    await expect(page.getByRole('button', { name: 'Atualizar QR Code' })).toBeDisabled();
-    await expect(page.getByText(/Escolha uma cor mais escura/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Atualizar QR Code' })).toBeEnabled();
+    await expect(page.getByText(/Escolha uma cor mais escura/)).toHaveCount(0);
+    await page.getByRole('button', { name: 'Atualizar QR Code' }).click();
+    await expect(page.getByText('QR Code atualizado. O endereço permanece o mesmo.', { exact: true })).toBeVisible();
+    expect(requests.filter(r => r.method === 'PUT').at(-1)?.body.configuration.color.toUpperCase()).toBe('#FFFFFF');
     await page.getByLabel('Cor principal', { exact: true }).fill('#691525');
     await page.getByLabel('QR ativo para visitantes').uncheck();
     await page.getByRole('button', { name: 'Atualizar QR Code' }).click();
@@ -346,6 +350,9 @@ test('a larger rectangular PNG is fitted into a transparent 128-pixel logo', asy
     mimeType: 'image/png',
     buffer: source,
   });
+  await expect(page.getByRole('dialog', { name: 'Ajuste sua imagem' })).toBeVisible();
+  expect(requests.filter(r => r.method === 'POST' && r.path === 'qr')).toHaveLength(0);
+  await page.getByRole('button', { name: 'Usar imagem', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Remover logo' })).toBeVisible();
   await page.getByRole('button', { name: 'Gerar QR Code', exact: true }).click();
   const logoPng = requests.find((r) => r.path === 'qr' && r.method === 'POST')!.body.configuration
@@ -363,6 +370,114 @@ test('a larger rectangular PNG is fitted into a transparent 128-pixel logo', asy
     return [context.getImageData(64, 0, 1, 1).data[3], context.getImageData(64, 64, 1, 1).data[3]];
   }, logoPng);
   expect(alpha).toEqual([0, 255]);
+});
+
+for (const format of ['jpeg', 'webp', 'svg']) {
+  test(`QR logo imports ${format}, crops and saves only a normalized PNG`, async ({ page }, info) => {
+    const requests = await mock(page, 'PRO');
+    let externalRequests = 0;
+    await page.route('https://qr-logo-untrusted.invalid/**', route => { externalRequests++; return route.abort(); });
+    await page.goto('/dashboard');
+    await qrSection(page);
+    const source = format === 'svg'
+      ? Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="5000" height="1000"><script>window.__qrUnsafe = true</script><image href="https://qr-logo-untrusted.invalid/pixel.png" width="10" height="10"/><path fill="#00cc44" d="M0 0h5000v1000H0z"/></svg>')
+      : Buffer.from(await page.evaluate((type) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 600; canvas.height = 300;
+        const ctx = canvas.getContext('2d')!;
+        ctx.fillStyle = '#00cc44'; ctx.fillRect(0, 0, 600, 300);
+        return canvas.toDataURL(`image/${type}`).split(',')[1];
+      }, format), 'base64');
+    await page.getByLabel('Logo opcional').setInputFiles({ name: `logo.${format}`, mimeType: format === 'svg' ? 'image/svg+xml' : `image/${format}`, buffer: source });
+    const dialog = page.getByRole('dialog', { name: 'Ajuste sua imagem' });
+    await expect(dialog.getByRole('button', { name: 'Usar imagem', exact: true })).toBeEnabled();
+    await dialog.getByRole('button', { name: 'Preencher quadrado' }).click();
+    await dialog.getByLabel('Zoom da imagem').press('End');
+    await dialog.getByRole('button', { name: 'Girar 90°' }).click();
+    const canvas = dialog.locator('canvas');
+    const bounds = (await canvas.boundingBox())!;
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    await page.mouse.down(); await page.mouse.move(bounds.x + bounds.width * .75, bounds.y + bounds.height * .7); await page.mouse.up();
+    expect(await dialog.getByLabel('Posição horizontal').inputValue()).not.toBe('0');
+    if (format === 'webp') await page.screenshot({ path: info.outputPath('qr-logo-editor.png') });
+    await dialog.getByRole('button', { name: 'Usar imagem', exact: true }).click();
+    await page.getByRole('button', { name: 'Gerar QR Code', exact: true }).click();
+    await expect.poll(() => requests.filter(r => r.path === 'qr' && r.method === 'POST').length).toBe(1);
+    const logo = requests.find(r => r.path === 'qr' && r.method === 'POST')!.body.configuration.logoPng;
+    const bytes = Buffer.from(logo.slice(22), 'base64');
+    expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)]).toEqual([128, 128]);
+    expect(bytes.length).toBeLessThan(96 * 1024);
+    await expect(page.locator('.qr-image')).toBeVisible();
+    expect(externalRequests).toBe(0);
+    expect(await page.evaluate(() => (window as any).__qrUnsafe)).toBeUndefined();
+  });
+}
+
+function twoPageLogoPdf(): Buffer {
+  const stream = (color: string, width: number, height: number) => {
+    const content = `${color} rg 0 0 ${width} ${height} re f\n`;
+    return `<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}endstream`;
+  };
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 400 200] /Resources << >> /Contents 4 0 R >>',
+    stream('1 0 0', 400, 200),
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 400] /Resources << >> /Contents 6 0 R >>',
+    stream('0 1 0', 200, 400),
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets: number[] = [0];
+  for (const [i, object] of objects.entries()) {
+    offsets.push(Buffer.byteLength(pdf));
+    pdf += `${i + 1} 0 obj\n${object}\nendobj\n`;
+  }
+  const xref = Buffer.byteLength(pdf);
+  pdf += `xref\n0 7\n0000000000 65535 f \n${offsets.slice(1).map(offset => `${offset.toString().padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return Buffer.from(pdf);
+}
+
+test('QR logo renders the selected PDF page locally and keeps cancellation reversible', async ({ page }) => {
+  const requests = await mock(page, 'PRO');
+  const issues: string[] = [];
+  page.on('pageerror', error => issues.push(error.message));
+  await page.goto('/dashboard');
+  await qrSection(page);
+  await page.getByLabel('Logo opcional').setInputFiles({ name: 'logo.pdf', mimeType: 'application/pdf', buffer: twoPageLogoPdf() });
+  const dialog = page.getByRole('dialog', { name: 'Ajuste sua imagem' });
+  await expect(dialog.getByRole('button', { name: 'Usar imagem', exact: true })).toBeEnabled({ timeout: 20000 });
+  await dialog.getByLabel('Página do PDF', { exact: true }).fill('2');
+  await expect(dialog.getByRole('button', { name: 'Usar imagem', exact: true })).toBeEnabled();
+  const pixel = await dialog.locator('canvas').evaluate(canvas => Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(256, 256, 1, 1).data));
+  expect(pixel).toEqual([0, 255, 0, 255]);
+  await dialog.getByRole('button', { name: 'Usar imagem', exact: true }).click();
+  const previous = await page.locator('.logo-thumbnail').getAttribute('src');
+  await page.getByLabel('Logo opcional').setInputFiles({ name: 'replacement.pdf', mimeType: 'application/pdf', buffer: twoPageLogoPdf() });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator('.logo-thumbnail')).toHaveAttribute('src', previous!);
+  await expect(page.getByLabel('Logo opcional')).toBeFocused();
+  await page.getByRole('button', { name: 'Gerar QR Code', exact: true }).click();
+  await expect.poll(() => requests.filter(r => r.path === 'qr' && r.method === 'POST').length).toBe(1);
+  expect(requests.find(r => r.path === 'qr' && r.method === 'POST')!.body.configuration.logoPng).toBe(previous);
+  expect(issues).toEqual([]);
+});
+
+test('QR logo rejects oversized, empty and disguised non-image files without sending them', async ({ page }) => {
+  const requests = await mock(page, 'PRO');
+  await page.goto('/dashboard');
+  await qrSection(page);
+  await page.getByLabel('Logo opcional').setInputFiles({ name: 'large.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(4 * 1024 * 1024 + 1) });
+  await expect(page.getByRole('alert')).toContainText('até 4 MB');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByLabel('Logo opcional').setInputFiles({ name: 'empty.png', mimeType: 'image/png', buffer: Buffer.alloc(0) });
+  await expect(page.getByRole('alert')).toContainText('vazio');
+  await page.getByLabel('Logo opcional').setInputFiles({ name: 'fake.png', mimeType: 'image/png', buffer: Buffer.from('<script>alert(1)</script>') });
+  await expect(page.getByRole('dialog').getByRole('alert')).toContainText('Não foi possível abrir');
+  await expect(page.getByRole('button', { name: 'Usar imagem', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  expect(requests.filter(r => r.path === 'qr' && r.method === 'POST')).toHaveLength(0);
 });
 test('conflict is clear and unsaved changes cannot download an obsolete file', async ({ page }) => {
   await mock(page, 'PRO', { conflict: true });

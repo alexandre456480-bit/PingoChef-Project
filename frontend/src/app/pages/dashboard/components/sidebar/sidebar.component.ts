@@ -30,41 +30,74 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
               (click)="navigate(item.section)"
               [style.animation-delay]="(i * 60) + 'ms'">
               <span class="nav-glow"></span>
-              <span class="nav-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <span class="nav-icon-wrap" aria-hidden="true">
+                <svg class="nav-icon-3d" width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <defs>
+                    <linearGradient [attr.id]="'sidebar-icon-' + item.section" x1="0" y1="0" x2="1" y2="1">
+                      <stop stop-color="#FFE6BC"/>
+                      <stop offset="1" stop-color="#F47B20"/>
+                    </linearGradient>
+                  </defs>
+                  <g [attr.fill]="'url(#sidebar-icon-' + item.section + ')'">
                   @switch (item.section) {
-                    @case ('analytics') { <path d="M3 3v18h18M7 14l4-4 4 2 5-7"/> }
-                    @case ('qr') { <rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><path d="M15 15h3v3h3v3h-6z"/> }
                     @case ('dashboard') {
-                      <rect width="7" height="7" x="3" y="3" rx="1"/>
-                      <rect width="7" height="7" x="14" y="3" rx="1"/>
-                      <rect width="7" height="7" x="14" y="14" rx="1"/>
-                      <rect width="7" height="7" x="3" y="14" rx="1"/>
+                      <g transform="matrix(1 .18 -.22 .95 4 -1)">
+                        <path d="M3 6h10v10H3zM17 6h10v10H17zM3 20h10v10H3zM17 20h10v10H17z" fill="#B94719"/>
+                        <rect x="3" y="3" width="10" height="10" rx="2"/>
+                        <rect x="17" y="3" width="10" height="10" rx="2"/>
+                        <rect x="3" y="17" width="10" height="10" rx="2"/>
+                        <rect x="17" y="17" width="10" height="10" rx="2"/>
+                        <path d="M5 5h6M19 5h6M5 19h6M19 19h6" stroke="#FFF4DC" stroke-linecap="round"/>
+                      </g>
                     }
                     @case ('menu') {
-                      <path d="M4 6h16M4 12h16M4 18h7"/>
-                      <circle cx="18" cy="18" r="3"/>
-                      <path d="m20.2 20.2 1.8 1.8"/>
+                      <path d="m5 6 19-3 4 3v23L9 31l-4-4z" fill="#B94719"/>
+                      <path d="m8 8 19-3v21L8 29z" fill="#FFF4DC"/>
+                      <path d="m5 5 19-3v23L5 28z"/>
+                      <path d="M8 5v22" stroke="#D26E2D" stroke-width="2"/>
+                      <path d="m12 10 8-1m-8 5 8-1m-8 5 5-.6" stroke="#690A1A" stroke-width="1.8" stroke-linecap="round"/>
                     }
                     @case ('empresa') {
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                      <polyline points="9 22 9 12 15 12 15 22"/>
+                      <path d="m5 10 20-3 4 4v16l-20 4-4-4z" fill="#B94719"/>
+                      <path d="m5 10 20-3v20L5 30z" fill="#FFE6BC"/>
+                      <path d="m5 5 20-3 4 4-20 3z" fill="#FFF4DC"/>
+                      <path d="m5 5 20-3 3 9-24 4z"/>
+                      <path d="m10 5-1 9m7-10v9m6-10 2 9" stroke="#FFF4DC" stroke-width="2"/>
+                      <path d="m9 19 6-1v11l-6 1z" fill="#690A1A"/>
+                      <path d="m18 18 4-.6v5l-4 .6z" fill="#D26E2D"/>
                     }
                     @case ('design') {
-                      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
-                      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
-                      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
-                      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
-                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                      <path d="M17 5C9 5 3 11 3 18s6 12 13 12c4 0 2-4 4-6 2-2 9 1 9-7S24 5 17 5Z" fill="#7C3C9C"/>
+                      <path d="M17 2C9 2 3 8 3 15s6 12 13 12c4 0 2-4 4-6 2-2 9 1 9-7S24 2 17 2Z" fill="#D8B4FE"/>
+                      <path d="M6 11c2-4 6-6 10-6" stroke="#F3E8FF" stroke-width="1.5" stroke-linecap="round"/>
+                      <circle cx="10" cy="11" r="2.6" fill="#FB7185"/>
+                      <circle cx="18" cy="8" r="2.6" fill="#FBBF24"/>
+                      <circle cx="24" cy="13" r="2.6" fill="#38BDF8"/>
+                      <circle cx="8" cy="19" r="2.6" fill="#34D399"/>
+                    }
+                    @case ('analytics') {
+                      <path d="m3 23 23-4 4 4-23 5z" fill="#B94719"/>
+                      <path d="m4 17 5-1v9l-5 1zm9-6 5-1v14l-5 1zm9-7 5-1v19l-5 1z"/>
+                      <path d="m9 16 3 3v5l-3 1zm9-6 3 3v10l-3 1zm9-7 3 3v15l-3 1z" fill="#D26E2D"/>
+                      <path d="m4 17 5-1 3 3-5 1zm9-6 5-1 3 3-5 1zm9-7 5-1 3 3-5 1z" fill="#FFF4DC"/>
+                    }
+                    @case ('qr') {
+                      <path d="m5 6 21-3 3 3v23L8 32l-3-3z" fill="#B94719"/>
+                      <path d="m3 4 23-3v24L3 29z"/>
+                      <g transform="matrix(1 -.14 0 1 0 4)" fill="#690A1A">
+                        <path fill-rule="evenodd" d="M6 2h7v7H6zM8 4v3h3V4zM16 2h7v7h-7zM18 4v3h3V4zM6 12h7v7H6zM8 14v3h3v-3z"/>
+                        <path d="M16 12h3v3h-3zm5 0h2v7h-4v-2h2zm-5 5h2v2h-2z"/>
+                      </g>
                     }
                     @case ('preview') {
-                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M2 16s4-9 14-9 14 9 14 9-4 9-14 9S2 16 2 16Z"/>
+                      <circle cx="16" cy="16" r="4" fill="#690A1A"/>
                     }
                     @case ('likes') {
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                      <path d="M16 28 5 17C-4 8 8-2 16 7c8-9 20 1 11 10Z"/>
                     }
                   }
+                  </g>
                 </svg>
               </span>
               <span class="nav-label">{{ item.label }}</span>
@@ -116,7 +149,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
     }
 
     .sidebar {
-      background: linear-gradient(180deg, #2C1024 0%, #1D0A18 100%);
+      background: linear-gradient(165deg, #690A1A, #410612);
       border-right: 1px solid rgba(255, 255, 255, 0.04);
       display: flex;
       flex-direction: column;
@@ -221,6 +254,11 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       transform: scale(1.1);
     }
 
+    .nav-item:focus-visible, .icon-round-btn:focus-visible {
+      outline: 2px solid #FFAB66;
+      outline-offset: -3px;
+    }
+
     /* Active state with claymorphism */
     .nav-item.active {
       background: linear-gradient(135deg, rgba(244, 123, 32, 0.12) 0%, rgba(244, 123, 32, 0.06) 100%);
@@ -254,17 +292,21 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       width: 36px;
       height: 36px;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.04);
+      background: linear-gradient(145deg, #8B1A3A, #520817);
+      border: 1px solid rgba(255, 230, 188, .16);
+      box-shadow: 0 3px 5px rgba(35, 3, 10, .3), inset 1px 1px 1px rgba(255, 230, 188, .15);
       transition: transform 180ms ease-out, opacity 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
       flex-shrink: 0;
     }
 
     .nav-item.active .nav-icon-wrap {
-      background: rgba(244, 123, 32, 0.18);
+      background: linear-gradient(145deg, #A43836, #690A1A);
       box-shadow:
         0 2px 8px rgba(244, 123, 32, 0.15),
         inset 1px 1px 2px rgba(255, 255, 255, 0.1);
     }
+
+    .nav-icon-3d { overflow: visible; filter: drop-shadow(0 2px 1px rgba(35, 3, 10, .4)); }
 
     .nav-label {
       flex: 1;

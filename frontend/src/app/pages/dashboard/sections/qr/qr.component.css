@@ -151,6 +151,9 @@ input[type='file'] {
   font-size: 0.72rem;
   padding: 9px 6px;
 }
+.logo-upload { display: grid; gap: 10px; padding: 14px; border: 1px dashed var(--panel-border-strong); border-radius: 14px; background: var(--panel-surface-inset); }
+.logo-upload:focus-within { border-color: var(--panel-accent); }
+.logo-thumbnail { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; border: 1px solid var(--panel-border-strong); background: #fff; }
 input[type='color'] {
   width: 64px;
   min-width: 64px;
@@ -320,8 +323,7 @@ a:focus-visible {
 .error strong {
   display: block;
 }
-.error,
-.invalid {
+.error {
   color: var(--panel-text);
   font-weight: 650;
 }
