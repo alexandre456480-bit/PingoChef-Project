@@ -72,7 +72,7 @@ interface SessionRow {
   session_hash: string; user_id: string; scope: 'owner' | 'recovery'; encrypted_tokens: string;
   token_expires_at: string; expires_at: string; last_seen_at: string; created_at: string; revoked_at: string | null;
 }
-export interface OwnerSession { hash: string; token: string; row: SessionRow; tokens: Tokens; user: Pick<User, 'id' | 'email' | 'email_confirmed_at'> }
+export interface OwnerSession { hash: string; token: string; row: SessionRow; tokens: Tokens; user: Pick<User, 'id' | 'email'> }
 const demoSessions = new Map<string, SessionRow>();
 async function readRow(hash: string): Promise<SessionRow | null> {
   if (isDemoMode()) return demoSessions.get(hash) || null;
@@ -166,11 +166,11 @@ export async function resolveOwnerSession(req: Request, expectedScope: 'owner' |
   if (isDemoMode()) {
     const local = localDb.users.find(value => value.id === row!.user_id);
     if (!local) throw ownerError(401, 'SESSION_INVALID');
-    user = { id: local.id, email: local.email, email_confirmed_at: row.created_at };
+    user = { id: local.id, email: local.email };
     row.last_seen_at = new Date().toISOString();
   } else {
     const { data, error } = await supabaseAdmin.auth.getUser(tokens.accessToken);
-    if (error || data.user?.id !== row.user_id || !data.user.email_confirmed_at) throw ownerError(401, 'SESSION_INVALID');
+    if (error || data.user?.id !== row.user_id) throw ownerError(401, 'SESSION_INVALID');
     const { data: admin, error: identityError } = await supabaseAdmin.from('admin_identities').select('user_id').eq('user_id', row.user_id).maybeSingle();
     if (identityError) throw ownerError(503, 'SESSION_SERVICE_UNAVAILABLE');
     if (admin) throw ownerError(403, 'WRONG_LOGIN_AREA');
@@ -194,7 +194,7 @@ export async function revokeOwnerSession(userId: string, hash: string | null): P
   const { error } = await supabaseAdmin.rpc('revoke_owner_sessions', { p_user_id: userId, p_hash: hash });
   if (error) throw ownerError(503, 'SESSION_SERVICE_UNAVAILABLE');
 }
-export async function enforceOwnerAttempts(req: Request, action: 'login' | 'register' | 'forgot' | 'resend', email: string): Promise<void> {
+export async function enforceOwnerAttempts(req: Request, action: 'login' | 'register' | 'forgot', email: string): Promise<void> {
   const window = action === 'login' ? 900 : 3600;
   const limits = action === 'login' ? [10, 50] : action === 'register' ? [3, 10] : [4, 20];
   const subjects = [`email:${email.trim().toLowerCase()}`, `ip:${req.ip || 'unknown'}`];

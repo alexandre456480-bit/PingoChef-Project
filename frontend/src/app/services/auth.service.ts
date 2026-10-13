@@ -70,7 +70,6 @@ export class AuthService {
   }
   isAuthenticated(): boolean { return Boolean(this.currentUser()); }
   forgotPassword(email: string) { return this.http.post(`${this.apiUrl}/forgot-password`, { email }); }
-  resendConfirmation(email: string) { return this.http.post(`${this.apiUrl}/resend-confirmation`, { email }); }
   recoverySession() {
     return this.http.get(`${this.apiUrl}/recovery-session`).pipe(tap((res: any) => this.state.csrfToken.set(res.data.csrfToken)));
   }

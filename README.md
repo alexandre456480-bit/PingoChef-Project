@@ -26,10 +26,10 @@ Aplique também, nesta ordem, `20261002000000_admin_phase3_commercial_ops.sql` e
 `20261002010000_admin_phase3_purge.sql` antes de publicar o backend atualizado.
 Gateway e backup ainda dependem de configuração operacional.
 
-A fundação de autenticação do proprietário, cadastro público confirmado e limites
+A fundação de autenticação do proprietário e limites
 está em [`docs/19-OWNER-PHASE1-FOUNDATION.md`](docs/19-OWNER-PHASE1-FOUNDATION.md).
 Aplique as duas migrations `20261003000000` e `20261003010000` após as anteriores,
-configure a chave de sessão e os templates Auth antes de implantar esta versão.
+configure a chave de sessão e o template de recuperação de senha antes de implantar esta versão.
 Se o Supabase já recebeu uma versão anterior da função `create_owner_session`,
 aplique também `20261004000000_owner_session_rpc_upgrade.sql`. O backend atual
 envia `p_auth_issued_at`; a função antiga com sete parâmetros faz o login
@@ -50,6 +50,16 @@ O painel usa agora a relação explícita `menu_items_category_tenant_fk` para e
 a ambiguidade entre produtos e categorias, mantendo o escopo do proprietário.
 
 ## Desenvolvimento local
+
+O cadastro atual não exige confirmação de e-mail. O backend cria a identidade,
+ativa o estabelecimento Free e encaminha o usuário ao login por senha.
+Antes de publicar esta versão, aplique em ordem
+[`20261012000000_repair_free_registration.sql`](supabase/migrations/20261012000000_repair_free_registration.sql),
+[`20261012010000_remove_owner_email_verification.sql`](supabase/migrations/20261012010000_remove_owner_email_verification.sql) e
+[`20261012020000_repair_business_subscription_trigger.sql`](supabase/migrations/20261012020000_repair_business_subscription_trigger.sql).
+A transição de contas pendentes e a configuração de recuperação estão em
+[`docs/23-OWNER-REGISTRATION-WITHOUT-EMAIL-VERIFICATION.md`](docs/23-OWNER-REGISTRATION-WITHOUT-EMAIL-VERIFICATION.md),
+que substitui os requisitos de confirmação do relatório da fase 1.
 
 Para corrigir o cadastro Free em bancos com a etapa comercial parcialmente aplicada,
 aplique [`20261012000000_repair_free_registration.sql`](supabase/migrations/20261012000000_repair_free_registration.sql)
@@ -128,8 +138,9 @@ Depois que o backend possuir uma URL HTTPS estável:
    `https://<backend>/api/v1/webhooks/mux`.
 3. Salve o signing secret como `MUX_WEBHOOK_SIGNING_SECRET` no backend.
 4. Configure o proxy `/api` do frontend para o backend do ambiente e mantenha
-   `OWNER_AUTH_CALLBACK_URL` sob a origem pública da aplicação. Confira allowlists
-   e templates de confirmação/recuperação conforme o relatório da fase 1.
+   `OWNER_RECOVERY_CALLBACK_URL` sob a origem pública da aplicação, terminando em
+   `/api/v1/auth/recover`. Confira allowlists e o template de recuperação conforme
+   o relatório de cadastro atual.
 
 As migrations em `supabase/migrations` devem ser aplicadas em ordem antes da
 primeira implantação do backend.

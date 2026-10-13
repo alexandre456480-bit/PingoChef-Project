@@ -8,7 +8,7 @@ import { encryptOwnerTokens, decryptOwnerTokens, ownerCookieOptions } from '../s
 import { mapEntitlementDatabaseError } from '../services/entitlement.service';
 
 jest.mock('../config/supabase', () => ({ isSupabaseConfigured: true, createPasswordAuthClient: jest.fn(),
-  supabaseAdmin: { from: jest.fn(), rpc: jest.fn(), auth: { getUser: jest.fn(), admin: { signOut: jest.fn() } } } }));
+  supabaseAdmin: { from: jest.fn(), rpc: jest.fn(), auth: { getUser: jest.fn(), admin: { signOut: jest.fn(), createUser: jest.fn() } } } }));
 // Distributed credential quotas are exercised against real PostgreSQL in test:database.
 jest.mock('express-rate-limit', () => ({ __esModule: true, default: () => (_req:any,_res:any,next:any) => next() }));
 
@@ -36,10 +36,11 @@ beforeEach(() => {
   process.env.OWNER_SESSION_ENCRYPTION_KEY=Buffer.alloc(32,19).toString('base64');
   process.env.INVITATION_HASH_SECRET='invitation-test-secret-'.repeat(3);
   process.env.OWNER_AUTH_CALLBACK_URL='http://localhost:3000/api/v1/auth/confirm-email';
+  delete process.env.OWNER_RECOVERY_CALLBACK_URL;
   rows.clear();selections.clear();duplicate=false;deniedProvision=false;
   (createPasswordAuthClient as jest.Mock).mockReturnValue({auth:provider});
   provider.signInWithPassword.mockResolvedValue({data:{user,session:secrets},error:null});
-  provider.signUp.mockResolvedValue({data:{user:{...user,email_confirmed_at:null,identities:[{id:'new'}]},session:null},error:null});
+  (supabaseAdmin.auth.admin.createUser as jest.Mock).mockResolvedValue({data:{user},error:null});
   provider.verifyOtp.mockResolvedValue({data:{user,session:secrets},error:null});
   provider.resend.mockResolvedValue({error:null});provider.resetPasswordForEmail.mockResolvedValue({error:null});
   provider.setSession.mockResolvedValue({error:null});provider.updateUser.mockResolvedValue({error:null});
@@ -115,7 +116,8 @@ describe('Owner BFF session and authentication boundaries',()=>{
     expect(result.status).toBe(200);expect(result.headers['set-cookie'][0]).toContain('HttpOnly');
     expect(result.headers['set-cookie'][0]).toContain('SameSite=Lax');
     const me=await request(api).get('/api/v1/auth/me').set('Cookie',cookie);
-    expect(me.body.data).toMatchObject({emailVerified:true,plan:{code:'FREE'},subscription:{status:'active'},usage:{products:0}});
+    expect(me.body.data).toMatchObject({plan:{code:'FREE'},subscription:{status:'active'},usage:{products:0}});
+    expect(me.body.data).not.toHaveProperty('emailVerified');
     for(const response of [result,me])expect(JSON.stringify(response.body)).not.toMatch(/server-only-|access_token|refresh_token|accessToken|refreshToken/);
     expect([...rows.values()][0].encrypted_tokens).not.toContain(secrets.refresh_token);
   });
@@ -125,6 +127,14 @@ describe('Owner BFF session and authentication boundaries',()=>{
     provider.signInWithPassword.mockResolvedValue({data:{user:{...user,email_confirmed_at:null},session:null},error:{code:'email_not_confirmed'}});
     const second=await login(app());expect(second.result.body.error.code).toBe(first.result.body.error.code);
     expect(second.result.headers['set-cookie']).toBeUndefined();
+  });
+  it('password-authenticated users and their sessions do not require an email confirmation flag',async()=>{
+    const unverified={...user,email_confirmed_at:null};
+    provider.signInWithPassword.mockResolvedValue({data:{user:unverified,session:secrets},error:null});
+    (supabaseAdmin.auth.getUser as jest.Mock).mockResolvedValue({data:{user:unverified},error:null});
+    const api=app();const {result,cookie}=await login(api);
+    expect(result.status).toBe(200);
+    expect((await request(api).get('/api/v1/auth/me').set('Cookie',cookie)).status).toBe(200);
   });
   it('persistent rate limit denies password authentication before calling Supabase Auth',async()=>{
     (supabaseAdmin.rpc as jest.Mock).mockResolvedValueOnce({data:false,error:null});
@@ -228,7 +238,7 @@ describe('Owner commercial journey and account operations',()=>{
       ? {data:null,error:{code:'42703',message:'column unavailable'}} : rpc(name,args));
     const failed=await request(api).post('/api/v1/auth/register').set('Origin',origin).send(body);
     expect(failed.status).toBe(503);expect(failed.body.error.code).toBe('REGISTRATION_UNAVAILABLE');
-    expect(selections.get(intentId).consumed_at).toBeNull();expect(provider.signUp).not.toHaveBeenCalled();
+    expect(selections.get(intentId).consumed_at).toBeNull();expect(supabaseAdmin.auth.admin.createUser).not.toHaveBeenCalled();
     expect((await request(api).get('/api/v1/auth/plan-intents/'+intentId)).status).toBe(200);
     (supabaseAdmin.rpc as jest.Mock).mockImplementation(rpc);
     expect((await request(api).post('/api/v1/auth/register').set('Origin',origin).send(body)).status).toBe(202);
@@ -253,47 +263,71 @@ describe('Owner commercial journey and account operations',()=>{
     expect(supabaseAdmin.rpc).toHaveBeenCalledWith('owner_schedule_account_deletion',{p_user_id:user.id,p_confirm_business_id:business.id});
   });
 });
-describe('Public Free signup and Supabase confirmation',()=>{
+describe('Public Free signup without email verification',()=>{
   const body={email:'new@example.test',password:'StrongPassword123!',fullName:'New Owner',businessName:'New Business',slug:'new-owner'};
-  it('stores a server intent and never auto-confirms or provisions signup',async()=>{
+  it('creates the identity without sending email and provisions Free before accepting signup',async()=>{
+    delete process.env.OWNER_AUTH_CALLBACK_URL;
     const response=await request(app()).post('/api/v1/auth/register').set('Origin',origin).send(body);
     expect(response.status).toBe(202);
-    expect(provider.signUp).toHaveBeenCalledWith({email:body.email,password:body.password,options:{emailRedirectTo:process.env.OWNER_AUTH_CALLBACK_URL}});
-    expect(supabaseAdmin.rpc).not.toHaveBeenCalledWith('provision_owner_account',expect.anything());
+    expect(supabaseAdmin.auth.admin.createUser).toHaveBeenCalledWith({email:body.email,password:body.password,email_confirm:true});
+    expect(provider.signUp).not.toHaveBeenCalled();expect(provider.resend).not.toHaveBeenCalled();
+    expect(supabaseAdmin.rpc).toHaveBeenCalledWith('bind_owner_registration',expect.objectContaining({p_user_id:user.id}));
+    expect(supabaseAdmin.rpc).toHaveBeenCalledWith('provision_owner_account',expect.objectContaining({p_user_id:user.id}));
+    expect(response.body.data.status).toBe('REGISTRATION_ACCEPTED');
+    expect(JSON.stringify(response.body)).not.toMatch(/access_token|refresh_token|server-only-/);
     expect(response.headers['set-cookie']).toBeUndefined();
   });
   it('duplicate email returns the same public response without binding or replacing an identity',async()=>{
     const api=app();const first=await request(api).post('/api/v1/auth/register').set('Origin',origin).send(body);
     duplicate=true;const second=await request(api).post('/api/v1/auth/register').set('Origin',origin).send(body);
-    expect(second.status).toBe(202);expect(second.body).toEqual(first.body);expect(provider.signUp).toHaveBeenCalledTimes(1);
+    expect(second.status).toBe(202);expect(second.body).toEqual(first.body);expect(supabaseAdmin.auth.admin.createUser).toHaveBeenCalledTimes(1);
   });
   it('browser plan_id is rejected and public PRO is unavailable',async()=>{
     const api=app();const forged=await request(api).post('/api/v1/auth/register').set('Origin',origin).send({...body,plan_id:randomUUID()});
     expect(forged.status).toBe(400);
     const paid=await request(api).post('/api/v1/auth/register').set('Origin',origin).send({...body,planCode:'PRO'});
-    expect(paid.status).toBe(409);expect(paid.body.error.code).toBe('PAID_PLAN_UNAVAILABLE');expect(provider.signUp).not.toHaveBeenCalled();
+    expect(paid.status).toBe(409);expect(paid.body.error.code).toBe('PAID_PLAN_UNAVAILABLE');expect(supabaseAdmin.auth.admin.createUser).not.toHaveBeenCalled();
   });
-  it('callback repetition is safe: OTP verified by Supabase and finalization never duplicates content',async()=>{
-    const api=app();provider.verifyOtp.mockResolvedValueOnce({data:{user,session:secrets},error:null})
-      .mockResolvedValueOnce({data:{user:null,session:null},error:{code:'otp_expired'}});
-    const path='/api/v1/auth/confirm-email?token_hash='+('a'.repeat(64));
-    const first=await request(api).get(path),second=await request(api).get(path);
-    expect(first.status).toBe(303);expect(first.headers.location).toContain('confirmation=success');
-    expect(second.headers.location).toContain('invalid_or_used');expect(first.headers['set-cookie']).toBeUndefined();
-    expect((supabaseAdmin.rpc as jest.Mock).mock.calls.filter(([name])=>name==='provision_owner_account')).toHaveLength(1);
+  it('retired confirmation endpoints cannot send email, consume an OTP or create a session',async()=>{
+    const api=app();
+    const legacy=await request(api).get('/api/v1/auth/confirm-email?token_hash='+('a'.repeat(64)));
+    expect(legacy.status).toBe(303);expect(legacy.headers.location).toBe(origin+'/login');
+    expect(legacy.headers['referrer-policy']).toBe('no-referrer');expect(legacy.headers['set-cookie']).toBeUndefined();
+    expect((await request(api).post('/api/v1/auth/resend-confirmation').set('Origin',origin).send({email:body.email})).status).toBe(404);
+    expect(provider.verifyOtp).not.toHaveBeenCalled();expect(provider.resend).not.toHaveBeenCalled();expect(rows.size).toBe(0);
   });
-  it('forged registration intent cannot be used to finalize another account',async()=>{
-    deniedProvision=true;const response=await request(app()).get('/api/v1/auth/confirm-email?token_hash='+('a'.repeat(64))+'&intent_id='+randomUUID());
-    expect(response.status).toBe(303);expect(response.headers.location).toContain('confirmation=pending');
+  it('a provisioning conflict leaves an authenticated owner able to complete registration',async()=>{
+    deniedProvision=true;const response=await request(app()).post('/api/v1/auth/register').set('Origin',origin).send(body);
+    expect(response.status).toBe(202);expect(response.headers['set-cookie']).toBeUndefined();
   });
-  it('fails closed if Supabase email confirmation is disabled',async()=>{
-    provider.signUp.mockResolvedValue({data:{user:{...user,identities:[{}]},session:secrets},error:null});
+  it.each([[400,'weak_password',400,'PASSWORD_POLICY_FAILED'],[429,'over_request_rate_limit',429,'TOO_MANY_REQUESTS'],[503,'unexpected_failure',503,'REGISTRATION_UNAVAILABLE']])
+    ('identity creation failure (%s) releases its registration without creating a browser session',async(status,code,expected,publicCode)=>{
+      (supabaseAdmin.auth.admin.createUser as jest.Mock).mockResolvedValue({data:{user:null},error:{status,code}});
+      const response=await request(app()).post('/api/v1/auth/register').set('Origin',origin).send(body);
+      expect(response.status).toBe(expected);expect(response.body.error.code).toBe(publicCode);
+      expect(supabaseAdmin.rpc).toHaveBeenCalledWith('abandon_owner_registration',expect.anything());
+      expect(supabaseAdmin.rpc).not.toHaveBeenCalledWith('bind_owner_registration',expect.anything());
+      expect(response.headers['set-cookie']).toBeUndefined();
+    });
+  it('an identity creation duplicate never replaces or binds an existing account',async()=>{
+    (supabaseAdmin.auth.admin.createUser as jest.Mock).mockResolvedValue({data:{user:null},error:{status:422,code:'email_exists'}});
     const response=await request(app()).post('/api/v1/auth/register').set('Origin',origin).send(body);
-    expect(response.status).toBe(503);expect(response.body.error.code).toBe('EMAIL_CONFIRMATION_REQUIRED');
+    expect(response.status).toBe(202);
+    expect(supabaseAdmin.rpc).not.toHaveBeenCalledWith('bind_owner_registration',expect.anything());
+    expect(supabaseAdmin.rpc).not.toHaveBeenCalledWith('provision_owner_account',expect.anything());
   });
-  it('expired email link never creates a session',async()=>{
+  it('expired recovery link never creates a session',async()=>{
     provider.verifyOtp.mockResolvedValue({data:{user:null,session:null},error:{code:'otp_expired'}});
-    const response=await request(app()).get('/api/v1/auth/confirm-email?token_hash='+('a'.repeat(64)));
-    expect(response.status).toBe(303);expect(response.headers['set-cookie']).toBeUndefined();expect(rows.size).toBe(0);
+    const response=await request(app()).get('/api/v1/auth/recover?token_hash='+('a'.repeat(64)));
+    expect(response.status).toBe(303);expect(response.headers.location).toContain('recovery=invalid_or_used');
+    expect(response.headers['set-cookie']).toBeUndefined();expect(rows.size).toBe(0);
+  });
+  it('password recovery retains its email delivery and a dedicated callback, including the legacy configuration fallback',async()=>{
+    process.env.OWNER_AUTH_CALLBACK_URL=origin+'/api/v1/auth/confirm-email';
+    const api=app();const response=await request(api).post('/api/v1/auth/forgot-password').set('Origin',origin).send({email:body.email});
+    expect(response.status).toBe(202);
+    expect(provider.resetPasswordForEmail).toHaveBeenCalledWith(body.email,{redirectTo:origin+'/api/v1/auth/recover'});
+    process.env.OWNER_RECOVERY_CALLBACK_URL=origin+'/api/v1/auth/recover';
+    expect((await request(api).post('/api/v1/auth/forgot-password').set('Origin',origin).send({email:body.email})).status).toBe(202);
   });
 });

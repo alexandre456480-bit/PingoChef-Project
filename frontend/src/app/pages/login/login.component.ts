@@ -107,7 +107,6 @@ import { AuthService } from '../../services/auth.service';
             </button>
           </form>
           <div class="auth-bottom-links"><a routerLink="/forgot-password">Esqueci minha senha</a></div>
-          <div class="auth-bottom-links"><button type="button" (click)="resend()" [disabled]="isLoading || !email">Reenviar confirmação</button></div>
 
           <!-- Links de Rodapé -->
           <div class="auth-bottom-links">
@@ -146,11 +145,10 @@ export class LoginComponent implements OnInit {
   notice = '';
 
   constructor(private authService: AuthService, private router: Router, route: ActivatedRoute,private cdr:ChangeDetectorRef) {
-    const status = route.snapshot.queryParamMap.get('confirmation');
-    this.notice = status === 'sent' ? 'Confira seu e-mail para confirmar o cadastro.'
-      : status === 'success' ? 'E-mail confirmado. Entre para continuar.'
-      : status === 'pending' ? 'E-mail confirmado. Entre para concluir os dados do cadastro.'
-      : status === 'invalid_or_used' ? 'Este link expirou ou já foi usado. Tente entrar ou reenvie a confirmação.' : '';
+    if (route.snapshot.queryParamMap.get('registration') === 'received') {
+      this.notice = 'Cadastro recebido. Entre com seu e-mail e senha para continuar.';
+      this.email = router.getCurrentNavigation()?.extras.state?.['email'] || history.state?.email || '';
+    }
     if (route.snapshot.queryParamMap.get('account') === 'unavailable') this.notice = 'Sua conta está indisponível. Entre em contato com o suporte.';
     if (route.snapshot.queryParamMap.get('account') === 'deletion-scheduled') this.notice = 'Exclusão agendada para daqui a 30 dias. Seu cardápio foi retirado do ar. Para ajuda, fale com pingochef@gmail.com.';
     if (route.snapshot.queryParamMap.get('password') === 'changed') this.notice = 'Senha atualizada e sessões encerradas. Entre com sua nova senha.';
@@ -159,28 +157,6 @@ export class LoginComponent implements OnInit {
     if(session==='all-ended')this.notice='Todas as sessões foram encerradas.';
   }
   ngOnInit(){this.authService.restore().pipe(finalize(()=>this.cdr.markForCheck())).subscribe({next:r=>{this.checking=false;if(r.data.provisioningRequired)this.router.navigate(['/complete-registration']);else if(r.data.accountActive)this.router.navigate(['/dashboard']);},error:e=>{this.checking=false;if(e.status!==401)this.errorMessage='Não foi possível verificar sua sessão. Confira sua conexão e tente entrar.';}});}
-  resend(): void {
-    if (!this.email || this.isLoading) return;
-    this.errorMessage = '';
-    this.notice = '';
-    const email = this.email.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.errorMessage = 'Informe o e-mail cadastrado para reenviar a confirmação.';
-      return;
-    }
-    this.isLoading = true;
-    this.authService.resendConfirmation(email).pipe(finalize(()=>this.cdr.markForCheck())).subscribe({
-      next: () => { this.isLoading = false; this.notice = 'Se necessário, enviaremos instruções para esse e-mail.'; },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = err.status === 400 ? 'Informe um e-mail válido para reenviar a confirmação.'
-          : err.status === 429 ? 'Aguarde alguns minutos antes de reenviar a confirmação.'
-          : err.status >= 500 ? 'O serviço de confirmação está temporariamente indisponível. Tente novamente em instantes.'
-          : 'Não foi possível enviar agora. Confira sua conexão e tente novamente.';
-      }
-    });
-  }
-
   onLogin(): void {
     if (!this.email || !this.password) return;
 
@@ -198,7 +174,7 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.status===0?'Não foi possível conectar. Confira sua conexão e tente novamente.':err.status===429?'Aguarde alguns minutos antes de tentar novamente.':err.status>=500?'O serviço de login está temporariamente indisponível. Tente novamente em instantes.':'Verifique e-mail, senha e a confirmação do endereço.';
+        this.errorMessage = err.status===0?'Não foi possível conectar. Confira sua conexão e tente novamente.':err.status===429?'Aguarde alguns minutos antes de tentar novamente.':err.error?.error?.code==='PROVISIONING_UNAVAILABLE'?'Não foi possível concluir a configuração da conta. Tente novamente em instantes.':err.status>=500?'O serviço de login está temporariamente indisponível. Tente novamente em instantes.':'E-mail ou senha incorretos.';
       }
     });
   }

@@ -28,7 +28,7 @@ import { AuthService } from '../../services/auth.service';
         <header class="auth-header-section">
           <img src="/pingo_chef_logo_principal.webp" alt="Pingo Chef" class="auth-logo-center" />
           <h1 class="auth-page-title">Cadastre-se</h1>
-          <p class="auth-page-subtitle">Comece no Free e confirme seu e-mail para ativar a conta</p>
+          <p class="auth-page-subtitle">Comece no Free e configure seu estabelecimento</p>
         </header>
 
         <!-- Corpo do Formulário -->
@@ -277,7 +277,7 @@ export class RegisterComponent {
       next: (res) => {
         this.isLoading = false;
         if (res.success) {
-          this.router.navigate(['/login'], { queryParams: { confirmation: 'sent' } });
+          this.router.navigate(['/login'], { queryParams: { registration: 'received' }, state: { email: this.formData.email } });
         }
       },
       error: (err) => {

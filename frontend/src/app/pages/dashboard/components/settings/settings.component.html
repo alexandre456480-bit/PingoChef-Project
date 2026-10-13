@@ -49,10 +49,6 @@
               <dd>{{ auth.currentUser()?.name || 'Não informado' }}</dd>
               <dt>E-mail</dt>
               <dd>{{ auth.currentUser()?.email }}</dd>
-              <dt>Verificação</dt>
-              <dd>
-                {{ auth.account()?.emailVerified ? 'E-mail verificado' : 'Confirmação pendente' }}
-              </dd>
               <dt>Estabelecimento</dt>
               <dd>{{ auth.currentBusiness()?.name }}</dd>
             </dl>

@@ -29,7 +29,6 @@ async function mock(page: Page, plan: AnalyticsPlan) {
               name: 'Bistrô',
               slug: 'bistro',
             },
-            emailVerified: true,
             accountActive: true,
             plan: { code: plan, name: plan },
             entitlements: {

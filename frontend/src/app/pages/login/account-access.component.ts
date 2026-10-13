@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { finalize } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -37,14 +38,14 @@ export class AccountAccessComponent implements OnInit {
   registration = { fullName: '', businessName: '', slug: '' };
   message = ''; error = ''; busy = false; ready = false;
   accountEmail = '';
-  constructor(private auth: AuthService, route: ActivatedRoute, private router: Router) {
+  constructor(private auth: AuthService, route: ActivatedRoute, private router: Router, private cdr: ChangeDetectorRef) {
     this.mode = route.snapshot.data['mode'];
     this.title = this.mode === 'forgot' ? 'Recuperar senha' : this.mode === 'reset' ? 'Definir nova senha' : 'Concluir cadastro';
   }
   ngOnInit(): void {
     if (this.mode === 'forgot') { this.ready = true; return; }
     const session = this.mode === 'reset' ? this.auth.recoverySession() : this.auth.restore();
-    session.subscribe({ next: (response:any) => { this.accountEmail = response.data?.email || ''; this.ready = true; }, error: () => { this.error = 'A sessão expirou. Solicite um novo link ou entre novamente.'; } });
+    session.pipe(finalize(() => this.cdr.markForCheck())).subscribe({ next: (response:any) => { this.accountEmail = response.data?.email || ''; this.ready = true; }, error: () => { this.error = 'A sessão expirou. Solicite um novo link ou entre novamente.'; } });
   }
   submit(): void {
     if (this.busy || !this.ready) return;
@@ -52,7 +53,7 @@ export class AccountAccessComponent implements OnInit {
     this.busy = true; this.error = '';
     const action = this.mode === 'forgot' ? this.auth.forgotPassword(this.email)
       : this.mode === 'reset' ? this.auth.resetPassword(this.password) : this.auth.completeRegistration(this.registration);
-    action.subscribe({ next: () => {
+    action.pipe(finalize(() => this.cdr.markForCheck())).subscribe({ next: () => {
       this.busy = false;
       if (this.mode === 'complete') this.router.navigate(['/dashboard']);
       else if (this.mode === 'reset') this.router.navigate(['/login']);

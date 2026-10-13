@@ -37,6 +37,10 @@ describe('Admin phase 3 hardening',()=>{
     expect(()=>validateDeploymentEnvironment(base)).toThrow('Staging cannot use');
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123'})).not.toThrow();
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
+      OWNER_AUTH_CALLBACK_URL:undefined,OWNER_RECOVERY_CALLBACK_URL:'https://app-staging.pingochef.com/api/v1/auth/recover'})).not.toThrow();
+    expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
+      OWNER_RECOVERY_CALLBACK_URL:'https://app-staging.pingochef.com/api/v1/auth/recover?next=https://evil.example'})).toThrow('requires the HTTPS recovery callback');
+    expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
       SUPABASE_URL:'https://productionref123.supabase.co'})).toThrow('does not match');
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
       ADMIN_LOGIN_HASH_SECRET:''})).toThrow('ADMIN_LOGIN_HASH_SECRET is not configured');

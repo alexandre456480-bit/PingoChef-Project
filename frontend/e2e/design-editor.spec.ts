@@ -9,7 +9,7 @@ async function openDesign(page: Page) {
     if (path === 'auth/me') return route.fulfill({ json: { success: true, data: {
       user: { id: 'owner', email: 'owner@example.test' },
       business: { id: 'business', name: 'Bistrô', slug: 'bistro' },
-      emailVerified: true, accountActive: true, plan: { code: 'PRO' },
+      accountActive: true, plan: { code: 'PRO' },
       entitlements: {}, usage: { products: 0, categories: 0, videos: 0 },
       csrfToken: 'a'.repeat(64), onboarding: { designConfigured: true }
     } } });

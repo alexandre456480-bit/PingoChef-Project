@@ -39,7 +39,6 @@ async function mock(
               name: 'Bistrô PingoChef',
               slug: 'bistro',
             },
-            emailVerified: true,
             accountActive: true,
             plan: { code: plan, name: plan },
             entitlements: {
@@ -419,7 +418,8 @@ test('owner login is keyboard accessible and restores the server account without
   await expect(enter).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/dashboard/);
-  await expect(page.locator('app-plan-usage').first()).toContainText('FREE');
+  await expect(page.locator('app-sidebar')).toBeAttached();
+  await expect(page.getByRole('heading', { name: 'Olá, Bistrô PingoChef' })).toBeVisible();
   expect(requests.find((r) => r.path === 'auth/login')?.body).toEqual({
     email: 'maria@example.test',
     password: 'StrongPassword123!',
@@ -429,29 +429,47 @@ test('owner login is keyboard accessible and restores the server account without
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('confirmation validates the email and clears a previous service error after a successful retry', async ({
+test('legacy confirmation links return to login with password recovery available and no resend flow', async ({
   page,
 }) => {
   await mock(page, 'FREE', { login: true });
-  const emails: string[] = [];
+  let sent = false;
   await page.route('**/api/v1/auth/resend-confirmation', async (route) => {
-    emails.push(route.request().postDataJSON().email);
-    return route.fulfill({
-      status: emails.length === 1 ? 503 : 202,
-      json:
-        emails.length === 1 ? { error: { code: 'EMAIL_DELIVERY_UNAVAILABLE' } } : { success: true },
-    });
+    sent = true;
+    return route.fulfill({ status: 404 });
+  });
+  await page.goto('/confirm-email?confirmation=sent');
+  await expect(page).toHaveURL(/login/);
+  await expect(page.getByRole('button', { name: 'Reenviar confirmação', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Esqueci minha senha' })).toBeVisible();
+  expect(sent).toBe(false);
+});
+
+test('password recovery still sends instructions and resets the password with recovery CSRF', async ({ page }) => {
+  await mock(page, 'FREE', { login: true });
+  let email = '';
+  let reset: { password: string; csrf: string | undefined } | undefined;
+  await page.route('**/api/v1/auth/forgot-password', async (route) => {
+    email = route.request().postDataJSON().email;
+    return route.fulfill({ status: 202, json: { success: true, data: {} } });
+  });
+  await page.route('**/api/v1/auth/recovery-session', async (route) => route.fulfill({
+    json: { success: true, data: { email: 'maria@example.test', csrfToken: 'a'.repeat(64) } },
+  }));
+  await page.route('**/api/v1/auth/reset-password', async (route) => {
+    reset = { password: route.request().postDataJSON().password, csrf: route.request().headers()['x-csrf-token'] };
+    return route.fulfill({ status: 204 });
   });
   await page.goto('/login');
-  await page.getByLabel('E-mail', { exact: true }).fill('usuario');
-  await page.getByRole('button', { name: 'Reenviar confirmação', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Informe o e-mail cadastrado');
-  expect(emails).toHaveLength(0);
+  await page.getByRole('link', { name: 'Esqueci minha senha' }).click();
   await page.getByLabel('E-mail', { exact: true }).fill('maria@example.test');
-  await page.getByRole('button', { name: 'Reenviar confirmação', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('temporariamente indisponível');
-  await page.getByRole('button', { name: 'Reenviar confirmação', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Se necessário, enviaremos instruções');
-  await expect(page.getByRole('alert')).toHaveCount(0);
-  expect(emails).toEqual(['maria@example.test', 'maria@example.test']);
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('enviaremos as instruções por e-mail');
+  expect(email).toBe('maria@example.test');
+  await page.goto('/reset-password');
+  await page.getByLabel('Nova senha', { exact: true }).fill('ChangedPassword123!');
+  await page.getByLabel('Confirmar senha', { exact: true }).fill('ChangedPassword123!');
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(page).toHaveURL(/login/);
+  expect(reset).toEqual({ password: 'ChangedPassword123!', csrf: 'a'.repeat(64) });
 });

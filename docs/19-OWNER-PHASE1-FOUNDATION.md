@@ -1,5 +1,9 @@
 # Fase 1 do proprietário: autenticação, cadastro e planos
 
+> Atualização: os requisitos de confirmação de e-mail deste relatório foram
+> substituídos pelo [cadastro sem confirmação](23-OWNER-REGISTRATION-WITHOUT-EMAIL-VERIFICATION.md).
+> Consulte o novo relatório para o fluxo atual e a configuração de recuperação de senha.
+
 Implementação e validação local em 02/10/2026. Este documento descreve o código desta fase e prevalece sobre especificações históricas de autenticação. A execução não aplicou migrations nem alterou configurações no Supabase remoto.
 
 ## Inventário real antes da migração

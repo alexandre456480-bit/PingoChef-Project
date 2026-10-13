@@ -133,7 +133,7 @@ app.use(express.urlencoded({ limit: '15mb', extended: true }));
 // Shared quotas supplement process-local filters across serverless/multiple instances.
 app.use('/api/v1/auth', (req, res, next) => {
   // Credential/email flows already reserve durable per-email AND per-IP budgets.
-  if (!/^\/(plan-intents(?:\/|$)|confirm-email$|recover$|recovery-session$|reset-password$|complete-registration$|migrate-session$|change-password$|delete-account$)/.test(req.path)) return next();
+  if (!/^\/(plan-intents(?:\/|$)|recover$|recovery-session$|reset-password$|complete-registration$|migrate-session$|change-password$|delete-account$)/.test(req.path)) return next();
   if (/^\/(recovery-session|reset-password|complete-registration|change-password|delete-account)$/.test(req.path) && !ownerCookie(req)) return next();
   return sharedRateLimit('owner-auth-http', 100, 900)(req, res, next);
 });
@@ -141,7 +141,7 @@ app.use('/api/v1/public/qr', sharedRateLimit('qr-resolve', 60));
 
 // Rotas da API REST
 app.use(['/api/v1/auth/login','/api/v1/auth/register','/api/v1/auth/forgot-password',
-  '/api/v1/auth/resend-confirmation','/api/v1/auth/migrate-session'], authLimiter);
+  '/api/v1/auth/migrate-session'], authLimiter);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/admin', adminRoutes);

@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { requireOwnerOrigin, ownerLogin, ownerRegister, ownerMe, ownerLogout, ownerEmailRequest,
-  ownerConfirmEmail, ownerRecoverySession, ownerResetPassword, ownerMigrateSession, ownerCompleteRegistration } from '../controllers/owner-auth.controller';
+import { requireOwnerOrigin, ownerLogin, ownerRegister, ownerMe, ownerLogout, ownerForgotPassword,
+  ownerRecover, ownerRecoverySession, ownerResetPassword, ownerMigrateSession, ownerCompleteRegistration } from '../controllers/owner-auth.controller';
 import rateLimit from 'express-rate-limit';
 import { ownerPlans, ownerCreatePlanIntent, ownerReadPlanIntent, ownerChangePassword, ownerDeleteAccount } from '../controllers/owner-commercial.controller';
+import { ownerOrigins } from '../services/owner-session.service';
 
 const router = Router();
 router.get('/plans', ownerPlans);
@@ -21,10 +22,14 @@ router.post('/login', requireOwnerOrigin, ownerLogin);
 router.get('/me', ownerMe);
 router.post('/logout', ownerLogout());
 router.post('/logout-all', ownerLogout(true));
-router.post('/forgot-password', requireOwnerOrigin, ownerEmailRequest(true));
-router.post('/resend-confirmation', requireOwnerOrigin, ownerEmailRequest());
-router.get('/confirm-email', ownerConfirmEmail());
-router.get('/recover', ownerConfirmEmail(true));
+router.post('/forgot-password', requireOwnerOrigin, ownerForgotPassword);
+// Old email links only lead to login; no token is consumed or account altered.
+router.get('/confirm-email', (_req, res) => {
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Cache-Control', 'no-store');
+  res.redirect(303, new URL('/login', ownerOrigins()[0]).toString());
+});
+router.get('/recover', ownerRecover);
 router.get('/recovery-session', ownerRecoverySession);
 router.post('/reset-password', ownerResetPassword);
 router.post('/complete-registration', ownerCompleteRegistration);

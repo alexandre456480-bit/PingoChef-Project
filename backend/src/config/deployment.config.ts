@@ -38,17 +38,18 @@ export function validateDeploymentEnvironment(env:NodeJS.ProcessEnv):void{
     ||Buffer.from(env.OWNER_SESSION_ENCRYPTION_KEY||'','base64').length!==32)
     throw new Error('OWNER_SESSION_ENCRYPTION_KEY must encode 32 random bytes');
   let callback:URL;
-  try{callback=new URL(env.OWNER_AUTH_CALLBACK_URL||'');}catch{throw new Error('OWNER_AUTH_CALLBACK_URL is not configured');}
+  try{callback=new URL(env.OWNER_RECOVERY_CALLBACK_URL||env.OWNER_AUTH_CALLBACK_URL||'');}catch{throw new Error('OWNER_RECOVERY_CALLBACK_URL is not configured');}
+  if(!env.OWNER_RECOVERY_CALLBACK_URL)callback.pathname=callback.pathname.replace(/confirm-email$/, 'recover');
   if(callback.protocol!=='https:'||callback.search||callback.hash||callback.username||callback.password
-    ||!callback.pathname.endsWith('/api/v1/auth/confirm-email'))
-    throw new Error('OWNER_AUTH_CALLBACK_URL requires the HTTPS email callback');
+    ||!callback.pathname.endsWith('/api/v1/auth/recover'))
+    throw new Error('OWNER_RECOVERY_CALLBACK_URL requires the HTTPS recovery callback');
   let menuOrigin:URL;
   try{menuOrigin=new URL(env.PUBLIC_MENU_ORIGIN||'');}catch{throw new Error('PUBLIC_MENU_ORIGIN is not configured');}
   if(menuOrigin.protocol!=='https:' || menuOrigin.href!==`${menuOrigin.origin}/` || menuOrigin.origin.length>140
     || !(env.FRONTEND_ORIGINS||'').split(',').map(value=>value.trim()).includes(menuOrigin.origin))
     throw new Error('PUBLIC_MENU_ORIGIN must be an allowed HTTPS owner application origin');
   if(!(env.FRONTEND_ORIGINS||'').split(',').map(value=>value.trim()).includes(callback.origin))
-    throw new Error('OWNER_AUTH_CALLBACK_URL must use an allowed owner application origin');
+    throw new Error('OWNER_RECOVERY_CALLBACK_URL must use an allowed owner application origin');
   if(env.OWNER_LEGACY_TOKEN_ACCEPT_UNTIL){
     const cutoff=Date.parse(env.OWNER_LEGACY_TOKEN_ACCEPT_UNTIL);
     if(!Number.isFinite(cutoff)||cutoff>Date.now()+14*86400000)

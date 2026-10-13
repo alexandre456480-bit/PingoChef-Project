@@ -15,13 +15,12 @@ async function mockApi(
   code: keyof typeof matrix = 'FREE',
   options: { expired?: boolean; delay?: number } = {},
 ) {
-  let ended = false;
+  let ended = options.expired === true;
   const [products, categories, videos, analytics, qr] = matrix[code];
   const posts: { path: string; body: any; headers: any }[] = [];
   const account = {
     user: { id: 'owner', email: 'owner@example.test', name: 'Maria' },
     business: { id, name: 'Bistrô PingoChef', slug: 'bistro' },
-    emailVerified: true,
     accountActive: true,
     provisioningRequired: false,
     plan: { code, name: names[code] },
@@ -49,9 +48,9 @@ async function mockApi(
     if (path === 'auth/me') {
       if (options.delay) await new Promise((r) => setTimeout(r, options.delay));
       return route.fulfill({
-        status: options.expired || ended ? 401 : 200,
+        status: ended ? 401 : 200,
         json:
-          options.expired || ended
+          ended
             ? { error: { code: 'SESSION_EXPIRED' } }
             : { success: true, data: account },
       });
@@ -99,11 +98,15 @@ async function mockApi(
           },
         },
       });
-    if (path === 'auth/register' || path === 'auth/resend-confirmation')
+    if (path === 'auth/register')
       return route.fulfill({
         status: 202,
-        json: { success: true, data: { status: 'AWAITING_EMAIL' } },
+        json: { success: true, data: { status: 'REGISTRATION_ACCEPTED' } },
       });
+    if (path === 'auth/login') {
+      ended = false;
+      return route.fulfill({ json: { success: true, data: account } });
+    }
     if (path === 'auth/logout' || path === 'auth/logout-all' || path === 'auth/change-password') {
       ended = true;
       return route.fulfill({ status: 204 });
@@ -173,10 +176,10 @@ test('plans remain readable on wide desktop, notebook, tablet and mobile; paid s
   await expect(page).toHaveURL(/register\?intent=/);
   await expect(page.getByText('Plano Free', { exact: true })).toBeVisible();
 });
-test('signup sends server intent and consent and opens masked confirmation page', async ({
+test('signup sends server intent and consent, then logs in without email verification', async ({
   page,
 }) => {
-  const { posts } = await mockApi(page);
+  const { posts } = await mockApi(page, 'FREE', { expired: true });
   await page.goto('/register?intent=' + intent);
   await page.getByLabel('Seu nome').fill('Maria Silva');
   await page.getByLabel('Nome do estabelecimento').fill('Bistro Teste');
@@ -185,16 +188,39 @@ test('signup sends server intent and consent and opens masked confirmation page'
   await page.getByLabel('Confirmar senha').fill('StrongPassword123!');
   await page.getByRole('checkbox', { name: /Li e aceito/ }).check();
   await page.getByRole('button', { name: 'Criar conta no Free' }).click();
-  await expect(page).toHaveURL(/confirm-email/);
-  await expect(page.getByText(/ma•••@example.test/)).toBeVisible();
+  await expect(page).toHaveURL(/login\?registration=received/);
+  await expect(page.getByRole('status')).toContainText('Cadastro recebido');
+  await expect(page.getByLabel('E-mail', { exact: true })).toHaveValue('maria@example.test');
+  await expect(page.getByRole('button', { name: 'Reenviar confirmação' })).toHaveCount(0);
   expect(posts.find((p) => p.path === 'auth/register')?.body).toMatchObject({
     intentId: intent,
     termsAccepted: true,
   });
   expect(posts.find((p) => p.path === 'auth/register')?.body.planCode).toBeUndefined();
-  await page.getByRole('button', { name: 'Reenviar confirmação' }).click();
-  await expect(page.getByText('Solicitação recebida.', { exact: false })).toBeVisible();
+  await page.getByLabel('Senha', { exact: true }).fill('StrongPassword123!');
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  expect(posts.some((p) => p.path === 'auth/resend-confirmation')).toBe(false);
 });
+test('signup keeps the form when an older backend still responds with email verification', async ({ page }) => {
+  await mockApi(page, 'FREE', { expired: true });
+  await page.route('**/api/v1/auth/register', route => route.fulfill({
+    status: 202, json: { success: true, data: { status: 'AWAITING_EMAIL' } },
+  }));
+  await page.goto('/register?intent=' + intent);
+  await page.getByLabel('Seu nome').fill('Maria Silva');
+  await page.getByLabel('Nome do estabelecimento').fill('Bistro Teste');
+  await page.getByLabel('E-mail', { exact: true }).fill('maria@example.test');
+  await page.getByLabel('Senha', { exact: true }).fill('StrongPassword123!');
+  await page.getByLabel('Confirmar senha').fill('StrongPassword123!');
+  await page.getByRole('checkbox', { name: /Li e aceito/ }).check();
+  await page.getByRole('button', { name: 'Criar conta no Free' }).click();
+  await expect(page).toHaveURL(/register\?intent=/);
+  await expect(page.getByRole('alert')).toContainText('Não foi possível concluir o cadastro');
+  await expect(page.getByLabel('E-mail', { exact: true })).toHaveValue('maria@example.test');
+  await expect(page.getByLabel('Senha', { exact: true })).toHaveValue('StrongPassword123!');
+});
+
 test('direct generic signup returns to plan choice; expired session never renders dashboard', async ({
   page,
 }) => {

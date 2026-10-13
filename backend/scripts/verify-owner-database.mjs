@@ -95,23 +95,51 @@ export async function verifyOwnerDatabase(pool) {
       await assert.rejects(client.query('COMMIT'),/Business requires a subscription/);
     }finally{await client.query('ROLLBACK');client.release();}
   });
+  await check('shared subscription trigger repair prevents missing record fields while retaining the mandatory subscription guard',async()=>{
+    const uid=randomUUID(),bid=randomUUID();
+    await query("INSERT INTO auth.users(id,email) VALUES($1,'trigger-repair@local.test')",[uid]);
+    await query("INSERT INTO profiles(id,full_name) VALUES($1,'Trigger Repair Owner')",[uid]);
+    // Reproduce the deployed CASE expression: PostgreSQL resolves fields in both
+    // branches, even when businesses has no OLD.business_id column.
+    await query(`CREATE OR REPLACE FUNCTION public.assert_business_subscription() RETURNS trigger
+      LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+      DECLARE v_id uuid; BEGIN
+        v_id:=CASE WHEN TG_TABLE_NAME='businesses' THEN NEW.id ELSE OLD.business_id END;
+        IF EXISTS(SELECT 1 FROM public.businesses WHERE id=v_id)
+          AND NOT EXISTS(SELECT 1 FROM public.subscriptions WHERE business_id=v_id) THEN
+          RAISE EXCEPTION 'Business requires a subscription';
+        END IF; RETURN NULL;
+      END $$`);
+    const insert="INSERT INTO businesses(id,owner_user_id,name,slug,status) VALUES($1,$2,'Trigger Repair','trigger-repair','ACTIVE')";
+    await assert.rejects(query(insert,[bid,uid]),e=>e.code==='42703'&&e.message.includes('business_id'));
+    assert.equal(await value('SELECT count(*)::int value FROM businesses WHERE id=$1',[bid]),0);
+    const migration=await readFile(new URL('../../supabase/migrations/20261012020000_repair_business_subscription_trigger.sql',import.meta.url),'utf8');
+    await query(migration);await query(migration);
+    await query(insert,[bid,uid]);
+    assert.equal(await value("SELECT count(*)::int value FROM subscriptions WHERE business_id=$1 AND status='active'",[bid]),1);
+    const client=await pool.connect();
+    try{
+      await client.query('BEGIN');
+      await client.query('DELETE FROM subscription_events WHERE business_id=$1',[bid]);
+      await client.query('DELETE FROM subscriptions WHERE business_id=$1',[bid]);
+      await assert.rejects(client.query('COMMIT'),/Business requires a subscription/);
+    }finally{await client.query('ROLLBACK');client.release();}
+  });
   await check('public PRO denied; existing email cannot be rebound',async()=>{
     await assert.rejects(query('SELECT start_owner_registration($1,$2,$3,$4,$5,$6,$7)',['new@local.test','New Owner','New Business','new-local',null,'PRO',null]),/PAID_PLAN_UNAVAILABLE/);
     assert.equal(await value('SELECT start_owner_registration($1,$2,$3,$4,$5,$6,$7) value',['owner@local.test','New Owner','New Business','duplicate-email',null,'FREE',null]),null);
   });
-  await check('confirmation required; forged intent denied; concurrent callback is idempotent',async()=>{
+  await check('unverified identity provisions immediately; forged intent denied; concurrent provisioning is idempotent',async()=>{
     const id=await value('SELECT start_owner_registration($1,$2,$3,$4,$5,$6,$7) value',['new@local.test','New Owner','New Business','new-local',null,'FREE',null]);
     const uid=randomUUID();await query('INSERT INTO auth.users(id,email) VALUES($1,$2)',[uid,'new@local.test']);
     assert.equal(await value('SELECT bind_owner_registration($1,$2) value',[id,uid]),true);
-    await assert.rejects(query('SELECT provision_owner_account($1,$2)',[uid,id]),/EMAIL_NOT_CONFIRMED/);
-    await query('UPDATE auth.users SET email_confirmed_at=now() WHERE id=$1',[uid]);
     await assert.rejects(query('SELECT provision_owner_account($1,$2)',[uid,randomUUID()]),/INVALID_REGISTRATION_INTENT/);
     const outputs=await Promise.all([value('SELECT provision_owner_account($1,$2) value',[uid,id]),value('SELECT provision_owner_account($1,$2) value',[uid,id])]);
     assert.ok(outputs[0]);assert.equal(outputs[0],outputs[1]);
     assert.equal(await value('SELECT count(*)::int value FROM businesses WHERE owner_user_id=$1',[uid]),1);
     assert.equal(await value('SELECT p.code value FROM subscriptions s JOIN plans p ON p.id=s.plan_id WHERE s.business_id=$1',[outputs[0]]),'FREE');
   });
-  await check('tampered paid intent fails closed after confirmation',async()=>{
+  await check('tampered paid intent fails closed during provisioning',async()=>{
     const id=await value('SELECT start_owner_registration($1,$2,$3,$4,$5,$6,$7) value',['tamper@local.test','Tamper Owner','Tamper Business','tamper-local',null,'FREE',null]);
     const uid=randomUUID();await query('INSERT INTO auth.users(id,email) VALUES($1,$2)',[uid,'tamper@local.test']);
     await query('SELECT bind_owner_registration($1,$2)',[id,uid]);
@@ -144,7 +172,7 @@ export async function verifyOwnerDatabase(pool) {
     await assert.rejects(asOwner(user,"INSERT INTO menu_items(business_id,category_id,name,price) VALUES($1,$2,'Bulk 1',10),($1,$2,'Bulk 2',10)",[business,category]),/LIMIT_EXCEEDED/);
     assert.equal(await value('SELECT count(*)::int value FROM menu_items WHERE business_id=$1',[business]),9);
   });
-  await check('invitation registration shares confirmed Free provisioning and cannot reserve twice',async()=>{
+  await check('invitation registration shares immediate Free provisioning and cannot reserve twice',async()=>{
     const email='invited@local.test',hash=randomBytes(32).toString('hex');
     await query('INSERT INTO customer_invitations(email,code_hash,created_by,expires_at) VALUES($1,$2,$3,now()+interval \'1 day\')',[email,hash,admin]);
     const args=[email,'Invited Owner','Invited Business','invited-local',null,'FREE',hash];
@@ -156,7 +184,7 @@ export async function verifyOwnerDatabase(pool) {
     const bid=await value('SELECT provision_owner_account($1,$2) value',[uid,ids.find(Boolean)]);assert.ok(bid);
     assert.equal(await value('SELECT status value FROM customer_invitations WHERE code_hash=$1',[hash]),'CONSUMED');
   });
-  await check('confirmation racing with binding and interrupted binding can be resumed',async()=>{
+  await check('bound registration provisions immediately and interrupted binding can be resumed',async()=>{
     const uid=randomUUID(),email='partial@local.test';
     const id=await value('SELECT start_owner_registration($1,$2,$3,$4,$5,$6,$7) value',[email,'Partial Owner','Partial Business','partial-local',null,'FREE',null]);
     await query('INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,$2,now())',[uid,email]);
@@ -224,11 +252,83 @@ export async function verifyOwnerDatabase(pool) {
       await query("INSERT INTO owner_plan_intents(plan_code,consumed_at) SELECT 'FREE',created_at-interval '1 second' FROM registration_intents WHERE id=$1",[id]);
     }
     await query(await readFile(new URL('../../supabase/migrations/20261012000000_repair_free_registration.sql',import.meta.url),'utf8'));
-    for(const [index,expected] of ['EXPIRED','PENDING','PENDING','PENDING','AWAITING_EMAIL'].entries()){
+    for(const [index,expected] of ['EXPIRED','PENDING','PENDING','PENDING','READY'].entries()){
       assert.equal(await value('SELECT status value FROM registration_intents WHERE id=$1',[ids[index]]),expected);
     }
     assert.equal(await value("SELECT count(*)::int value FROM auth.users WHERE email IN ('repair-identity@local.test','repair-bound@local.test')"),2);
     assert.ok(await value('SELECT start_owner_registration($1,$2,$3,$4,NULL,\'FREE\',NULL) value',['repair-orphan@local.test','Repair Owner','Repair Business','repair-orphan-retry']));
+  });
+  await check('removal migration repairs duplicate unbound legacy drafts and rolls back conflicts between bound registrations',async()=>{
+    const migration=await readFile(new URL('../../supabase/migrations/20261012010000_remove_owner_email_verification.sql',import.meta.url),'utf8');
+    const client=await pool.connect(),uid=randomUUID();
+    const insert=async(email,status,bound,consent,age)=>{
+      const id=randomUUID();
+      await client.query("INSERT INTO registration_intents(id,email,selected_plan_id,source,full_name,business_name,slug,status,auth_user_id,terms_accepted_at,created_at) VALUES($1,$2,(SELECT id FROM plans WHERE code='FREE'),'PUBLIC','Duplicate Owner','Duplicate Business','duplicate-repair',$3,$4,$5,now()-($6*interval '1 hour'))",[id,email,status,bound,consent?new Date():null,age]);
+      return id;
+    };
+    const status=async(id)=>(await client.query('SELECT status FROM registration_intents WHERE id=$1',[id])).rows[0]?.status;
+    try{
+      // Reproduce an older/partial schema that allowed a PENDING draft alongside AWAITING_EMAIL.
+      await client.query('BEGIN');
+      await client.query('DROP INDEX registration_intents_email_pending_idx; DROP INDEX registration_intents_user_pending_idx');
+      await client.query("ALTER TABLE registration_intents DROP CONSTRAINT registration_intents_status_check; ALTER TABLE registration_intents ADD CONSTRAINT registration_intents_status_check CHECK(status IN ('PENDING','READY','AWAITING_EMAIL','EXPIRED','COMPLETED'))");
+      await client.query("INSERT INTO auth.users(id,email) VALUES($1,'duplicate-bound@local.test')",[uid]);
+      const bound=await insert('duplicate-bound@local.test','AWAITING_EMAIL',uid,true,2);
+      const orphan=await insert('duplicate-bound@local.test','PENDING',null,false,1);
+      const consent=await insert('duplicate-consent@local.test','PENDING',null,true,2);
+      const noConsent=await insert('duplicate-consent@local.test','PENDING',null,false,1);
+      const older=await insert('duplicate-latest@local.test','PENDING',null,false,2);
+      const latest=await insert('duplicate-latest@local.test','PENDING',null,false,1);
+      await client.query('COMMIT');
+      await client.query(migration);await client.query(migration);
+      for(const id of [orphan,noConsent,older])assert.equal(await status(id),'EXPIRED');
+      assert.equal(await status(bound),'READY');
+      for(const id of [consent,latest])assert.equal(await status(id),'PENDING');
+      assert.equal((await client.query('SELECT count(*)::int n FROM registration_intents WHERE id=ANY($1::uuid[])',[[bound,orphan,consent,noConsent,older,latest]])).rows[0].n,6);
+      assert.equal((await client.query('SELECT count(*)::int n FROM auth.users WHERE id=$1',[uid])).rows[0].n,1);
+      await assert.rejects(client.query("INSERT INTO registration_intents(email,selected_plan_id,source,full_name,business_name,slug) VALUES('duplicate-bound@local.test',(SELECT id FROM plans WHERE code='FREE'),'PUBLIC','Other Owner','Other Business','duplicate-blocked')"),e=>e.code==='23505');
+      // Bound conflicts must abort the entire migration, including draft cleanup.
+      await client.query('BEGIN');
+      await client.query('DROP INDEX registration_intents_email_pending_idx; DROP INDEX registration_intents_user_pending_idx');
+      const conflict=await insert('duplicate-bound@local.test','READY',uid,true,1);
+      const rollbackDraft=await insert('duplicate-consent@local.test','PENDING',null,false,3);
+      await client.query('COMMIT');
+      await assert.rejects(client.query(migration),/Conflicting bound registration intents/);
+      await client.query('ROLLBACK');
+      assert.equal(await status(conflict),'READY');assert.equal(await status(rollbackDraft),'PENDING');
+      await client.query('DELETE FROM registration_intents WHERE id=ANY($1::uuid[])',[[conflict,rollbackDraft]]);
+      await client.query(migration);
+    }finally{await client.query('ROLLBACK');client.release();}
+  });
+  await check('removal migration releases existing owner identities without changing admins, unrelated users or recovery tokens',async()=>{
+    const legacyOwner=randomUUID(),legacyAdmin=randomUUID(),unrelated=randomUUID();
+    await query("INSERT INTO auth.users(id,email,confirmation_token,recovery_token) VALUES($1,'legacy-owner@local.test','old-confirm','keep-recovery'),($2,'legacy-admin@local.test','admin-confirm','admin-recovery'),($3,'unrelated@local.test','other-confirm','other-recovery')",[legacyOwner,legacyAdmin,unrelated]);
+    await query('INSERT INTO admin_identities(user_id) VALUES($1)',[legacyAdmin]);
+    await query("INSERT INTO profiles(id,full_name) VALUES($1,'Legacy')",[legacyOwner]);
+    await query("INSERT INTO businesses(owner_user_id,name,slug,status) VALUES($1,'Legacy','legacy-transition','ACTIVE')",[legacyOwner]);
+    const migration=await readFile(new URL('../../supabase/migrations/20261012010000_remove_owner_email_verification.sql',import.meta.url),'utf8');
+    await query(migration);await query(migration);
+    const owner=(await query('SELECT email_confirmed_at,confirmation_token,recovery_token FROM auth.users WHERE id=$1',[legacyOwner])).rows[0];
+    assert.ok(owner.email_confirmed_at);assert.equal(owner.confirmation_token,'');assert.equal(owner.recovery_token,'keep-recovery');
+    assert.equal(await value('SELECT email_confirmed_at value FROM auth.users WHERE id=$1',[legacyAdmin]),null);
+    assert.equal(await value('SELECT email_confirmed_at value FROM auth.users WHERE id=$1',[unrelated]),null);
+    assert.equal(await value('SELECT confirmation_token value FROM auth.users WHERE id=$1',[legacyAdmin]),'admin-confirm');
+    assert.equal(await value("SELECT count(*)::int value FROM auth.users WHERE email IN ('repair-identity@local.test','repair-bound@local.test') AND email_confirmed_at IS NOT NULL"),2);
+    assert.equal(await value("SELECT create_owner_session($1,$2,'owner','ciphertext',now()+interval '1 hour',now()+interval '1 hour',NULL,NULL) value",[randomBytes(32).toString('hex'),unrelated]),true);
+    assert.equal(await value("SELECT create_owner_session($1,$2,'owner','ciphertext',now()+interval '1 hour',now()+interval '1 hour',NULL,NULL) value",[randomBytes(32).toString('hex'),legacyAdmin]),false);
+  });
+  await check('identity creation failure releases only its own selected draft and retains bound registrations',async()=>{
+    const selection=await value("INSERT INTO owner_plan_intents(plan_code) VALUES('FREE') RETURNING id value");
+    const args=[selection,'failed-identity@local.test','Failed Owner','Failed Business','failed-identity',null,null];
+    const id=await value('SELECT start_selected_owner_registration($1,$2,$3,$4,$5,$6,$7) value',args);
+    await query('SELECT abandon_owner_registration($1)',[id]);
+    assert.equal(await value('SELECT consumed_at value FROM owner_plan_intents WHERE id=$1',[selection]),null);
+    const retry=await value('SELECT start_selected_owner_registration($1,$2,$3,$4,$5,$6,$7) value',args);
+    const uid=randomUUID();await query('INSERT INTO auth.users(id,email) VALUES($1,$2)',[uid,args[1]]);
+    await query('SELECT bind_owner_registration($1,$2)',[retry,uid]);
+    await query('SELECT abandon_owner_registration($1)',[retry]);
+    assert.equal(await value('SELECT status value FROM registration_intents WHERE id=$1',[retry]),'READY');
+    assert.ok(await value('SELECT consumed_at value FROM owner_plan_intents WHERE id=$1',[selection]));
   });
   await check('every plan rejects the next product, category and video at its exact limit',async()=>{
     for(const [code,limits] of Object.entries({FREE:[10,4,1],BASIC:[30,10,7],MEDIUM:[70,25,25],PRO:[150,40,40]})){

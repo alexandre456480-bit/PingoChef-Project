@@ -20,21 +20,27 @@ const registerSchema = z.object({ email: emailSchema, password: passwordSchema,
   intentId: z.string().uuid().optional(), termsAccepted: z.literal(true).optional() }).strict();
 const emailBody = z.object({ email: emailSchema }).strict();
 const accepted = (res: Response) => res.status(202).json({ success: true, data: {
-  status: 'AWAITING_EMAIL', message: 'Se o endereço puder receber esta solicitação, enviaremos as instruções por e-mail.'
+  status: 'REGISTRATION_ACCEPTED', message: 'Cadastro recebido. Entre com seu e-mail e senha para continuar.'
+} });
+const recoveryAccepted = (res: Response) => res.status(202).json({ success: true, data: {
+  message: 'Se o endereço puder receber esta solicitação, enviaremos as instruções por e-mail.'
 } });
 const handler = (action: (req: Request, res: Response) => Promise<unknown>): RequestHandler =>
   (req, res, next: NextFunction) => { res.setHeader('Cache-Control', 'no-store'); action(req, res).catch(next); };
 export const requireOwnerOrigin: RequestHandler = (req, _res, next) => {
   try { checkOwnerOrigin(req, true); next(); } catch (error) { next(error); }
 };
-function callbackUrl(recovery = false): string {
-  const base = process.env.OWNER_AUTH_CALLBACK_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000/api/v1/auth/confirm-email');
+function recoveryCallbackUrl(): string {
+  const base = process.env.OWNER_RECOVERY_CALLBACK_URL || process.env.OWNER_AUTH_CALLBACK_URL
+    || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000/api/v1/auth/recover');
   let url: URL;
   try { url = new URL(base); } catch { throw ownerError(503, 'AUTH_CONFIGURATION_ERROR'); }
   if (url.search || url.hash || url.username || url.password || (process.env.NODE_ENV === 'production' && url.protocol !== 'https:')) {
     throw ownerError(503, 'AUTH_CONFIGURATION_ERROR');
   }
-  if (recovery) url.pathname = url.pathname.replace(/confirm-email$/, 'recover');
+  // Existing deployments can retain the old variable until configuration is updated.
+  url.pathname = url.pathname.replace(/confirm-email$/, 'recover');
+  if (!url.pathname.endsWith('/api/v1/auth/recover') || !ownerOrigins().includes(url.origin)) throw ownerError(503, 'AUTH_CONFIGURATION_ERROR');
   return url.toString();
 }
 async function rejectAdmin(userId: string) {
@@ -45,8 +51,8 @@ async function rejectAdmin(userId: string) {
 async function provision(userId: string, intentId: string | null = null): Promise<string | null> {
   const { data, error } = await supabaseAdmin.rpc('provision_owner_account', { p_user_id: userId, p_intent_id: intentId });
   if (error) {
-    const codes = ['EMAIL_NOT_CONFIRMED', 'INVALID_REGISTRATION_INTENT', 'REGISTRATION_EXPIRED', 'INVALID_INVITATION', 'PAID_PLAN_UNAVAILABLE'];
-    if (codes.includes(error.message)) throw ownerError(409, error.message, 'Cadastro pendente. Verifique as instruções de confirmação.');
+    const codes = ['OWNER_UNAUTHORIZED', 'INVALID_REGISTRATION_INTENT', 'REGISTRATION_EXPIRED', 'INVALID_INVITATION', 'PAID_PLAN_UNAVAILABLE'];
+    if (codes.includes(error.message)) throw ownerError(409, error.message, 'Entre para concluir os dados do cadastro.');
     if (error.code === '23505') throw ownerError(409, 'PROVISIONING_CONFLICT', 'Escolha outro identificador para o estabelecimento.');
     throw ownerError(503, 'PROVISIONING_UNAVAILABLE');
   }
@@ -69,7 +75,7 @@ async function meData(user: OwnerSession['user']) {
     ? await supabaseAdmin.from('platform_events').select('event_name').eq('business_id',business.id)
       .in('event_name',['DESIGN_CONFIGURED','MENU_PUBLISHED']) : {data:[]};
   const { data: profile } = isDemoMode() ? { data: null } : await supabaseAdmin.from('profiles').select('full_name').eq('id',user.id).maybeSingle();
-  return { user: { id: user.id, email: user.email, name: profile?.full_name || null }, business, emailVerified: Boolean(user.email_confirmed_at),
+  return { user: { id: user.id, email: user.email, name: profile?.full_name || null }, business,
     accountActive, provisioningRequired: !business, isPublished:lifecycle?.is_published===true,
     onboarding:{designConfigured:Array.isArray(milestones)&&milestones.some((e:any)=>e.event_name==='DESIGN_CONFIGURED')},
     plan: snapshot?.plan || null, subscription: snapshot?.subscription || null,
@@ -83,7 +89,7 @@ export const ownerLogin = handler(async (req, res) => {
   if (isDemoMode()) {
     const local = localDb.users.find(row => row.email.toLowerCase() === email);
     if (!local || !localDb.verifyPassword(password, local.passwordHash)) throw ownerError(401, 'INVALID_CREDENTIALS', 'E-mail ou senha incorretos.');
-    user = { id: local.id, email: local.email, email_confirmed_at: new Date().toISOString() };
+    user = { id: local.id, email: local.email };
     session = { access_token: `local_jwt_${local.id}_${Date.now()}`, refresh_token: '', expires_at: Math.floor(Date.now() / 1000) + 3600 } as Session;
   } else {
     const { data, error } = await createPasswordAuthClient().auth.signInWithPassword({ email, password });
@@ -91,13 +97,12 @@ export const ownerLogin = handler(async (req, res) => {
       if (error.status === 429) throw ownerError(429, 'TOO_MANY_REQUESTS');
       throw ownerError(503, 'AUTH_SERVICE_UNAVAILABLE', 'O serviço de login está temporariamente indisponível.');
     }
-    if (error || !data.session || !data.user.email_confirmed_at) {
-      // Do not reveal whether a credential or an unconfirmed email caused rejection.
-      throw ownerError(401, 'INVALID_CREDENTIALS', 'Verifique e-mail, senha e a confirmação do endereço.');
+    if (error || !data.session || !data.user) {
+      throw ownerError(401, 'INVALID_CREDENTIALS', 'E-mail ou senha incorretos.');
     }
     await rejectAdmin(data.user.id);
     session = data.session; user = data.user;
-    // A callback interrupted after OTP verification is resumed after a valid password login.
+    // Resume provisioning interrupted after identity creation, using password authentication.
     try { await provision(user.id); } catch (error: any) {
       if (![409].includes(error.status)) throw error;
       // Authenticated owner may repair a pending registration without deleting the identity.
@@ -124,8 +129,7 @@ export const ownerRegister = handler(async (req, res) => {
   const body = registerSchema.parse(req.body);
   await enforceOwnerAttempts(req, 'register', body.email);
   if (body.planCode !== 'FREE') throw ownerError(409, 'PAID_PLAN_UNAVAILABLE', 'Cadastro público disponível no plano Free.');
-  if (isDemoMode()) throw ownerError(503, 'EMAIL_CONFIRMATION_REQUIRED', 'Configure Supabase Auth para cadastrar contas.');
-  const redirect = callbackUrl();
+  if (isDemoMode()) throw ownerError(503, 'REGISTRATION_UNAVAILABLE', 'Configure Supabase Auth para cadastrar contas.');
   if (body.intentId && !body.termsAccepted) throw ownerError(400,'TERMS_REQUIRED');
   const registration = {
     p_email: body.email, p_full_name: body.fullName, p_business_name: body.businessName,
@@ -141,53 +145,48 @@ export const ownerRegister = handler(async (req, res) => {
     throw ownerError(503, 'REGISTRATION_UNAVAILABLE');
   }
   if (!intentId) return accepted(res);
-  const auth = createPasswordAuthClient();
-  const { data, error: signupError } = await auth.auth.signUp({ email: body.email, password: body.password,
-    options: { emailRedirectTo: redirect } });
-  if (signupError || !data.user || !data.user.identities?.length || data.session || data.user.email_confirmed_at) {
+  // Server-only creation sends no confirmation email. The provider flag enables
+  // password login; it is not presented as proof of mailbox ownership.
+  const { data, error: signupError } = await supabaseAdmin.auth.admin.createUser({
+    email: body.email, password: body.password, email_confirm: true
+  });
+  if (signupError || !data.user) {
     await supabaseAdmin.rpc('abandon_owner_registration', { p_intent_id: intentId });
-    if (data.session || data.user?.email_confirmed_at) throw ownerError(503, 'EMAIL_CONFIRMATION_REQUIRED', 'Confirmação de e-mail deve estar habilitada.');
-    if (signupError && signupError.status && signupError.status >= 500) throw ownerError(503, 'EMAIL_DELIVERY_UNAVAILABLE');
-    return accepted(res);
+    if (['email_exists', 'user_already_exists'].includes(signupError?.code || '')) return accepted(res);
+    if (signupError?.code === 'weak_password') throw ownerError(400, 'PASSWORD_POLICY_FAILED', 'Escolha uma senha que atenda à política de segurança.');
+    if (signupError?.status === 429) throw ownerError(429, 'TOO_MANY_REQUESTS');
+    throw ownerError(503, 'REGISTRATION_UNAVAILABLE');
   }
   const { data: bound, error: bindError } = await supabaseAdmin.rpc('bind_owner_registration', { p_intent_id: intentId, p_user_id: data.user.id });
   if (bindError || !bound) throw ownerError(503, 'REGISTRATION_BINDING_PENDING');
+  try { await provision(data.user.id, intentId); }
+  catch (error: any) { if (error.status !== 409) throw error; }
+  // Registration does not replace a browser session; access still requires a password login.
   return accepted(res);
 });
-export const ownerEmailRequest = (recovery = false) => handler(async (req, res) => {
+export const ownerForgotPassword = handler(async (req, res) => {
   const { email } = emailBody.parse(req.body);
-  try { await enforceOwnerAttempts(req, recovery ? 'forgot' : 'resend', email); }
-  catch (error: any) { if (error.status === 429) return accepted(res); throw error; }
-  if (isDemoMode()) return accepted(res);
-  const redirect = callbackUrl(recovery);
+  try { await enforceOwnerAttempts(req, 'forgot', email); }
+  catch (error: any) { if (error.status === 429) return recoveryAccepted(res); throw error; }
+  if (isDemoMode()) return recoveryAccepted(res);
+  const redirect = recoveryCallbackUrl();
   const auth = createPasswordAuthClient();
-  const result = recovery ? await auth.auth.resetPasswordForEmail(email, { redirectTo: redirect })
-    : await auth.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirect } });
-  // Existence, already confirmed addresses and Auth's own throttling share the same response.
+  const result = await auth.auth.resetPasswordForEmail(email, { redirectTo: redirect });
+  // Existence and Auth's own throttling share the same response.
   if (result.error && (result.error.status || 0) >= 500) throw ownerError(503, 'EMAIL_DELIVERY_UNAVAILABLE');
-  return accepted(res);
+  return recoveryAccepted(res);
 });
-export const ownerConfirmEmail = (recovery = false) => handler(async (req, res) => {
+export const ownerRecover = handler(async (req, res) => {
   res.setHeader('Referrer-Policy', 'no-referrer');
   const tokenHash = z.string().min(32).max(256).regex(/^[A-Za-z0-9_-]+$/).safeParse(req.query.token_hash);
-  const destination = new URL(recovery ? '/reset-password' : '/confirm-email', ownerOrigins()[0]);
-  if (!tokenHash.success || isDemoMode()) { destination.searchParams.set('confirmation', 'invalid'); return res.redirect(303, destination.toString()); }
-  const { data, error } = await createPasswordAuthClient().auth.verifyOtp({ token_hash: tokenHash.data, type: recovery ? 'recovery' : 'email' });
-  if (error || !data.user?.email_confirmed_at || !data.session) {
-    destination.searchParams.set('confirmation', 'invalid_or_used'); return res.redirect(303, destination.toString());
+  const destination = new URL('/reset-password', ownerOrigins()[0]);
+  if (!tokenHash.success || isDemoMode()) { destination.searchParams.set('recovery', 'invalid'); return res.redirect(303, destination.toString()); }
+  const { data, error } = await createPasswordAuthClient().auth.verifyOtp({ token_hash: tokenHash.data, type: 'recovery' });
+  if (error || !data.user || !data.session) {
+    destination.searchParams.set('recovery', 'invalid_or_used'); return res.redirect(303, destination.toString());
   }
   await rejectAdmin(data.user.id);
-  if (recovery) await createOwnerSession(req, res, data.user.id, data.session, 'recovery');
-  else {
-    const intent = req.query.intent_id === undefined ? null : z.string().uuid().parse(req.query.intent_id);
-    try { await provision(data.user.id, intent); destination.searchParams.set('confirmation', 'success'); }
-    catch (error: any) {
-      if (error.status !== 409) throw error;
-      destination.searchParams.set('confirmation', 'pending');
-    }
-    // No automatic login on an email confirmation link; prevents signup login-CSRF.
-    await supabaseAdmin.auth.admin.signOut(data.session.access_token, 'local').catch(() => undefined);
-  }
+  await createOwnerSession(req, res, data.user.id, data.session, 'recovery');
   return res.redirect(303, destination.toString());
 });
 export const ownerRecoverySession = handler(async (req, res) => {
@@ -224,7 +223,7 @@ export const ownerMigrateSession = handler(async (req, res) => {
   const token = req.get('authorization')?.match(/^Bearer ([A-Za-z0-9_.-]+)$/)?.[1];
   if (!token) throw ownerError(401, 'UNAUTHORIZED');
   const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user?.email_confirmed_at) throw ownerError(401, 'INVALID_TOKEN');
+  if (error || !data.user) throw ownerError(401, 'INVALID_TOKEN');
   await rejectAdmin(data.user.id);
   const { data: business, error: businessError } = await supabaseAdmin.from('businesses').select('id').eq('owner_user_id', data.user.id).single();
   if (businessError || !business || !await businessEligibility.isAccountActive(business.id)) throw ownerError(403, 'ACCOUNT_NOT_ACTIVE');

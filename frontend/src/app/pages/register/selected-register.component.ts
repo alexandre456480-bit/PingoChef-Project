@@ -16,8 +16,7 @@ import { CommercialService, PlanIntent } from '../../services/commercial.service
       ><a routerLink="/login">Entrar</a>
     </nav>
     <div class="stepper" aria-label="Etapas do cadastro">
-      <span>1. Plano</span><span class="current">2. Conta</span><span>3. E-mail</span
-      ><span>4. Primeiros passos</span>
+      <span>1. Plano</span><span class="current">2. Conta</span><span>3. Primeiros passos</span>
     </div>
     <main class="center-card">
       @if (loading) {
@@ -30,8 +29,7 @@ import { CommercialService, PlanIntent } from '../../services/commercial.service
         <span class="eyebrow">Plano {{ intent.plan.name }}</span>
         <h1>Seu cardápio começa aqui.</h1>
         <p>
-          Crie sua conta no {{ intent.plan.name }}. Vamos confirmar seu e-mail antes de ativar o
-          estabelecimento.
+          Crie sua conta no {{ intent.plan.name }} e entre para configurar seu estabelecimento.
         </p>
         <a routerLink="/plans">Voltar e escolher outro plano</a>
         <form (ngSubmit)="submit()" #form="ngForm">
@@ -205,13 +203,18 @@ export class SelectedRegisterComponent implements OnInit {
       .register({ ...this.data, intentId: this.intent.id, termsAccepted: true })
       .pipe(finalize(() => this.cdr.markForCheck()))
       .subscribe({
-        next: () => {
+        next: (response) => {
+          if (response.data?.status !== 'REGISTRATION_ACCEPTED') {
+            this.saving = false;
+            this.error = 'Não foi possível concluir o cadastro. Atualize a página e tente novamente.';
+            return;
+          }
           const email = this.data.email;
           this.data.password = '';
           this.confirmation = '';
-          this.router.navigate(['/confirm-email'], {
+          this.router.navigate(['/login'], {
             state: { email },
-            queryParams: { confirmation: 'sent' },
+            queryParams: { registration: 'received' },
           });
         },
         error: (e) => {
