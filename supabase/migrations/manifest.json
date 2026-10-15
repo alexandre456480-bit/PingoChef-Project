@@ -1,0 +1,130 @@
+[
+  {
+    "file": "20260907000000_init_schema_and_rls.sql",
+    "sha256": "efabdf6bc430682d3678ffe158eda0347f0b0342431303edff281ded8431490d"
+  },
+  {
+    "file": "20260909000000_update_design_settings_schema.sql",
+    "sha256": "863017fe38607ff8f4f4eb0a58099d248c3607443830151e8ab9c73c470e2a60"
+  },
+  {
+    "file": "20260909010000_add_subcategories_and_highlight_type.sql",
+    "sha256": "1657708add8b3666470de940e5d16270ba575b9af06669d408fcae12b3344d09"
+  },
+  {
+    "file": "20260911000000_add_combo_and_best_seller_highlights.sql",
+    "sha256": "aebd0b12cc870729779503186e73b4a71e4aafb54eb9d69ed3b25429733cee36"
+  },
+  {
+    "file": "20260912000000_security_hardening.sql",
+    "sha256": "8fd699ef101bb9e58e064742633a106fb8452f139a5c53c1c489c8f3f9746e51"
+  },
+  {
+    "file": "20260916010000_add_show_price_and_category_display_mode.sql",
+    "sha256": "f5fd2dd2f9454167a481066f706d21ac4ba08a9f17b17dc3f80853a651274a2a"
+  },
+  {
+    "file": "20260917000000_add_intro_card_to_design_settings.sql",
+    "sha256": "ea1abd9375c8ea0f3d0514e9013841556e504642e618d2120ff4ff18bcb5571d"
+  },
+  {
+    "file": "20260918000000_add_welcome_background_and_business_settings.sql",
+    "sha256": "b1ab6673adf74ce7cd2de5af06dd90bcbd33e8c4f73c73a80915a139d9c34122"
+  },
+  {
+    "file": "20260923000000_add_product_media.sql",
+    "sha256": "4417ad5b8c8b90c2910ce708845e59f4a70f70554ddc5db2919916ca88ef1545"
+  },
+  {
+    "file": "20260924000000_add_video_backend_controls.sql",
+    "sha256": "3e31cb7d219d032dfa36619a3dab6aa7a4c42ce1468192e320f950c5799b58bc"
+  },
+  {
+    "file": "20260925000000_single_product_video_and_aspect_ratio.sql",
+    "sha256": "fa5341ad045c7565333bb77f1fe3e0d32aee9924d24c29132268e064de1006f5"
+  },
+  {
+    "file": "20260925010000_harden_anonymous_likes.sql",
+    "sha256": "3d704ca406a1eaaaff8335c1a678ff733037f3488820e05ea9f8bad51462ad8d"
+  },
+  {
+    "file": "20260930000000_admin_foundation.sql",
+    "sha256": "3b0906b0cc3f7b133802967bc1c8924c9541f248e00b38ea79009c9f7de7d820"
+  },
+  {
+    "file": "20260930010000_admin_phase1.sql",
+    "sha256": "e336cd9164795887f44c4313335fc92209a55252239cfcd89b6e04fe582e55f7"
+  },
+  {
+    "file": "20261001000000_admin_dashboard_analytics.sql",
+    "sha256": "1ed955f02e998455f5ac46db6822c95475d76923f21e03a67349409052d0a600"
+  },
+  {
+    "file": "20261002000000_admin_phase3_commercial_ops.sql",
+    "sha256": "316a5c72f45926b3724b6a332e8ab06a6d88c1b5fc2bcf004e97bf566e5a0d03"
+  },
+  {
+    "file": "20261002010000_admin_phase3_purge.sql",
+    "sha256": "c31778ea8b669cbbe0b45719eb421bdbf45bfcc4b141a0b366ca719a47835ac6"
+  },
+  {
+    "file": "20261003000000_owner_plans_and_limits.sql",
+    "sha256": "7d25942ddbdbafd6af0e560dc3c5a2e41794b26def3e89ab61a1e55001aa625c"
+  },
+  {
+    "file": "20261003010000_owner_sessions_and_registration.sql",
+    "sha256": "c3d549b56ec2570565b0d1e6b7751ebc5f153457e831f896141580b437f0cb6b"
+  },
+  {
+    "file": "20261003020000_owner_commercial_journey.sql",
+    "sha256": "26117da6a64e56b90a809f7d6e85b5196fbe2ba22ceba59d55aab24f8f510163"
+  },
+  {
+    "file": "20261003030000_menu_analytics.sql",
+    "sha256": "79620df0a62e37a2ce33df1d4b5e00f54c95f55d47cbb2cf0407b39ea2cd6bb5"
+  },
+  {
+    "file": "20261003040000_qr_and_shared_security.sql",
+    "sha256": "5cdffa3a5b2337ca078b865bd7a7a5f9eb6067cc74c9c80d1063f318427d26d8"
+  },
+  {
+    "file": "20261004000000_owner_session_rpc_upgrade.sql",
+    "sha256": "502555fec958366f0c6954e435585c0cf3fd9157ff867c2b9a47116f0f970ab4"
+  },
+  {
+    "file": "20261004010000_qr_logo_limits.sql",
+    "sha256": "14b7f1940020be8ea91694f2c96130b1e0d5d27d621054ec697042ee4852a8c9"
+  },
+  {
+    "file": "20261011000000_qr_capacity_and_deletion.sql",
+    "sha256": "2781a66c1d0a8a38ad6c39b197b3c37ebf9b52520a453585c2bd74f4d452a4a7"
+  },
+  {
+    "file": "20261011010000_remove_design_motion.sql",
+    "sha256": "042239bf3cab3a434e43ba97217cabb9aa80d14f2dd4882371dc3f873dc2bb54"
+  },
+  {
+    "file": "20261012000000_repair_free_registration.sql",
+    "sha256": "c72849dbef5f8cacd6aa3d056c4b542a842c31edbeebc2656702ed285acc7066"
+  },
+  {
+    "file": "20261012010000_remove_owner_email_verification.sql",
+    "sha256": "148b46e79d226e19cf9f2a48b503abff58fe58e3d172eacd5a4a7f40ea2c225f"
+  },
+  {
+    "file": "20261012020000_repair_business_subscription_trigger.sql",
+    "sha256": "c0f767644557100102ab49b77cc15e607b57d9d717c1909fb0f37603e71eec94"
+  },
+  {
+    "file": "20261014000000_performance_read_paths.sql",
+    "sha256": "5f5600286414e086c074d2096a3b5669fdbdbf86899640633e4b9fa66c206f95"
+  },
+  {
+    "file": "20261014010000_analytics_product_trend_index.sql",
+    "sha256": "c49f8cb10a2d2d04c05704d0071070e092476971ec602836b3344a5357fb7756"
+  },
+  {
+    "file": "20261014020000_private_image_pilot.sql",
+    "sha256": "152059038b41c94f4f71010f55c6efc8c4a37f099a1dfb66438c19f4589cfdf7"
+  }
+]

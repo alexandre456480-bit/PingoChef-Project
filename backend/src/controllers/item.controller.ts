@@ -5,6 +5,7 @@ import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config
 import { localDb, isDemoMode } from '../config/localDb';
 import { entitlements, mapEntitlementDatabaseError } from '../services/entitlement.service';
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
+import { reorderMenu } from '../services/menu-order.service';
 
 // Validação segura de imagem: bloqueia SVG para evitar Stored XSS e valida mime types e tamanho Base64
 const safeImageString = z.string().trim().refine(val => {
@@ -80,7 +81,7 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       let query = client
         .from('menu_items')
-        .select('*, categories!menu_items_category_tenant_fk(name)')
+        .select('id,category_id,subcategory_id,name,description,price,promotional_price,image_url,is_available,is_highlighted,highlight_type,show_price,likes_count,display_order,created_at,categories!menu_items_category_tenant_fk(name)')
         .eq('business_id', businessId)
         .order('display_order', { ascending: true });
 
@@ -104,7 +105,7 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
           id: item.id,
           categoryId: item.category_id,
           subcategoryId: item.subcategory_id || null,
-          categoryName: item.categories?.name || null,
+          categoryName: (Array.isArray(item.categories) ? item.categories[0]?.name : (item.categories as { name?: string } | null)?.name) || null,
           name: item.name,
           description: item.description,
           price: Number(item.price),
@@ -417,13 +418,7 @@ export const reorderItemsController = async (req: AuthenticatedRequest, res: Res
 
     if (isSupabaseConfigured) {
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
-      for (const o of orders) {
-        await client
-          .from('menu_items')
-          .update({ display_order: o.displayOrder, updated_at: new Date().toISOString() })
-          .eq('id', o.id)
-          .eq('business_id', businessId);
-      }
+      await reorderMenu(client, businessId, 'products', orders);
 
       return res.status(200).json({
         success: true,

@@ -1,13 +1,20 @@
 import request from 'supertest';
 import app from '../server';
 import { localDb } from '../config/localDb';
-import { isSupabaseConfigured } from '../config/supabase';
+import { isSupabaseConfigured, supabaseAdmin } from '../config/supabase';
+
+// This unit suite must simulate an unavailable DB, never use a developer's
+// .env credentials or reserve authentication quotas in a live Supabase project.
+jest.mock('../config/supabase', () => ({ isSupabaseConfigured: false,
+  supabaseAdmin: { rpc: jest.fn(), from: jest.fn() } }));
 
 describe('🛡️ Hardening de Segurança - Suíte de Testes Obrigatórios', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.API_TELEMETRY_ENABLED = 'false';
+    (supabaseAdmin.rpc as jest.Mock).mockResolvedValue({ data: null, error: { message: 'simulated unavailable database' } });
   });
 
   afterAll(() => {

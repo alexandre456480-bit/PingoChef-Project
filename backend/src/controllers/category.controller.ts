@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
 import { entitlements, mapEntitlementDatabaseError } from '../services/entitlement.service';
+import { reorderMenu } from '../services/menu-order.service';
 
 const categorySchema = z.object({
   name: z.string().trim().min(2, 'Nome da categoria deve ter no mínimo 2 caracteres').max(100, 'Nome muito longo'),
@@ -37,7 +38,7 @@ export const getCategoriesController = async (req: AuthenticatedRequest, res: Re
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       const { data, error } = await client
         .from('categories')
-        .select('*')
+        .select('id,name,description,icon,icon_key,icon_type,image_url,display_mode,display_order,is_active,created_at')
         .eq('business_id', businessId)
         .order('display_order', { ascending: true });
 
@@ -342,13 +343,7 @@ export const reorderCategoriesController = async (req: AuthenticatedRequest, res
 
     if (isSupabaseConfigured) {
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
-      for (const item of orders) {
-        await client
-          .from('categories')
-          .update({ display_order: item.displayOrder })
-          .eq('id', item.id)
-          .eq('business_id', businessId);
-      }
+      await reorderMenu(client, businessId, 'categories', orders);
 
       return res.status(200).json({
         success: true,

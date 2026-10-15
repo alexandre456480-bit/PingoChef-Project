@@ -4,11 +4,15 @@ import { localDb, isDemoMode } from '../config/localDb';
 import { businessEligibility } from '../services/business-eligibility.service';
 import { resolveOwnerSession, ownerError } from '../services/owner-session.service';
 import { enforceSharedRequest } from './shared-rate-limit.middleware';
+import { measureAuth } from '../services/request-performance.service';
 
 export interface AuthenticatedRequest extends Request { userId?: string; businessId?: string; accessToken?: string }
 
 // The name is retained for existing routers; production authenticates an opaque cookie.
 export const authenticateJwt = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  return measureAuth(() => authenticateOwner(req, res, next));
+};
+async function authenticateOwner(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const demoBearer = req.get('authorization')?.match(/^Bearer (local_jwt_.+)$/)?.[1];
     let userId: string;
@@ -41,4 +45,4 @@ export const authenticateJwt = async (req: AuthenticatedRequest, res: Response, 
     res.setHeader('Cache-Control', 'no-store');
     return next();
   } catch (error) { next(error); }
-};
+}

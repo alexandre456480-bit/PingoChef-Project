@@ -106,12 +106,20 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         business = bData;
         const businessId = business.id;
 
+        // These tenant-scoped reads are independent. Eligibility above remains
+        // fresh for every visit; no draft/public authorization is cached.
+        const [designResult, categoryResult, subcategoryResult, itemResult] = await Promise.all([
+          supabaseAdmin.from('design_settings').select('template_key,palette,font_heading,font_body,font_pair,category_style,home_blocks,custom_config').eq('business_id', businessId).maybeSingle(),
+          supabaseAdmin.from('categories').select('id,name,description,icon,icon_key,icon_type,image_url,display_order,display_mode').eq('business_id', businessId).eq('is_active', true).order('display_order', { ascending: true }),
+          supabaseAdmin.from('subcategories').select('id,category_id,name,display_order').eq('business_id', businessId).order('display_order', { ascending: true }),
+          supabaseAdmin.from('menu_items').select('id,category_id,subcategory_id,name,description,price,promotional_price,image_url,is_highlighted,highlight_type,likes_count,display_order,show_price').eq('business_id', businessId).eq('is_available', true).order('display_order', { ascending: true })
+        ]);
+        if ([designResult, categoryResult, subcategoryResult, itemResult].some(result => result.error)) {
+          throw new Error('PUBLIC_MENU_DATABASE_UNAVAILABLE');
+        }
+
         // 2. Obter configurações de design
-        const { data: dData } = await supabaseAdmin
-          .from('design_settings')
-          .select('*')
-          .eq('business_id', businessId)
-          .maybeSingle();
+        const { data: dData } = designResult;
 
         design = dData || {
           template_key: 'modern',
@@ -137,12 +145,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         };
 
         // 3. Obter categorias ativas
-        const { data: cData } = await supabaseAdmin
-          .from('categories')
-          .select('id, name, description, icon, icon_key, icon_type, image_url, display_order, display_mode')
-          .eq('business_id', businessId)
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
+        const { data: cData } = categoryResult;
 
         categories = (cData || []).map(c => ({
           id: c.id,
@@ -157,11 +160,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         }));
 
         // 4. Obter subcategorias
-        const { data: sData, error: sError } = await supabaseAdmin
-          .from('subcategories')
-          .select('id, category_id, name, display_order')
-          .eq('business_id', businessId)
-          .order('display_order', { ascending: true });
+        const { data: sData, error: sError } = subcategoryResult;
 
         if (sError) {
           console.error('[Data Audit]', { event: 'public_menu_subcategories_query_failed' });
@@ -183,12 +182,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         }));
 
         // 5. Obter itens disponíveis
-        const { data: iData } = await supabaseAdmin
-          .from('menu_items')
-          .select('id, category_id, subcategory_id, name, description, price, promotional_price, image_url, is_highlighted, highlight_type, likes_count, display_order, show_price')
-          .eq('business_id', businessId)
-          .eq('is_available', true)
-          .order('display_order', { ascending: true });
+        const { data: iData } = itemResult;
 
         items = (iData || []).map(i => ({
           id: i.id,

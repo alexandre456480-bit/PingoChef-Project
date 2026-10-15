@@ -67,14 +67,15 @@ async function meData(user: OwnerSession['user']) {
     if (error) throw ownerError(503, 'AUTH_SERVICE_UNAVAILABLE');
     business = data;
   }
-  const snapshot = business ? await entitlements.getEntitlements(business.id) : null;
-  const accountActive = business ? await businessEligibility.isAccountActive(business.id) : false;
-  const {data: lifecycle} = business && !isDemoMode()
-    ? await supabaseAdmin.from('business_account_state').select('is_published').eq('business_id',business.id).maybeSingle() : {data:null};
-  const {data: milestones} = business && !isDemoMode()
-    ? await supabaseAdmin.from('platform_events').select('event_name').eq('business_id',business.id)
-      .in('event_name',['DESIGN_CONFIGURED','MENU_PUBLISHED']) : {data:[]};
-  const { data: profile } = isDemoMode() ? { data: null } : await supabaseAdmin.from('profiles').select('full_name').eq('id',user.id).maybeSingle();
+  const [snapshot, accountActive, { data: lifecycle, error: lifecycleError },
+    { data: milestones, error: milestonesError }, { data: profile, error: profileError }] = await Promise.all([
+    business ? entitlements.getEntitlements(business.id) : null,
+    business ? businessEligibility.isAccountActive(business.id) : false,
+    business && !isDemoMode() ? supabaseAdmin.from('business_account_state').select('is_published').eq('business_id', business.id).maybeSingle() : { data: null, error: null },
+    business && !isDemoMode() ? supabaseAdmin.from('platform_events').select('event_name').eq('business_id', business.id).in('event_name', ['DESIGN_CONFIGURED', 'MENU_PUBLISHED']) : { data: [], error: null },
+    !isDemoMode() ? supabaseAdmin.from('profiles').select('full_name').eq('id', user.id).maybeSingle() : { data: null, error: null }
+  ]);
+  if (lifecycleError || milestonesError || profileError) throw ownerError(503, 'AUTH_SERVICE_UNAVAILABLE');
   return { user: { id: user.id, email: user.email, name: profile?.full_name || null }, business,
     accountActive, provisioningRequired: !business, isPublished:lifecycle?.is_published===true,
     onboarding:{designConfigured:Array.isArray(milestones)&&milestones.some((e:any)=>e.event_name==='DESIGN_CONFIGURED')},

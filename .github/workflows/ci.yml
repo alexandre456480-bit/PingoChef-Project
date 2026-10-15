@@ -1,0 +1,49 @@
+name: Build and isolated security checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      DEMO_MODE: 'false'
+      API_TELEMETRY_ENABLED: 'false'
+      PERFORMANCE_REORDER_RPC_ENABLED: 'false'
+      PERFORMANCE_ANALYTICS_BATCH_RPC_ENABLED: 'false'
+      MEDIA_STORAGE_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm ci
+        working-directory: frontend
+      - run: node backend/scripts/scan-source-secrets.mjs
+      - run: node backend/scripts/check-migrations.mjs
+      - run: node --test backend/scripts/operational-tools.test.mjs
+      - run: npm run build
+        working-directory: backend
+      - run: npx tsc --noEmit -p tsconfig.app.json
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: npm run security:scan
+        working-directory: frontend
+      - run: npm test -- --runInBand
+        working-directory: backend
+      - run: npm test -- --watch=false
+        working-directory: frontend
+      # Embedded PostgreSQL 16, loopback, random credentials; never DATABASE_URL/Supabase.
+      - run: npm run test:database
+        working-directory: backend

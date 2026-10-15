@@ -52,8 +52,9 @@ it("uses the tenant category FK while retaining owner RLS and server business sc
   expect(createUserClient).toHaveBeenCalledWith("test-owner-token");
   expect(from).toHaveBeenCalledWith("menu_items");
   expect(query.select).toHaveBeenCalledWith(
-    "*, categories!menu_items_category_tenant_fk(name)",
+    expect.stringContaining("categories!menu_items_category_tenant_fk(name)"),
   );
+  expect(query.select.mock.calls[0][0]).not.toContain('*');
   expect(query.eq).toHaveBeenCalledWith("business_id", "owner-business");
   expect(supabaseAdmin.from).not.toHaveBeenCalled();
   expect(gallery).toHaveBeenCalledWith("owner-business", ["item"], false);

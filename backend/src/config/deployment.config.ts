@@ -2,6 +2,8 @@ export function validateDeploymentEnvironment(env:NodeJS.ProcessEnv):void{
   if(env.NODE_ENV!=='production')return;
   if(!['production','staging'].includes(env.DEPLOYMENT_ENV||''))
     throw new Error('DEPLOYMENT_ENV must be production or staging');
+  if(env.DEPLOYMENT_ENV==='production'&&env.MEDIA_STORAGE_ENABLED==='true')
+    throw new Error('Image Storage pilot is staging-only until publication and purge integration');
   const url=env.SUPABASE_URL;
   const expected=env.EXPECTED_SUPABASE_PROJECT_REF;
   if(!url||!expected||!(/^[a-z0-9]{10,30}$/.test(expected)))

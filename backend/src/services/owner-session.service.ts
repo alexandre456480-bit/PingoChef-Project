@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import type { Session, User } from '@supabase/supabase-js';
 import { createPasswordAuthClient, supabaseAdmin } from '../config/supabase';
 import { isDemoMode, localDb } from '../config/localDb';
+import { measureAuth } from './request-performance.service';
 
 export function ownerError(status: number, code: string, message = 'Não foi possível concluir a solicitação.') {
   return Object.assign(new Error(message), { status, code });
@@ -126,6 +127,9 @@ export async function createOwnerSession(req: Request, res: Response, userId: st
   return ownerCsrf(token);
 }
 export async function resolveOwnerSession(req: Request, expectedScope: 'owner' | 'recovery' = 'owner'): Promise<OwnerSession> {
+  return measureAuth(() => resolveSession(req, expectedScope));
+}
+async function resolveSession(req: Request, expectedScope: 'owner' | 'recovery'): Promise<OwnerSession> {
   const token = ownerCookie(req);
   if (!token) throw ownerError(401, 'UNAUTHORIZED', 'Entre na sua conta.');
   checkOwnerOrigin(req, !['GET', 'HEAD', 'OPTIONS'].includes(req.method));
@@ -169,9 +173,13 @@ export async function resolveOwnerSession(req: Request, expectedScope: 'owner' |
     user = { id: local.id, email: local.email };
     row.last_seen_at = new Date().toISOString();
   } else {
-    const { data, error } = await supabaseAdmin.auth.getUser(tokens.accessToken);
+    // Independent identity reads. Both must pass before the existing final
+    // conditional touch/revocation check; no session decision is cached.
+    const [{ data, error }, { data: admin, error: identityError }] = await Promise.all([
+      supabaseAdmin.auth.getUser(tokens.accessToken),
+      supabaseAdmin.from('admin_identities').select('user_id').eq('user_id', row.user_id).maybeSingle()
+    ]);
     if (error || data.user?.id !== row.user_id) throw ownerError(401, 'SESSION_INVALID');
-    const { data: admin, error: identityError } = await supabaseAdmin.from('admin_identities').select('user_id').eq('user_id', row.user_id).maybeSingle();
     if (identityError) throw ownerError(503, 'SESSION_SERVICE_UNAVAILABLE');
     if (admin) throw ownerError(403, 'WRONG_LOGIN_AREA');
     user = data.user;

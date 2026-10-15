@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase';
+import { measureAuth } from '../services/request-performance.service';
 
 export interface AdminRequest extends Request {
   adminUserId?: string;
@@ -39,6 +40,9 @@ export function requireAdminOrigin(req: Request, res: Response, next: NextFuncti
 }
 
 export async function requireAdmin(req: AdminRequest, res: Response, next: NextFunction) {
+  return measureAuth(() => authenticateAdmin(req, res, next));
+}
+async function authenticateAdmin(req: AdminRequest, res: Response, next: NextFunction) {
   try {
     if (!isSupabaseConfigured) return res.status(503).json({ success: false, error: { code: 'SERVICE_UNAVAILABLE' } });
     const token = cookie(req, adminCookieName());

@@ -340,7 +340,7 @@ export class MenuAnalyticsService {
       hours,
       qr,
       previous,
-    ] = await Promise.all([
+    ] = process.env.PERFORMANCE_ANALYTICS_BATCH_RPC_ENABLED === 'true' ? await this.batchReportData(c) : await Promise.all([
       this.rpc(c, "summary"),
       this.rpc(c, "series"),
       this.rpc(c, "ranking", { p_metric: "product_views", p_limit: 5 }),
@@ -386,6 +386,25 @@ export class MenuAnalyticsService {
       collectionStartedAt: c.settings.collection_started_at,
       likesAttributed: !c.query.source && !c.query.qrId,
     };
+  }
+  private async batchReportData(c: Context): Promise<any[]> {
+    const args = { p_business: c.business, p_start: c.range.start, p_end: c.range.end,
+      p_bucket: c.range.bucket, p_source: c.query.source || null, p_qr: c.query.qrId || null,
+      p_previous_start: c.comparison?.start || null, p_previous_end: c.comparison?.end || null };
+    const key = JSON.stringify(['report', args, c.snapshot.entitlements, c.settings]);
+    let result = this.cache.get(key);
+    if (!result || result.expires <= Date.now()) {
+      const { data, error } = await supabaseAdmin.rpc('analytics_report', args);
+      if (error) throw databaseError(error);
+      if (!data || typeof data.summary !== 'object') throw ownerError(503, 'ANALYTICS_UNAVAILABLE');
+      result = { value: data, expires: Date.now() + 10_000 };
+      if (Buffer.byteLength(JSON.stringify(data), 'utf8') <= 65_536) {
+        if (this.cache.size >= 256) this.cache.delete(this.cache.keys().next().value!);
+        this.cache.set(key, result);
+      }
+    }
+    const d = result.value;
+    return [d.summary, d.series, d.viewed, d.liked, d.categories, d.sources, d.hours, d.qr, d.previous];
   }
   async ingest(
     business: string,

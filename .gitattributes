@@ -1,0 +1,2 @@
+supabase/**/*.sql text eol=lf
+supabase/migrations/manifest.json text eol=lf

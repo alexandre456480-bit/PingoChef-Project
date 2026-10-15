@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
+import { reorderMenu } from '../services/menu-order.service';
 
 const createSubcategorySchema = z.object({
   categoryId: z.string().min(1, 'Categoria obrigatória'),
@@ -36,7 +37,7 @@ export const getSubcategoriesController = async (req: AuthenticatedRequest, res:
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       let query = client
         .from('subcategories')
-        .select('*')
+        .select('id,category_id,name,display_order,created_at')
         .eq('business_id', businessId)
         .order('display_order', { ascending: true });
 
@@ -348,13 +349,7 @@ export const reorderSubcategoriesController = async (req: AuthenticatedRequest, 
 
     if (isSupabaseConfigured) {
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
-      for (const o of orders) {
-        await client
-          .from('subcategories')
-          .update({ display_order: o.displayOrder })
-          .eq('id', o.id)
-          .eq('business_id', businessId);
-      }
+      await reorderMenu(client, businessId, 'subcategories', orders);
 
       return res.status(200).json({
         success: true,

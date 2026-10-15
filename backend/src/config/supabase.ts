@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import type { Request, Response } from 'express';
+import { measuredFetch } from '../services/request-performance.service';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ export const supabaseAdmin = createClient(
   isSupabaseConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
   isSupabaseConfigured ? supabaseServiceKey : 'dummy-key',
   {
+    global: { fetch: measuredFetch('supabase') },
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -40,7 +42,7 @@ export const createAuditedAdminClient = (req: Request, res: Response) => createC
   isSupabaseConfigured ? supabaseServiceKey : 'dummy-key',
   {
     auth: { autoRefreshToken: false, persistSession: false },
-    global: { headers: {
+    global: { fetch: measuredFetch('supabase'), headers: {
       'x-admin-client-ip': req.ip || '',
       'x-admin-request-id': String(res.locals.requestId || '')
     } }
@@ -52,6 +54,7 @@ export const createAuditedAdminClient = (req: Request, res: Response) => createC
 export const createPasswordAuthClient = () => {
   if (!isSupabaseConfigured || !supabaseAnonKey) throw new Error('Auth client unavailable');
   return createClient(supabaseUrl, supabaseAnonKey, {
+    global: { fetch: measuredFetch('supabase') },
     auth: { autoRefreshToken: false, persistSession: false }
   });
 };
@@ -71,6 +74,7 @@ export const createUserClient = (accessToken: string) => {
         persistSession: false
       },
       global: {
+        fetch: measuredFetch('supabase'),
         headers: {
           Authorization: `Bearer ${accessToken}`
         }

@@ -62,7 +62,7 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       const { data, error } = await client
         .from('design_settings')
-        .select('*')
+        .select('template_key,palette,font_heading,font_body,font_pair,category_style,home_blocks,custom_config')
         .eq('business_id', businessId)
         .maybeSingle();
 

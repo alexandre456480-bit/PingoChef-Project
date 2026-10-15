@@ -3,6 +3,7 @@ import type { UnwrapWebhookEvent } from '@mux/ts/resources/webhooks/webhooks';
 import type { Upload } from '@mux/ts/resources/video/uploads';
 import type { Asset } from '@mux/ts/resources/video/assets';
 import { VideoConfig, loadVideoConfig } from '../config/video.config';
+import { measuredFetch } from './request-performance.service';
 
 export interface CreateDirectUploadInput {
   corsOrigin: string;
@@ -43,6 +44,7 @@ export class OfficialMuxVideoProvider implements MuxVideoProvider {
 
   constructor(private readonly config: VideoConfig) {
     this.client = new Mux({
+      fetch: measuredFetch('external'),
       tokenId: config.muxTokenId,
       tokenSecret: config.muxTokenSecret,
       webhookSecret: config.muxWebhookSigningSecret,

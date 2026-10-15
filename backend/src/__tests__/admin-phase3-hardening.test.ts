@@ -36,6 +36,8 @@ describe('Admin phase 3 hardening',()=>{
       OWNER_AUTH_CALLBACK_URL:'https://app-staging.pingochef.com/api/v1/auth/confirm-email'} as NodeJS.ProcessEnv;
     expect(()=>validateDeploymentEnvironment(base)).toThrow('Staging cannot use');
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123'})).not.toThrow();
+    expect(()=>validateDeploymentEnvironment({...base,DEPLOYMENT_ENV:'production',MEDIA_STORAGE_ENABLED:'true'}))
+      .toThrow('Image Storage pilot is staging-only');
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',
       OWNER_AUTH_CALLBACK_URL:undefined,OWNER_RECOVERY_CALLBACK_URL:'https://app-staging.pingochef.com/api/v1/auth/recover'})).not.toThrow();
     expect(()=>validateDeploymentEnvironment({...base,PRODUCTION_SUPABASE_PROJECT_REF:'productionref123',

@@ -1,5 +1,13 @@
 # PingoChef
 
+Consolidação atual: [hardening, migrations reproduzíveis, staging e Storage piloto](docs/25-HARDENING-CONSOLIDATION.md).
+Fonte SQL oficial: `supabase/migrations/` (32 migrations e manifesto). Índice concorrente deve executar fora de transação.
+Flags independentes de reorder e Analytics ficam desligadas por padrão; consulte o runbook antes de ativar.
+
+Consolidação atual: [hardening, migrations reproduzíveis, staging e Storage piloto](docs/25-HARDENING-CONSOLIDATION.md).
+Fonte SQL oficial: `supabase/migrations/` (32 migrations e manifesto). Índice concorrente deve executar fora de transação.
+Flags independentes de reorder e Analytics ficam desligadas por padrão; consulte o runbook antes de ativar.
+
 SaaS de cardápio digital com painel do estabelecimento, experiência pública,
 Supabase e processamento seguro de vídeos pelo Mux.
 

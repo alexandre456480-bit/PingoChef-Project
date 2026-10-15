@@ -293,7 +293,7 @@ export const qrService = {
   },
   async list(business: string) {
     const snapshot = await this.authorize(business);
-    const [{ data, error }, settings] = await Promise.all([
+    const [{ data, error }, settings, publicAvailable] = await Promise.all([
       supabaseAdmin
         .from("analytics_qr_refs")
         .select(fields)
@@ -306,6 +306,7 @@ export const qrService = {
         .select("max_codes_per_business")
         .eq("singleton", true)
         .single(),
+      businessEligibility.isPublicEligible(business),
     ]);
     qrDatabaseError(error);
     qrDatabaseError(settings.error);
@@ -313,7 +314,7 @@ export const qrService = {
       rows: (data || []).map((row) => dto(row as QrRow)),
       limit: settings.data!.max_codes_per_business,
       customization: snapshot.entitlements.QR_CUSTOMIZATION === true,
-      publicAvailable: await businessEligibility.isPublicEligible(business),
+      publicAvailable,
     };
   },
   async get(business: string, id: string): Promise<QrRow> {

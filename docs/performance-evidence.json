@@ -1,0 +1,339 @@
+{
+  "date": "2026-10-14",
+  "http_before": {
+    "scenario": "Local HTTP + mocked database/Auth, cold report cache; not production latency",
+    "simulated_rtt_ms": 10,
+    "node": "v24.19.0",
+    "rows": [
+      {
+        "endpoint": "/api/v1/auth/me",
+        "samples": 30,
+        "p50_ms": 172.29,
+        "p95_ms": 239.6,
+        "p99_ms": 257.76,
+        "db_round_trips": 9,
+        "external_calls": 1,
+        "max_concurrent_calls": 1,
+        "http_bytes": 742
+      },
+      {
+        "endpoint": "/api/v1/items",
+        "samples": 30,
+        "p50_ms": 234.16,
+        "p95_ms": 236.39,
+        "p99_ms": 237.27,
+        "db_round_trips": 12,
+        "external_calls": 2,
+        "max_concurrent_calls": 1,
+        "http_bytes": 279
+      },
+      {
+        "endpoint": "/api/v1/categories",
+        "samples": 30,
+        "p50_ms": 124.24,
+        "p95_ms": 127.42,
+        "p99_ms": 128.78,
+        "db_round_trips": 6,
+        "external_calls": 1,
+        "max_concurrent_calls": 1,
+        "http_bytes": 202
+      },
+      {
+        "endpoint": "/api/v1/design",
+        "samples": 30,
+        "p50_ms": 124.72,
+        "p95_ms": 126.58,
+        "p99_ms": 126.99,
+        "db_round_trips": 6,
+        "external_calls": 1,
+        "max_concurrent_calls": 1,
+        "http_bytes": 864
+      },
+      {
+        "endpoint": "/api/v1/public/menu/benchmark",
+        "samples": 30,
+        "p50_ms": 125.25,
+        "p95_ms": 127.64,
+        "p99_ms": 127.75,
+        "db_round_trips": 7,
+        "external_calls": 0,
+        "max_concurrent_calls": 1,
+        "http_bytes": 1767
+      },
+      {
+        "endpoint": "/api/v1/analytics",
+        "samples": 30,
+        "p50_ms": 171.74,
+        "p95_ms": 174.97,
+        "p99_ms": 278.96,
+        "db_round_trips": 16,
+        "external_calls": 1,
+        "max_concurrent_calls": 8,
+        "http_bytes": 492
+      },
+      {
+        "endpoint": "/api/v1/qr",
+        "samples": 30,
+        "p50_ms": 186.52,
+        "p95_ms": 262.39,
+        "p99_ms": 277.81,
+        "db_round_trips": 11,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 91
+      }
+    ]
+  },
+  "http_reorder_before": {
+    "scenario": "Local HTTP + mocked database/Auth, cold report cache; not production latency",
+    "simulated_rtt_ms": 10,
+    "node": "v24.19.0",
+    "rows": [
+      {
+        "endpoint": "/api/v1/items/reorder",
+        "samples": 30,
+        "p50_ms": 580.49,
+        "p95_ms": 618.04,
+        "p99_ms": 693.18,
+        "db_round_trips": 34,
+        "external_calls": 2,
+        "max_concurrent_calls": 1,
+        "http_bytes": 80
+      }
+    ]
+  },
+  "http_compatible": {
+    "scenario": "Local HTTP + mocked database/Auth, cold report cache; not production latency",
+    "batch_rpc_enabled": false,
+    "simulated_rtt_ms": 10,
+    "node": "v24.19.0",
+    "rows": [
+      {
+        "endpoint": "/api/v1/auth/me",
+        "samples": 30,
+        "p50_ms": 92.92,
+        "p95_ms": 96.99,
+        "p99_ms": 184.94,
+        "db_round_trips": 9,
+        "external_calls": 1,
+        "max_concurrent_calls": 5,
+        "http_bytes": 742
+      },
+      {
+        "endpoint": "/api/v1/items",
+        "samples": 30,
+        "p50_ms": 125.22,
+        "p95_ms": 131.18,
+        "p99_ms": 140.16,
+        "db_round_trips": 7,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 279
+      },
+      {
+        "endpoint": "/api/v1/categories",
+        "samples": 30,
+        "p50_ms": 109.14,
+        "p95_ms": 169.86,
+        "p99_ms": 189.51,
+        "db_round_trips": 6,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 202
+      },
+      {
+        "endpoint": "/api/v1/design",
+        "samples": 30,
+        "p50_ms": 109.42,
+        "p95_ms": 117.66,
+        "p99_ms": 118.61,
+        "db_round_trips": 6,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 864
+      },
+      {
+        "endpoint": "/api/v1/public/menu/benchmark",
+        "samples": 30,
+        "p50_ms": 77.88,
+        "p95_ms": 79.48,
+        "p99_ms": 92.52,
+        "db_round_trips": 7,
+        "external_calls": 0,
+        "max_concurrent_calls": 4,
+        "http_bytes": 1767
+      },
+      {
+        "endpoint": "/api/v1/analytics",
+        "samples": 30,
+        "p50_ms": 155.06,
+        "p95_ms": 160.31,
+        "p99_ms": 402.67,
+        "db_round_trips": 16,
+        "external_calls": 1,
+        "max_concurrent_calls": 8,
+        "http_bytes": 492
+      },
+      {
+        "endpoint": "/api/v1/qr",
+        "samples": 30,
+        "p50_ms": 155.99,
+        "p95_ms": 167.45,
+        "p99_ms": 220.6,
+        "db_round_trips": 11,
+        "external_calls": 1,
+        "max_concurrent_calls": 3,
+        "http_bytes": 91
+      },
+      {
+        "endpoint": "/api/v1/items/reorder",
+        "samples": 30,
+        "p50_ms": 437.26,
+        "p95_ms": 484.42,
+        "p99_ms": 507.28,
+        "db_round_trips": 27,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 80
+      }
+    ]
+  },
+  "http_batch": {
+    "scenario": "Local HTTP + mocked database/Auth, cold report cache; not production latency",
+    "batch_rpc_enabled": true,
+    "simulated_rtt_ms": 10,
+    "node": "v24.19.0",
+    "rows": [
+      {
+        "endpoint": "/api/v1/auth/me",
+        "samples": 30,
+        "p50_ms": 93.89,
+        "p95_ms": 112.65,
+        "p99_ms": 180.47,
+        "db_round_trips": 9,
+        "external_calls": 1,
+        "max_concurrent_calls": 5,
+        "http_bytes": 742
+      },
+      {
+        "endpoint": "/api/v1/items",
+        "samples": 30,
+        "p50_ms": 124.24,
+        "p95_ms": 135.07,
+        "p99_ms": 135.35,
+        "db_round_trips": 7,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 279
+      },
+      {
+        "endpoint": "/api/v1/categories",
+        "samples": 30,
+        "p50_ms": 108.28,
+        "p95_ms": 120.83,
+        "p99_ms": 182.85,
+        "db_round_trips": 6,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 202
+      },
+      {
+        "endpoint": "/api/v1/design",
+        "samples": 30,
+        "p50_ms": 109.28,
+        "p95_ms": 123.57,
+        "p99_ms": 123.75,
+        "db_round_trips": 6,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 864
+      },
+      {
+        "endpoint": "/api/v1/public/menu/benchmark",
+        "samples": 30,
+        "p50_ms": 77.85,
+        "p95_ms": 85.38,
+        "p99_ms": 91.67,
+        "db_round_trips": 7,
+        "external_calls": 0,
+        "max_concurrent_calls": 4,
+        "http_bytes": 1767
+      },
+      {
+        "endpoint": "/api/v1/analytics",
+        "samples": 30,
+        "p50_ms": 154.66,
+        "p95_ms": 186.86,
+        "p99_ms": 309.94,
+        "db_round_trips": 9,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 492
+      },
+      {
+        "endpoint": "/api/v1/qr",
+        "samples": 30,
+        "p50_ms": 155.88,
+        "p95_ms": 213.86,
+        "p99_ms": 237.46,
+        "db_round_trips": 11,
+        "external_calls": 1,
+        "max_concurrent_calls": 3,
+        "http_bytes": 91
+      },
+      {
+        "endpoint": "/api/v1/items/reorder",
+        "samples": 30,
+        "p50_ms": 141.96,
+        "p95_ms": 183.45,
+        "p99_ms": 221.44,
+        "db_round_trips": 8,
+        "external_calls": 1,
+        "max_concurrent_calls": 2,
+        "http_bytes": 80
+      }
+    ]
+  },
+  "postgres": {
+    "scenario": "PostgreSQL 16 local, 109500 synthetic product/day aggregates, 730 days/150 products, warm buffers; not production",
+    "before": {
+      "samples": 10,
+      "p50_ms": 105.247,
+      "p95_ms": 124.211,
+      "p99_ms": 124.211,
+      "shared_hit_blocks": 1602,
+      "shared_read_blocks": 0,
+      "nodes": [
+        "Aggregate",
+        "Gather Merge",
+        "Aggregate",
+        "Sort",
+        "Seq Scan"
+      ]
+    },
+    "after": {
+      "samples": 10,
+      "p50_ms": 2.616,
+      "p95_ms": 3.576,
+      "p99_ms": 3.576,
+      "shared_hit_blocks": 19,
+      "shared_read_blocks": 0,
+      "nodes": [
+        "Aggregate",
+        "Index Scan:analytics_product_trend_idx"
+      ]
+    }
+  },
+  "backend_unit": {
+    "passed": 193,
+    "skipped": 2
+  },
+  "frontend_unit": {
+    "passed": 57
+  },
+  "postgres_existing_scenarios": 59,
+  "postgres_additional_security_groups": 2,
+  "production_migrations_applied": false,
+  "production_deploy_performed": false,
+  "baseline_backend_commit": "7cd6325f027f106cfe59ae01098971917ec45779"
+}

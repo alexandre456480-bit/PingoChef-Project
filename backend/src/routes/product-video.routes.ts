@@ -12,11 +12,12 @@ import {
 
 const router = Router();
 
-router.use(authenticateJwt as any);
-router.post('/media/publish-ready', publishReadyMediaController as any);
-router.get('/:itemId/media', listProductMediaController as any);
-router.post('/:itemId/media/video/upload-intent', createVideoUploadIntentController as any);
-router.post('/:itemId/media/:mediaId/playback', createOwnerPreviewPlaybackController as any);
-router.delete('/:itemId/media/:mediaId', deleteProductVideoController as any);
+// This router and itemRoutes share /items. Keep the same authentication on
+// every media endpoint, without running it on unmatched ordinary CRUD paths.
+router.post('/media/publish-ready', authenticateJwt as any, publishReadyMediaController as any);
+router.get('/:itemId/media', authenticateJwt as any, listProductMediaController as any);
+router.post('/:itemId/media/video/upload-intent', authenticateJwt as any, createVideoUploadIntentController as any);
+router.post('/:itemId/media/:mediaId/playback', authenticateJwt as any, createOwnerPreviewPlaybackController as any);
+router.delete('/:itemId/media/:mediaId', authenticateJwt as any, deleteProductVideoController as any);
 
 export default router;
