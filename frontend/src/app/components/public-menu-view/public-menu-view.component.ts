@@ -1,6 +1,5 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild, ChangeDetectionStrategy, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Category, MenuItem, MenuService, Subcategory } from '../../services/menu.service';
 import {
@@ -20,11 +19,17 @@ import { AuthService } from '../../services/auth.service';
 import { findCatalogIcon } from '../../constants/icon-catalog';
 import { ProductMediaGalleryComponent } from '../product-media-gallery/product-media-gallery.component';
 import { MenuRevealDirective } from './menu-reveal.directive';
+import { MenuImageDirective, safeMenuImage } from './menu-image.directive';
+import { MenuFontsService, menuFont } from '../../services/menu-fonts.service';
+import { DialogFocusDirective } from '../dialog-focus.directive';
+
+export const normalizeMenuSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 
 @Component({
   selector: 'app-public-menu-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductMediaGalleryComponent, MenuRevealDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, ProductMediaGalleryComponent, MenuRevealDirective, MenuImageDirective, DialogFocusDirective],
   template: `
     <div
       class="menu-viewport"
@@ -53,9 +58,12 @@ import { MenuRevealDirective } from './menu-reveal.directive';
         <div
           class="welcome-screen"
           [class.anim-exit]="viewState === 'transitioning'"
-          [style.background-image]="welcomeBgType === 'image' && welcomeBgImage ? 'url(' + welcomeBgImage + ')' : 'none'"
+
           [style.background-color]="welcomeBgColor">
 
+          @if (welcomeBgType === 'image' && welcomeBgImage) {
+            <img class="welcome-cover" [appMenuImage]="welcomeBgImage" menuImageKind="hero" menuImagePriority="high" alt="" />
+          }
           <!-- Dynamic Glass Gradient Overlay -->
           <div
             class="welcome-overlay"
@@ -69,7 +77,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
           <div class="welcome-content">
             <!-- Floating Logo with Glowing Ring -->
             <div class="welcome-logo-wrap">
-              <img [src]="logoUrl" [alt]="businessName" class="welcome-logo-img" (error)="onLogoError($event)" />
+              <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="welcome-logo-img" [menuImagePriority]="welcomeBgType === 'image' && welcomeBgImage ? 'auto' : 'high'" />
             </div>
 
             <!-- Business Typography -->
@@ -106,20 +114,13 @@ import { MenuRevealDirective } from './menu-reveal.directive';
         </div>
       }
 
-      @if (viewState === 'transitioning') {
-        <div class="entry-transition-layer" aria-hidden="true">
-          <span class="entry-panel entry-panel-left"></span>
-          <span class="entry-panel entry-panel-right"></span>
-          <span class="entry-mark"><img [src]="logoUrl" alt="" (error)="onLogoError($event)" /></span>
-        </div>
-      }
-
       <!-- ══════════════════════════════════════════════════ -->
       <!-- ── 2. VITRINE & MENU PRINCIPAL ── -->
       <!-- ══════════════════════════════════════════════════ -->
       @if (viewState === 'menu' || viewState === 'transitioning') {
         <div
           class="menu-main-shell"
+          [attr.inert]="selectedProduct ? '' : null"
           [class.anim-enter]="viewState === 'transitioning'"
           [class.menu-opening]="menuOpening"
           [style.background]="screenBg">
@@ -131,7 +132,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
               class="capsule-btn"
               [class.active]="searchActive"
               (click)="toggleSearch()"
-              title="Buscar prato ou bebida">
+              title="Buscar prato ou bebida" aria-label="Buscar prato ou bebida" [attr.aria-expanded]="searchActive" aria-controls="public-menu-search">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
@@ -173,17 +174,19 @@ import { MenuRevealDirective } from './menu-reveal.directive';
 
           <!-- Search Expandable Bar -->
           @if (searchActive) {
-            <div class="search-drawer" [style.background]="surfaceColor + 'F2'">
+            <div id="public-menu-search" class="search-drawer" [style.padding-right.px]="82 + (enableCart ? 48 : 0) + (isPhonePreview ? 48 : 0)" [style.background]="surfaceColor + 'F2'">
               <div class="search-field-wrap">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input
                   type="text"
-                  [(ngModel)]="searchFilter"
-                  placeholder="Buscar pelo nome do prato ou bebida..."
+                  [value]="searchFilter"
+                  (input)="updateSearch($event)"
+                  (compositionend)="updateSearch($event)"
+                  aria-label="Buscar produtos" placeholder="Buscar pelo nome do prato ou bebida..."
                   class="search-input"
                   autofocus />
                 @if (searchFilter) {
-                  <button type="button" class="clear-btn" (click)="searchFilter = ''">✕</button>
+                  <button type="button" class="clear-btn" aria-label="Limpar busca" (click)="searchFilter = ''">✕</button>
                 }
               </div>
             </div>
@@ -196,7 +199,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
             @if (logoPosition === 'above-hero' && !searchFilter && showHeroBlock) {
               <div class="above-hero-section">
                 <div class="above-hero-logo-wrap">
-                  <img [src]="logoUrl" [alt]="businessName" class="above-hero-logo-img" (error)="onLogoError($event)" />
+                  <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="above-hero-logo-img" />
                 </div>
               </div>
             }
@@ -206,7 +209,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
               <div class="no-hero-header" [style.background]="surfaceColor" [style.border-bottom]="'1px solid ' + surfaceColor + '30'">
                 <div class="no-hero-brand">
                   <div class="no-hero-logo-wrap">
-                    <img [src]="logoUrl" [alt]="businessName" class="no-hero-logo-img" (error)="onLogoError($event)" />
+                    <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="no-hero-logo-img" />
                   </div>
                   <div class="no-hero-texts">
                     <h2 class="no-hero-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ businessName }}</h2>
@@ -229,7 +232,10 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                     <div
                       class="hero-carousel-slide"
                       [class.active]="currentBannerIndex === bIdx"
-                      [style.background-image]="'url(' + sanitizeBannerUrl(banner) + ')'">
+                      >
+                      @if (currentBannerIndex === bIdx) {
+                        <img class="hero-slide-image" [appMenuImage]="banner" menuImageKind="hero" alt="" />
+                      }
                     </div>
                   }
                 </div>
@@ -254,7 +260,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                 @if (logoPosition === 'hero-bottom-center') {
                   <div class="hero-overlap-logo-container">
                     <div class="hero-overlap-ring">
-                      <img [src]="logoUrl" [alt]="businessName" class="hero-overlap-img" (error)="onLogoError($event)" />
+                      <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="hero-overlap-img" />
                     </div>
                   </div>
                 }
@@ -309,7 +315,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                       <button
                         type="button"
                         class="category-nav-pill"
-                        [class.active]="!activeCatId"
+                        [class.active]="!activeCatId" [attr.aria-current]="!activeCatId ? 'page' : null"
                         [style.--active-color]="accentColor"
                         (click)="filterCategory(null)">
                         <div class="cat-pill-icon svg-3d">
@@ -332,13 +338,13 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         <button
                           type="button"
                           class="category-nav-pill"
-                          [class.active]="activeCatId === cat.id"
+                          [class.active]="activeCatId === cat.id" [attr.aria-current]="activeCatId === cat.id ? 'page' : null" [attr.aria-label]="cat.name"
                           [attr.data-display-mode]="cat.displayMode || 'icon_text_side'"
                           [style.--active-color]="accentColor"
                           (click)="filterCategory(cat.id)">
                           @if (cat.displayMode !== 'icon_only' || cat.iconType !== 'none') {
                             @if (cat.iconType === 'image' && cat.imageUrl) {
-                              <img [src]="cat.imageUrl" [alt]="cat.name" class="cat-pill-img" />
+                              <img [appMenuImage]="cat.imageUrl" [alt]="cat.name" class="cat-pill-img" />
                             } @else if (cat.iconType !== 'none' && getCatSvg(cat)) {
                               <div class="cat-pill-svg" [innerHTML]="getCatSvg(cat)"></div>
                             }
@@ -365,10 +371,11 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                     <div class="promo-items-scroll">
                       @for (item of promoItems; track item.id) {
                         <div class="promo-item-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
+                          <button type="button" class="product-card-trigger" [attr.aria-label]="'Ver detalhes de ' + item.name" (click)="openProductDetail(item); $event.stopPropagation()"></button>
 
                           <div class="promo-img-wrap">
                             @if (item.imageUrl) {
-                              <img [src]="item.imageUrl" [alt]="item.name" class="card-photo" />
+                              <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="card-photo" />
                             } @else {
                               <div class="photo-placeholder" [style.color]="accentColor">
                                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -386,6 +393,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                               } @else if (item.promotionalPrice) {
                                 <span class="old-price" [style.color]="textSecondary">R$ {{ item.price.toFixed(2) }}</span>
                                 <span class="active-price" [style.color]="accentColor">R$ {{ item.promotionalPrice.toFixed(2) }}</span>
+                              } @else {
+                                <span class="active-price" [style.color]="accentColor">R$ {{ item.price.toFixed(2) }}</span>
                               }
                             </div>
                           @if (enableLikes) {
@@ -423,10 +432,11 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                     <div class="liked-ranking-list">
                       @for (item of mostLikedItems; track item.id) {
                         <div class="ranking-item-row" [style.background]="surfaceColor" (click)="openProductDetail(item)">
+                          <button type="button" class="product-card-trigger" [attr.aria-label]="'Ver detalhes de ' + item.name" (click)="openProductDetail(item); $event.stopPropagation()"></button>
 
                           <div class="ranking-img-wrap">
                             @if (item.imageUrl) {
-                              <img [src]="item.imageUrl" [alt]="item.name" class="row-thumb" />
+                              <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="row-thumb" />
                             } @else {
                               <div class="thumb-fallback" [style.color]="accentColor">★</div>
                             }
@@ -454,12 +464,14 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                       </div>
                     </div>
 
+                    @defer (on viewport) {
                     <div class="featured-chef-grid">
                       @for (item of featuredItems; track item.id) {
                         <div class="featured-chef-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
+                          <button type="button" class="product-card-trigger" [attr.aria-label]="'Ver detalhes de ' + item.name" (click)="openProductDetail(item); $event.stopPropagation()"></button>
                           <div class="chef-card-photo-wrap">
                             @if (item.imageUrl) {
-                              <img [src]="item.imageUrl" [alt]="item.name" class="chef-photo" />
+                              <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="chef-photo" />
                             } @else {
                               <div class="chef-fallback" [style.color]="accentColor">★</div>
                             }
@@ -478,6 +490,16 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         </div>
                       }
                     </div>
+                    } @placeholder {
+                      <div class="featured-chef-grid module-skeleton" role="status" aria-label="Preparando produtos">
+                        @for (item of featuredItems; track item.id) {
+                          <div class="featured-chef-card module-skeleton-card" [style.background]="surfaceColor" aria-hidden="true">
+                            <div class="chef-card-photo-wrap skeleton-photo"></div>
+                            <div class="chef-card-content"><span class="skeleton-copy"></span><span class="skeleton-copy short"></span><span class="skeleton-copy"></span></div>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 }
 
@@ -491,13 +513,15 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                       </div>
                     </div>
 
+                    @defer (on viewport) {
                     <div class="combos-scroll-track">
                       @for (item of comboItems; track item.id) {
                         <div class="combo-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
+                          <button type="button" class="product-card-trigger" [attr.aria-label]="'Ver detalhes de ' + item.name" (click)="openProductDetail(item); $event.stopPropagation()"></button>
 
                           <div class="combo-img-wrap">
                             @if (item.imageUrl) {
-                              <img [src]="item.imageUrl" [alt]="item.name" class="combo-card-img" />
+                              <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="combo-card-img" />
                             } @else {
                               <div class="photo-placeholder" [style.color]="accentColor">
                                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -542,6 +566,16 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         </div>
                       }
                     </div>
+                    } @placeholder {
+                      <div class="combos-scroll-track module-skeleton" role="status" aria-label="Preparando produtos">
+                        @for (item of comboItems; track item.id) {
+                          <div class="combo-card module-skeleton-card" [style.background]="surfaceColor" aria-hidden="true">
+                            <div class="combo-img-wrap skeleton-photo"></div>
+                            <div class="combo-card-content"><span class="skeleton-copy"></span><span class="skeleton-copy short"></span><span class="skeleton-copy"></span></div>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 }
 
@@ -556,13 +590,15 @@ import { MenuRevealDirective } from './menu-reveal.directive';
 
                     </div>
 
+                    @defer (on viewport) {
                     <div class="best-sellers-grid">
                       @for (item of bestSellerItems; track item.id) {
                         <div class="best-seller-card" [style.background]="surfaceColor" (click)="openProductDetail(item)">
+                          <button type="button" class="product-card-trigger" [attr.aria-label]="'Ver detalhes de ' + item.name" (click)="openProductDetail(item); $event.stopPropagation()"></button>
 
                           <div class="best-seller-img-wrap">
                             @if (item.imageUrl) {
-                              <img [src]="item.imageUrl" [alt]="item.name" class="best-seller-thumb" />
+                              <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="best-seller-thumb" />
                             } @else {
                               <div class="thumb-fallback" [style.color]="accentColor">★</div>
                             }
@@ -596,6 +632,16 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         </div>
                       }
                     </div>
+                    } @placeholder {
+                      <div class="best-sellers-grid module-skeleton" role="status" aria-label="Preparando produtos">
+                        @for (item of bestSellerItems; track item.id) {
+                          <div class="best-seller-card module-skeleton-card" [style.background]="surfaceColor" aria-hidden="true">
+                            <div class="best-seller-img-wrap skeleton-photo"></div>
+                            <div class="best-seller-info"><span class="skeleton-copy"></span><span class="skeleton-copy short"></span><span class="skeleton-copy"></span></div>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 }
               }
@@ -613,7 +659,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                     <button
                       type="button"
                       class="category-nav-pill"
-                      [class.active]="!activeCatId"
+                      [class.active]="!activeCatId" [attr.aria-current]="!activeCatId ? 'page' : null"
                       [style.--active-color]="accentColor"
                       (click)="filterCategory(null)">
                       <div class="cat-pill-icon svg-3d">
@@ -636,13 +682,13 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                       <button
                         type="button"
                         class="category-nav-pill"
-                        [class.active]="activeCatId === cat.id"
+                        [class.active]="activeCatId === cat.id" [attr.aria-current]="activeCatId === cat.id ? 'page' : null" [attr.aria-label]="cat.name"
                         [attr.data-display-mode]="cat.displayMode || 'icon_text_side'"
                         [style.--active-color]="accentColor"
                         (click)="filterCategory(cat.id)">
                         @if (cat.displayMode !== 'icon_only' || cat.iconType !== 'none') {
                           @if (cat.iconType === 'image' && cat.imageUrl) {
-                            <img [src]="cat.imageUrl" [alt]="cat.name" class="cat-pill-img" />
+                            <img [appMenuImage]="cat.imageUrl" [alt]="cat.name" class="cat-pill-img" />
                           } @else if (cat.iconType !== 'none' && getCatSvg(cat)) {
                             <div class="cat-pill-svg" [innerHTML]="getCatSvg(cat)"></div>
                           }
@@ -713,7 +759,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                                 <!-- Photo Wrap -->
                                 <div class="product-card-photo">
                                   @if (item.imageUrl) {
-                                    <img [src]="item.imageUrl" [alt]="item.name" class="product-photo-img" loading="lazy" />
+                                    <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="product-photo-img" loading="lazy" />
                                   } @else {
                                     <div class="photo-placeholder-box" [style.color]="accentColor">
                                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
@@ -820,7 +866,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                               <!-- Photo Wrap -->
                               <div class="product-card-photo">
                                 @if (item.imageUrl) {
-                                  <img [src]="item.imageUrl" [alt]="item.name" class="product-photo-img" loading="lazy" />
+                                  <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="product-photo-img" loading="lazy" />
                                 } @else {
                                   <div class="photo-placeholder-box" [style.color]="accentColor">
                                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
@@ -902,7 +948,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
                         <!-- Photo Wrap -->
                         <div class="product-card-photo">
                           @if (item.imageUrl) {
-                            <img [src]="item.imageUrl" [alt]="item.name" class="product-photo-img" loading="lazy" />
+                            <img [appMenuImage]="item.imageUrl" [alt]="item.name" class="product-photo-img" loading="lazy" />
                           } @else {
                             <div class="photo-placeholder-box" [style.color]="accentColor">
                               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
@@ -978,9 +1024,15 @@ import { MenuRevealDirective } from './menu-reveal.directive';
               </div>
             }
 
+            @if (!items.length) {
+              <section class="empty-products-msg" [style.color]="textSecondary">
+                <h2>Cardápio em preparação</h2><p>O estabelecimento está atualizando as opções. Volte em breve.</p>
+              </section>
+            }
+            @if (likeMessage()) { <p class="like-feedback" role="status">{{ likeMessage() }}</p> }
             <!-- Footer info -->
             <footer class="public-menu-footer">
-              <img [src]="logoUrl" [alt]="businessName" class="footer-mini-logo" (error)="onLogoError($event)" />
+              <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="footer-mini-logo" />
               <span class="footer-powered">Cardápio Digital</span>
             </footer>
 
@@ -993,8 +1045,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       <!-- ══════════════════════════════════════════════════ -->
       @if (selectedProduct) {
         <div class="product-modal-backdrop" (click)="closeProductDetail()">
-          <div class="product-modal-sheet" [class.video-expanded]="productVideoExpanded" (click)="$event.stopPropagation()" [style.background]="surfaceColor">
-            <button type="button" class="sheet-close-btn" aria-label="Fechar detalhes" (click)="closeProductDetail()">
+          <div class="product-modal-sheet" role="dialog" [attr.aria-modal]="productVideoExpanded ? null : 'true'" aria-labelledby="product-detail-title" tabindex="-1" appDialogFocus [dialogFocusEnabled]="!productVideoExpanded" (dialogEscape)="closeProductDetail()" [class.video-expanded]="productVideoExpanded" (click)="$event.stopPropagation()" [style.background]="surfaceColor">
+            <button type="button" class="sheet-close-btn" aria-label="Fechar detalhes" [disabled]="productVideoExpanded" (click)="closeProductDetail()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
 
@@ -1008,9 +1060,9 @@ import { MenuRevealDirective } from './menu-reveal.directive';
               (expandedChange)="productVideoExpanded = $event">
             </app-product-media-gallery>
 
-            <div class="modal-sheet-content">
+            <div class="modal-sheet-content" [attr.inert]="productVideoExpanded ? '' : null">
               <div class="sheet-header">
-                <h3 class="sheet-product-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">
+                <h3 id="product-detail-title" class="sheet-product-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">
                   {{ selectedProduct.name }}
                 </h3>
                 @if (enableLikes) {
@@ -1212,6 +1264,38 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       color: var(--text-primary, #2D1822);
     }
 
+    .welcome-cover, .hero-slide-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    img[appMenuImage] { transition:opacity 180ms ease; background:color-mix(in srgb,var(--surface-color) 80%,#8a8075 20%); }
+    .menu-image-loading { opacity:0; }
+    .menu-image-ready, .menu-image-priority { opacity:1; }
+    .menu-image-priority { transition:none !important; }
+    .menu-image-failed { object-fit:contain !important; }
+    .promo-item-card,.ranking-item-row,.featured-chef-card,.combo-card,.best-seller-card { position:relative; }
+    .product-card-trigger { position:absolute; inset:0; z-index:1; width:100%; height:100%; padding:0; border:0; border-radius:inherit; background:transparent; cursor:pointer; }
+    .card-like-btn,.row-like-btn,.chef-card-like,.combo-like-btn,.item-like-btn,.like-btn { position:relative; z-index:2; }
+    button:focus-visible, [role=button]:focus-visible { outline:3px solid var(--accent-color); outline-offset:3px; }
+    .capsule-btn,.clear-btn,.sheet-close-btn,.item-like-btn,.card-like-btn,.row-like-btn,.sheet-like-action,.btn-view-item { min-width:44px; min-height:44px; }
+    .category-nav-pill { min-height:44px; }
+    .btn-back-home,.subcategory-header-collapsible { min-height:44px; box-sizing:border-box; }
+    .module-skeleton-card { pointer-events:none; }
+    /* Preserve progressive DOM placeholders while letting the browser skip
+       layout/paint for distant sections until they approach the scrollport. */
+    .showcase-block { content-visibility:auto; contain-intrinsic-block-size:auto 320px; }
+    .featured-chef-block,.best-sellers-block { contain-intrinsic-block-size:auto 900px; }
+    .module-skeleton .featured-chef-card { min-height:224px; }
+    .module-skeleton .combo-card { min-height:276px; }
+    .module-skeleton .best-seller-card { min-height:195px; }
+    .skeleton-photo,.skeleton-copy { background:color-mix(in srgb,var(--surface-color) 80%,var(--text-secondary) 20%); animation:moduleBreathe 1.8s ease-in-out infinite alternate; }
+    .skeleton-copy { display:block; height:14px; border-radius:5px; margin:4px 0; width:88%; }
+    .skeleton-copy.short { width:65%; }
+    @keyframes moduleBreathe { from{opacity:.45}to{opacity:.8} }
+    @media(prefers-reduced-motion:reduce) { .skeleton-photo,.skeleton-copy{animation:none} }
+    .search-input { min-height:44px; font-size:16px; }
+    button:active { transform:scale(.98); }
+    .showcase-scrollable { scroll-padding-top:74px; padding-bottom:max(32px,env(safe-area-inset-bottom)); }
+    .search-drawer { z-index:30; }
+    @media(prefers-reduced-motion:reduce) { img[appMenuImage],button { transition:none !important; } .menu-main-shell { animation:none !important; } button:active { transform:none; } }
+
     /* Phone preview embedded mode */
     .menu-viewport.in-phone {
       height: 520px;
@@ -1366,7 +1450,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       box-shadow:
         0 8px 25px rgba(244, 123, 32, 0.4),
         inset 0 1px 2px rgba(255, 255, 255, 0.4);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .btn-enter-menu:hover {
@@ -1402,70 +1486,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       letter-spacing: 0.04em;
     }
 
-    .welcome-screen.anim-exit {
-      pointer-events: none;
-      animation: welcomeRetreat 460ms cubic-bezier(0.55, 0, 0.8, 0.35) both;
-    }
-    @keyframes welcomeRetreat {
-      to { opacity: 0; transform: translateY(-14px) scale(0.93); }
-    }
-
-    .entry-transition-layer {
-      position: absolute;
-      inset: 0;
-      z-index: 60;
-      overflow: hidden;
-      pointer-events: none;
-      display: grid;
-      place-items: center;
-    }
-    .entry-panel {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 50.5%;
-      background: linear-gradient(130deg, var(--primary-color), var(--accent-color));
-    }
-    .entry-panel-left {
-      left: 0;
-      box-shadow: 8px 0 26px rgba(0, 0, 0, 0.2);
-      animation: entryDoorLeft 1120ms cubic-bezier(0.76, 0, 0.24, 1) both;
-    }
-    .entry-panel-right {
-      right: 0;
-      background: linear-gradient(230deg, var(--primary-color), var(--secondary-color));
-      box-shadow: -8px 0 26px rgba(0, 0, 0, 0.2);
-      animation: entryDoorRight 1120ms cubic-bezier(0.76, 0, 0.24, 1) both;
-    }
-    @keyframes entryDoorLeft {
-      0% { transform: translateX(-105%); }
-      27%, 43% { transform: translateX(0); }
-      100% { transform: translateX(-105%); }
-    }
-    @keyframes entryDoorRight {
-      0% { transform: translateX(105%); }
-      27%, 43% { transform: translateX(0); }
-      100% { transform: translateX(105%); }
-    }
-    .entry-mark {
-      z-index: 1;
-      width: 92px;
-      height: 92px;
-      display: grid;
-      place-items: center;
-      animation: entryMarkPop 1120ms linear both;
-    }
-    .entry-mark img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    @keyframes entryMarkPop {
-      0%, 24% { opacity: 0; transform: scale(0.55) rotate(-18deg); }
-      34%, 50% { opacity: 1; transform: scale(1) rotate(0); }
-      72%, 100% { opacity: 0; transform: scale(1.45) rotate(8deg); }
-    }
-
     /* ══════════════════════════════════════════════════ */
     /* ── 2. MENU MAIN SHELL ── */
     /* ══════════════════════════════════════════════════ */
@@ -1476,15 +1496,6 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       flex-direction: column;
       overflow: hidden;
       position: relative;
-    }
-
-    .menu-main-shell.anim-enter {
-      animation: menuCascadeIn 850ms 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-
-    @keyframes menuCascadeIn {
-      from { opacity: 0; transform: translateY(42px) scale(0.93); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     /* Floating Controls Capsule (Minimalist Glass Design) */
@@ -1514,7 +1525,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease;
     }
     .capsule-btn:hover, .capsule-btn.active {
       background: rgba(244, 123, 32, 0.18);
@@ -1553,9 +1564,9 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       background: var(--bg-color);
       border: 1px solid rgba(0, 0, 0, 0.1);
       border-radius: 10px;
-      padding: 6px 28px 6px 32px;
+      padding: 6px 52px 6px 32px;
       color: var(--text-primary);
-      font-size: 0.76rem;
+      font-size: 16px;
       outline: none;
       box-sizing: border-box;
     }
@@ -1589,26 +1600,18 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       transform: translate3d(0, 14px, 0) rotate(-0.7deg);
     }
     .menu-reveal-visible {
-      animation: menuPageReveal 340ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+      animation: menuPageReveal 200ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
     }
-    .menu-opening .menu-reveal-visible {
-      animation-duration: 620ms;
-      animation-delay: 820ms;
-    }
-    .menu-opening .showcase-scrollable > .menu-reveal-visible:nth-child(2n) { animation-delay: 910ms; }
-    .menu-opening .showcase-scrollable > .menu-reveal-visible:nth-child(3n) { animation-delay: 990ms; }
+
     .items-grid > .menu-reveal-visible:nth-child(4n + 2) { animation-delay: 45ms; }
     .items-grid > .menu-reveal-visible:nth-child(4n + 3) { animation-delay: 90ms; }
     .items-grid > .menu-reveal-visible:nth-child(4n + 4) { animation-delay: 135ms; }
-    .menu-opening .items-grid > .menu-reveal-visible:nth-child(4n + 2) { animation-delay: 875ms; }
-    .menu-opening .items-grid > .menu-reveal-visible:nth-child(4n + 3) { animation-delay: 930ms; }
-    .menu-opening .items-grid > .menu-reveal-visible:nth-child(4n + 4) { animation-delay: 985ms; }
     @keyframes menuPageReveal {
       from { opacity: 0; transform: translate3d(0, 14px, 0) rotate(-0.7deg); }
       to { opacity: 1; transform: none; }
     }
     .catalog-section.category-enter {
-      animation: categoryPageIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+      animation: categoryPageIn 200ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
     }
     @keyframes categoryPageIn {
       from { opacity: 0.65; transform: translate3d(10px, 0, 0); }
@@ -1632,7 +1635,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border: 1px solid rgba(255, 255, 255, 0.18);
       border-radius: 20px;
       padding: 18px 20px;
-      box-shadow: 
+      box-shadow:
         0 8px 32px 0 rgba(0, 0, 0, 0.08),
         inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
       transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
@@ -1781,7 +1784,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border: none;
       padding: 0;
       cursor: pointer;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .carousel-dot.active {
       width: 22px;
@@ -1802,7 +1805,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border-radius: 12px;
       border: 1px solid rgba(0, 0, 0, 0.08);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease;
     }
     .menu-viewport[data-template="minimal"] .product-item-card:hover {
       border-color: var(--accent-color);
@@ -1823,7 +1826,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border-radius: 24px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 6px 6px 18px rgba(0,0,0,0.18), -3px -3px 10px rgba(255,255,255,0.06), inset 1px 1px 2px rgba(255,255,255,0.12);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .menu-viewport[data-template="modern"] .product-item-card:hover {
       transform: translateY(-3px) scale(1.01);
@@ -1868,7 +1871,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       border-radius: 16px;
       border: 1px solid rgba(0, 0, 0, 0.08);
       box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
-      transition: all 0.25s ease;
+      transition: transform 0.25s ease;
     }
     .menu-viewport[data-template="premium"] .product-item-card:hover {
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
@@ -1891,7 +1894,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       -webkit-backdrop-filter: blur(16px) saturate(180%);
       border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-      transition: all 0.25s ease;
+      transition: transform 0.25s ease;
     }
     .menu-viewport[data-template="dark"] .product-item-card:hover {
       border-color: var(--accent-color);
@@ -1931,7 +1934,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       min-height: 38px;
     }
     .category-nav-pill:hover {
@@ -2053,7 +2056,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       cursor: pointer;
       position: relative;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease;
     }
     .promo-item-card:hover {
       transform: translateY(-2px);
@@ -2109,7 +2112,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: transform 0.15s;
     }
 
     /* Liked ranking */
@@ -2430,7 +2433,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       cursor: pointer;
       border: 1px solid;
       text-align: center;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease;
     }
     .btn-sheet-close-action:hover {
       opacity: 0.85;
@@ -2483,10 +2486,9 @@ import { MenuRevealDirective } from './menu-reveal.directive';
     }
     .product-item-card {
       display: grid;
-      grid-template-columns: 88px 1fr;
-      min-height: 88px;
-      max-height: 88px;
-      height: 88px;
+      grid-template-columns: 104px 1fr;
+      min-height: 124px;
+      height: auto;
       border-radius: 12px;
       overflow: hidden;
       cursor: pointer;
@@ -2494,21 +2496,9 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       box-sizing: border-box;
     }
     .product-card-photo {
-      position: relative;
-      width: 88px;
-      height: 88px;
-      min-width: 88px;
-      max-width: 88px;
-      min-height: 88px;
-      max-height: 88px;
-      aspect-ratio: 1 / 1;
-      flex-shrink: 0;
-      background: rgba(0, 0, 0, 0.05);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      align-self: center;
+      position:relative; width:104px; height:104px; min-width:104px;
+      aspect-ratio:1; background:rgba(0,0,0,.05); overflow:hidden;
+      display:flex; align-items:center; justify-content:center; align-self:center;
     }
     .product-photo-img {
       width: 100%;
@@ -2530,7 +2520,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       background: transparent;
       border: none;
       color: var(--text-secondary);
-      min-height: 24px;
+      min-height: 44px;
       flex-shrink: 0;
       border-radius: 10px;
       padding: 2px 5px;
@@ -2541,7 +2531,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       z-index: 3;
     }
     .like-counter-val {
-      font-size: 0.58rem;
+      font-size: 0.75rem;
       font-weight: 700;
     }
 
@@ -2560,7 +2550,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       overflow: hidden;
     }
     .card-item-title {
-      font-size: 0.82rem;
+      font-size: 0.875rem;
       font-weight: 700;
       margin: 0;
       line-height: 1.2;
@@ -2569,7 +2559,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       text-overflow: ellipsis;
     }
     .card-item-desc {
-      font-size: 0.67rem;
+      font-size: 0.8125rem;
       margin: 0;
       line-height: 1.25;
       display: -webkit-box;
@@ -2605,16 +2595,16 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       justify-content: center;
       gap: 1px;
     }
-    .price-regular { 
-      font-size: 0.82rem; 
-      font-weight: 800; 
-      line-height: 1; 
+    .price-regular {
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1;
       letter-spacing: -0.01em;
     }
-    .price-highlight { 
-      font-size: 0.82rem; 
-      font-weight: 900; 
-      line-height: 1.05; 
+    .price-highlight {
+      font-size: 0.82rem;
+      font-weight: 900;
+      line-height: 1.05;
       letter-spacing: -0.01em;
       display: inline-block;
       text-shadow: 0 1px 2px rgba(0,0,0,0.12);
@@ -2623,11 +2613,11 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       font-size: 0.80rem;
       transform: none;
     }
-    .price-strikethrough { 
-      font-size: 0.60rem; 
-      text-decoration: line-through; 
-      opacity: 0.65; 
-      line-height: 1; 
+    .price-strikethrough {
+      font-size: 0.60rem;
+      text-decoration: line-through;
+      opacity: 0.65;
+      line-height: 1;
       margin: 0;
       font-weight: 500;
     }
@@ -2657,7 +2647,7 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       cursor: pointer;
       flex-shrink: 0;
       white-space: nowrap;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease;
     }
     .btn-view-item:hover {
       filter: brightness(1.1);
@@ -2712,12 +2702,12 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       scrollbar-width: thin;
       border: 1px solid rgba(255, 255, 255, 0.1);
       position: relative;
-      animation: sheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: sheetUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .product-modal-sheet.video-expanded { overflow: visible; }
     .menu-viewport.in-phone .product-modal-sheet { max-height: 500px; }
     @keyframes sheetUp {
-      from { transform: translateY(100%); }
+      from { transform: translateY(12px); opacity:0; }
       to { transform: translateY(0); }
     }
     .sheet-close-btn {
@@ -2828,11 +2818,11 @@ import { MenuRevealDirective } from './menu-reveal.directive';
       gap: 5px;
       padding: 5px 10px;
       border-radius: 8px;
-      font-size: 0.72rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       border: 1px solid;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
     }
     .btn-view-item:hover {
@@ -3251,7 +3241,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   @ViewChild('showcaseScroller') private showcaseScroller?: ElementRef<HTMLElement>;
   @ViewChild('catalogSection') private catalogSection?: ElementRef<HTMLElement>;
   /** Se for true, consome os signals em tempo real do painel (DesignService, MenuService, AuthService) */
-  @Input() isPhonePreview = false;
+  private previewMode = signal(false);
+  @Input() set isPhonePreview(value: boolean) { this.previewMode.set(value); }
+  get isPhonePreview(): boolean { return this.previewMode(); }
 
   /** Se for false (rota pública), recebe os dados carregados da API */
   @Input() publicSlug: string | null = null;
@@ -3262,12 +3254,17 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   private openingTimers: ReturnType<typeof setTimeout>[] = [];
 
   // Filters & selection
-  activeCatId: string | null = null;
+  private category = signal<string | null>(null);
+  get activeCatId(): string | null { return this.category(); }
+  set activeCatId(value: string | null) { this.category.set(value); }
   categoryTransitioning = false;
   private categoryFrame = 0;
   searchActive = false;
-  searchFilter = '';
+  private search = signal('');
+  get searchFilter(): string { return this.search(); }
+  set searchFilter(value: string) { this.search.set(value); }
   selectedProduct: MenuItem | null = null;
+  readonly likeMessage = signal('');
   productVideoExpanded = false;
   modalItemQuantity = 1;
   private previewLikedItemIds = new Set<string>();
@@ -3280,6 +3277,49 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   // Subcategories Accordion State
   collapsedSubcategories = new Set<string>();
+  private readonly iconCache = new Map<string, SafeHtml | null>();
+  private readonly catalogItems = computed(() => this.isPhonePreview
+    ? this.menuService.items().filter(item => item.isAvailable)
+    : this.publicMenuService.menuData()?.items || []);
+  private readonly categoryList = computed(() => this.isPhonePreview
+    ? this.menuService.categories().filter(category => category.isActive)
+    : this.publicMenuService.menuData()?.categories || []);
+  private readonly subcategoryList = computed(() => this.isPhonePreview
+    ? this.menuService.subcategories() : this.publicMenuService.menuData()?.subcategories || []);
+  private readonly searchIndex = computed(() => new Map(this.items.map(item =>
+    [item.id, normalizeMenuSearch(item.name + ' ' + (item.description || ''))])));
+  private readonly visibleItems = computed(() => {
+    const query = normalizeMenuSearch(this.searchFilter), category = this.activeCatId;
+    const index = this.searchIndex();
+    return this.items.filter(item => (!category || item.categoryId === category) &&
+      (!query || index.get(item.id)?.includes(query)))
+      .sort((a,b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  });
+  private readonly groupedItems = computed(() => {
+    const subcategories = this.activeCatId ? this.subcategories.filter(sub => sub.categoryId === this.activeCatId)
+      .sort((a,b) => (a.displayOrder || 0) - (b.displayOrder || 0)) : [];
+    const ids = new Set(subcategories.map(sub => sub.id));
+    const groups = new Map<string, MenuItem[]>(), ungrouped: MenuItem[] = [];
+    for (const item of this.displayItems) {
+      if (item.subcategoryId && ids.has(item.subcategoryId)) {
+        const rows = groups.get(item.subcategoryId) || []; rows.push(item); groups.set(item.subcategoryId, rows);
+      } else ungrouped.push(item);
+    }
+    return { subcategories, groups, ungrouped };
+  });
+  private readonly highlights = computed(() => {
+    const items = this.items;
+    const explicit = items.filter(item => item.highlightType === 'most_liked');
+    const organic = items.filter(item => item.highlightType !== 'most_liked' && (item.likesCount || 0) > 0)
+      .sort((a,b) => (b.likesCount || 0) - (a.likesCount || 0));
+    return {
+      promotion: items.filter(item => item.highlightType === 'promotion' || (item.promotionalPrice && item.promotionalPrice < item.price)),
+      liked: [...explicit, ...organic].slice(0,4),
+      featured: items.filter(item => item.highlightType === 'chef' || (item.isHighlighted && (!item.highlightType || item.highlightType === 'none'))),
+      combo: items.filter(item => item.highlightType === 'combo'),
+      bestseller: items.filter(item => item.highlightType === 'best_seller'),
+    };
+  });
 
   toggleSubcategory(subcategoryId: string): void {
     if (this.collapsedSubcategories.has(subcategoryId)) {
@@ -3301,8 +3341,14 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     public cartService: CartService,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
-    private analytics: PublicAnalyticsService
-  ) { }
+    private analytics: PublicAnalyticsService,
+    private fonts: MenuFontsService
+  ) {
+    effect(() => {
+      const design = this.isPhonePreview ? this.designService.draft() : this.publicMenuService.menuData()?.design;
+      if (design) this.fonts.selected(this.headingFont, this.bodyFont);
+    });
+  }
 
   ngOnInit(): void {
     if (this.publicSlug) {
@@ -3337,6 +3383,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   startBannerTimer(): void {
     this.stopBannerTimer();
+    if (this.viewState === 'welcome' || this.heroBanners.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     this.bannerTimer = setInterval(() => {
       this.nextBanner();
     }, 6000); // 6 segundos para cada slide da hero section
@@ -3412,7 +3459,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   get coverImageUrl(): string {
-    return this.business.coverImageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80';
+    return this.business.coverImageUrl || (this.isPhonePreview ? 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80' : '');
   }
 
   get welcomeBgType(): 'image' | 'color' {
@@ -3515,7 +3562,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     if (banners && Array.isArray(banners) && banners.length > 0) {
       return banners;
     }
-    return [this.coverImageUrl];
+    return this.coverImageUrl ? [this.coverImageUrl] : [];
   }
 
   get currentBannerIndex(): number {
@@ -3528,22 +3575,13 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   sanitizeBannerUrl(url: string | null | undefined): string {
-    if (!url) return '';
-    const trimmed = url.trim();
-    if (trimmed.toLowerCase().startsWith('javascript:') || trimmed.toLowerCase().startsWith('vbscript:')) {
-      return '';
-    }
-    return trimmed.replace(/["'\\]/g, '');
+    return safeMenuImage(url);
   }
 
-  get homeBistroSvg(): SafeHtml | null {
-    const icon = findCatalogIcon('3d-bistro');
-    return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg) : null;
-  }
+  get homeBistroSvg(): SafeHtml | null { return this.cachedIcon('3d-bistro'); }
 
   highlightTitleIcon(key: '3d-combo' | '3d-bestseller'): SafeHtml | null {
-    const icon = findCatalogIcon(key);
-    return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg.replace('<svg ', '<svg width="28" height="28" ')) : null;
+    return this.cachedIcon(key);
   }
 
   get welcomeTagline(): string {
@@ -3596,50 +3634,25 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return this.currentTemplate?.logoPosition || 'top-left';
   }
 
-  get categories(): Category[] {
-    if (this.isPhonePreview) {
-      return this.menuService.categories().filter(c => c.isActive);
-    }
-    return this.publicMenuService.menuData()?.categories || [];
-  }
+  get categories(): Category[] { return this.categoryList(); }
 
-  get subcategories(): Subcategory[] {
-    if (this.isPhonePreview) {
-      return this.menuService.subcategories();
-    }
-    return this.publicMenuService.menuData()?.subcategories || [];
-  }
+  get subcategories(): Subcategory[] { return this.subcategoryList(); }
 
-  get activeCategorySubcategories(): Subcategory[] {
-    if (!this.activeCatId) return [];
-    return this.subcategories
-      .filter(s => s.categoryId === this.activeCatId)
-      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-  }
+  get activeCategorySubcategories(): Subcategory[] { return this.groupedItems().subcategories; }
 
   getItemsBySubcategory(subcategoryId: string): MenuItem[] {
-    return this.displayItems
-      .filter(i => i.subcategoryId === subcategoryId)
-      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    return this.groupedItems().groups.get(subcategoryId) || [];
   }
 
   getItemsWithoutSubcategory(): MenuItem[] {
-    const visibleSubcategoryIds = new Set(this.activeCategorySubcategories.map(s => s.id));
-    return this.displayItems
-      .filter(i => !i.subcategoryId || !visibleSubcategoryIds.has(i.subcategoryId))
-      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    return this.groupedItems().ungrouped;
   }
 
   get visibleCategories(): Category[] {
     return this.categories;
   }
 
-  get items(): MenuItem[] {
-    if (this.isPhonePreview) {
-      return this.menuService.items().filter(i => i.isAvailable);
-    }
-    return this.publicMenuService.menuData()?.items || [];
-  }
+  get items(): MenuItem[] { return this.catalogItems(); }
 
   // ── DESIGN TOKENS (7 CORES + 2 FONTES) ──
 
@@ -3676,13 +3689,13 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   get headingFont(): string {
-    if (this.design?.fontHeading) return this.design.fontHeading;
+    if (this.design?.fontHeading) return menuFont(this.design.fontHeading, 'Outfit');
     const pair = AVAILABLE_FONT_PAIRS.find(f => f.key === this.design?.fontPair);
     return pair ? pair.heading : 'Outfit';
   }
 
   get bodyFont(): string {
-    if (this.design?.fontBody) return this.design.fontBody;
+    if (this.design?.fontBody) return menuFont(this.design.fontBody, 'Inter');
     const pair = AVAILABLE_FONT_PAIRS.find(f => f.key === this.design?.fontPair);
     return pair ? pair.body : 'Inter';
   }
@@ -3696,7 +3709,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   get showHeroBlock(): boolean {
-    return (this.design?.homeBlocks || []).some(b => b.type === 'hero' && b.enabled);
+    return (this.design?.homeBlocks || []).some(b => b.type === 'hero' && b.enabled) && this.heroBanners.length > 0;
   }
 
   get showCategoriesBlock(): boolean {
@@ -3747,30 +3760,15 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   // ── FILTERED DATA ──
 
-  get promoItems(): MenuItem[] {
-    return this.items.filter(i => i.highlightType === 'promotion' || (i.promotionalPrice && i.promotionalPrice < i.price));
-  }
+  get promoItems(): MenuItem[] { return this.highlights().promotion; }
 
-  get mostLikedItems(): MenuItem[] {
-    const explicitLiked = this.items.filter(i => i.highlightType === 'most_liked');
-    const otherItems = this.items.filter(i => i.highlightType !== 'most_liked');
-    const organicLiked = otherItems
-      .filter(i => (i.likesCount || 0) > 0)
-      .sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0));
-    return [...explicitLiked, ...organicLiked].slice(0, 4);
-  }
+  get mostLikedItems(): MenuItem[] { return this.highlights().liked; }
 
-  get featuredItems(): MenuItem[] {
-    return this.items.filter(i => i.highlightType === 'chef' || (i.isHighlighted && (!i.highlightType || i.highlightType === 'none')));
-  }
+  get featuredItems(): MenuItem[] { return this.highlights().featured; }
 
-  get comboItems(): MenuItem[] {
-    return this.items.filter(i => i.highlightType === 'combo');
-  }
+  get comboItems(): MenuItem[] { return this.highlights().combo; }
 
-  get bestSellerItems(): MenuItem[] {
-    return this.items.filter(i => i.highlightType === 'best_seller');
-  }
+  get bestSellerItems(): MenuItem[] { return this.highlights().bestseller; }
 
   get currentCategoryName(): string {
     if (this.searchFilter) return 'Resultados da Busca';
@@ -3779,20 +3777,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return cat ? cat.name : 'Cardápio';
   }
 
-  get displayItems(): MenuItem[] {
-    let list = this.items;
-    if (this.activeCatId) {
-      list = list.filter(i => i.categoryId === this.activeCatId);
-    }
-    if (this.searchFilter.trim()) {
-      const q = this.searchFilter.toLowerCase().trim();
-      list = list.filter(i =>
-        i.name.toLowerCase().includes(q) ||
-        (i.description && i.description.toLowerCase().includes(q))
-      );
-    }
-    return [...list].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-  }
+  get displayItems(): MenuItem[] { return this.visibleItems(); }
 
   get userLikesCount(): number {
     return this.publicMenuService.likedItemIds().size;
@@ -3801,21 +3786,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   // ── INTERAÇÕES & ANIMAÇÃO ──
 
   openMenuWithAnimation(): void {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      this.viewState = 'menu';
-      return;
-    }
-    this.menuOpening = true;
-    this.viewState = 'transitioning';
-    this.openingTimers.push(setTimeout(() => {
-      this.viewState = 'menu';
-      this.cdr.detectChanges();
-    }, 1120));
-    this.openingTimers.push(setTimeout(() => {
-      this.menuOpening = false;
-      this.openingTimers = [];
-      this.cdr.detectChanges();
-    }, 1580));
+    this.viewState = 'menu';
+    this.menuOpening = false;
+    this.startBannerTimer();
   }
 
   resetToWelcome(): void {
@@ -3833,6 +3806,11 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     if (!this.searchActive) this.searchFilter = '';
   }
 
+  updateSearch(event: Event): void {
+    if ((event as InputEvent).isComposing) return;
+    this.searchFilter = (event.target as HTMLInputElement).value;
+  }
+
   filterCategory(catId: string | null): void {
     if (this.activeCatId === catId && !this.searchFilter) return;
     if (!this.isPhonePreview && catId) this.analytics.record(this.publicSlug, 'CATEGORY_VIEW', { categoryId: catId });
@@ -3845,11 +3823,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     this.categoryFrame = requestAnimationFrame(() => {
       this.showcaseScroller?.nativeElement.scrollTo({ top: 0, behavior: 'auto' });
-      this.cdr.detectChanges();
-      void this.catalogSection?.nativeElement.offsetWidth;
-      this.categoryTransitioning = true;
       this.categoryFrame = 0;
-      this.cdr.detectChanges();
     });
   }
 
@@ -3904,14 +3878,17 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
       this.previewLikedItemIds.add(itemId);
       const it = this.items.find(i => i.id === itemId);
       if (it) {
-        it.likesCount = (it.likesCount || 0) + 1;
+        this.menuService.items.update(rows => rows.map(row => row.id === itemId ? {...row, likesCount:(row.likesCount || 0) + 1} : row));
       }
       return;
     }
 
     if (this.publicMenuService.isLikePending(itemId)) return;
     const slug = this.business.slug || 'sapatolandia-gourmet';
-    this.publicMenuService.likeItem(slug, itemId).subscribe();
+    this.likeMessage.set('');
+    this.publicMenuService.likeItem(slug, itemId).subscribe(response => {
+      if (!response && !this.isLiked(itemId)) this.likeMessage.set('Não foi possível registrar sua curtida. Tente novamente.');
+    });
   }
 
   onAddToCartClick(event: Event, item: MenuItem): void {
@@ -3937,9 +3914,15 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   getCatSvg(cat: Category): SafeHtml | null {
-    if (cat.iconType === 'none') return null;
-    const icon = findCatalogIcon(cat.iconKey || cat.icon);
-    return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg) : null;
+    return cat.iconType === 'none' ? null : this.cachedIcon(cat.iconKey || cat.icon || '');
+  }
+
+  private cachedIcon(key: string): SafeHtml | null {
+    if (!this.iconCache.has(key)) {
+      const icon = findCatalogIcon(key);
+      this.iconCache.set(key, icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg.replace('<svg ', '<svg width="28" height="28" ')) : null);
+    }
+    return this.iconCache.get(key) || null;
   }
 
   onLogoError(event: Event): void {

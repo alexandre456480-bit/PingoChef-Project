@@ -41,7 +41,8 @@ export class ProductPlaybackService {
     if (!publicSlug) throw new Error('Slug público ausente.');
     return this.http.post<{ success: boolean; data: PlaybackSession }>(
       `${this.apiUrl}/public/menus/${encodeURIComponent(publicSlug)}/items/${encodeURIComponent(itemId)}/media/${encodeURIComponent(mediaId)}/playback`,
-      {}
+      {},
+      { withCredentials: true }
     );
   }
 

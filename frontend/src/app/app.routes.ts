@@ -1,14 +1,13 @@
 import { Routes } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
 import { inject } from '@angular/core';
-import { LoginComponent } from './pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './admin/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: () => inject(DOCUMENT).location.hostname === 'admin.pingochef.com'
     ? 'admin/login' : 'plans', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
+  { path: 'login', loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent) },
   { path: 'plans', loadComponent: () => import('./pages/plans/plans.component').then(m=>m.PlansComponent) },
   { path: 'terms', loadComponent:()=>import('./pages/plans/legal-information.component').then(m=>m.LegalInformationComponent) },
   { path: 'privacy', loadComponent:()=>import('./pages/plans/legal-information.component').then(m=>m.LegalInformationComponent),data:{privacy:true} },

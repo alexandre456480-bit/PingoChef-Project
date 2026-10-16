@@ -96,6 +96,8 @@ import { QrComponent } from './sections/qr/qr.component';
           @switch (activeSection) {
             @case ('dashboard') {
               <app-dashboard-home
+                [loading]="isInitialLoading"
+                [dataError]="homeDataError"
                 (navigateTo)="setSection($event)"
                 (onToast)="showToast($event)">
               </app-dashboard-home>
@@ -534,6 +536,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showDesktopPreview = true;
   panelTheme: 'light' | 'dark' = 'dark';
   isInitialLoading = true;
+  homeDataError = '';
   isPublishing = false;
 
   private pendingInitialRequests = 3;
@@ -568,10 +571,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Carrega dados iniciais essenciais para alimentar os componentes e o phone-preview em tempo real
     this.menuService.loadCategories()
       .pipe(finalize(() => this.completeInitialRequest()))
-      .subscribe({error:()=>this.showToast('Não foi possível carregar as categorias. Confira sua conexão.')});
+      .subscribe({error:()=>{this.homeDataError = 'Não foi possível carregar as categorias.';this.showToast('Não foi possível carregar as categorias. Confira sua conexão.');}});
     this.menuService.loadItems()
       .pipe(finalize(() => this.completeInitialRequest()))
-      .subscribe({error:()=>this.showToast('Não foi possível carregar os produtos. Confira sua conexão.')});
+      .subscribe({error:()=>{this.homeDataError = 'Não foi possível carregar os produtos.';this.showToast('Não foi possível carregar os produtos. Confira sua conexão.');}});
     this.designService.loadDesign()
       .pipe(finalize(() => this.completeInitialRequest()))
       .subscribe({error:()=>this.showToast('Não foi possível carregar o design. Confira sua conexão.')});

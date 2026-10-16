@@ -14,6 +14,7 @@ import { verifyPerformanceDatabase } from './verify-performance-database.mjs';
 import { checkedMigrations,migrationSql } from './check-migrations.mjs';
 import { verifyImageStorage } from './verify-image-storage.mjs';
 import { verifyIndexRecovery } from './verify-index-recovery.mjs';
+import { verifyVideoSecurity } from './verify-video-security.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
 const toolsRoot = resolve(root, '.tools');
@@ -93,6 +94,7 @@ try {
   await verifyPerformanceDatabase(pool);
   await verifyImageStorage(pool);
   await verifyIndexRecovery(pool);
+  await verifyVideoSecurity(pool, config);
 } finally {
   if (pool) await pool.end();
   if (started) await run(binaries.pg_ctl, ['-D', dataDirectory, '-m', 'fast', '-w', 'stop'], { windowsHide: true, timeout: 30000 });

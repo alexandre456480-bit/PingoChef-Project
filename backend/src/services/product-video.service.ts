@@ -6,6 +6,7 @@ import type {
   ProductMediaRepository
 } from '../repositories/product-media.repository';
 import type { MuxVideoProvider } from './mux-video.service';
+import { videoAudit } from './video-audit.service';
 
 export class VideoHttpError extends Error {
   constructor(
@@ -19,6 +20,7 @@ export class VideoHttpError extends Error {
 }
 
 export interface UploadIntentInput {
+  idempotencyKey?: string;
   businessId: string;
   userId: string;
   menuItemId: string;
@@ -62,7 +64,8 @@ const DENIALS: Record<string, { status: number; message: string }> = {
   INVALID_UPLOAD_METADATA: { status: 400, message: 'Metadados do arquivo inválidos.' },
   VIDEO_ALREADY_EXISTS: { status: 409, message: 'Este produto já possui um vídeo. Use a opção de troca.' },
   VIDEO_REPLACEMENT_NOT_FOUND: { status: 409, message: 'O vídeo que seria trocado não está mais disponível.' },
-  VIDEO_UPLOAD_IN_PROGRESS: { status: 409, message: 'Já existe um vídeo em processamento para este produto.' }
+  VIDEO_UPLOAD_IN_PROGRESS: { status: 409, message: 'Já existe um vídeo em processamento para este produto.' },
+  IDEMPOTENCY_CONFLICT: { status: 409, message: 'A tentativa de upload não corresponde à solicitação anterior.' }
 };
 
 export class ProductVideoService {
@@ -88,7 +91,7 @@ export class ProductVideoService {
     }
 
     const ipHash = createHmac('sha256', this.config.ipHashSecret)
-      .update(input.clientIp || 'unknown')
+      .update(`video-upload:${new Date().toISOString().slice(0, 10)}:${input.clientIp || 'unknown'}`)
       .digest('hex');
 
     const reservation = await this.repository.reserveUpload({
@@ -103,13 +106,29 @@ export class ProductVideoService {
       dailyLimit: this.config.dailyUploadLimit,
       pendingLimit: this.config.maxPendingUploads,
       rateLimit: this.config.uploadRateLimit,
-      rateWindowSeconds: this.config.uploadRateWindowSeconds
+      rateWindowSeconds: this.config.uploadRateWindowSeconds,
+      ...(input.idempotencyKey ? { idempotencyHash: createHmac('sha256', this.config.ipHashSecret)
+        .update(`upload-idempotency:${input.businessId}:${input.idempotencyKey}`).digest('hex') } : {})
     });
 
     if (!reservation.mediaId) {
       const code = reservation.denialCode ?? 'UPLOAD_RESERVATION_DENIED';
       const denial = DENIALS[code] ?? { status: 403, message: 'Upload não autorizado.' };
       throw new VideoHttpError(denial.status, code, denial.message);
+    }
+
+    if (reservation.reused) {
+      if (!reservation.uploadId || !reservation.expiresAt || Date.parse(reservation.expiresAt) <= Date.now()) {
+        throw new VideoHttpError(409, 'VIDEO_UPLOAD_IN_PROGRESS', 'A tentativa anterior está em processamento ou expirou.');
+      }
+      let upload;
+      try { upload = await this.mux.retrieveUpload(reservation.uploadId); }
+      catch { throw new VideoHttpError(503, 'VIDEO_PROVIDER_UNAVAILABLE', 'Serviço de vídeo temporariamente indisponível.'); }
+      if (upload.status !== 'waiting' || !upload.url || upload.cors_origin !== input.corsOrigin) {
+        throw new VideoHttpError(409, 'VIDEO_UPLOAD_IN_PROGRESS', 'A tentativa anterior já foi processada.');
+      }
+      return { mediaId: reservation.mediaId, uploadUrl: upload.url, expiresAt: reservation.expiresAt,
+        maxFileSizeBytes: this.config.maxUploadBytes, maxDurationSeconds: this.config.maxDurationSeconds };
     }
 
     let createdUpload: Awaited<ReturnType<MuxVideoProvider['createDirectUpload']>> | undefined;
@@ -254,7 +273,8 @@ export class ProductVideoService {
     }
   }
 
-  async reconcile(): Promise<{ inspected: number; repaired: number; pending: number }> {
+  async reconcile(uploadPage = 1, assetPage = 1): Promise<{ inspected: number; repaired: number; pending: number; nextUploadPage: number; nextAssetPage: number }> {
+    const deadline = Date.now() + 40_000;
     const candidates = await this.repository.listReconciliationCandidates(
       this.config.reconciliationBatchSize
     );
@@ -262,7 +282,29 @@ export class ProductVideoService {
     let pending = 0;
 
     for (const media of candidates) {
+      if (Date.now() >= deadline) { pending += 1; break; }
       try {
+        await this.repository.touchReconciliation?.(media.id);
+        if (['rejected', 'errored'].includes(media.status)) {
+          await this.deleteProviderResource(media);
+          await this.repository.markAssetDeleted(media.id);
+          repaired += 1;
+          continue;
+        }
+        if (media.status === 'waiting' && !media.mux_upload_id) {
+          await this.repository.failReservation(media.business_id, media.id, 'UPLOAD_EXPIRED');
+          repaired += 1;
+          continue;
+        }
+        if (media.status === 'ready' && media.mux_asset_id) {
+          try { await this.mux.retrieveAsset(media.mux_asset_id); }
+          catch (error) {
+            if (!this.mux.isNotFoundError(error)) throw error;
+            await this.repository.markErrored(media.id, 'MUX_ASSET_MISSING');
+            repaired += 1;
+          }
+          continue;
+        }
         if (media.status === 'pending_deletion') {
           await this.deleteProviderResource(media);
           await this.repository.deleteMedia(media.id);
@@ -304,8 +346,12 @@ export class ProductVideoService {
 
     // Provider-side sweep closes the distributed-transaction gap where Mux
     // created an upload but the database was temporarily unable to store its ID.
-    const providerUploads = await this.mux.listRecentUploads(this.config.reconciliationBatchSize);
+    const uploadSweepStarted = Date.now() < deadline;
+    const providerUploads = uploadSweepStarted
+      ? await this.mux.listRecentUploads(this.config.reconciliationBatchSize, uploadPage) : [];
+    let uploadsComplete = uploadSweepStarted;
     for (const upload of providerUploads) {
+      if (Date.now() >= deadline) { uploadsComplete = false; pending += 1; break; }
       if (!upload.mediaId) continue;
       try {
         const alreadyLinked = await this.repository.findByUploadId(upload.id);
@@ -342,18 +388,46 @@ export class ProductVideoService {
         }
 
         if (upload.assetId) {
+          await this.repository.recordMaintenanceAlert?.(reservedMedia?.business_id ?? null, upload.mediaId, 'ORPHAN_MUX_ASSET');
+          videoAudit('video_mux_orphan_found', { businessId: reservedMedia?.business_id, mediaId: upload.mediaId });
           await this.mux.deleteAsset(upload.assetId);
+          await this.repository.recordMaintenanceAlert?.(reservedMedia?.business_id ?? null, upload.mediaId, 'ORPHAN_MUX_ASSET_REMOVED');
+          videoAudit('video_mux_orphan_removed', { businessId: reservedMedia?.business_id, mediaId: upload.mediaId });
           repaired += 1;
         } else if (upload.status === 'waiting') {
           await this.mux.cancelUpload(upload.id);
           repaired += 1;
         }
       } catch {
+        uploadsComplete = false;
         pending += 1;
       }
     }
-
-    return { inspected: candidates.length + providerUploads.length, repaired, pending };
+    let assetCount = 0;
+    let assetsComplete = true;
+    if (this.mux.listAssetsPage && Date.now() < deadline) {
+      const assets = await this.mux.listAssetsPage(this.config.reconciliationBatchSize, assetPage);
+      assetCount = assets.length;
+      for (const asset of assets) {
+        if (Date.now() >= deadline) { assetsComplete = false; pending += 1; break; }
+        // Dedicated Pingo namespace only, plus a grace interval for in-flight attachment.
+        if (!asset.mediaId || !Number.isFinite(asset.createdAt) || asset.createdAt * 1000 > Date.now() - 3600_000) continue;
+        try {
+          if (await this.repository.findByAssetId(asset.id)) continue;
+          const reservation = await this.repository.findById(asset.mediaId);
+          if (reservation && ['waiting', 'uploading', 'processing'].includes(reservation.status)) continue;
+          await this.repository.recordMaintenanceAlert?.(reservation?.business_id ?? null, asset.mediaId, 'ORPHAN_MUX_ASSET');
+          videoAudit('video_mux_orphan_found', { businessId: reservation?.business_id, mediaId: asset.mediaId });
+          await this.deleteAssetIdempotently(asset.id);
+          await this.repository.recordMaintenanceAlert?.(reservation?.business_id ?? null, asset.mediaId, 'ORPHAN_MUX_ASSET_REMOVED');
+          videoAudit('video_mux_orphan_removed', { businessId: reservation?.business_id, mediaId: asset.mediaId });
+          repaired += 1;
+        } catch { assetsComplete = false; pending += 1; }
+      }
+    } else assetsComplete = false;
+    return { inspected: candidates.length + providerUploads.length + assetCount, repaired, pending,
+      nextUploadPage: uploadsComplete ? (providerUploads.length < this.config.reconciliationBatchSize ? 1 : uploadPage + 1) : uploadPage,
+      nextAssetPage: assetsComplete ? (assetCount < this.config.reconciliationBatchSize ? 1 : assetPage + 1) : assetPage };
   }
 
   private async processClaimedWebhook(event: MuxWebhookEventLike): Promise<boolean> {
@@ -365,6 +439,7 @@ export class ProductVideoService {
       if (!uploadId || !assetId) return false;
       const media = await this.repository.findByUploadId(uploadId);
       if (!media) return false;
+      if (media.mux_asset_id && media.mux_asset_id !== assetId) throw new VideoHttpError(503, 'ASSET_BINDING_MISMATCH', 'Falha temporária ao confirmar a mídia.');
       if (media.status === 'ready' && media.mux_asset_id === assetId) return true;
       if (['rejected', 'errored', 'pending_deletion'].includes(media.status)) {
         await this.deleteLateAsset(media, assetId);
@@ -387,6 +462,10 @@ export class ProductVideoService {
         }
       }
       if (!media) return false;
+      if ((data.upload_id && media.mux_upload_id !== data.upload_id) || (media.mux_asset_id && media.mux_asset_id !== data.id)) {
+        throw new VideoHttpError(503, 'ASSET_BINDING_MISMATCH', 'Falha temporária ao confirmar a mídia.');
+      }
+      if (media.status === 'ready') return true;
       if (media.status === 'pending_deletion') {
         await this.deleteLateAsset(media, data.id);
         return true;
@@ -406,7 +485,7 @@ export class ProductVideoService {
         media = await this.repository.findByUploadId(data.upload_id);
       }
       if (!media) return false;
-      if (['pending_deletion', 'rejected'].includes(media.status)) return true;
+      if (['ready', 'pending_deletion', 'rejected'].includes(media.status)) return true;
       await this.repository.markErrored(media.id, 'MUX_ASSET_ERRORED', data.id);
       return true;
     }
@@ -429,7 +508,7 @@ export class ProductVideoService {
     duration: number | undefined,
     playbackIds: Array<{ id: string; policy?: string }> | undefined
   ): Promise<void> {
-    if (!Number.isFinite(duration) || (duration as number) < 0) {
+    if (!Number.isFinite(duration) || (duration as number) <= 0) {
       await this.rejectAndDelete(media, assetId, 0, 'INVALID_ASSET_DURATION');
       return;
     }
@@ -440,7 +519,7 @@ export class ProductVideoService {
     }
 
     const signedPlaybackId = playbackIds?.find(playback => playback.policy === 'signed')?.id;
-    if (!signedPlaybackId) {
+    if (!signedPlaybackId || playbackIds?.some(playback => playback.policy !== 'signed')) {
       await this.rejectAndDelete(media, assetId, duration as number, 'SIGNED_PLAYBACK_MISSING');
       return;
     }
@@ -452,6 +531,7 @@ export class ProductVideoService {
       signedPlaybackId
     );
     await this.cleanupReplacedMedia(replacedMediaIds ?? []);
+    videoAudit('video_upload_ready', { businessId: media.business_id, mediaId: media.id });
   }
 
   private async cleanupReplacedMedia(mediaIds: string[]): Promise<void> {
@@ -480,6 +560,7 @@ export class ProductVideoService {
     errorCode: string
   ): Promise<void> {
     await this.repository.markRejected(media.id, assetId, duration, errorCode);
+    videoAudit('video_upload_rejected', { businessId: media.business_id, mediaId: media.id, code: errorCode });
     try {
       await this.mux.deleteAsset(assetId);
     } catch (error) {

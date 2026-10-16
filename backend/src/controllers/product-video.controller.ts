@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { NextFunction, Request, Response } from 'express';
 import { ipKeyGenerator } from 'express-rate-limit';
 import { z } from 'zod';
@@ -15,6 +15,13 @@ import {
   ProductVideoService,
   VideoHttpError
 } from '../services/product-video.service';
+import { VideoAbuseService, videoRequestIdentity } from '../services/video-abuse.service';
+import { supabaseAdmin } from '../config/supabase';
+import { internalJobAuthorized } from '../middleware/internal-job-auth';
+import { enforceSharedRequest } from '../middleware/shared-rate-limit.middleware';
+import { videoAudit } from '../services/video-audit.service';
+import { loadVideoSecurityConfig } from '../config/video-security.config';
+import { syncMuxDeliveryUsage } from '../services/mux-delivery-usage.service';
 
 let singleton: ProductVideoService | undefined;
 
@@ -59,6 +66,7 @@ export async function createVideoUploadIntentController(
   res: Response,
   next: NextFunction
 ): Promise<Response | void> {
+  res.setHeader('Cache-Control', 'private, no-store');
   try {
     if (!req.userId || !req.businessId) {
       return errorResponse(res, new VideoHttpError(401, 'UNAUTHORIZED', 'Sessão inválida.'));
@@ -74,6 +82,9 @@ export async function createVideoUploadIntentController(
     }
 
     const origin = resolveAllowedUploadOrigin(req.get('origin'), config);
+    const idempotencyKey = req.get('idempotency-key');
+    if (idempotencyKey) z.string().uuid().parse(idempotencyKey);
+    await new VideoAbuseService().authorizeUpload(req.businessId, req.userId, videoRequestIdentity(req, res));
     const result = await getProductVideoService().createUploadIntent({
       businessId: req.businessId,
       userId: req.userId,
@@ -83,7 +94,8 @@ export async function createVideoUploadIntentController(
       declaredFileSizeBytes: body.fileSizeBytes,
       declaredMimeType: body.mimeType,
       aspectRatio: body.aspectRatio,
-      replacesMediaId: body.replacesMediaId
+      replacesMediaId: body.replacesMediaId,
+      idempotencyKey
     });
 
     return res.status(201).json({ success: true, data: result });
@@ -145,43 +157,68 @@ export async function muxWebhookController(
   req: Request,
   res: Response
 ): Promise<Response> {
+  res.setHeader('Cache-Control', 'no-store');
+  if (!req.get('mux-signature')) return errorResponse(res, new VideoHttpError(400, 'INVALID_WEBHOOK_SIGNATURE', 'Assinatura do webhook inválida.'));
   try {
     if (!Buffer.isBuffer(req.body)) {
       return errorResponse(res, new VideoHttpError(400, 'INVALID_WEBHOOK_BODY', 'Corpo inválido.'));
     }
 
     const provider = getMuxVideoProvider();
-    const event = await provider.verifyAndUnwrapWebhook(
-      req.body.toString('utf8'),
-      req.headers as Record<string, unknown>
-    );
+    let event;
+    try {
+      event = await provider.verifyAndUnwrapWebhook(req.body.toString('utf8'), req.headers as Record<string, unknown>);
+    } catch {
+      return errorResponse(res, new VideoHttpError(400, 'INVALID_WEBHOOK_SIGNATURE', 'Assinatura do webhook inválida.'));
+    }
+    await enforceSharedRequest('video-webhook', 'verified-events', loadVideoSecurityConfig().webhookLimit, 60);
     const outcome = await getProductVideoService().processWebhook(event as MuxWebhookEventLike);
     return res.status(200).json({ success: true, data: { status: outcome } });
   } catch (error) {
+    videoAudit('video_mux_webhook_failed', { code: error instanceof VideoHttpError ? error.code : 'WEBHOOK_PROCESSING_FAILED' });
+    try { await supabaseAdmin.rpc('record_video_abuse', { p_business: null, p_media: null, p_endpoint: 'webhook', p_code: 'WEBHOOK_FAILURE' }); }
+    catch { /* Database outages cannot prevent the required 5xx retry response. */ }
     if (error instanceof VideoHttpError) return errorResponse(res, error);
     return errorResponse(
       res,
-      new VideoHttpError(400, 'INVALID_WEBHOOK_SIGNATURE', 'Assinatura do webhook inválida.')
+      new VideoHttpError(503, 'WEBHOOK_PROCESSING_FAILED', 'Falha temporária ao processar o evento.')
     );
   }
 }
 
 export async function reconcileVideosController(req: Request, res: Response): Promise<Response> {
-  const configuredSecret = loadVideoConfig().reconciliationSecret;
-  const supplied = req.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
-  const expectedBuffer = Buffer.from(configuredSecret);
-  const suppliedBuffer = Buffer.from(supplied);
-
-  if (
-    expectedBuffer.length !== suppliedBuffer.length
-    || !timingSafeEqual(expectedBuffer, suppliedBuffer)
-  ) {
+  res.setHeader('Cache-Control', 'no-store');
+  const header = req.get('authorization');
+  if (!internalJobAuthorized(header, process.env.VIDEO_RECONCILIATION_SECRET)
+    && !internalJobAuthorized(header, process.env.CRON_SECRET)) {
     return errorResponse(res, new VideoHttpError(401, 'UNAUTHORIZED', 'Credencial inválida.'));
   }
 
   try {
-    const result = await getProductVideoService().reconcile();
-    return res.status(200).json({ success: true, data: result });
+    const token = randomUUID();
+    const { data: claim, error } = await supabaseAdmin.rpc('claim_video_maintenance', { p_token: token, p_seconds: 240 });
+    if (error) throw error;
+    if (!claim) return res.status(200).json({ success: true, data: { status: 'leased' } });
+    // Retention must run even if Mux is down or the optional delivery job fails.
+    const { error: retentionError } = await supabaseAdmin.rpc('maintain_video_security_state');
+    if (retentionError) throw retentionError;
+    const result = await getProductVideoService().reconcile(claim.uploadPage, claim.assetPage);
+    let usage: Awaited<ReturnType<typeof syncMuxDeliveryUsage>> | null = null;
+    let usageStatus = 'disabled';
+    if (process.env.MUX_USAGE_SYNC_ENABLED === 'true') {
+      try { usage = await syncMuxDeliveryUsage(getMuxVideoProvider(), claim.usageDay, claim.usagePage); usageStatus = 'synced'; }
+      catch {
+        usageStatus = 'unavailable';
+        videoAudit('video_provider_usage_failed', { code: 'PROVIDER_USAGE_FAILURE' });
+        await supabaseAdmin.rpc('record_video_abuse', { p_business: null, p_media: null, p_endpoint: 'maintenance', p_code: 'PROVIDER_USAGE_FAILURE' });
+      }
+    }
+    const { data: finished, error: finishError } = await supabaseAdmin.rpc('finish_video_maintenance', {
+      p_token: token, p_upload_page: result.nextUploadPage, p_asset_page: result.nextAssetPage,
+      p_usage_day: usage?.day ?? null, p_usage_page: usage?.page ?? null
+    });
+    if (finishError || !finished) throw finishError || new Error('VIDEO_LEASE_LOST');
+    return res.status(200).json({ success: true, data: { ...result, usageStatus } });
   } catch {
     return errorResponse(
       res,

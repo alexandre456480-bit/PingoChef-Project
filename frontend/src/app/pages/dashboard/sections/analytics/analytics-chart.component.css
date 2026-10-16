@@ -1,0 +1,230 @@
+:host {
+  display: block;
+  min-width: 0;
+  --chart-color: var(--panel-accent);
+}
+.chart-help,
+.no-data {
+  color: var(--panel-text-muted);
+  font-size: 0.73rem;
+  line-height: 1.6;
+  margin: 14px 0 0;
+}
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  margin: 12px 0 6px;
+  padding-bottom: 12px;
+}
+svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+  touch-action: pan-y;
+  border-radius: 10px;
+  cursor: crosshair;
+}
+svg:focus-visible,
+.bar-row:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--chart-color);
+  outline-offset: 3px;
+}
+.grid {
+  stroke: var(--panel-border-strong);
+  stroke-dasharray: 3 5;
+  vector-effect: non-scaling-stroke;
+}
+.data-area {
+  fill: var(--chart-color);
+  opacity: 0.1;
+}
+.data-line {
+  fill: none;
+  stroke: var(--chart-color);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.data-point {
+  fill: var(--panel-surface);
+  stroke: var(--chart-color);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.crosshair {
+  stroke: var(--panel-text-muted);
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+.selected-point {
+  fill: var(--chart-color);
+  stroke: var(--panel-surface);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+.y-axis {
+  position: absolute;
+  inset: 17px auto 44px 0;
+  width: 5.5%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: right;
+  pointer-events: none;
+}
+.y-axis span,
+.x-axis span {
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--panel-text-muted);
+}
+.x-axis {
+  position: absolute;
+  left: 6.67%;
+  right: 2.22%;
+  bottom: 13px;
+  height: 15px;
+  pointer-events: none;
+}
+.x-axis span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.x-axis .first {
+  transform: none;
+}
+.x-axis .last:not(.first) {
+  transform: translateX(-100%);
+}
+.chart-tooltip {
+  position: absolute;
+  top: 6px;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 3px;
+  width: 150px;
+  max-width: 65%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: var(--panel-surface-strong);
+  border: 1px solid var(--panel-border-strong);
+  box-shadow: 0 8px 28px #2d1b2e22;
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 2;
+  overflow-wrap: anywhere;
+}
+.chart-tooltip span {
+  font-size: 0.73rem;
+  color: var(--panel-text-soft);
+}
+.chart-tooltip strong {
+  font:
+    750 1.65rem Outfit,
+    sans-serif;
+  color: var(--panel-text);
+}
+.chart-tooltip small {
+  font-size: 0.67rem;
+  color: var(--panel-text-muted);
+}
+.bar-chart {
+  display: grid;
+  gap: 8px;
+  padding: 16px 0;
+}
+.bar-row {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--panel-text);
+  font: inherit;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.bar-row.selected {
+  background: var(--panel-fill-hover);
+  border-color: var(--panel-border-strong);
+}
+.bar-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 0.79rem;
+}
+.bar-heading > span {
+  overflow-wrap: anywhere;
+}
+.bar-heading strong {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.bar-track {
+  display: block;
+  height: 8px;
+  border-radius: 8px;
+  background: var(--panel-surface-inset);
+  overflow: hidden;
+}
+.bar-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--panel-wine), var(--chart-color));
+}
+.bar-detail {
+  font-size: 0.7rem;
+  color: var(--panel-text-soft);
+}
+details {
+  font-size: 0.76rem;
+  color: var(--panel-text-soft);
+}
+summary {
+  cursor: pointer;
+  padding: 12px 0;
+  width: fit-content;
+}
+.table-wrap {
+  overflow: auto;
+  max-height: 340px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+th,
+td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--panel-border);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+td {
+  text-align: right;
+}
+caption {
+  text-align: left;
+  padding: 8px;
+  font-weight: 700;
+}
+@media (max-width: 480px) {
+  .x-axis span {
+    font-size: 0.59rem;
+  }
+  .chart-tooltip {
+    width: 132px;
+  }
+}

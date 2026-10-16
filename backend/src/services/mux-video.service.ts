@@ -26,6 +26,9 @@ export interface ProviderUploadRecord {
   timeoutSeconds: number;
 }
 
+export interface ProviderAssetRecord { id: string; mediaId: string | null; createdAt: number; }
+export interface ProviderDeliveryRecord { assetId: string; deliveredSeconds: number; }
+
 export interface MuxVideoProvider {
   createDirectUpload(input: CreateDirectUploadInput): Promise<CreatedDirectUpload>;
   verifyAndUnwrapWebhook(rawBody: string, headers: Record<string, unknown>): Promise<UnwrapWebhookEvent>;
@@ -33,7 +36,9 @@ export interface MuxVideoProvider {
   cancelUpload(uploadId: string): Promise<void>;
   retrieveUpload(uploadId: string): Promise<Upload>;
   retrieveAsset(assetId: string): Promise<Asset>;
-  listRecentUploads(limit: number): Promise<ProviderUploadRecord[]>;
+  listRecentUploads(limit: number, page?: number): Promise<ProviderUploadRecord[]>;
+  listAssetsPage?(limit: number, page: number): Promise<ProviderAssetRecord[]>;
+  listDeliveryUsage?(start: number, end: number, page: number): Promise<ProviderDeliveryRecord[]>;
   signPlaybackToken(playbackId: string, ttlSeconds: number): Promise<string>;
   isNotFoundError(error: unknown): boolean;
   isUploadNotCancellableError(error: unknown): boolean;
@@ -49,7 +54,8 @@ export class OfficialMuxVideoProvider implements MuxVideoProvider {
       tokenSecret: config.muxTokenSecret,
       webhookSecret: config.muxWebhookSigningSecret,
       jwtSigningKey: config.muxSigningKeyId,
-      jwtPrivateKey: config.muxSigningPrivateKey
+      jwtPrivateKey: config.muxSigningPrivateKey,
+      timeout: 8000, maxRetries: 0
     });
   }
 
@@ -78,11 +84,14 @@ export class OfficialMuxVideoProvider implements MuxVideoProvider {
     };
   }
 
-  verifyAndUnwrapWebhook(
+  async verifyAndUnwrapWebhook(
     rawBody: string,
     headers: Record<string, unknown>
   ): Promise<UnwrapWebhookEvent> {
-    return this.client.webhooks.unwrap(rawBody, headers as any, this.config.muxWebhookSigningSecret);
+    const event = await this.client.webhooks.unwrap(rawBody, headers as any, this.config.muxWebhookSigningSecret);
+    const timestamp = Number(/(?:^|,)\s*t=(\d+)/.exec(String(headers['mux-signature'] || ''))?.[1]);
+    if (!Number.isSafeInteger(timestamp) || timestamp > Math.floor(Date.now() / 1000) + 300) throw new Error('Invalid webhook timestamp');
+    return event;
   }
 
   async deleteAsset(assetId: string): Promise<void> {
@@ -101,9 +110,9 @@ export class OfficialMuxVideoProvider implements MuxVideoProvider {
     return this.client.video.assets.retrieve(assetId, { timeout: 8000, maxRetries: 0 });
   }
 
-  async listRecentUploads(limit: number): Promise<ProviderUploadRecord[]> {
-    const page = await this.client.video.uploads.list({ limit });
-    return page.data.map(upload => {
+  async listRecentUploads(limit: number, page = 1): Promise<ProviderUploadRecord[]> {
+    const result = await this.client.video.uploads.list({ limit, page });
+    return result.data.map(upload => {
       const passthrough = upload.new_asset_settings?.passthrough;
       return {
         id: upload.id,
@@ -117,10 +126,24 @@ export class OfficialMuxVideoProvider implements MuxVideoProvider {
     });
   }
 
+  async listAssetsPage(limit: number, page: number): Promise<ProviderAssetRecord[]> {
+    const result = await this.client.video.assets.list({ limit, page });
+    return result.data.map(asset => ({ id: asset.id, createdAt: Number(asset.created_at),
+      mediaId: asset.passthrough?.startsWith('pingo-media:') ? asset.passthrough.slice('pingo-media:'.length) : null }));
+  }
+
+  async listDeliveryUsage(start: number, end: number, page: number): Promise<ProviderDeliveryRecord[]> {
+    const result = await this.client.video.deliveryUsage.list({ timeframe: [String(start), String(end)], limit: 100, page });
+    return result.data.map(row => ({ assetId: row.asset_id, deliveredSeconds: row.delivered_seconds }));
+  }
+
   signPlaybackToken(playbackId: string, ttlSeconds: number): Promise<string> {
     return this.client.jwt.signPlaybackId(playbackId, {
       type: 'video',
-      expiration: `${ttlSeconds}s`
+      expiration: `${ttlSeconds}s`,
+      ...(this.config.muxPlaybackRestrictionId ? {
+        params: { playback_restriction_id: this.config.muxPlaybackRestrictionId }
+      } : {})
     });
   }
 

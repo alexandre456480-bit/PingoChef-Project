@@ -9,7 +9,9 @@ export function internalJobAuthorized(header: string | undefined,
   return expected.length===supplied.length && timingSafeEqual(expected,supplied);
 }
 export function requireInternalJob(req:Request,res:Response,next:NextFunction): void {
-  if(!internalJobAuthorized(req.get('authorization'),process.env.INTERNAL_JOBS_SECRET)){
+  res.setHeader('Cache-Control','no-store');
+  if(!internalJobAuthorized(req.get('authorization'),process.env.INTERNAL_JOBS_SECRET)
+    && !internalJobAuthorized(req.get('authorization'),process.env.CRON_SECRET)){
     res.status(401).json({success:false,error:{code:'INTERNAL_UNAUTHORIZED'}});return;
   }
   next();

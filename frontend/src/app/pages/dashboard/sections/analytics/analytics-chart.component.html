@@ -1,0 +1,151 @@
+<p class="chart-help">
+  {{
+    kind === 'line'
+      ? 'Passe o mouse, toque ou use as setas para explorar os valores.'
+      : 'Passe o mouse, toque ou use Tab para explorar os valores.'
+  }}
+</p>
+@if (points.length) {
+  @if (kind === 'line') {
+    <div class="chart-wrap">
+      <div class="y-axis" aria-hidden="true">
+        @for (tick of ticks; track $index) {
+          <span>{{ tick | number: '1.0-0' : 'pt-BR' }}</span>
+        }
+      </div>
+      <svg
+        viewBox="0 0 720 220"
+        preserveAspectRatio="none"
+        role="slider"
+        tabindex="0"
+        aria-orientation="horizontal"
+        [attr.aria-label]="title + '. Explore com as setas.'"
+        aria-valuemin="0"
+        [attr.aria-valuemax]="points.length - 1"
+        [attr.aria-valuenow]="active() ?? 0"
+        [attr.aria-valuetext]="valueText"
+        (pointermove)="pointer($event)"
+        (pointerdown)="pointer($event)"
+        (pointerleave)="leave($event)"
+        (pointercancel)="active.set(null)"
+        (focus)="active() === null && active.set(0)"
+        (blur)="active.set(null)"
+        (keydown)="key($event)"
+      >
+        @for (tick of [0, 1, 2, 3]; track tick) {
+          <line
+            x1="48"
+            x2="704"
+            [attr.y1]="24 + tick * 52"
+            [attr.y2]="24 + tick * 52"
+            class="grid"
+          />
+        }
+        <polygon [attr.points]="area" class="data-area" />
+        <polyline [attr.points]="line" class="data-line" />
+        @if (points.length <= 60) {
+          @for (point of points; track $index; let i = $index) {
+            <circle [attr.cx]="x(i)" [attr.cy]="y(point.value)" r="3.5" class="data-point" />
+          }
+        }
+        @if (selected; as point) {
+          <line
+            [attr.x1]="x(active()!)"
+            [attr.x2]="x(active()!)"
+            y1="16"
+            y2="188"
+            class="crosshair"
+          />
+          <ellipse
+            [attr.cx]="x(active()!)"
+            [attr.cy]="y(point.value)"
+            rx="7"
+            ry="7"
+            class="selected-point"
+          />
+        }
+      </svg>
+      <div class="x-axis" aria-hidden="true">
+        @for (label of labels; track $index) {
+          <span [style.left.%]="label.position" [class.first]="$first" [class.last]="$last">{{
+            label.text
+          }}</span>
+        }
+      </div>
+      @if (selected; as point) {
+        <div
+          class="chart-tooltip"
+          role="tooltip"
+          [style.left.%]="18 + ((x(active()!) - 48) / 656) * 64"
+        >
+          <span>{{ point.label }}</span
+          ><strong>{{ point.value | number: '1.0-0' : 'pt-BR' }}</strong>
+          <small>{{ title }}</small>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="bar-chart" [attr.aria-label]="title">
+      @for (point of points; track $index; let i = $index) {
+        <button
+          type="button"
+          class="bar-row"
+          [class.selected]="active() === i"
+          [attr.aria-label]="
+            drilldown
+              ? 'Ver tendência de ' + point.label
+              : point.label + ': ' + point.value.toLocaleString('pt-BR')
+          "
+          (pointerenter)="active.set(i)"
+          (pointerleave)="leave($event)"
+          (click)="selectBar(i)"
+          (focus)="active.set(i)"
+          (blur)="active.set(null)"
+          (keydown.escape)="active.set(null)"
+        >
+          <span class="bar-heading"
+            ><span>{{ point.label }}</span
+            ><strong>{{ point.value | number: '1.0-0' : 'pt-BR' }}</strong></span
+          >
+          <span class="bar-track"
+            ><span [style.width.%]="(point.value / maximum) * 100"></span
+          ></span>
+          @if (active() === i) {
+            <span class="bar-detail" role="tooltip"
+              >{{ title }} · {{ point.value | number: '1.0-0' : 'pt-BR'
+              }}{{ drilldown ? ' · Toque para ver a tendência' : '' }}</span
+            >
+          }
+        </button>
+      }
+    </div>
+  }
+} @else {
+  <p class="no-data">Nenhum evento registrado neste período e filtros.</p>
+}
+<details>
+  <summary>Ver valores em tabela</summary>
+  <div class="table-wrap">
+    <table>
+      <caption>
+        {{
+          title
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ kind === 'line' ? 'Período' : 'Descrição' }}</th>
+          <th scope="col">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (point of points; track $index) {
+          <tr>
+            <th scope="row">{{ point.label }}</th>
+            <td>{{ point.value | number: '1.0-0' : 'pt-BR' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</details>

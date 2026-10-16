@@ -1,54 +1,29 @@
 import { expect, test } from '@playwright/test';
 
+test.setTimeout(120_000);
+test.beforeEach(async ({ page }) => {
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.fulfill({ contentType: 'text/css', body: '' }));
+});
+
 const framePath = '/assets/mascots/loading/pingo-run-';
 
-test('shows the six-frame Pingo loader while the public menu is loading', async ({ page }, testInfo) => {
+test('public loading shows its shell and local skeleton without downloading mascot frames', async ({ page }, testInfo) => {
   let releaseRequest!: () => void;
   const pendingResponse = new Promise<void>(resolve => releaseRequest = resolve);
-  const assetRequests = new Map<string, number>();
-  page.on('request', request => {
-    const url = new URL(request.url());
-    if (url.pathname.includes(framePath)) {
-      assetRequests.set(url.pathname, (assetRequests.get(url.pathname) ?? 0) + 1);
-    }
-  });
-
+  const frames: string[] = [];
+  page.on('request', request => { if (new URL(request.url()).pathname.includes(framePath)) frames.push(request.url()); });
   await page.route('**/api/v1/public/menu/**', async route => {
     await pendingResponse;
-    await route.fulfill({
-      status: 404,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: false })
-    });
+    await route.fulfill({ status: 404, json: { success: false } });
   });
-
   await page.goto('/m/validacao-loader');
-
-  const loader = page.getByRole('status');
-  await expect(loader).toBeVisible();
-  await expect(loader).toContainText('Preparando seu cardápio...');
-
-  const frames = loader.locator('.pingo-loader__preload-frame');
-  await expect(frames).toHaveCount(6);
-  await expect.poll(async () => frames.evaluateAll(images => images.every(image => {
-    const frame = image as HTMLImageElement;
-    return frame.complete && frame.naturalWidth > 0 && frame.naturalHeight > 0;
-  }))).toBe(true);
-
-  const dimensions = await frames.evaluateAll(images => images.map(image => {
-    const frame = image as HTMLImageElement;
-    return `${frame.naturalWidth}x${frame.naturalHeight}`;
-  }));
-  expect(new Set(dimensions).size).toBe(1);
-  const visibleFrame = loader.locator('.pingo-loader__frame');
-  await expect(visibleFrame).toHaveJSProperty('complete', true);
-
-  await page.screenshot({ path: `test-results/pingo-loader-${testInfo.project.name}.png` });
+  await expect(page.locator('.public-app-container')).toBeVisible();
+  await expect(page.locator('.menu-skeleton')).toHaveClass(/is-visible/);
+  await page.screenshot({ path: `test-results/public-skeleton-${testInfo.project.name}.png` });
+  expect(frames).toEqual([]);
   releaseRequest();
-  await expect(loader).not.toBeVisible();
-
-  expect(assetRequests.size).toBe(6);
-  expect([...assetRequests.values()]).toEqual([1, 1, 1, 1, 1, 1]);
+  await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
+  await expect(page.locator('.menu-skeleton')).toHaveCount(0);
 });
 
 test('uses dark as the dashboard default and preserves a light preference', async ({ page }) => {
@@ -89,22 +64,16 @@ test('uses dark as the dashboard default and preserves a light preference', asyn
 test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('keeps a static mascot frame', async ({ page }) => {
+  test('keeps the public skeleton static', async ({ page }) => {
     let releaseRequest!: () => void;
     const pendingResponse = new Promise<void>(resolve => releaseRequest = resolve);
-
     await page.route('**/api/v1/public/menu/**', async route => {
       await pendingResponse;
-      await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' });
+      await route.fulfill({ status: 404, json: {} });
     });
-
     await page.goto('/m/movimento-reduzido');
-    const loader = page.getByRole('status');
-    await expect(loader).toBeVisible();
-
-    const frame = loader.locator('.pingo-loader__frame');
-    await expect(frame).toHaveCSS('animation-name', 'none');
-    await expect(frame).toHaveAttribute('src', /pingo-run-01\.webp$/);
+    await expect(page.locator('.menu-skeleton')).toHaveClass(/is-visible/);
+    await expect(page.locator('.skeleton-logo')).toHaveCSS('animation-name', 'none');
     releaseRequest();
   });
 });

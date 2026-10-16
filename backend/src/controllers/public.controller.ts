@@ -5,6 +5,7 @@ import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
 import { businessEligibility } from '../services/business-eligibility.service';
+import { publicBanners, publicCategoryHeroes, publicCustomConfig, publicImage } from '../services/public-menu-presentation';
 
 const slugParamSchema = z.string().trim().regex(/^[a-z0-9-]+$/, 'Slug inválido');
 
@@ -356,10 +357,10 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           name: business.name,
           slug: business.slug,
           description: business.description || '',
-          logoUrl: business.logo_url || '/logo_img.webp',
-          coverImageUrl: business.cover_image_url || business.welcome_bg_image || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
+          logoUrl: publicImage(business.logo_url) || '/logo_img.webp',
+          coverImageUrl: publicImage(business.cover_image_url) || publicImage(business.welcome_bg_image) || '',
           welcomeBgType: business.welcome_bg_type || 'image',
-          welcomeBgImage: business.welcome_bg_image || business.cover_image_url || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
+          welcomeBgImage: publicImage(business.welcome_bg_image) || publicImage(business.cover_image_url) || '',
           welcomeBgColor: business.welcome_bg_color || '#0F0F12',
           phone: business.phone || null,
           whatsapp: business.whatsapp || null
@@ -372,14 +373,14 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           fontBody: design.font_body || 'Inter',
           categoryStyle: design.category_style || 'icon_name',
           homeBlocks: mergedBlocks,
-          heroBanners: design.custom_config?.hero_banners || design.hero_banners || [],
+          heroBanners: publicBanners(design.custom_config?.hero_banners || design.hero_banners),
           heroScope: design.custom_config?.hero_scope || 'all',
-          categoryHeroConfigs: design.custom_config?.category_hero_configs || design.category_hero_configs || {},
-          customConfig: design.custom_config || {}
+          categoryHeroConfigs: publicCategoryHeroes(design.custom_config?.category_hero_configs || design.category_hero_configs),
+          customConfig: publicCustomConfig(design.custom_config)
         },
-        categories,
+        categories: categories.map(category => ({...category, imageUrl: publicImage(category.imageUrl)})),
         subcategories,
-        items
+        items: items.map(item => ({...item, imageUrl: publicImage(item.imageUrl)}))
       }
     });
   } catch (error) {

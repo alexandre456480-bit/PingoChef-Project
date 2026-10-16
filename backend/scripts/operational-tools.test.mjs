@@ -4,10 +4,11 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { stagingConfig } from '../../frontend/scripts/create-staging-config.mjs';
 import { checkedMigrations } from './check-migrations.mjs';
+import { restrictionSettings } from './configure-mux-playback-restriction.mjs';
 
 const run=(script,input='',env={})=>spawnSync(process.execPath,[fileURLToPath(new URL(script,import.meta.url))],{
   input,encoding:'utf8',env:{SystemRoot:process.env.SystemRoot,NODE_ENV:'test',...env},timeout:10000});
-test('official migration manifest is complete, ordered and unique',async()=>assert.equal((await checkedMigrations()).length,32));
+test('official migration manifest is complete, ordered and unique',async()=>assert.equal((await checkedMigrations()).length,33));
 test('staging proxy preserves headers but cannot point to production',()=>{
   const base={headers:[{source:'/(.*)',headers:[{key:'security',value:'keep'}]}],rewrites:[{source:'/api/:path*',destination:'https://production.example/api/:path*'},{source:'/(.*)',destination:'/index.html'}]};
   const safe=stagingConfig(base,'https://staging.example','https://production.example');
@@ -32,4 +33,15 @@ test('operational write tools refuse production before opening any connection',(
     const result=run(script,'',{DEPLOYMENT_ENV:'production'});assert.notEqual(result.status,0);
     assert.match(result.stderr,/staging/i);
   }
+});
+test('Mux restrictions accept only explicit domains and deny missing referrer/high-risk UA',()=>{
+  const settings=restrictionSettings({MUX_PLAYBACK_ALLOWED_DOMAINS:'stage.example.com,www.stage.example.com'});
+  assert.equal(settings.referrer.allow_no_referrer,false);
+  assert.equal(settings.user_agent.allow_high_risk_user_agent,false);
+  for(const domains of ['*','*.example.com','localhost','https://example.com','example.com/path','127.0.0.1'])
+    assert.throws(()=>restrictionSettings({MUX_PLAYBACK_ALLOWED_DOMAINS:domains}));
+  const blocked=run('./configure-mux-playback-restriction.mjs','',{DEPLOYMENT_ENV:'production'});
+  assert.notEqual(blocked.status,0);
+  const dry=run('./configure-mux-playback-restriction.mjs','',{DEPLOYMENT_ENV:'staging',MUX_PLAYBACK_ALLOWED_DOMAINS:'stage.example.com'});
+  assert.equal(dry.status,0,dry.stderr);assert.equal(JSON.parse(dry.stdout).mode,'DRY_RUN');
 });

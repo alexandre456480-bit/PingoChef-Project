@@ -1,0 +1,2091 @@
+{
+  "createdAt": "2026-10-15T23:03:27.847Z",
+  "environment": "Local Chromium, production build, fixture API 200ms; external fonts isolated; not production/CrUX",
+  "methodology": {
+    "mobileRepeats": 3,
+    "otherViewportRepeats": 1,
+    "cpuSlowdown": {
+      "wifi": 1,
+      "fast4g": 4,
+      "slow4g": 4
+    },
+    "fixture": {
+      "items": 60,
+      "categories": 6,
+      "apiDelayMs": 200,
+      "imageFileBytes": 100770
+    },
+    "caveats": [
+      "Local production builds and fixtures; not production, CrUX or a physical mobile device.",
+      "External fonts isolated in both phases; family selection validated separately, font-transfer savings not measured.",
+      "LCP measures the Welcome before the first interaction; category/product stages include the controlled Enter click.",
+      "detailMs/menuEntryMs include Playwright actionability and animation waits, not just event processing.",
+      "TTFB refers to the local HTML document, not the BFF/Supabase latency.",
+      "Initial response cohort selects responses seen by Welcome+300ms, then counts completed bytes at departure. Pending transfers may be absent; compare Wi-Fi cohort only, not full-load totals.",
+      "Lighthouse audits initial Welcome; it does not measure INP or certify the whole catalog."
+    ]
+  },
+  "profiles": {
+    "wifi": {
+      "latency": 0,
+      "downloadThroughput": 20000000,
+      "uploadThroughput": 5000000
+    },
+    "fast4g": {
+      "latency": 150,
+      "downloadThroughput": 1125000,
+      "uploadThroughput": 187500
+    },
+    "slow4g": {
+      "latency": 200,
+      "downloadThroughput": 200000,
+      "uploadThroughput": 93750
+    }
+  },
+  "before": [
+    {
+      "template": "modern",
+      "network": "wifi",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 8,
+        "FCP": 492,
+        "LCP": 524,
+        "CLS": 0.002,
+        "INP": 144
+      },
+      "stages": {
+        "structure": 216,
+        "shell": 470.2,
+        "hero": 470.2,
+        "category": 1919.5,
+        "product": 1981.5
+      },
+      "menuEntryMs": 1184,
+      "detailMs": 580,
+      "initialResponseCohortCount": 15,
+      "initialResponseCohortBytes": 896314,
+      "menuFixturePayloadBytes": 22490
+    },
+    {
+      "template": "modern",
+      "network": "fast4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 6.7,
+        "FCP": 1676,
+        "LCP": 2060,
+        "CLS": 0.001,
+        "INP": 552
+      },
+      "stages": {
+        "structure": 1469.6,
+        "shell": 1879.3,
+        "hero": 1879.7,
+        "category": 3786.5,
+        "product": 3877
+      },
+      "menuEntryMs": 1822,
+      "detailMs": 993,
+      "initialResponseCohortCount": 15,
+      "initialResponseCohortBytes": 873641,
+      "menuFixturePayloadBytes": 22490
+    },
+    {
+      "template": "modern",
+      "network": "slow4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 6.8,
+        "FCP": 2696,
+        "LCP": 3628,
+        "CLS": 0.001,
+        "INP": 1120
+      },
+      "stages": {
+        "structure": 2406.4,
+        "shell": 3457.5,
+        "hero": 3457.7,
+        "category": 5569.9,
+        "product": 5570.1
+      },
+      "menuEntryMs": 1810,
+      "detailMs": 727,
+      "initialResponseCohortCount": 13,
+      "initialResponseCohortBytes": 671745,
+      "menuFixturePayloadBytes": 22490
+    },
+    {
+      "template": "minimal",
+      "network": "wifi",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 5.8,
+        "FCP": 484,
+        "LCP": 488,
+        "CLS": 0.002,
+        "INP": 128
+      },
+      "stages": {
+        "structure": 191.3,
+        "shell": 432.8,
+        "hero": 432.8,
+        "category": 1924.6,
+        "product": 1838.4
+      },
+      "menuEntryMs": 1185,
+      "detailMs": 517,
+      "initialResponseCohortCount": 15,
+      "initialResponseCohortBytes": 896325,
+      "menuFixturePayloadBytes": 22501
+    },
+    {
+      "template": "minimal",
+      "network": "fast4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 5.7,
+        "FCP": 1596,
+        "LCP": 2004,
+        "CLS": 0.001,
+        "INP": 560
+      },
+      "stages": {
+        "structure": 1397.9,
+        "shell": 1810.7,
+        "hero": 1810.9,
+        "category": 3874.6,
+        "product": 3875
+      },
+      "menuEntryMs": 1806,
+      "detailMs": 942,
+      "initialResponseCohortCount": 15,
+      "initialResponseCohortBytes": 873641,
+      "menuFixturePayloadBytes": 22501
+    },
+    {
+      "template": "minimal",
+      "network": "slow4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 7.4,
+        "FCP": 2700,
+        "LCP": 3700,
+        "CLS": 0.001,
+        "INP": 1072
+      },
+      "stages": {
+        "structure": 2426.9,
+        "shell": 3506.4,
+        "hero": 3506.6,
+        "category": 5633.2,
+        "product": 5633.6
+      },
+      "menuEntryMs": 1854,
+      "detailMs": 810,
+      "initialResponseCohortCount": 13,
+      "initialResponseCohortBytes": 671745,
+      "menuFixturePayloadBytes": 22501
+    }
+  ],
+  "after": [
+    {
+      "template": "modern",
+      "network": "wifi",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 5.7,
+        "FCP": 500,
+        "LCP": 500,
+        "CLS": 0.001,
+        "INP": 112
+      },
+      "stages": {
+        "structure": 185.5,
+        "shell": 185.5,
+        "hero": 445.5,
+        "category": 884.1,
+        "product": 884.1
+      },
+      "menuEntryMs": 149,
+      "detailMs": 77,
+      "initialResponseCohortCount": 12,
+      "initialResponseCohortBytes": 413246,
+      "menuFixturePayloadBytes": 22490
+    },
+    {
+      "template": "modern",
+      "network": "fast4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 5.3,
+        "FCP": 2108,
+        "LCP": 2108,
+        "CLS": 0.005,
+        "INP": 552
+      },
+      "stages": {
+        "structure": 1405.4,
+        "shell": 1405.4,
+        "hero": 2012.4,
+        "category": 3280.8,
+        "product": 3281.1
+      },
+      "menuEntryMs": 905,
+      "detailMs": 592,
+      "initialResponseCohortCount": 12,
+      "initialResponseCohortBytes": 413246,
+      "menuFixturePayloadBytes": 22490
+    },
+    {
+      "template": "modern",
+      "network": "slow4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 4.5,
+        "FCP": 3228,
+        "LCP": 3228,
+        "CLS": 0.002,
+        "INP": 928
+      },
+      "stages": {
+        "structure": 2140.6,
+        "shell": 2140.8,
+        "hero": 3007.6,
+        "category": 4600.9,
+        "product": 4601
+      },
+      "menuEntryMs": 1371,
+      "detailMs": 410,
+      "initialResponseCohortCount": 12,
+      "initialResponseCohortBytes": 390573,
+      "menuFixturePayloadBytes": 22490
+    },
+    {
+      "template": "minimal",
+      "network": "wifi",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 4.3,
+        "FCP": 492,
+        "LCP": 492,
+        "CLS": 0.001,
+        "INP": 96
+      },
+      "stages": {
+        "structure": 185.1,
+        "shell": 185.2,
+        "hero": 446.7,
+        "category": 888.8,
+        "product": 888.9
+      },
+      "menuEntryMs": 138,
+      "detailMs": 82,
+      "initialResponseCohortCount": 12,
+      "initialResponseCohortBytes": 413257,
+      "menuFixturePayloadBytes": 22501
+    },
+    {
+      "template": "minimal",
+      "network": "fast4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 5.2,
+        "FCP": 2152,
+        "LCP": 2152,
+        "CLS": 0.002,
+        "INP": 640
+      },
+      "stages": {
+        "structure": 1444.4,
+        "shell": 1444.6,
+        "hero": 2012.6,
+        "category": 3132.8,
+        "product": 3133.2
+      },
+      "menuEntryMs": 850,
+      "detailMs": 448,
+      "initialResponseCohortCount": 12,
+      "initialResponseCohortBytes": 390573,
+      "menuFixturePayloadBytes": 22501
+    },
+    {
+      "template": "minimal",
+      "network": "slow4g",
+      "runs": 3,
+      "vitals": {
+        "TTFB": 5.4,
+        "FCP": 3444,
+        "LCP": 3444,
+        "CLS": 0.001,
+        "INP": 720
+      },
+      "stages": {
+        "structure": 2425.6,
+        "shell": 2426,
+        "hero": 3283.7,
+        "category": 4373.9,
+        "product": 4374.1
+      },
+      "menuEntryMs": 1075,
+      "detailMs": 317,
+      "initialResponseCohortCount": 12,
+      "initialResponseCohortBytes": 390573,
+      "menuFixturePayloadBytes": 22501
+    }
+  ],
+  "builds": {
+    "before": {
+      "files": [
+        {
+          "file": "styles-EOP3XZK3.css",
+          "kind": "css",
+          "rawBytes": 58381,
+          "gzipBytes": 10630
+        },
+        {
+          "file": "chunk-Da4-SChG.js",
+          "kind": "js",
+          "rawBytes": 633,
+          "gzipBytes": 333
+        },
+        {
+          "file": "main-5WVYNO7Y.js",
+          "kind": "js",
+          "rawBytes": 400871,
+          "gzipBytes": 122978
+        },
+        {
+          "file": "chunk-BnZKGcn6.js",
+          "kind": "js",
+          "rawBytes": 3857,
+          "gzipBytes": 1785
+        },
+        {
+          "file": "chunk-BU3FMRjM.js",
+          "kind": "js",
+          "rawBytes": 244874,
+          "gzipBytes": 54106
+        }
+      ],
+      "bootstrapJsRawBytes": 401504,
+      "publicJourneyJsRawBytes": 650235,
+      "publicJourneyJsGzipBytes": 179202,
+      "globalCssRawBytes": 58381
+    },
+    "after": {
+      "files": [
+        {
+          "file": "chunk-Da4-SChG.js",
+          "kind": "js",
+          "rawBytes": 633,
+          "gzipBytes": 333
+        },
+        {
+          "file": "styles-KVXN75YK.css",
+          "kind": "css",
+          "rawBytes": 43657,
+          "gzipBytes": 9797
+        },
+        {
+          "file": "main-2U4QGS4R.js",
+          "kind": "js",
+          "rawBytes": 360753,
+          "gzipBytes": 114359
+        },
+        {
+          "file": "chunk-mT_rTkmj.js",
+          "kind": "js",
+          "rawBytes": 10779,
+          "gzipBytes": 4160
+        },
+        {
+          "file": "chunk-DE8oJVPp.js",
+          "kind": "js",
+          "rawBytes": 8345,
+          "gzipBytes": 3392
+        },
+        {
+          "file": "chunk-C4F2rlie.js",
+          "kind": "js",
+          "rawBytes": 142,
+          "gzipBytes": 129
+        },
+        {
+          "file": "chunk-VyHd8wpg.js",
+          "kind": "js",
+          "rawBytes": 235966,
+          "gzipBytes": 50762
+        },
+        {
+          "file": "chunk-1RR3RTIg.js",
+          "kind": "js",
+          "rawBytes": 8862,
+          "gzipBytes": 3340
+        }
+      ],
+      "bootstrapJsRawBytes": 361386,
+      "publicJourneyJsRawBytes": 625480,
+      "publicJourneyJsGzipBytes": 176475,
+      "globalCssRawBytes": 43657
+    }
+  },
+  "lighthouse": [
+    {
+      "phase": "before",
+      "template": "modern",
+      "version": "13.5.0",
+      "scores": {
+        "performance": 63,
+        "accessibility": 100,
+        "best-practices": 100
+      },
+      "metrics": {
+        "first-contentful-paint": 5140.728,
+        "largest-contentful-paint": 5140.728,
+        "cumulative-layout-shift": 0.007026225901605638,
+        "total-blocking-time": 191.11699999237044,
+        "speed-index": 6510
+      },
+      "runtimeError": null
+    },
+    {
+      "phase": "before",
+      "template": "minimal",
+      "version": "13.5.0",
+      "scores": {
+        "performance": 60,
+        "accessibility": 100,
+        "best-practices": 100
+      },
+      "metrics": {
+        "first-contentful-paint": 5628.043,
+        "largest-contentful-paint": 5628.043,
+        "cumulative-layout-shift": 0.00708023563426421,
+        "total-blocking-time": 210.8140000000003,
+        "speed-index": 6813
+      },
+      "runtimeError": null
+    },
+    {
+      "phase": "after",
+      "template": "modern",
+      "version": "13.5.0",
+      "scores": {
+        "performance": 74,
+        "accessibility": 100,
+        "best-practices": 100
+      },
+      "metrics": {
+        "first-contentful-paint": 4247.704,
+        "largest-contentful-paint": 4247.704,
+        "cumulative-layout-shift": 0.008025705169960127,
+        "total-blocking-time": 0,
+        "speed-index": 5000
+      },
+      "runtimeError": null
+    },
+    {
+      "phase": "after",
+      "template": "minimal",
+      "version": "13.5.0",
+      "scores": {
+        "performance": 72,
+        "accessibility": 100,
+        "best-practices": 100
+      },
+      "metrics": {
+        "first-contentful-paint": 4533.597,
+        "largest-contentful-paint": 4533.597,
+        "cumulative-layout-shift": 0.009126416466386648,
+        "total-blocking-time": 0,
+        "speed-index": 5168
+      },
+      "runtimeError": null
+    }
+  ],
+  "cases": {
+    "before": [
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 13.2,
+          "FCP": 820,
+          "LCP": 820,
+          "CLS": 0.003,
+          "INP": 160
+        },
+        "stages": {
+          "structure": 533.2000000029802,
+          "shell": 767.6000000014901,
+          "hero": 767.6000000014901,
+          "category": 2275,
+          "product": 2359.7000000029802
+        },
+        "menuEntryMs": 1203,
+        "detailMs": 580,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896314,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 6.1,
+          "FCP": 484,
+          "CLS": 0.002,
+          "LCP": 524,
+          "INP": 144
+        },
+        "stages": {
+          "structure": 216,
+          "shell": 470.20000000298023,
+          "hero": 470.20000000298023,
+          "category": 1919.5,
+          "product": 1981.5
+        },
+        "menuEntryMs": 1164,
+        "detailMs": 512,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896314,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 8,
+          "FCP": 492,
+          "LCP": 492,
+          "CLS": 0.001,
+          "INP": 128
+        },
+        "stages": {
+          "structure": 194.30000000447035,
+          "shell": 436.70000000298023,
+          "hero": 436.80000000447035,
+          "category": 1835.7000000029802,
+          "product": 1918.6000000014901
+        },
+        "menuEntryMs": 1184,
+        "detailMs": 1061,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896314,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 6.7,
+          "FCP": 1708,
+          "CLS": 0.001,
+          "LCP": 2100,
+          "INP": 552
+        },
+        "stages": {
+          "structure": 1513.8000000044703,
+          "shell": 1941.8000000044703,
+          "hero": 1942,
+          "category": 3925.60000000149,
+          "product": 4032.10000000149
+        },
+        "menuEntryMs": 1822,
+        "detailMs": 993,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 873641,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 7.1,
+          "FCP": 1676,
+          "CLS": 0,
+          "LCP": 2060,
+          "INP": 520
+        },
+        "stages": {
+          "structure": 1469.6000000014901,
+          "shell": 1879.3000000044703,
+          "hero": 1879.7000000029802,
+          "category": 3786.5,
+          "product": 3877
+        },
+        "menuEntryMs": 1727,
+        "detailMs": 1025,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 873641,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 6,
+          "FCP": 1588,
+          "CLS": 0.001,
+          "LCP": 1992,
+          "INP": 584
+        },
+        "stages": {
+          "structure": 1386.0999999940395,
+          "shell": 1801.1999999955297,
+          "hero": 1801.2999999970198,
+          "category": 3771.5,
+          "product": 3875.1999999955297
+        },
+        "menuEntryMs": 1830,
+        "detailMs": 811,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 873641,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 7.4,
+          "FCP": 2712,
+          "CLS": 0.001,
+          "LCP": 3660,
+          "INP": 1104
+        },
+        "stages": {
+          "structure": 2406.4000000059605,
+          "shell": 3479.10000000149,
+          "hero": 3479.5,
+          "category": 5594.20000000298,
+          "product": 5594.4000000059605
+        },
+        "menuEntryMs": 1810,
+        "detailMs": 697,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 13,
+        "initialResponseCohortBytes": 671745,
+        "initialImageBytes": 474144,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 6.2,
+          "FCP": 2676,
+          "CLS": 0,
+          "LCP": 3624,
+          "INP": 1144
+        },
+        "stages": {
+          "structure": 2373.89999999851,
+          "shell": 3436.89999999851,
+          "hero": 3437.1999999955297,
+          "category": 5533.89999999851,
+          "product": 5534.10000000149
+        },
+        "menuEntryMs": 1810,
+        "detailMs": 727,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 13,
+        "initialResponseCohortBytes": 671745,
+        "initialImageBytes": 474144,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 6.8,
+          "FCP": 2696,
+          "CLS": 0.001,
+          "LCP": 3628,
+          "INP": 1120
+        },
+        "stages": {
+          "structure": 2413.60000000149,
+          "shell": 3457.5,
+          "hero": 3457.6999999955297,
+          "category": 5569.89999999851,
+          "product": 5570.10000000149
+        },
+        "menuEntryMs": 1840,
+        "detailMs": 843,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 13,
+        "initialResponseCohortBytes": 671745,
+        "initialImageBytes": 474144,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 360,
+        "height": 800,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.3,
+          "FCP": 512,
+          "LCP": 512,
+          "CLS": 0.002,
+          "INP": 128
+        },
+        "stages": {
+          "structure": 220.29999999701977,
+          "shell": 463.5,
+          "hero": 463.5,
+          "category": 1908.7999999970198,
+          "product": 2004.5
+        },
+        "menuEntryMs": 1223,
+        "detailMs": 568,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896314,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 430,
+        "height": 932,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.7,
+          "FCP": 512,
+          "LCP": 512,
+          "CLS": 0.002,
+          "INP": 160
+        },
+        "stages": {
+          "structure": 202.29999999701977,
+          "shell": 450.19999999552965,
+          "hero": 450.29999999701977,
+          "category": 1943.3999999985099,
+          "product": 2039.6999999955297
+        },
+        "menuEntryMs": 1255,
+        "detailMs": 536,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896314,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 768,
+        "height": 1024,
+        "run": 0,
+        "vitals": {
+          "TTFB": 6.3,
+          "FCP": 564,
+          "LCP": 640,
+          "CLS": 0.001,
+          "INP": 224
+        },
+        "stages": {
+          "structure": 233.79999999701977,
+          "shell": 484.8999999985099,
+          "hero": 484.8999999985099,
+          "category": 2015.8999999985099,
+          "product": 2098.60000000149
+        },
+        "menuEntryMs": 1273,
+        "detailMs": 538,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896314,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 1440,
+        "height": 900,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.9,
+          "FCP": 500,
+          "LCP": 576,
+          "CLS": 0,
+          "INP": 184
+        },
+        "stages": {
+          "structure": 186,
+          "shell": 417.8999999985099,
+          "hero": 418,
+          "category": 1888.3999999985099,
+          "product": 1972.0999999940395
+        },
+        "menuEntryMs": 1219,
+        "detailMs": 515,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896314,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.6,
+          "FCP": 484,
+          "LCP": 484,
+          "CLS": 0.001,
+          "INP": 120
+        },
+        "stages": {
+          "structure": 195.10000000149012,
+          "shell": 432.80000000447035,
+          "hero": 432.80000000447035,
+          "product": 1838.4000000059605,
+          "category": 1924.6000000014901
+        },
+        "menuEntryMs": 1179,
+        "detailMs": 1015,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896325,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 6,
+          "FCP": 488,
+          "LCP": 488,
+          "CLS": 0.002,
+          "INP": 136
+        },
+        "stages": {
+          "structure": 191.30000000447035,
+          "shell": 436.30000000447035,
+          "hero": 436.30000000447035,
+          "product": 1887.3999999985099,
+          "category": 1968.5
+        },
+        "menuEntryMs": 1213,
+        "detailMs": 517,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896325,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 5.8,
+          "FCP": 468,
+          "LCP": 508,
+          "CLS": 0.002,
+          "INP": 128
+        },
+        "stages": {
+          "structure": 168,
+          "shell": 415.79999999701977,
+          "hero": 415.79999999701977,
+          "product": 1825.1000000014901,
+          "category": 1896.5
+        },
+        "menuEntryMs": 1185,
+        "detailMs": 481,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896325,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.7,
+          "FCP": 1596,
+          "CLS": 0,
+          "LCP": 2004,
+          "INP": 520
+        },
+        "stages": {
+          "structure": 1397.8999999985099,
+          "shell": 1810.6999999955297,
+          "hero": 1810.8999999985099,
+          "product": 3739.2999999970198,
+          "category": 3839.5
+        },
+        "menuEntryMs": 1806,
+        "detailMs": 942,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 873641,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 5.5,
+          "FCP": 1664,
+          "CLS": 0.001,
+          "LCP": 2032,
+          "INP": 560
+        },
+        "stages": {
+          "structure": 1449.5999999940395,
+          "shell": 1909.5,
+          "hero": 1909.8999999985099,
+          "category": 3952.2999999970198,
+          "product": 3952.5
+        },
+        "menuEntryMs": 1804,
+        "detailMs": 1018,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 873641,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 6.8,
+          "FCP": 1568,
+          "CLS": 0.001,
+          "LCP": 1960,
+          "INP": 648
+        },
+        "stages": {
+          "structure": 1382.5,
+          "shell": 1785.2000000029802,
+          "hero": 1785.6000000014901,
+          "category": 3874.60000000149,
+          "product": 3875
+        },
+        "menuEntryMs": 1856,
+        "detailMs": 809,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 873641,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 6.4,
+          "FCP": 2648,
+          "CLS": 0.002,
+          "LCP": 3628,
+          "INP": 1072
+        },
+        "stages": {
+          "structure": 2371.0999999940395,
+          "shell": 3449.2999999970198,
+          "hero": 3449.5,
+          "category": 5633.19999999553,
+          "product": 5633.5999999940395
+        },
+        "menuEntryMs": 1854,
+        "detailMs": 767,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 13,
+        "initialResponseCohortBytes": 671745,
+        "initialImageBytes": 474144,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 7.5,
+          "FCP": 2788,
+          "CLS": 0,
+          "LCP": 3704,
+          "INP": 1104
+        },
+        "stages": {
+          "structure": 2501.39999999851,
+          "shell": 3546.8000000044703,
+          "hero": 3547,
+          "category": 5623.80000000447,
+          "product": 5624.20000000298
+        },
+        "menuEntryMs": 1789,
+        "detailMs": 854,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 13,
+        "initialResponseCohortBytes": 671745,
+        "initialImageBytes": 474144,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 7.4,
+          "FCP": 2700,
+          "CLS": 0.001,
+          "LCP": 3700,
+          "INP": 944
+        },
+        "stages": {
+          "structure": 2426.89999999851,
+          "shell": 3506.39999999851,
+          "hero": 3506.5999999940395,
+          "category": 5687.69999999553,
+          "product": 5687.89999999851
+        },
+        "menuEntryMs": 1857,
+        "detailMs": 810,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 13,
+        "initialResponseCohortBytes": 671745,
+        "initialImageBytes": 474144,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 360,
+        "height": 800,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.2,
+          "FCP": 508,
+          "LCP": 568,
+          "CLS": 0.002,
+          "INP": 136
+        },
+        "stages": {
+          "structure": 227.29999999701977,
+          "shell": 460.5,
+          "hero": 460.6000000014901,
+          "product": 1875.1999999955297,
+          "category": 1963.8999999985099
+        },
+        "menuEntryMs": 1185,
+        "detailMs": 526,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896325,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 430,
+        "height": 932,
+        "run": 0,
+        "vitals": {
+          "TTFB": 6,
+          "FCP": 548,
+          "LCP": 608,
+          "CLS": 0.002,
+          "INP": 168
+        },
+        "stages": {
+          "structure": 247.40000000596046,
+          "shell": 484.6000000014901,
+          "hero": 484.70000000298023,
+          "product": 1965.2000000029802,
+          "category": 2049
+        },
+        "menuEntryMs": 1225,
+        "detailMs": 498,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896325,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 768,
+        "height": 1024,
+        "run": 0,
+        "vitals": {
+          "TTFB": 6,
+          "FCP": 492,
+          "LCP": 560,
+          "CLS": 0.001,
+          "INP": 160
+        },
+        "stages": {
+          "structure": 178.39999999850988,
+          "shell": 418.70000000298023,
+          "hero": 418.70000000298023,
+          "product": 1948.8999999985099,
+          "category": 2032.5
+        },
+        "menuEntryMs": 1304,
+        "detailMs": 1017,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896325,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 1440,
+        "height": 900,
+        "run": 0,
+        "vitals": {
+          "TTFB": 7.8,
+          "FCP": 516,
+          "LCP": 596,
+          "CLS": 0,
+          "INP": 168
+        },
+        "stages": {
+          "structure": 191.30000000447035,
+          "shell": 432.5,
+          "hero": 432.5,
+          "product": 1881.3999999985099,
+          "category": 1968.8999999985099
+        },
+        "menuEntryMs": 1212,
+        "detailMs": 511,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 15,
+        "initialResponseCohortBytes": 896325,
+        "initialImageBytes": 676040,
+        "contentGets": 1,
+        "mascotFrameResponses": 6,
+        "failures": []
+      }
+    ],
+    "after": [
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 11.2,
+          "FCP": 528,
+          "LCP": 528,
+          "CLS": 0.001,
+          "INP": 112
+        },
+        "stages": {
+          "structure": 207,
+          "shell": 207,
+          "hero": 477.1000000014901,
+          "category": 892.1999999955297,
+          "product": 892.1999999955297
+        },
+        "menuEntryMs": 149,
+        "detailMs": 77,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 5.7,
+          "FCP": 464,
+          "LCP": 464,
+          "CLS": 0.001,
+          "INP": 112
+        },
+        "stages": {
+          "structure": 162.10000000149012,
+          "shell": 162.10000000149012,
+          "hero": 416.6000000014901,
+          "category": 834,
+          "product": 834
+        },
+        "menuEntryMs": 174,
+        "detailMs": 75,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 4.6,
+          "FCP": 500,
+          "LCP": 500,
+          "CLS": 0.001,
+          "INP": 96
+        },
+        "stages": {
+          "structure": 185.5,
+          "shell": 185.5,
+          "hero": 445.5,
+          "category": 884.1000000014901,
+          "product": 884.1000000014901
+        },
+        "menuEntryMs": 132,
+        "detailMs": 81,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.4,
+          "FCP": 2096,
+          "LCP": 2096,
+          "CLS": 0.002,
+          "INP": 464
+        },
+        "stages": {
+          "structure": 1372.1000000014901,
+          "shell": 1372.2000000029802,
+          "hero": 2040.6000000014901,
+          "category": 2886.2000000029802,
+          "product": 2886.5
+        },
+        "menuEntryMs": 798,
+        "detailMs": 404,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 5.3,
+          "FCP": 2108,
+          "LCP": 2108,
+          "CLS": 0.006,
+          "INP": 672
+        },
+        "stages": {
+          "structure": 1407.3999999985099,
+          "shell": 1408.1000000014901,
+          "hero": 2003.8000000044703,
+          "category": 3287.2000000029802,
+          "product": 3287.60000000149
+        },
+        "menuEntryMs": 1067,
+        "detailMs": 616,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 6.6,
+          "FCP": 2116,
+          "LCP": 2116,
+          "CLS": 0.005,
+          "INP": 552
+        },
+        "stages": {
+          "structure": 1405.3999999985099,
+          "shell": 1405.3999999985099,
+          "hero": 2012.3999999985099,
+          "category": 3280.7999999970198,
+          "product": 3281.10000000149
+        },
+        "menuEntryMs": 905,
+        "detailMs": 592,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.5,
+          "FCP": 3260,
+          "LCP": 3260,
+          "CLS": 0.002,
+          "INP": 928
+        },
+        "stages": {
+          "structure": 2193.4000000059605,
+          "shell": 2193.60000000149,
+          "hero": 3041.5,
+          "category": 4680.5,
+          "product": 4680.70000000298
+        },
+        "menuEntryMs": 1373,
+        "detailMs": 410,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 4.5,
+          "FCP": 3192,
+          "LCP": 3192,
+          "CLS": 0.001,
+          "INP": 928
+        },
+        "stages": {
+          "structure": 2119.89999999851,
+          "shell": 2119.89999999851,
+          "hero": 2976.39999999851,
+          "category": 4600.89999999851,
+          "product": 4601
+        },
+        "menuEntryMs": 1371,
+        "detailMs": 394,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 4.2,
+          "FCP": 3228,
+          "LCP": 3228,
+          "CLS": 0.002,
+          "INP": 920
+        },
+        "stages": {
+          "structure": 2140.60000000149,
+          "shell": 2140.8000000044703,
+          "hero": 3007.60000000149,
+          "category": 4484.89999999851,
+          "product": 4485.20000000298
+        },
+        "menuEntryMs": 1355,
+        "detailMs": 466,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 360,
+        "height": 800,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.5,
+          "FCP": 496,
+          "LCP": 496,
+          "CLS": 0.001,
+          "INP": 104
+        },
+        "stages": {
+          "structure": 190.20000000298023,
+          "shell": 190.20000000298023,
+          "hero": 448.8999999985099,
+          "category": 879.3999999985099,
+          "product": 879.3999999985099
+        },
+        "menuEntryMs": 126,
+        "detailMs": 95,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 430,
+        "height": 932,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.3,
+          "FCP": 500,
+          "LCP": 500,
+          "CLS": 0.001,
+          "INP": 96
+        },
+        "stages": {
+          "structure": 185.70000000298023,
+          "shell": 185.70000000298023,
+          "hero": 443.5,
+          "category": 922.4000000059605,
+          "product": 922.5
+        },
+        "menuEntryMs": 159,
+        "detailMs": 88,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 768,
+        "height": 1024,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.4,
+          "FCP": 480,
+          "LCP": 548,
+          "CLS": 0.001,
+          "INP": 120
+        },
+        "stages": {
+          "structure": 152.09999999403954,
+          "shell": 152.09999999403954,
+          "hero": 418.69999999552965,
+          "category": 904.1999999955297,
+          "product": 904.2999999970198
+        },
+        "menuEntryMs": 192,
+        "detailMs": 79,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "modern",
+        "network": "wifi",
+        "width": 1440,
+        "height": 900,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.2,
+          "FCP": 512,
+          "LCP": 556,
+          "CLS": 0,
+          "INP": 144
+        },
+        "stages": {
+          "structure": 186.40000000596046,
+          "shell": 186.40000000596046,
+          "hero": 450.1000000014901,
+          "category": 951.1000000014901,
+          "product": 951.1000000014901
+        },
+        "menuEntryMs": 206,
+        "detailMs": 87,
+        "menuPayloadBytes": 22490,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413246,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.5,
+          "FCP": 492,
+          "LCP": 492,
+          "CLS": 0.001,
+          "INP": 88
+        },
+        "stages": {
+          "structure": 181.59999999403954,
+          "shell": 181.69999999552965,
+          "hero": 446.69999999552965,
+          "category": 908.5,
+          "product": 908.5
+        },
+        "menuEntryMs": 143,
+        "detailMs": 82,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 4.3,
+          "FCP": 492,
+          "LCP": 492,
+          "CLS": 0.001,
+          "INP": 112
+        },
+        "stages": {
+          "structure": 185.10000000149012,
+          "shell": 185.19999999552965,
+          "hero": 442.8999999985099,
+          "category": 872.7999999970198,
+          "product": 872.7999999970198
+        },
+        "menuEntryMs": 138,
+        "detailMs": 78,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 4,
+          "FCP": 520,
+          "LCP": 520,
+          "CLS": 0.001,
+          "INP": 96
+        },
+        "stages": {
+          "structure": 185.60000000149012,
+          "shell": 185.60000000149012,
+          "hero": 472.20000000298023,
+          "category": 888.8000000044703,
+          "product": 888.8999999985099
+        },
+        "menuEntryMs": 123,
+        "detailMs": 88,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.2,
+          "FCP": 2096,
+          "LCP": 2096,
+          "CLS": 0.001,
+          "INP": 528
+        },
+        "stages": {
+          "structure": 1444.3999999985099,
+          "shell": 1444.6000000014901,
+          "hero": 1940.1000000014901,
+          "category": 2916.7000000029802,
+          "product": 2916.89999999851
+        },
+        "menuEntryMs": 732,
+        "detailMs": 297,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 4.1,
+          "FCP": 2240,
+          "LCP": 2240,
+          "CLS": 0.002,
+          "INP": 704
+        },
+        "stages": {
+          "structure": 1521.5,
+          "shell": 1521.6999999955297,
+          "hero": 2199.7999999970198,
+          "category": 3297.7999999970198,
+          "product": 3297.89999999851
+        },
+        "menuEntryMs": 850,
+        "detailMs": 558,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "fast4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 5.4,
+          "FCP": 2152,
+          "LCP": 2152,
+          "CLS": 0.002,
+          "INP": 640
+        },
+        "stages": {
+          "structure": 1394.8999999985099,
+          "shell": 1395.2999999970198,
+          "hero": 2012.6000000014901,
+          "category": 3132.7999999970198,
+          "product": 3133.1999999955297
+        },
+        "menuEntryMs": 929,
+        "detailMs": 448,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 0,
+        "vitals": {
+          "TTFB": 5.4,
+          "FCP": 3960,
+          "LCP": 3960,
+          "CLS": 0.004,
+          "INP": 984
+        },
+        "stages": {
+          "structure": 2886.8000000044703,
+          "shell": 2886.8000000044703,
+          "hero": 3727.39999999851,
+          "category": 5424.30000000447,
+          "product": 5424.70000000298
+        },
+        "menuEntryMs": 1312,
+        "detailMs": 317,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 1,
+        "vitals": {
+          "TTFB": 6.7,
+          "FCP": 3444,
+          "LCP": 3444,
+          "CLS": 0,
+          "INP": 656
+        },
+        "stages": {
+          "structure": 2425.60000000149,
+          "shell": 2426,
+          "hero": 3283.7000000029802,
+          "category": 4373.9000000059605,
+          "product": 4374.10000000149
+        },
+        "menuEntryMs": 867,
+        "detailMs": 277,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "slow4g",
+        "width": 390,
+        "height": 844,
+        "run": 2,
+        "vitals": {
+          "TTFB": 5.4,
+          "FCP": 3116,
+          "LCP": 3116,
+          "CLS": 0.001,
+          "INP": 720
+        },
+        "stages": {
+          "structure": 2147.1999999955297,
+          "shell": 2147.39999999851,
+          "hero": 3004.5999999940395,
+          "category": 4088.89999999851,
+          "product": 4089
+        },
+        "menuEntryMs": 1075,
+        "detailMs": 358,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 390573,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 360,
+        "height": 800,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.3,
+          "FCP": 488,
+          "LCP": 488,
+          "CLS": 0.002,
+          "INP": 112
+        },
+        "stages": {
+          "structure": 186,
+          "shell": 186,
+          "hero": 438.5,
+          "category": 881.3999999985099,
+          "product": 881.3999999985099
+        },
+        "menuEntryMs": 137,
+        "detailMs": 95,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 430,
+        "height": 932,
+        "run": 0,
+        "vitals": {
+          "TTFB": 7.7,
+          "FCP": 580,
+          "LCP": 580,
+          "CLS": 0.001,
+          "INP": 120
+        },
+        "stages": {
+          "structure": 278.19999999552965,
+          "shell": 278.29999999701977,
+          "hero": 526.8999999985099,
+          "category": 951.6000000014901,
+          "product": 951.6000000014901
+        },
+        "menuEntryMs": 138,
+        "detailMs": 90,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 768,
+        "height": 1024,
+        "run": 0,
+        "vitals": {
+          "TTFB": 3.9,
+          "FCP": 492,
+          "LCP": 540,
+          "CLS": 0,
+          "INP": 120
+        },
+        "stages": {
+          "structure": 171,
+          "shell": 171,
+          "hero": 421.6000000014901,
+          "category": 855.5,
+          "product": 855.5
+        },
+        "menuEntryMs": 149,
+        "detailMs": 92,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      },
+      {
+        "template": "minimal",
+        "network": "wifi",
+        "width": 1440,
+        "height": 900,
+        "run": 0,
+        "vitals": {
+          "TTFB": 4.1,
+          "FCP": 468,
+          "LCP": 488,
+          "CLS": 0,
+          "INP": 128
+        },
+        "stages": {
+          "structure": 158.29999999701977,
+          "shell": 158.29999999701977,
+          "hero": 407.59999999403954,
+          "category": 836.8999999985099,
+          "product": 836.8999999985099
+        },
+        "menuEntryMs": 137,
+        "detailMs": 107,
+        "menuPayloadBytes": 22501,
+        "initialResponseCohortCount": 12,
+        "initialResponseCohortBytes": 413257,
+        "initialImageBytes": 201896,
+        "contentGets": 1,
+        "mascotFrameResponses": 0,
+        "failures": []
+      }
+    ]
+  },
+  "budgets": {
+    "bootstrapJsAtMostBaseline": {
+      "limitBytes": 401504,
+      "actualBytes": 361386,
+      "passed": true
+    },
+    "publicJourneyGzipAtMostBaseline": {
+      "limitBytes": 179202,
+      "actualBytes": 176475,
+      "passed": true
+    },
+    "oneContentGet": {
+      "passed": true
+    },
+    "noMascotFrameDownload": {
+      "passed": true
+    }
+  }
+}

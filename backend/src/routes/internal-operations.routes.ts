@@ -8,7 +8,8 @@ import { renderQr, publicMenuOrigin, defaultQrConfiguration } from '../services/
 const router=Router();
 router.use(rateLimit({windowMs:15*60*1000,limit:30,standardHeaders:true,legacyHeaders:false}));
 router.use(requireInternalJob);
-router.post('/security/maintain',async (_req,res)=>{
+router.route('/security/maintain').all(async (req,res,next)=>{
+  if(!['GET','POST'].includes(req.method))return next();
   try{
     const {data,error}=await supabaseAdmin.rpc('maintain_shared_security_state');
     if(error)throw error;
@@ -52,7 +53,8 @@ router.get('/ready',async (_req,res)=>{
     return res.json({success:true,data:{status:'ready'}});
   }catch{return res.status(503).json({success:false,error:{code:'DEPENDENCY_UNAVAILABLE'}});}
 });
-router.post('/accounts/purge',async (_req,res)=>{
+router.route('/accounts/purge').all(async (req,res,next)=>{
+  if(!['GET','POST'].includes(req.method))return next();
   try{return res.json({success:true,data:await runAccountPurgeOnce()});}
   catch(error){
     console.error('[Account Purge]',{requestId:res.locals.requestId,

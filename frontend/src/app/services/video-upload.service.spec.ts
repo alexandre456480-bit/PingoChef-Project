@@ -33,6 +33,7 @@ describe('VideoUploadService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.has('Authorization')).toBe(false);
     expect(req.request.headers.get('X-CSRF-Token')).toBe('test-csrf');
+    expect(req.request.headers.get('Idempotency-Key')).toMatch(/^[a-f0-9-]{36}$/);
     expect(req.request.withCredentials).toBe(true);
     expect(req.request.body).toEqual({
       fileSizeBytes: 1024,

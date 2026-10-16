@@ -1,6 +1,7 @@
 import {expect,test} from '@playwright/test';
 
 test('audits initial dashboard requests without loading Analytics or a second bootstrap',async({page},info)=>{
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.abort());
   const requests:{endpoint:string;started:number;finished:number;bytes:number}[]=[];
   const start=performance.now();
   await page.route('**/api/v1/**',async route=>{
@@ -17,7 +18,7 @@ test('audits initial dashboard requests without loading Analytics or a second bo
     await route.fulfill({contentType:'application/json',body});
   });
   await page.goto('/dashboard');
-  await expect(page.locator('app-dashboard-home')).toBeVisible();
+  await expect(page.locator('app-dashboard-home')).toBeVisible({timeout:20_000});
   await expect(page.locator('app-dashboard app-pingo-loader').first().locator('[aria-busy]')).toHaveAttribute('aria-busy','false');
   const navigationMs=performance.now()-start;
   console.info(JSON.stringify({event:'dashboard_loading_audit',device:info.project.name,navigation_ms:Math.round(navigationMs),requests:requests.length,

@@ -20,6 +20,7 @@ import {
 import { MuxPlayerLoaderService } from '../../services/mux-player-loader.service';
 import { PublicAnalyticsService, PublicAnalyticsEvent } from '../../services/public-analytics.service';
 import type MuxPlayerElement from '@mux/mux-player';
+import { MenuImageDirective } from '../public-menu-view/menu-image.directive';
 
 type GallerySlide =
   | { key: string; kind: 'image'; imageUrl: string }
@@ -28,25 +29,27 @@ type GallerySlide =
 @Component({
   selector: 'app-product-media-gallery',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MenuImageDirective],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     @if (slides.length > 0) {
       <section
         class="media-gallery"
-        tabindex="0"
+        [attr.tabindex]="session ? -1 : 0"
         aria-label="Galeria do produto"
-        (keydown.arrowLeft)="previous()"
-        (keydown.arrowRight)="next()"
+        (keydown.arrowLeft)="!session && previous()"
+        (keydown.arrowRight)="!session && next()"
         (touchstart)="onTouchStart($event)"
         (touchend)="onTouchEnd($event)">
         <div
           class="media-stage"
+          [attr.inert]="session ? '' : null"
           [class.video-stage]="activeSlide.kind === 'video'">
           @if (activeSlide.kind === 'image') {
-            <img [src]="activeSlide.imageUrl" [alt]="productName" class="media-image" />
+            <img [appMenuImage]="activeSlide.imageUrl" menuImageKind="detail" [alt]="productName" class="media-image" />
           } @else {
-            <div class="video-poster" [style.background-image]="imageUrl ? 'url(' + imageUrl + ')' : 'none'">
+            <div class="video-poster">
+              <img class="poster-image" [appMenuImage]="imageUrl" menuImageKind="detail" alt="" />
               <div class="poster-shade"></div>
               <button
                 type="button"
@@ -85,7 +88,7 @@ type GallerySlide =
         }
 
         @if (slides.length > 1) {
-          <div class="gallery-dots" role="tablist" aria-label="Selecionar mídia">
+          <div class="gallery-dots" role="tablist" aria-label="Selecionar mídia" [attr.inert]="session ? '' : null">
             @for (slide of slides; track slide.key; let index = $index) {
               <button
                 type="button"
@@ -216,9 +219,12 @@ type GallerySlide =
     .nav-button svg { width: 20px; height: 20px; }
     .nav-button.previous { left: 12px; }
     .nav-button.next { right: 12px; }
-    .gallery-dots { display: flex; justify-content: center; gap: 7px; padding: 10px 12px 4px; }
-    .gallery-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: color-mix(in srgb, var(--text-secondary) 35%, transparent); cursor: pointer; transition: width 180ms ease, background 180ms ease; }
-    .gallery-dot.active { width: 24px; background: var(--accent-color); }
+    .gallery-dots { display: flex; justify-content: center; gap: 0; padding: 0 12px; }
+    .gallery-dot { width:44px; height:44px; padding:0; border:0; background:transparent; display:grid; place-items:center; cursor:pointer; }
+    .gallery-dot::before { content:''; width:8px; height:8px; border-radius:99px; background:color-mix(in srgb,var(--text-secondary) 35%,transparent); transition:width 180ms ease,background-color 180ms ease; }
+    .gallery-dot.active::before { width:24px; background:var(--accent-color); }
+    .nav-button,.close-video-button { min-width:44px; min-height:44px; }
+    @media(prefers-reduced-motion:reduce) { .gallery-dot::before {transition:none} }
     .playback-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: #FFF3F3; color: #8B1A3A; font-size: .8rem; }
     .playback-error button { border: 1px solid currentColor; border-radius: 8px; padding: 6px 9px; background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
     .video-lightbox {
@@ -284,6 +290,12 @@ type GallerySlide =
     }
     .close-video-button svg { width: 19px; height: 19px; }
     .close-video-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent-color) 75%, white); outline-offset: 3px; }
+    .poster-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .menu-image-loading { opacity:0; }
+    .menu-image-ready { opacity:1; }
+    .media-image,.poster-image { transition:opacity 180ms ease; background:color-mix(in srgb,var(--surface-color,#e9e6e2) 80%,#8a8075 20%); }
+    .menu-image-failed { object-fit:contain; }
+    @media(prefers-reduced-motion:reduce) { .media-image,.poster-image {transition:none}.loading-ring {animation:none} }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes lightboxFade { from { opacity: 0; } to { opacity: 1; } }
     @keyframes playerZoom { from { opacity: 0; transform: translateY(12px) scale(.86); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -325,15 +337,24 @@ export class ProductMediaGalleryComponent implements OnDestroy {
   private touchStartX: number | null = null;
   private analyticsPlayId: string | null = null;
   private playStarted = false;
+  private destroyed = false;
+  private playVersion = 0;
+  private cachedMedia?: ProductGalleryMedia[];
+  private cachedImage?: string | null;
+  private cachedSlides: GallerySlide[] = [];
+  private returnFocus: HTMLElement | null = null;
 
   constructor(
     private readonly playback: ProductPlaybackService,
     private readonly playerLoader: MuxPlayerLoaderService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly analytics: PublicAnalyticsService
+    private readonly analytics: PublicAnalyticsService,
+    private readonly host: ElementRef<HTMLElement>
   ) {}
 
   get slides(): GallerySlide[] {
+    if (this.cachedMedia === this.media && this.cachedImage === this.imageUrl) return this.cachedSlides;
+    this.cachedMedia = this.media; this.cachedImage = this.imageUrl;
     const result: GallerySlide[] = [];
     const videos = this.media
       .filter(item => item.mediaType === 'video' && item.source === 'mux')
@@ -341,8 +362,9 @@ export class ProductMediaGalleryComponent implements OnDestroy {
     for (const media of videos) {
       result.push({ key: media.id, kind: 'video', media });
     }
-    if (this.imageUrl) result.push({ key: 'primary-image', kind: 'image', imageUrl: this.imageUrl });
-    return result;
+    if (this.imageUrl || !result.length) result.push({ key: 'primary-image', kind: 'image', imageUrl: this.imageUrl || '/assets/menu/image-placeholder.svg' });
+    this.cachedSlides = result;
+    return this.cachedSlides;
   }
 
   get activeSlide(): GallerySlide {
@@ -351,23 +373,27 @@ export class ProductMediaGalleryComponent implements OnDestroy {
 
   async play(media: ProductGalleryMedia): Promise<void> {
     if (this.loading) return;
+    const version = ++this.playVersion;
+    this.returnFocus = document.activeElement as HTMLElement | null;
     this.loading = true;
     this.errorMessage = null;
     this.applyPlayerLayout(media.aspectRatio);
     try {
-      const response = await firstValueFrom(this.playback.requestPlayback(
+      const [response] = await Promise.all([firstValueFrom(this.playback.requestPlayback(
         this.itemId,
         media.id,
         this.publicSlug,
         this.previewMode
-      ));
-      await this.playerLoader.load();
+      )), this.playerLoader.load()]);
+      if (this.destroyed || version !== this.playVersion) return;
       this.activeMediaId = media.id;
       this.analyticsPlayId = crypto.randomUUID();
       this.playStarted = false;
       this.session = response.data;
       this.expandedChange.emit(true);
+      requestAnimationFrame(() => { if (!this.destroyed) this.host.nativeElement.querySelector<HTMLButtonElement>('.close-video-button')?.focus(); });
     } catch {
+      if (this.destroyed || version !== this.playVersion) return;
       this.errorMessage = 'Não foi possível carregar o vídeo agora.';
       this.activeMediaId = null;
       this.session = null;
@@ -444,9 +470,10 @@ export class ProductMediaGalleryComponent implements OnDestroy {
     delta < 0 ? this.next() : this.previous();
   }
 
-  ngOnDestroy(): void { this.stopPlayback(); }
+  ngOnDestroy(): void { this.destroyed = true; this.stopPlayback(); }
 
   private stopPlayback(): void {
+    this.playVersion++;
     this.player?.nativeElement.pause?.();
     this.session = null;
     this.activeMediaId = null;
@@ -456,6 +483,7 @@ export class ProductMediaGalleryComponent implements OnDestroy {
     this.playerAspectRatio = '16 / 9';
     this.expandedPlayerWidth = 'min(92vw, 960px)';
     this.expandedChange.emit(false);
+    requestAnimationFrame(() => { if (!this.destroyed && this.returnFocus?.isConnected) this.returnFocus.focus(); });
   }
 
   private applyPlayerLayout(aspectRatio: ProductGalleryMedia['aspectRatio']): void {

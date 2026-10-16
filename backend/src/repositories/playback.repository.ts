@@ -2,6 +2,8 @@ import { supabaseAdmin } from '../config/supabase';
 import { businessEligibility } from '../services/business-eligibility.service';
 
 export interface PlaybackAccessRecord {
+  businessId: string;
+  mediaId: string;
   playbackId: string;
   itemName: string;
 }
@@ -46,7 +48,7 @@ export class SupabasePlaybackRepository implements PlaybackRepository {
     if (mediaError) throw new Error('PLAYBACK_DATABASE_UNAVAILABLE');
     if (!media?.mux_playback_id) return null;
 
-    return { playbackId: media.mux_playback_id, itemName: item.name };
+    return { businessId: business.id, mediaId, playbackId: media.mux_playback_id, itemName: item.name };
   }
 
   async findOwnerPlayback(
@@ -78,6 +80,6 @@ export class SupabasePlaybackRepository implements PlaybackRepository {
     if (mediaError) throw new Error('PLAYBACK_DATABASE_UNAVAILABLE');
     if (!media?.mux_playback_id) return null;
 
-    return { playbackId: media.mux_playback_id, itemName: item.name };
+    return { businessId, mediaId, playbackId: media.mux_playback_id, itemName: item.name };
   }
 }

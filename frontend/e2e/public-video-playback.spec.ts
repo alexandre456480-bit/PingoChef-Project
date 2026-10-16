@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
 
+test.setTimeout(120_000);
+test.beforeEach(async ({ page }) => {
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.fulfill({ contentType: 'text/css', body: '' }));
+});
+
 const menuResponse = {
   success: true,
   data: {

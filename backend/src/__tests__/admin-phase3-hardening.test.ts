@@ -8,7 +8,7 @@ import { removeMuxPurgeResource } from '../services/account-purge.service';
 import type { MuxVideoProvider } from '../services/mux-video.service';
 
 describe('Admin phase 3 hardening',()=>{
-  it.each(['/api/v1/admin/commercial','/api/v1/admin/infrastructure'])
+  it.each(['/api/v1/admin/commercial','/api/v1/admin/infrastructure','/api/v1/admin/video-security'])
     ('rejects a customer bearer token on %s',async path=>{
       const response=await request(app).get(path).set('Authorization','Bearer ordinary-customer-token');
       expect(response.status).toBe(401);

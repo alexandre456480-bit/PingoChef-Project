@@ -140,7 +140,9 @@ for (const plan of ['FREE', 'BASIC', 'MEDIUM', 'PRO'] as const) {
     await page
       .getByRole('button', { name: 'Próxima página de Produtos mais visualizados' })
       .click();
-    await expect(page.getByText('Produto 6', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('[data-ranking="product_views"] .bar-heading').filter({ hasText: 'Produto 6' }),
+    ).toBeVisible();
     expect(
       requests.some((q) => q.path === 'analytics/rankings' && q.params.get('page') === '2'),
     ).toBe(true);
@@ -156,6 +158,15 @@ for (const plan of ['FREE', 'BASIC', 'MEDIUM', 'PRO'] as const) {
     }
     for (const width of [1280, 900, 390]) {
       await page.setViewportSize({ width, height: 920 });
+      await page.locator('.analytics .page-header').scrollIntoViewIfNeeded();
+      const actions = (await page.locator('.header-actions').boundingBox())!;
+      for (const control of await page
+        .locator('.header-actions select, .header-actions button')
+        .all()) {
+        const bounds = (await control.boundingBox())!;
+        expect(bounds.x).toBeGreaterThanOrEqual(actions.x);
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(actions.x + actions.width + 1);
+      }
       for (let index = 0; index < 4; index++) {
         await page.locator('.kpi .info').nth(index).focus();
         const tooltip = page.locator('.kpi [role="tooltip"]').nth(index);
@@ -300,6 +311,180 @@ test('public QR navigation collects once per navigation, preserves anonymous ses
   expect(second.body.visitorId).toBe(first.body.visitorId);
   expect(second.body.pageId).not.toBe(first.body.pageId);
   expect(Object.keys(first.body).sort()).toEqual(['events', 'pageId', 'source', 'visitorId']);
+});
+
+test('analysis focus isolates metrics, charts and insights while preserving period and export', async ({
+  page,
+}) => {
+  const queries = await mock(page, 'PRO');
+  await analytics(page);
+  await expect(page.locator('.kpi-value').first()).toHaveText('42');
+  const selector = page.getByLabel('Filtrar análise', { exact: true });
+  const count = queries.filter((q) => q.path === 'analytics').length;
+  await selector.selectOption('productViews');
+  await expect(page.locator('.kpi-value')).toHaveText('28');
+  await expect(page.locator('[data-ranking="product_views"]')).toBeVisible();
+  await expect(
+    page.locator('[data-ranking="likes"], .advanced-grid, .video-completion'),
+  ).toHaveCount(0);
+  await expect(page.locator('.insights')).toContainText('Produto em destaque');
+  await expect(page.getByLabel('Conteúdo do CSV')).toHaveValue('products');
+  await page.getByRole('button', { name: 'Ver tendência de Produto 1', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Tendência · Produto 1' })).toBeVisible();
+  await selector.selectOption('likes');
+  await expect(page.locator('.kpi-value')).toHaveText('4');
+  await expect(page.locator('.chart-card, .advanced-grid, .video-completion')).toHaveCount(0);
+  await expect(page.locator('[data-ranking="likes"]')).toBeVisible();
+  await expect(page.locator('.insights')).toContainText('Preferência dos clientes');
+  await expect(page.getByLabel('Conteúdo do CSV')).toHaveValue('likes');
+  await selector.selectOption('videoPlays');
+  await expect(page.locator('.kpi-value')).toHaveText('6');
+  await expect(page.locator('.video-completion')).toBeVisible();
+  await expect(page.locator('.rankings, .advanced-grid')).toHaveCount(0);
+  await selector.selectOption('visitors');
+  await expect(page.locator('.kpi-value')).toHaveText('3');
+  await expect(page.locator('.rankings, .advanced-grid, .video-completion')).toHaveCount(0);
+  for (const [focus, heading] of [
+    ['categories', 'Categorias mais vistas'],
+    ['sources', 'Origens dos acessos'],
+    ['qr', 'Tráfego por QR'],
+  ]) {
+    await selector.selectOption(focus);
+    await expect(page.locator('.advanced-grid > article')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+    await expect(page.locator('.chart-card, .rankings, .video-completion')).toHaveCount(0);
+  }
+  expect(queries.filter((q) => q.path === 'analytics').length).toBe(count);
+  await selector.selectOption('likes');
+  await page.getByLabel('Origem', { exact: true }).selectOption('qr');
+  await page.getByRole('button', { name: 'Aplicar filtros', exact: true }).click();
+  await expect(page.locator('.kpi-value')).toHaveText('—');
+  await expect(page.locator('[data-ranking="likes"]')).toContainText('Curtidas não têm atribuição');
+  await expect(page.locator('.insights, app-analytics-chart')).toHaveCount(0);
+  await selector.selectOption('all');
+  await expect(page.locator('.kpi-value')).toHaveCount(4);
+});
+
+test('charts show exact values with pointer, touch and keyboard; tooltips remain inside mobile', async ({
+  page,
+  isMobile,
+}) => {
+  await mock(page, 'MEDIUM');
+  await analytics(page);
+  await expect(page.locator('.kpi-value').first()).toHaveText('42');
+  const chart = page.locator('.chart-card app-analytics-chart').first();
+  const slider = chart.getByRole('slider');
+  await slider.scrollIntoViewIfNeeded();
+  const bounds = (await slider.boundingBox())!;
+  if (isMobile) {
+    await page.touchscreen.tap(bounds.x + bounds.width * 0.95, bounds.y + 100);
+  } else {
+    await page.mouse.move(bounds.x + bounds.width * 0.95, bounds.y + 100);
+  }
+  await expect(chart.getByRole('tooltip')).toContainText('02/10/2026');
+  await expect(chart.getByRole('tooltip').locator('strong')).toHaveText('4');
+  await slider.focus();
+  await slider.press('Home');
+  await expect(slider).toHaveAttribute('aria-valuetext', '26/09/2026: 38');
+  await expect(chart.getByRole('tooltip').locator('strong')).toHaveText('38');
+  await slider.press('ArrowRight');
+  await expect(slider).toHaveAttribute('aria-valuetext', '02/10/2026: 4');
+  await slider.press('Escape');
+  await expect(chart.getByRole('tooltip')).toHaveCount(0);
+  await page.getByLabel('Filtrar análise', { exact: true }).selectOption('likes');
+  const bar = page.locator('[data-ranking="likes"] .bar-row').first();
+  if (isMobile) await bar.tap();
+  else await bar.hover();
+  await expect(page.locator('[data-ranking="likes"] .bar-detail')).toContainText('Curtidas · 20');
+  for (const width of [1440, 900, 390, 320]) {
+    await page.setViewportSize({ width, height: 940 });
+    await page.getByLabel('Filtrar análise', { exact: true }).selectOption('all');
+    await slider.scrollIntoViewIfNeeded();
+    await slider.focus();
+    await slider.press('End');
+    const tooltip = (await chart.getByRole('tooltip').boundingBox())!;
+    expect(tooltip.x).toBeGreaterThanOrEqual(0);
+    expect(tooltip.x + tooltip.width).toBeLessThanOrEqual(width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await slider.blur();
+  await page.setViewportSize({ width: isMobile ? 390 : 1440, height: 1000 });
+  await page.locator('.analytics .page-header').scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: `../.tools/analytics-redesign-${isMobile ? 'mobile' : 'desktop'}-dark.png`,
+    fullPage: true,
+    animations: 'disabled',
+  });
+  await page.getByRole('button', { name: 'Ativar tema claro', exact: true }).click();
+  await expect(page.locator('.dashboard-shell')).toHaveAttribute('data-panel-theme', 'light');
+  await page.screenshot({
+    path: `../.tools/analytics-redesign-${isMobile ? 'mobile' : 'desktop'}-light.png`,
+    fullPage: true,
+    animations: 'disabled',
+  });
+});
+
+test('empty reports and a single point remain readable and reset the chart selection', async ({
+  page,
+}) => {
+  await mock(page, 'BASIC');
+  let populated = false;
+  await page.route('**/api/v1/analytics?**', async (route) => {
+    const data = analyticsReport('BASIC', new URL(route.request().url()).searchParams);
+    for (const key of Object.keys(data.summary)) data.summary[key as keyof typeof data.summary] = 0;
+    data.series = populated
+      ? [{ date: '2026-10-02', menuViews: 0, visitors: 0, productViews: 3, videoPlays: 0 }]
+      : [];
+    data.summary.productViews = populated ? 3 : 0;
+    data.viewed = { rows: [], total: 0 };
+    data.liked = { rows: [], total: 0 };
+    await route.fulfill({ json: { success: true, data } });
+  });
+  await analytics(page);
+  await expect(page.locator('.kpi-value').first()).toHaveText('0');
+  await expect(page.locator('app-analytics-chart [role="slider"], .bar-row')).toHaveCount(0);
+  await page.getByLabel('Filtrar análise', { exact: true }).selectOption('likes');
+  await expect(page.locator('.insights')).toContainText('Sem curtidas');
+  await expect(page.locator('[data-ranking="likes"] .no-data')).toBeVisible();
+  await page.getByLabel('Filtrar análise', { exact: true }).selectOption('productViews');
+  populated = true;
+  await page.getByRole('button', { name: 'Aplicar filtros', exact: true }).click();
+  await expect(page.locator('.kpi-value')).toHaveText('3');
+  const slider = page.getByRole('slider');
+  await slider.focus();
+  await slider.press('End');
+  await expect(slider).toHaveAttribute('aria-valuemax', '0');
+  await expect(slider).toHaveAttribute('aria-valuetext', '02/10/2026: 3');
+  populated = false;
+  await page.getByRole('button', { name: 'Aplicar filtros', exact: true }).click();
+  await expect(page.locator('.kpi-value')).toHaveText('0');
+  await expect(page.locator('.chart-tooltip, [role="slider"]')).toHaveCount(0);
+});
+
+test('changing analysis focus cancels a pending product trend', async ({ page }) => {
+  await mock(page, 'MEDIUM');
+  let aborted = false;
+  page.on('requestfailed', (request) => {
+    if (request.url().includes('analytics/product-trends')) aborted = true;
+  });
+  await page.route('**/api/v1/analytics/product-trends?**', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await route
+      .fulfill({ json: { success: true, data: [{ date: '2026-10-02', value: 999 }] } })
+      .catch(() => {});
+  });
+  await analytics(page);
+  await expect(page.locator('.kpi-value').first()).toHaveText('42');
+  const request = page.waitForRequest('**/api/v1/analytics/product-trends?**');
+  await page.getByRole('button', { name: 'Ver tendência de Produto 1', exact: true }).click();
+  await request;
+  const selector = page.getByLabel('Filtrar análise', { exact: true });
+  await selector.selectOption('likes');
+  await expect.poll(() => aborted).toBe(true);
+  await selector.selectOption('productViews');
+  await expect(page.getByRole('heading', { name: 'Tendência · Produto 1' })).toHaveCount(0);
 });
 
 test('rapid filter changes abort an older request and cannot display its late response', async ({

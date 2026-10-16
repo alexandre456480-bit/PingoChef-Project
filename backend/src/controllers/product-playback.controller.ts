@@ -6,7 +6,7 @@ import { SupabasePlaybackRepository } from '../repositories/playback.repository'
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
 import { getMuxVideoProvider } from '../services/mux-video.service';
 import { PlaybackDeniedError, ProductPlaybackService } from '../services/product-playback.service';
-import { enforceSharedRequest } from '../middleware/shared-rate-limit.middleware';
+import { VideoSecurityError, videoRequestIdentity } from '../services/video-abuse.service';
 
 const uuid = z.string().uuid();
 const slug = z.string().trim().regex(/^[a-z0-9-]+$/);
@@ -22,7 +22,10 @@ function service(): ProductPlaybackService {
 }
 
 function sendError(res: Response, error: unknown): Response {
-  if (error instanceof PlaybackDeniedError) {
+  if (!(error instanceof PlaybackDeniedError) && !(error instanceof VideoSecurityError)
+    && (error as Error)?.name !== 'ZodError') error = new VideoSecurityError(503, 'VIDEO_TEMPORARILY_UNAVAILABLE');
+  if (error instanceof PlaybackDeniedError || error instanceof VideoSecurityError) {
+    if (error.status === 429) res.setHeader('Retry-After', '60');
     return res.status(error.status).json({
       success: false,
       error: { code: error.code, message: error.message, timestamp: new Date().toISOString() }
@@ -36,15 +39,16 @@ export async function createPublicPlaybackController(
   res: Response,
   next: NextFunction
 ): Promise<Response | void> {
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   try {
     const parsedSlug = slug.parse(req.params.slug);
     const itemId = uuid.parse(req.params.itemId);
     const mediaId = uuid.parse(req.params.mediaId);
-    await enforceSharedRequest('public-playback', `ip:${req.ip || req.socket.remoteAddress || 'unknown'}`, 30);
     const data = await service().createPublicSession(
       parsedSlug,
       itemId,
-      mediaId
+      mediaId,
+      videoRequestIdentity(req, res)
     );
     res.setHeader('Cache-Control', 'private, no-store, max-age=0');
     return res.status(200).json({ success: true, data });
@@ -58,6 +62,7 @@ export async function createOwnerPreviewPlaybackController(
   res: Response,
   next: NextFunction
 ): Promise<Response | void> {
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   try {
     if (!req.businessId) throw new PlaybackDeniedError();
     const itemId = uuid.parse(req.params.itemId);
@@ -65,7 +70,8 @@ export async function createOwnerPreviewPlaybackController(
     const data = await service().createOwnerPreviewSession(
       req.businessId,
       itemId,
-      mediaId
+      mediaId,
+      videoRequestIdentity(req, res)
     );
     res.setHeader('Cache-Control', 'private, no-store, max-age=0');
     return res.status(200).json({ success: true, data });

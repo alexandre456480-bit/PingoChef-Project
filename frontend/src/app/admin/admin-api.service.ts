@@ -46,6 +46,15 @@ export interface AdminInfrastructureReport {
   measurement:{api:string;mux:string;storageBytes:string;costs:string};
 }
 
+export interface VideoSecurityReport {
+  days: number; page: number; total: number; measurement: 'ESTIMATED';
+  globalState: string; environmentKillSwitch: boolean;
+  businesses: { businessId: string; name: string; plan: string; activeVideos: number;
+    metrics: Record<string, number>; estimatedDeliverySeconds: number; providerReportedDeliverySeconds: number | null; state: string; expiresAt: string | null }[];
+  media: { businessId: string; mediaId: string; requests: number; estimatedDeliverySeconds: number }[];
+  events: { businessId: string | null; mediaId: string | null; endpoint: string; code: string; createdAt: string; occurrences: number }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminApiService {
   private readonly base = `${API_BASE_URL}/admin`;
@@ -105,6 +114,14 @@ export class AdminApiService {
   infrastructure(filter:AdminFilter):Observable<AdminInfrastructureReport>{
     return this.http.get<AdminEnvelope<AdminInfrastructureReport>>(`${this.base}/infrastructure`,
       this.options(this.params({from:filter.from,to:filter.to}))).pipe(map(result=>result.data));
+  }
+  videoSecurity(days: number, page: number): Observable<VideoSecurityReport> {
+    return this.http.get<AdminEnvelope<VideoSecurityReport>>(`${this.base}/video-security`,
+      this.options(this.params({ days, page }))).pipe(map(result => result.data));
+  }
+  setVideoSecurityState(businessId: string | null, state: string, seconds: number, reason: string) {
+    return this.http.post<AdminEnvelope<unknown>>(`${this.base}/video-security/state`,
+      { businessId, state, seconds, reason }, this.writeOptions());
   }
   purgeJobs(page:number){
     return this.http.get<AdminEnvelope<{id:string;business_id:string;phase:string;attempts:number;

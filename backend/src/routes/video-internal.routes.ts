@@ -4,6 +4,7 @@ import { reconcileVideosController } from '../controllers/product-video.controll
 const router = Router();
 
 router.post('/reconcile', reconcileVideosController as any);
+router.get('/reconcile', reconcileVideosController as any);
 
 export default router;
 

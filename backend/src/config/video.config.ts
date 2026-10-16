@@ -22,6 +22,7 @@ export interface VideoLimitsConfig {
 }
 
 export interface VideoPlaybackConfig {
+  muxPlaybackRestrictionId?: string;
   muxSigningKeyId: string;
   muxSigningPrivateKey: string;
   playbackTokenTtlSeconds: number;
@@ -118,7 +119,8 @@ function parseAllowedOrigins(env: NodeJS.ProcessEnv): string[] {
           );
         }
 
-        if (env.NODE_ENV === 'production' && parsed.protocol !== 'https:') {
+        if ((env.NODE_ENV === 'production' || env.VERCEL_ENV === 'production') && (parsed.protocol !== 'https:'
+          || ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname) || parsed.hostname.endsWith('.localhost'))) {
           throw new VideoConfigurationError(
             'VIDEO_UPLOAD_ALLOWED_ORIGINS deve usar HTTPS em produção.'
           );
@@ -152,8 +154,8 @@ export function loadVideoLimits(env: NodeJS.ProcessEnv = process.env): VideoLimi
     uploadUrlTtlSeconds: positiveInteger(
       env,
       'VIDEO_UPLOAD_URL_TTL_SECONDS',
-      900,
-      { min: 60, max: 3600 }
+      300,
+      { min: 60, max: 900 }
     ),
     dailyUploadLimit: positiveInteger(env, 'VIDEO_DAILY_UPLOAD_LIMIT', 20, { max: 10000 }),
     maxPendingUploads: positiveInteger(env, 'VIDEO_MAX_PENDING_UPLOADS', 3, { max: 100 }),
@@ -183,6 +185,7 @@ export function loadVideoPlaybackConfig(
   env: NodeJS.ProcessEnv = process.env
 ): VideoPlaybackConfig {
   return {
+    muxPlaybackRestrictionId: env.MUX_PLAYBACK_RESTRICTION_ID?.trim() || undefined,
     muxSigningKeyId: requiredSecretWithAlias(env, 'MUX_SIGNING_KEY_ID', 'MUX_SIGNING_KEY'),
     muxSigningPrivateKey: requiredSecretWithAlias(
       env,

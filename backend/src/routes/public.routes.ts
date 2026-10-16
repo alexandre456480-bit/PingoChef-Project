@@ -7,8 +7,12 @@ import { collectMenuAnalytics } from '../controllers/menu-analytics.controller';
 import { qrService } from '../services/qr.service';
 import { z } from 'zod';
 import { ownerError } from '../services/owner-session.service';
+import { collectPublicVitals } from '../controllers/public-vitals.controller';
+import { loadVideoSecurityConfig } from '../config/video-security.config';
 
 const router = Router();
+// Eligibility and denial responses must never be retained by an intermediary.
+router.use((_req,res,next) => { res.setHeader('Cache-Control','no-store'); next(); });
 router.get('/qr/:identifier', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   void (async () => {
@@ -25,7 +29,9 @@ function boundedEnvInteger(name: string, fallback: number, min: number, max: num
 
 const playbackLimiter = rateLimit({
   windowMs: boundedEnvInteger('VIDEO_PLAYBACK_RATE_WINDOW_SECONDS', 60, 10, 3600) * 1000,
-  limit: boundedEnvInteger('VIDEO_PLAYBACK_RATE_LIMIT', 20, 1, 300),
+  // Cheap IP prefilter must accommodate a full restaurant behind one NAT.
+  // Session/business/media authority lives in the shared PostgreSQL adaptor.
+  limit: loadVideoSecurityConfig().policy.ipLimit,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -71,6 +77,7 @@ const likeLimiter = rateLimit({
 
 // Endpoints abertos sem autenticação para o cardápio público do cliente final
 router.get('/menu/:slug', getPublicMenuController as any);
+router.post('/menu/:slug/vitals', rateLimit({windowMs:60_000,limit:30,standardHeaders:true,legacyHeaders:false}), collectPublicVitals);
 router.post('/menu/:slug/events', rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false }), collectMenuAnalytics);
 router.post('/menu/:slug/like/:itemId', likeLimiter, likeItemController as any);
 router.post(

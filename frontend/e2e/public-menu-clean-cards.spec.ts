@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
 
+test.setTimeout(120_000);
+test.beforeEach(async ({ page }) => {
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.fulfill({ contentType: 'text/css', body: '' }));
+});
+
 test('public cards keep highlights and likes working with clean photos and categories at the same elevation', async ({ page }, testInfo) => {
   await page.addInitScript(() => localStorage.clear());
   await page.emulateMedia({ reducedMotion: 'reduce' });

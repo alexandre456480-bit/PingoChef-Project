@@ -6,8 +6,10 @@ import { RouterLink } from '@angular/router';
 import { AdminApiService, AdminCommercialReport, AdminDashboard, AdminFilter, AdminInfrastructureReport } from './admin-api.service';
 import { periodLabel } from './admin-filter';
 import { AdminMetricTooltipDirective } from './admin-metric-tooltip.directive';
+import { AdminVideoSecurityComponent } from './admin-video-security.component';
 
-@Component({selector:'app-admin-operations',standalone:true,imports:[CommonModule,FormsModule,RouterLink,AdminMetricTooltipDirective],template:`
+@Component({selector:'app-admin-operations',standalone:true,imports:[CommonModule,FormsModule,RouterLink,AdminMetricTooltipDirective,AdminVideoSecurityComponent],template:`
+  @if(section==='videos'||section==='security'){<app-admin-video-security />}
   @if(section==='subscriptions'){
     <section class="admin-page-heading"><div><span class="admin-eyebrow">Negócio</span><h2>Assinaturas</h2><p>Estados comerciais e evolução no período {{period}}.</p></div></section>
     @if(data&&!loading){<div class="admin-metrics-grid"><article class="admin-card admin-kpi" title="Assinaturas com status active. Fonte: subscriptions."><span>Ativas</span><strong>{{n('subscriptionsActive')}}</strong><small>assinaturas · atual</small></article><article class="admin-card admin-kpi" title="Assinaturas com status grace. Fonte: subscriptions."><span>Em grace</span><strong>{{n('subscriptionsGrace')}}</strong><small>assinaturas · atual</small></article><article class="admin-card admin-kpi" title="Assinaturas com status past_due. Fonte: subscriptions."><span>Em atraso</span><strong>{{n('subscriptionsPastDue')}}</strong><small>assinaturas · atual</small></article><article class="admin-card admin-kpi" title="Assinaturas com status canceled. Fonte: subscriptions."><span>Canceladas</span><strong>{{n('subscriptionsCanceled')}}</strong><small>assinaturas · atual</small></article></div>}

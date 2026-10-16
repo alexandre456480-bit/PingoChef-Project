@@ -28,6 +28,7 @@ export interface ProductMediaRecord {
 }
 
 export interface ReserveUploadInput {
+  idempotencyHash?: string;
   businessId: string;
   userId: string;
   menuItemId: string;
@@ -43,6 +44,9 @@ export interface ReserveUploadInput {
 }
 
 export interface UploadReservation {
+  reused?: boolean;
+  uploadId?: string | null;
+  expiresAt?: string | null;
   mediaId: string | null;
   denialCode: string | null;
 }
@@ -101,6 +105,8 @@ export interface ProductMediaRepository {
   recordDeletionFailure(media: ProductMediaRecord, errorCode: string): Promise<void>;
   deleteMedia(mediaId: string): Promise<void>;
   listReconciliationCandidates(limit: number): Promise<ProductMediaRecord[]>;
+  touchReconciliation?(mediaId: string): Promise<void>;
+  recordMaintenanceAlert?(businessId: string | null, mediaId: string | null, code: string): Promise<void>;
 }
 
 const MEDIA_SELECT = [
@@ -129,6 +135,11 @@ function databaseError(operation: string): Error {
 
 export class SupabaseProductMediaRepository implements ProductMediaRepository {
   async reserveUpload(input: ReserveUploadInput): Promise<UploadReservation> {
+    if (input.idempotencyHash) {
+      const { data, error } = await supabaseAdmin.rpc('reserve_video_upload_secure', { p_input: input });
+      if (error) throw mapEntitlementDatabaseError(error) || databaseError('reservar');
+      return { ...data, mediaId: data?.mediaId ?? null, denialCode: data?.denialCode ?? null };
+    }
     const { data, error } = await supabaseAdmin.rpc('reserve_video_upload', {
       p_business_id: input.businessId,
       p_user_id: input.userId,
@@ -307,6 +318,7 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
       })
       .eq('id', mediaId)
       .eq('mux_upload_id', uploadId)
+      .or(`mux_asset_id.is.null,mux_asset_id.eq.${assetId}`)
       .in('status', ['waiting', 'uploading', 'processing'])
       .select(MEDIA_SELECT)
       .maybeSingle();
@@ -328,7 +340,7 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
   }
 
   async markRejected(mediaId: string, assetId: string, durationSeconds: number, errorCode: string): Promise<void> {
-    await this.updateOne(mediaId, {
+    const { error } = await supabaseAdmin.from('product_media').update({
       status: 'rejected',
       is_published: false,
       mux_asset_id: assetId,
@@ -337,11 +349,12 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
       last_error_code: errorCode,
       last_provider_sync_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    });
+    }).eq('id', mediaId).in('status', ['waiting', 'uploading', 'processing']);
+    if (error) throw databaseError('rejeitar');
   }
 
   async markErrored(mediaId: string, errorCode: string, assetId?: string | null): Promise<void> {
-    await this.updateOne(mediaId, {
+    const { error } = await supabaseAdmin.from('product_media').update({
       status: 'errored',
       is_published: false,
       ...(assetId ? { mux_asset_id: assetId } : {}),
@@ -349,7 +362,8 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
       last_error_code: errorCode,
       last_provider_sync_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    });
+    }).eq('id', mediaId).in('status', errorCode === 'MUX_ASSET_MISSING' ? ['ready'] : ['waiting', 'uploading', 'processing']);
+    if (error) throw databaseError('atualizar');
   }
 
   async markAssetDeleted(mediaId: string): Promise<void> {
@@ -398,11 +412,24 @@ export class SupabaseProductMediaRepository implements ProductMediaRepository {
       .from('product_media')
       .select(MEDIA_SELECT)
       .eq('source', 'mux')
-      .or(`status.eq.pending_deletion,and(status.in.(waiting,uploading),upload_expires_at.lt.${now}),and(status.eq.processing,updated_at.lt.${staleProcessing})`)
-      .order('updated_at', { ascending: true })
+      .or(`status.eq.pending_deletion,and(status.in.(rejected,errored),mux_asset_deleted_at.is.null),and(status.in.(waiting,uploading),upload_expires_at.lt.${now}),and(status.eq.waiting,upload_expires_at.is.null,created_at.lt.${staleProcessing}),and(status.eq.processing,updated_at.lt.${staleProcessing}),and(status.eq.ready,last_provider_sync_at.lt.${staleProcessing}),and(status.eq.ready,last_provider_sync_at.is.null)`)
+      .order('last_provider_sync_at', { ascending: true, nullsFirst: true })
       .limit(limit);
     if (error) throw databaseError('conciliar');
     return (data ?? []) as unknown as ProductMediaRecord[];
+  }
+
+  async touchReconciliation(mediaId: string): Promise<void> {
+    const { error } = await supabaseAdmin.from('product_media')
+      .update({ last_provider_sync_at: new Date().toISOString() }).eq('id', mediaId);
+    if (error) throw databaseError('conciliar');
+  }
+
+  async recordMaintenanceAlert(businessId: string | null, mediaId: string | null, code: string): Promise<void> {
+    const { error } = await supabaseAdmin.rpc('record_video_abuse', {
+      p_business: businessId, p_media: mediaId, p_endpoint: 'maintenance', p_code: code
+    });
+    if (error) throw databaseError('registrar alerta');
   }
 
   private async findOne(column: 'mux_upload_id' | 'mux_asset_id', value: string): Promise<ProductMediaRecord | null> {

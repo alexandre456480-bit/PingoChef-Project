@@ -9,6 +9,7 @@ import { requireAdmin as authenticateAdmin, requireAdminOrigin, requireRecentAdm
 import { sharedRateLimit } from '../middleware/shared-rate-limit.middleware';
 import type { RequestHandler } from 'express';
 import { getCommercialReport, getInfrastructureReport, getPurgeJobs } from '../controllers/admin-phase3-read.controller';
+import { getVideoSecurityReport, setVideoSecurityState } from '../controllers/video-security-admin.controller';
 
 const router = Router();
 const requireAdmin: RequestHandler = (req, res, next) => {
@@ -33,6 +34,8 @@ router.get('/overview', requireAdmin, getOverview);
 router.get('/dashboard', requireAdmin, getDashboard);
 router.get('/commercial', requireAdmin, getCommercialReport);
 router.get('/infrastructure', requireAdmin, getInfrastructureReport);
+router.get('/video-security', requireAdmin, getVideoSecurityReport);
+router.post('/video-security/state', criticalLimiter, requireAdmin, requireRecentAdmin, setVideoSecurityState);
 router.get('/purge-jobs', requireAdmin, getPurgeJobs);
 router.get('/businesses', requireAdmin, listBusinesses);
 router.get('/businesses/:id', requireAdmin, getBusiness);

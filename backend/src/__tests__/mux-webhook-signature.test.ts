@@ -57,10 +57,17 @@ describe('official Mux webhook cryptographic verification', () => {
     })).rejects.toThrow();
   });
 
+  it.each([-301, 301])('rejects a correctly signed timestamp outside replay tolerance: %s', async offset => {
+    const timestamp = Math.floor(Date.now()/1000)+offset;
+    const signature = createHmac('sha256',webhookSecret).update(`${timestamp}.${rawBody}`).digest('hex');
+    await expect(provider.verifyAndUnwrapWebhook(rawBody,{'mux-signature':`t=${timestamp},v1=${signature}`})).rejects.toThrow();
+  });
+
   it('creates a playback JWT that cryptographically expires after the requested TTL', async () => {
     const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
     const signingProvider = new OfficialMuxVideoProvider({
       ...config,
+      muxPlaybackRestrictionId: 'restriction-staging',
       muxSigningPrivateKey: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString()
     });
 
@@ -69,6 +76,9 @@ describe('official Mux webhook cryptographic verification', () => {
     const claims = decode(token) as JwtPayload;
 
     expect(claims.sub).toBe('signed-playback-id');
+    expect(claims.aud).toBe('v');
+    expect(claims.playback_restriction_id).toBe('restriction-staging');
+    expect(() => verify(token, publicKey, { subject: 'another-media' })).toThrow();
     expect(claims.exp).toBeDefined();
     expect(claims.exp).toBeGreaterThanOrEqual(issuedAt + 30);
     expect(claims.exp).toBeLessThanOrEqual(Math.floor(Date.now() / 1000) + 30);

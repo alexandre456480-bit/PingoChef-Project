@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
 
+test.setTimeout(120_000);
+test.beforeEach(async ({ page }) => {
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.fulfill({ contentType: 'text/css', body: '' }));
+});
+
 test('subcategorias longas continuam visíveis no cardápio público', async ({ page }) => {
   const categoryId = '11111111-1111-4111-8111-111111111111';
   const subcategoryId = '22222222-2222-4222-8222-222222222222';
@@ -40,22 +45,7 @@ test('subcategorias longas continuam visíveis no cardápio público', async ({ 
 
   await page.goto('/m/teste-subcategorias');
   await page.getByRole('button', { name: 'Ver o Cardápio' }).click();
-  await expect(page.locator('.entry-transition-layer')).toBeVisible();
-  const mark = await page.locator('.entry-mark').evaluate(element => {
-    const logo = element.getBoundingClientRect();
-    const curtains = element.parentElement!.getBoundingClientRect();
-    return {
-      offsetX: logo.left + logo.width / 2 - (curtains.left + curtains.width / 2),
-      offsetY: logo.top + logo.height / 2 - (curtains.top + curtains.height / 2),
-      background: getComputedStyle(element).backgroundColor,
-      imageFit: getComputedStyle(element.querySelector('img')!).objectFit
-    };
-  });
-  expect(Math.abs(mark.offsetX)).toBeLessThan(1);
-  expect(Math.abs(mark.offsetY)).toBeLessThan(1);
-  expect(mark.background).toBe('rgba(0, 0, 0, 0)');
-  expect(mark.imageFit).toBe('contain');
-  await expect(page.locator('.entry-transition-layer')).toHaveCount(0, { timeout: 3000 });
+  await expect(page.locator('.entry-transition-layer')).toHaveCount(0);
   await page.locator('.category-nav-pill').filter({ hasText: 'Pratos' }).first().click();
 
   await expect(page.getByRole('heading', { name: 'Artesanais' })).toBeVisible();

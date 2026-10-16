@@ -65,7 +65,7 @@ export class VideoUploadService {
     return this.http.post<{ success: true; data: VideoUploadIntent }>(
       `${this.apiUrl}/items/${encodeURIComponent(itemId)}/media/video/upload-intent`,
       { fileSizeBytes, mimeType, aspectRatio, replacesMediaId },
-      this.authOptions()
+      { headers: this.authOptions().headers.set('Idempotency-Key', crypto.randomUUID()) }
     ).pipe(timeout(30_000), map(response => response.data));
   }
 

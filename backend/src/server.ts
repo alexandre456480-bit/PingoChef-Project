@@ -27,9 +27,11 @@ import qrRoutes from './routes/qr.routes';
 import { sharedRateLimit } from './middleware/shared-rate-limit.middleware';
 import { ownerError, ownerCookie } from './services/owner-session.service';
 import { securityAudit } from './services/security-audit.service';
+import { validateVideoDeploymentEnvironment } from './config/video-deployment.config';
 
 dotenv.config();
 validateDeploymentEnvironment(process.env);
+validateVideoDeploymentEnvironment(process.env);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -69,7 +71,7 @@ const corsOptions: cors.CorsOptions = {
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Idempotency-Key'],
   credentials: true
 };
 
@@ -118,6 +120,7 @@ const authLimiter = rateLimit({
 app.use(globalLimiter);
 
 app.use('/api/v1/public/menu/:slug/events', requireAnalyticsJson, express.json({ limit: '16kb' }));
+app.use('/api/v1/public/menu/:slug/vitals', requireAnalyticsJson, express.json({ limit: '2kb' }));
 app.use('/api/v1/auth', (req, _res, next) => {
   if (['POST', 'PUT', 'PATCH'].includes(req.method) && !req.is('application/json')) throw ownerError(415, 'AUTH_JSON_REQUIRED');
   next();
@@ -126,6 +129,7 @@ app.use('/api/v1/qr', (req, _res, next) => {
   if (['POST', 'PUT'].includes(req.method) && !req.is('application/json')) throw ownerError(415, 'QR_JSON_REQUIRED');
   next();
 }, express.json({ limit: '256kb' }));
+app.use('/api/v1/items/:itemId/media/video/upload-intent', express.json({ limit: '2kb' }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 

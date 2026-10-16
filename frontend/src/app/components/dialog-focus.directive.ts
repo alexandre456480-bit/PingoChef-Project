@@ -6,11 +6,13 @@ import {
   HostListener,
   OnDestroy,
   Output,
+  Input,
   inject,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 @Directive({ selector: '[appDialogFocus]', standalone: true })
 export class DialogFocusDirective implements AfterViewInit, OnDestroy {
+  @Input() dialogFocusEnabled = true;
   @Output() dialogEscape = new EventEmitter<void>();
   private document = inject(DOCUMENT);
   private element = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -26,6 +28,7 @@ export class DialogFocusDirective implements AfterViewInit, OnDestroy {
     (this.nodes()[0] || this.element.nativeElement).focus();
   }
   @HostListener('keydown', ['$event']) onKey(e: KeyboardEvent) {
+    if (!this.dialogFocusEnabled) return;
     if (e.key === 'Escape') {
       e.preventDefault();
       this.dialogEscape.emit();

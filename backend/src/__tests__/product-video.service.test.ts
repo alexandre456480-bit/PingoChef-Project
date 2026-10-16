@@ -92,6 +92,57 @@ function providerMock(): jest.Mocked<MuxVideoProvider> {
   };
 }
 
+describe('ProductVideoService recovery and replay', () => {
+  it('expires a reservation even when provider creation never attached an upload ID', async () => {
+    const repository=repositoryMock(),provider=providerMock();
+    repository.listReconciliationCandidates.mockResolvedValue([media({status:'waiting',mux_upload_id:null,mux_asset_id:null})]);
+    await new ProductVideoService(repository,provider,config).reconcile();
+    expect(repository.failReservation).toHaveBeenCalledWith('business-1','media-1','UPLOAD_EXPIRED');
+  });
+
+  it('does not regress a ready media on a different duplicate ready/errored event', async () => {
+    const repository=repositoryMock(),provider=providerMock();
+    repository.claimWebhook.mockResolvedValue(true);repository.findByAssetId.mockResolvedValue(media({status:'ready'}));
+    const service=new ProductVideoService(repository,provider,config);
+    await service.processWebhook({id:'late-ready',type:'video.asset.ready',data:{id:'asset-1',upload_id:'upload-1',duration:8,playback_ids:[{id:'signed',policy:'signed'}]}});
+    await service.processWebhook({id:'late-error',type:'video.asset.errored',data:{id:'asset-1'}});
+    expect(repository.markReady).not.toHaveBeenCalled();expect(repository.markErrored).not.toHaveBeenCalled();
+  });
+
+  it('rejects a webhook that binds an asset to a different stored upload', async () => {
+    const repository=repositoryMock(),provider=providerMock();
+    repository.claimWebhook.mockResolvedValue(true);repository.findByAssetId.mockResolvedValue(media());
+    await expect(new ProductVideoService(repository,provider,config).processWebhook({id:'mismatch',type:'video.asset.ready',
+      data:{id:'asset-1',upload_id:'foreign-upload',duration:8,playback_ids:[{id:'signed',policy:'signed'}]}})).rejects.toMatchObject({code:'ASSET_BINDING_MISMATCH'});
+    expect(repository.markReady).not.toHaveBeenCalled();expect(provider.deleteAsset).not.toHaveBeenCalled();
+  });
+
+  it('reuses an unexpired idempotent upload without creating another provider resource', async () => {
+    const repository=repositoryMock(),provider=providerMock();
+    repository.reserveUpload.mockResolvedValue({mediaId:'media-1',denialCode:null,reused:true,uploadId:'upload-1',expiresAt:new Date(Date.now()+300000).toISOString()});
+    provider.retrieveUpload.mockResolvedValue({id:'upload-1',status:'waiting',url:'https://upload.example.test/opaque',cors_origin:'https://app.example.com'} as any);
+    await new ProductVideoService(repository,provider,config).createUploadIntent({businessId:'business-1',userId:'owner',menuItemId:'item-1',clientIp:'192.0.2.1',
+      corsOrigin:'https://app.example.com',declaredFileSizeBytes:1024,declaredMimeType:'video/mp4',aspectRatio:'16:9',replacesMediaId:null,idempotencyKey:'fixture'});
+    expect(provider.createDirectUpload).not.toHaveBeenCalled();expect(repository.attachMuxUpload).not.toHaveBeenCalled();
+  });
+
+  it('continues sweeps from durable provider pages', async () => {
+    const repository=repositoryMock(),provider=providerMock();repository.listReconciliationCandidates.mockResolvedValue([]);
+    provider.listAssetsPage=jest.fn().mockResolvedValue([]);
+    await new ProductVideoService(repository,provider,config).reconcile(7,9);
+    expect(provider.listRecentUploads).toHaveBeenCalledWith(50,7);expect(provider.listAssetsPage).toHaveBeenCalledWith(50,9);
+  });
+  it('sanitizes provider failures while retrying an idempotent upload', async () => {
+    const repository=repositoryMock(),provider=providerMock();
+    repository.reserveUpload.mockResolvedValue({mediaId:'media-1',denialCode:null,reused:true,uploadId:'upload-1',expiresAt:new Date(Date.now()+300000).toISOString()});
+    provider.retrieveUpload.mockRejectedValue(new Error('sensitive provider payload'));
+    await expect(new ProductVideoService(repository,provider,config).createUploadIntent({businessId:'business-1',userId:'owner',menuItemId:'item-1',clientIp:'192.0.2.1',
+      corsOrigin:'https://app.example.com',declaredFileSizeBytes:1024,declaredMimeType:'video/mp4',aspectRatio:'16:9',replacesMediaId:null,idempotencyKey:'fixture'}))
+      .rejects.toMatchObject({status:503,code:'VIDEO_PROVIDER_UNAVAILABLE',message:'Serviço de vídeo temporariamente indisponível.'});
+    expect(provider.createDirectUpload).not.toHaveBeenCalled();
+  });
+});
+
 describe('ProductVideoService security boundaries', () => {
   const pendingView = {
     id: 'media-1', media_type: 'video' as const, source: 'mux' as const,
@@ -350,7 +401,7 @@ describe('ProductVideoService security boundaries', () => {
     const repository = repositoryMock();
     const provider = providerMock();
     repository.claimWebhook.mockResolvedValue(true);
-    repository.findByAssetId.mockResolvedValue(media({ id: 'media-new' }));
+    repository.findByAssetId.mockResolvedValue(media({ id: 'media-new', mux_asset_id: 'asset-new' }));
     repository.markReady.mockResolvedValue(['media-old']);
     repository.findById.mockResolvedValue(media({
       id: 'media-old',
@@ -513,7 +564,7 @@ describe('ProductVideoService security boundaries', () => {
     await expect(service.reconcile()).resolves.toEqual({
       inspected: 1,
       repaired: 1,
-      pending: 0
+      pending: 0, nextUploadPage: 1, nextAssetPage: 1
     });
 
     expect(repository.attachMuxUpload).toHaveBeenCalledWith(
@@ -537,7 +588,7 @@ describe('ProductVideoService security boundaries', () => {
     ]);
     const service = new ProductVideoService(repository, provider, config);
 
-    await expect(service.reconcile()).resolves.toEqual({ inspected: 1, repaired: 1, pending: 0 });
+    await expect(service.reconcile()).resolves.toEqual({ inspected: 1, repaired: 1, pending: 0, nextUploadPage: 1, nextAssetPage: 1 });
     expect(provider.deleteAsset).toHaveBeenCalledWith('asset-delete');
     expect(repository.deleteMedia).toHaveBeenCalledWith('media-1');
     expect(repository.deleteMedia.mock.invocationCallOrder[0])
@@ -559,7 +610,7 @@ describe('ProductVideoService security boundaries', () => {
     }]);
     const service = new ProductVideoService(repository, provider, config);
 
-    await expect(service.reconcile()).resolves.toEqual({ inspected: 1, repaired: 1, pending: 0 });
+    await expect(service.reconcile()).resolves.toEqual({ inspected: 1, repaired: 1, pending: 0, nextUploadPage: 1, nextAssetPage: 1 });
     expect(provider.deleteAsset).toHaveBeenCalledWith('orphan-asset');
   });
 
@@ -578,7 +629,7 @@ describe('ProductVideoService security boundaries', () => {
     }]);
     const service = new ProductVideoService(repository, provider, config);
 
-    await expect(service.reconcile()).resolves.toEqual({ inspected: 1, repaired: 1, pending: 0 });
+    await expect(service.reconcile()).resolves.toEqual({ inspected: 1, repaired: 1, pending: 0, nextUploadPage: 1, nextAssetPage: 1 });
     expect(provider.cancelUpload).toHaveBeenCalledWith('abandoned-upload');
   });
 });
