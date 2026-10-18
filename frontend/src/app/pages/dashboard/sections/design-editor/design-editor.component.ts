@@ -16,13 +16,14 @@ import {
   HomeBlock
 } from '../../../../services/design.service';
 import { MenuService } from '../../../../services/menu.service';
+import { HomeIconsEditorComponent } from './home-icons-editor.component';
 
 type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
 
 @Component({
   selector: 'app-design-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HomeIconsEditorComponent],
   template: `
     <div class="design-container">
 
@@ -30,7 +31,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
       <!-- ── 1. TEMPLATES DO CARDÁPIO (APENAS ESTRUTURA) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
       <details class="design-section" open>
-        <summary class="section-head">
+        <summary class="section-head" data-tour="design">
           <div class="head-icon tmpl">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect width="18" height="7" x="3" y="3" rx="1"/>
@@ -53,8 +54,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
           @for (tmpl of templates; track tmpl.key; let i = $index) {
             <button type="button"
               class="template-card"
-              [class.selected]="designService.draft().templateKey === tmpl.key"
-              [attr.aria-pressed]="designService.draft().templateKey === tmpl.key"
+              [class.selected]="designService.currentTemplate().key === tmpl.key"
+              [attr.aria-pressed]="designService.currentTemplate().key === tmpl.key"
               (click)="selectTemplate(tmpl.key)"
               [style.--ti]="i">
 
@@ -72,6 +73,9 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
 
                 <!-- Hero Section Mockup -->
                 <div class="tmpl-mini-hero" [attr.data-hero]="tmpl.heroStyle">
+                  @if (tmpl.key === 'brand-cover') {
+                    <div class="tmpl-mini-brand-logo"></div>
+                  }
                   @if (tmpl.logoPosition === 'hero-bottom-center') {
                     <div class="tmpl-hero-overlap-logo"></div>
                   }
@@ -100,7 +104,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
                 <span class="tmpl-ideal">{{ tmpl.idealFor }}</span>
               </div>
 
-              @if (designService.draft().templateKey === tmpl.key) {
+              @if (designService.currentTemplate().key === tmpl.key) {
                 <div class="tmpl-check">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                     <polyline points="20 6 9 17 4 12"/>
@@ -541,10 +545,23 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
       </details>
 
       <!-- ═════════════════════════════════════════════════════ -->
+      <!-- Ícones do botão Início e das vitrines da página inicial -->
+      <details class="design-section" data-tour="home-icons">
+        <summary class="section-head">
+          <div class="head-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><circle cx="17.5" cy="6.5" r="3.5"/><path d="m6.5 14 4 7h-8l4-7ZM14 14h7v7h-7z"/></svg>
+          </div>
+          <div><h2 class="section-title">Ícones da Página Inicial</h2>
+            <p class="section-sub">Personalize os títulos das vitrines e o botão Início, ou escolha exibir somente o texto.</p></div>
+          <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <app-home-icons-editor />
+      </details>
+
       <!-- ── 5.5 RECURSOS DO CARDÁPIO (CURTIDAS & CARRINHO) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <details class="design-section">
-        <summary class="section-head">
+      <details class="design-section" data-tour="resources-panel">
+        <summary class="section-head" data-tour="resources">
           <div class="head-icon features">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -999,7 +1016,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
           <button type="button" class="btn-reset" (click)="resetDraft()" [disabled]="!designService.hasUnsavedChanges()">
             Descartar
           </button>
-          <button type="button" class="btn-save" (click)="saveDraft()">
+          <button type="button" class="btn-save" data-tour="design-save" (click)="saveDraft()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
               <polyline points="17 21 17 13 7 13 7 21"/>
@@ -1249,6 +1266,50 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
       border: 1px solid rgba(6, 182, 212, 0.4);
       box-shadow: 0 0 6px rgba(6, 182, 212, 0.15);
     }
+
+    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-header { display: none; }
+    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-hero {
+      height: 54px;
+      margin: -12px -12px 6px;
+      border-radius: 12px 12px 18px 18px;
+      background: linear-gradient(140deg, #8B1A3A, #E7BB9B);
+    }
+    .tmpl-preview[data-tmpl="showcase"] .tmpl-hero-overlap-logo {
+      width: 26px;
+      height: 26px;
+      bottom: -10px;
+      background: #F47B20;
+      border: 3px solid #0D0D10;
+      box-shadow: none;
+    }
+    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-cats span { height: 10px; border-radius: 999px; }
+    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-grid { grid-template-columns: 1fr; }
+    .tmpl-preview[data-tmpl="showcase"] .mini-card-sample {
+      height: 22px;
+      background: linear-gradient(90deg, #52525B 22%, #27272A 22%);
+    }
+
+    .tmpl-preview[data-tmpl="brand-cover"] .tmpl-mini-header { display: none; }
+    .tmpl-preview[data-tmpl="brand-cover"] .tmpl-mini-hero {
+      height: 58px;
+      border-radius: 8px;
+      background: linear-gradient(110deg, #211510, #7B4324);
+    }
+    .tmpl-mini-brand-logo { width: 20px; height: 20px; border-radius: 4px; background: #F47B20; align-self: flex-start; margin-top: 8px; }
+    .tmpl-preview[data-tmpl="brand-cover"] .tmpl-mini-cats span { height: 10px; border-radius: 3px; }
+
+    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-mini-header { display: none; }
+    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-mini-hero {
+      height: 62px;
+      margin: -12px -12px 8px;
+      background: linear-gradient(120deg, #3E2018, #975B36);
+    }
+    .tmpl-preview[data-tmpl="editorial-arc"] .tmpl-mini-hero { border-radius: 12px 12px 45% 45% / 12px 12px 12% 12%; }
+    .tmpl-preview[data-tmpl="editorial-arc"] .tmpl-mini-cats span { height: 12px; border-radius: 4px; }
+    .tmpl-preview[data-tmpl="curve-panels"] .tmpl-mini-hero { border-radius: 12px 12px 50% 50% / 12px 12px 26% 26%; background: linear-gradient(145deg, #42788B, #BEC7CA); }
+    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-hero-overlap-logo { background: #F47B20; border-color: #0D0D10; box-shadow: none; }
+    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-mini-grid { grid-template-columns: 1fr; }
+    .tmpl-preview[data-tmpl="curve-panels"] .mini-card-sample { border-top: 6px solid #8B1A3A; }
 
     .tmpl-info {
       display: flex;
@@ -1957,7 +2018,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
     /* ══════════════════════════════════════════════════ */
     .design-footer {
       position: sticky;
-      bottom: 16px;
+      bottom: calc(16px + var(--tutorial-sheet-space, 0px));
       background: rgba(20, 20, 24, 0.92);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.12);

@@ -3,9 +3,12 @@ import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
+import { isHomeIconId } from '../constants/home-icon-id';
 
 const hexColorSchema = z.string().trim().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|[A-Fa-f0-9]{8})$/, 'Cor hexadecimal inválida');
 const fontNameSchema = z.string().trim().regex(/^[a-zA-Z0-9\s-]+$/, 'Nome de fonte inválido').max(50);
+
+const homeIconSchema = z.string().max(180).refine(isHomeIconId, 'Ícone inválido').nullable().optional();
 
 const introCardSchema = z.object({
   enabled: z.boolean().default(true),
@@ -14,7 +17,7 @@ const introCardSchema = z.object({
 }).optional();
 
 const designSchema = z.object({
-  template_key: z.enum(['minimal', 'modern', 'premium', 'dark']).default('modern'),
+  template_key: z.enum(['minimal', 'modern', 'premium', 'dark', 'showcase']).default('modern'),
   palette: z.object({
     key: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/),
     name: z.string().trim().max(50),
@@ -45,7 +48,16 @@ const designSchema = z.object({
       required: z.boolean().optional()
     })
   ).default([]),
-  custom_config: z.record(z.unknown()).optional()
+  custom_config: z.object({
+    home_icons: z.object({
+      home: homeIconSchema,
+      promotion: homeIconSchema,
+      most_liked: homeIconSchema,
+      featured_product: homeIconSchema,
+      combo: homeIconSchema,
+      best_seller: homeIconSchema
+    }).strict().optional()
+  }).passthrough().optional()
 }).strict();
 
 export const getDesignController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

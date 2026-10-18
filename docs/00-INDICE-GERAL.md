@@ -1,5 +1,8 @@
 # 📋 Índice Geral — SaaS Cardápio Digital
 
+> **Tutorial guiado do painel:** arquitetura, roteiro, persistência, permissões,
+> assets e validação em [Tutorial guiado PingoChef](./TUTORIAL-GUIADO.md).
+
 > **Fonte de verdade estrutural do projeto.**  
 > Cada documento abaixo cobre um domínio específico. Quando um domínio depende de outro, a dependência está explicitamente referenciada dentro do arquivo.
 

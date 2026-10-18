@@ -11,7 +11,7 @@ const thresholds = {
 };
 const vitalsSchema = z
   .object({
-    templateCode: z.enum(["minimal", "modern", "premium", "dark"]),
+    templateCode: z.enum(["minimal", "modern", "premium", "dark", "showcase"]),
     deviceClass: z.enum(["mobile", "tablet", "desktop"]),
     metrics: z
       .array(

@@ -10,6 +10,12 @@
     system-ui,
     sans-serif;
 }
+.tutorial-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px;padding:20px;border:1px solid #dca03d55;border-radius:16px;background:#dca03d0b}
+.tutorial-entry h3{margin:0 0 6px;font:600 17px Outfit,Inter,sans-serif;color:var(--pc-text)}
+.tutorial-entry p{margin:0;font-size:13px;color:var(--pc-muted)}
+.tutorial-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 18px;border:1px solid #e6b955;border-radius:12px;background:linear-gradient(135deg,#ffe3a2,#efb646);color:#462018;font:700 14px Inter,sans-serif;cursor:pointer;box-shadow:0 4px 12px #bd842b22}
+.tutorial-button:focus-visible{outline:2px solid #e6b955;outline-offset:4px}
+@media(max-width:430px){.tutorial-entry{align-items:flex-start;flex-direction:column}.tutorial-button{width:100%}}
 .settings-backdrop {
   position: fixed;
   inset: 0;

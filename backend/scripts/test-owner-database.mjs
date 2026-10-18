@@ -7,6 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:net';
 import pg from 'pg';
 import { verifyOwnerDatabase } from './verify-owner-database.mjs';
+import { verifyOwnerTutorial } from './verify-owner-tutorial.mjs';
 import { verifyMenuAnalytics } from './verify-menu-analytics.mjs';
 import { verifyQrSecurity } from './verify-qr-security.mjs';
 import { benchmarkAnalyticsIndex } from './benchmark-analytics-index.mjs';
@@ -89,6 +90,7 @@ try {
   await pool.query(registrationRepair);
   console.log('OK partial registration schema repair and repeated application');
   await verifyOwnerDatabase(pool);
+  await verifyOwnerTutorial(pool);
   await verifyMenuAnalytics(pool);
   await verifyQrSecurity(pool);
   await verifyPerformanceDatabase(pool);

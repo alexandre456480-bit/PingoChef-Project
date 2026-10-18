@@ -6,7 +6,7 @@ import {
   DesignService,
   DesignSettings,
   TemplateConfig,
-  AVAILABLE_TEMPLATES,
+  resolveMenuTemplate,
   AVAILABLE_PALETTES,
   AVAILABLE_FONT_PAIRS,
   contrastTextColor,
@@ -22,6 +22,8 @@ import { MenuRevealDirective } from './menu-reveal.directive';
 import { MenuImageDirective, safeMenuImage } from './menu-image.directive';
 import { MenuFontsService, menuFont } from '../../services/menu-fonts.service';
 import { DialogFocusDirective } from '../dialog-focus.directive';
+import { MenuHomeIconComponent } from '../menu-home-icon/menu-home-icon.component';
+import { HomeIconSection, homeIconChoice } from '../../constants/home-icons';
 
 export const normalizeMenuSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 
@@ -29,12 +31,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
   selector: 'app-public-menu-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ProductMediaGalleryComponent, MenuRevealDirective, MenuImageDirective, DialogFocusDirective],
+  imports: [CommonModule, ProductMediaGalleryComponent, MenuRevealDirective, MenuImageDirective, DialogFocusDirective, MenuHomeIconComponent],
   template: `
     <div
       class="menu-viewport"
       [class.in-phone]="isPhonePreview"
       [attr.data-template]="templateKey"
+      [attr.data-header-template]="currentTemplate.key"
+      [attr.data-template-family]="isCurvedTemplate ? 'curved' : null"
       [attr.data-surface]="surfaceStyle"
       [attr.data-logo-pos]="logoPosition"
       [style.--bg-color]="screenBg"
@@ -205,7 +209,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
             }
 
             <!-- CABEÇALHO ELEGANTE QUANDO A HERO SECTION ESTÁ DESATIVADA -->
-            @if (!showHeroBlock && !searchFilter) {
+            @if (!(activeCatId ? isCategoryHeroEnabled : showHeroBlock) && !searchFilter) {
               <div class="no-hero-header" [style.background]="surfaceColor" [style.border-bottom]="'1px solid ' + surfaceColor + '30'">
                 <div class="no-hero-brand">
                   <div class="no-hero-logo-wrap">
@@ -213,7 +217,9 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   </div>
                   <div class="no-hero-texts">
                     <h2 class="no-hero-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ businessName }}</h2>
-                    <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
+                    @if (!isCurvedTemplate) {
+                      <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
+                    }
                   </div>
                 </div>
               </div>
@@ -257,7 +263,21 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   }
                 </div>
 
-                @if (logoPosition === 'hero-bottom-center') {
+                @if (currentTemplate.key === 'editorial-arc' && hasIntroCard && introCard.title) {
+                  <div class="editorial-hero-copy">
+                    <h2 [style.font-family]="headingFont + ', sans-serif'">{{ introCard.title }}</h2>
+                  </div>
+                }
+                @if (currentTemplate.key === 'brand-cover') {
+                  <div class="brand-cover-identity">
+                    <img class="brand-cover-logo" [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" />
+                    <h2 class="brand-cover-name" [style.font-family]="headingFont + ', sans-serif'">{{ businessName }}</h2>
+                    @if (businessDescription.trim()) {
+                      <p class="brand-cover-description" [style.font-family]="bodyFont + ', sans-serif'">{{ businessDescription }}</p>
+                    }
+                  </div>
+                }
+                @if (logoPosition === 'hero-bottom-center' && templateKey !== 'showcase') {
                   <div class="hero-overlap-logo-container">
                     <div class="hero-overlap-ring">
                       <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="hero-overlap-img" />
@@ -265,12 +285,23 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   </div>
                 }
               </div>
+              @if (templateKey === 'showcase' && logoPosition === 'hero-bottom-center') {
+                <div class="hero-overlap-logo-container">
+                  <div class="hero-overlap-ring">
+                    <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="hero-overlap-img" />
+                  </div>
+                </div>
+              }
+              @if (currentTemplate.key === 'editorial-arc') {
+                <div class="editorial-brand-line"><span>{{ businessName }}</span></div>
+              }
             </ng-template>
 
-            <!-- 1. VITRINE DINÂMICA REORDENÁVEL (QUANDO EM 'INÍCIO' E SEM BUSCA) -->
-            @if (!searchFilter && !activeCatId) {
+            @if (templateKey === 'showcase' && !searchFilter && isCategoryHeroEnabled) {
+              <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
+            }
 
-              <!-- BLOCO DE APRESENTAÇÃO / DESCRIÇÃO INICIAL (FIXO NO INÍCIO ACIMA DA HERO) -->
+            <ng-template #introDescriptionTemplate>
               @if (hasIntroCard) {
                 <div class="intro-description-wrapper">
                   <div
@@ -280,7 +311,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     [style.border-color]="surfaceColor + '35'">
 
                     <div class="intro-card-body">
-                      @if (introCard.title) {
+                      @if (introCard.title && !(currentTemplate.key === 'editorial-arc' && isCategoryHeroEnabled)) {
                         <h3
                           class="intro-card-title"
                           [style.font-family]="headingFont + ', sans-serif'"
@@ -300,11 +331,26 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   </div>
                 </div>
               }
+            </ng-template>
+
+            @if (isCurvedTemplate && hasIntroCard && !searchFilter) {
+              <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
+            }
+
+            <!-- 1. VITRINE DINÂMICA REORDENÁVEL (QUANDO EM 'INÍCIO' E SEM BUSCA) -->
+            @if (!searchFilter && !activeCatId) {
+
+              <!-- BLOCO DE APRESENTAÇÃO / DESCRIÇÃO INICIAL (FIXO NO INÍCIO ACIMA DA HERO) -->
+              @if (!isCurvedTemplate) {
+                <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
+              }
 
               @for (block of orderedHomeBlocks; track block.id) {
                 <!-- BLOCO HERO / BANNER -->
-                @if (block.type === 'hero' && showHeroBlock) {
-                  <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
+                @if (block.type === 'hero') {
+                  @if (showHeroBlock && templateKey !== 'showcase') {
+                    <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
+                  }
                 }
 
                 <!-- BLOCO DE CATEGORIAS -->
@@ -318,21 +364,25 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         [class.active]="!activeCatId" [attr.aria-current]="!activeCatId ? 'page' : null"
                         [style.--active-color]="accentColor"
                         (click)="filterCategory(null)">
-                        <div class="cat-pill-icon svg-3d">
-                          @if (homeBistroSvg) {
-                            <div class="cat-pill-svg" [innerHTML]="homeBistroSvg"></div>
-                          } @else {
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/>
-                              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                              <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/>
-                              <path d="M2 7h20"/>
-                              <path d="M22 7a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0"/>
-                            </svg>
-                          }
-                        </div>
-                        <span class="cat-pill-label">Início</span>
-                      </button>
+                        @if (homeIcon('home') === undefined) {
+                          <div class="cat-pill-icon svg-3d">
+                            @if (homeBistroSvg) {
+                              <div class="cat-pill-svg" [innerHTML]="homeBistroSvg"></div>
+                            } @else {
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/>
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                                <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/>
+                                <path d="M2 7h20"/>
+                                <path d="M22 7a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0"/>
+                              </svg>
+                            }
+                          </div>
+                        } @else if (homeIcon('home') !== null) {
+                          <div class="cat-pill-icon svg-3d"><app-menu-home-icon class="cat-pill-svg" section="home" [choice]="homeIcon('home')" /></div>
+                        }
+                          <span class="cat-pill-label">Início</span>
+                        </button>
 
                       @for (cat of visibleCategories; track cat.id) {
                         <button
@@ -364,7 +414,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true">🔥</span>Promoções & Ofertas</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('promotion') === undefined) { <span class="block-title-icon" aria-hidden="true">🔥</span> } @else if (homeIcon('promotion') !== null) { <app-menu-home-icon class="block-title-icon" section="promotion" [choice]="homeIcon('promotion')" /> }Promoções & Ofertas</h3>
                       </div>
                     </div>
 
@@ -425,7 +475,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true">❤️</span>Os Mais Curtidos</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('most_liked') === undefined) { <span class="block-title-icon" aria-hidden="true">❤️</span> } @else if (homeIcon('most_liked') !== null) { <app-menu-home-icon class="block-title-icon" section="most_liked" [choice]="homeIcon('most_liked')" /> }Os Mais Curtidos</h3>
                       </div>
                     </div>
 
@@ -460,7 +510,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><img class="block-title-icon" src="/icons_chef_hat.webp" alt="" />Pratos do Chef & Especialidades</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('featured_product') === undefined) { <img class="block-title-icon" src="/icons_chef_hat.webp" alt="" /> } @else if (homeIcon('featured_product') !== null) { <app-menu-home-icon class="block-title-icon" section="featured_product" [choice]="homeIcon('featured_product')" /> }Pratos do Chef & Especialidades</h3>
                       </div>
                     </div>
 
@@ -509,7 +559,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-combo')"></span>Combos Especiais</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('combo') === undefined) { <span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-combo')"></span> } @else if (homeIcon('combo') !== null) { <app-menu-home-icon class="block-title-icon" section="combo" [choice]="homeIcon('combo')" /> }Combos Especiais</h3>
                       </div>
                     </div>
 
@@ -585,7 +635,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary"><span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-bestseller')"></span>Mais Vendidos</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('best_seller') === undefined) { <span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-bestseller')"></span> } @else if (homeIcon('best_seller') !== null) { <app-menu-home-icon class="block-title-icon" section="best_seller" [choice]="homeIcon('best_seller')" /> }Mais Vendidos</h3>
                       </div>
 
                     </div>
@@ -647,7 +697,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               }
             } @else if (!searchFilter) {
               <!-- Hero Section nas outras categorias (mantendo a descrição/intro card oculta) -->
-              @if (isCategoryHeroEnabled) {
+              @if (isCategoryHeroEnabled && templateKey !== 'showcase') {
                 <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
               }
 
@@ -662,21 +712,25 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       [class.active]="!activeCatId" [attr.aria-current]="!activeCatId ? 'page' : null"
                       [style.--active-color]="accentColor"
                       (click)="filterCategory(null)">
-                      <div class="cat-pill-icon svg-3d">
-                        @if (homeBistroSvg) {
-                          <div class="cat-pill-svg" [innerHTML]="homeBistroSvg"></div>
-                        } @else {
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/>
-                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/>
-                            <path d="M2 7h20"/>
-                            <path d="M22 7a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0"/>
-                          </svg>
-                        }
-                      </div>
-                      <span class="cat-pill-label">Início</span>
-                    </button>
+                      @if (homeIcon('home') === undefined) {
+                            <div class="cat-pill-icon svg-3d">
+                          @if (homeBistroSvg) {
+                            <div class="cat-pill-svg" [innerHTML]="homeBistroSvg"></div>
+                          } @else {
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/>
+                              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                              <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/>
+                              <path d="M2 7h20"/>
+                              <path d="M22 7a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0"/>
+                            </svg>
+                          }
+                        </div>
+                          } @else if (homeIcon('home') !== null) {
+                            <div class="cat-pill-icon svg-3d"><app-menu-home-icon class="cat-pill-svg" section="home" [choice]="homeIcon('home')" /></div>
+                          }
+                        <span class="cat-pill-label">Início</span>
+                      </button>
 
                     @for (cat of visibleCategories; track cat.id) {
                       <button
@@ -1245,6 +1299,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     </div>
   `,
+  styleUrls: ['./public-menu-header-templates.css', './public-menu-curved-templates.css'],
   styles: [`
     :host {
       display: block;
@@ -1879,6 +1934,107 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       transform: translateY(-2px);
     }
 
+    /* Vitrine Compacta: capa de ponta a ponta e logo fora da área recortada. */
+    [data-template="showcase"] .showcase-scrollable {
+      padding-top: 0;
+      gap: 12px;
+    }
+    [data-template="showcase"] .showcase-scrollable > * {
+      flex-shrink: 0;
+    }
+    [data-template="showcase"] .showcase-hero-banner {
+      margin: 0 -12px;
+      height: auto;
+      min-height: 0;
+      aspect-ratio: 2.5;
+      border-radius: 0 0 32px 32px;
+      box-shadow: none;
+    }
+    [data-template="showcase"] .hero-banner-overlay {
+      position: absolute;
+      inset: 0;
+      min-height: 0;
+      background: linear-gradient(180deg, transparent 70%, rgba(0,0,0,.12)) !important;
+      justify-content: flex-start;
+      padding-top: 18px;
+    }
+    [data-template="showcase"] .carousel-dots-wrap { margin-top: 0; }
+    [data-template="showcase"] .hero-overlap-logo-container {
+      margin: -62px 0 0;
+      pointer-events: none;
+    }
+    [data-template="showcase"] .hero-overlap-ring {
+      width: 88px;
+      height: 88px;
+      border: 5px solid var(--bg-color);
+      background: var(--surface-color);
+      box-sizing: border-box;
+      box-shadow: 0 6px 18px rgba(0,0,0,.07);
+    }
+    [data-template="showcase"] .hero-overlap-img { object-fit: contain; }
+    [data-template="showcase"] .intro-description-wrapper { text-align: center; padding: 0 8px; }
+    [data-template="showcase"] .intro-description-card {
+      padding: 6px 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      background: transparent !important;
+    }
+    [data-template="showcase"] .categories-nav-section { margin: 0 -12px; }
+    [data-template="showcase"] .cat-nav-scroll { padding: 6px 14px 12px; gap: 8px; }
+    [data-template="showcase"] .category-nav-pill {
+      border-radius: 999px;
+      padding: 10px 18px;
+      min-height: 44px;
+    }
+    [data-template="showcase"] .product-item-card,
+    [data-template="showcase"] .category-nav-pill:not(.active) {
+      border: 1px solid color-mix(in srgb, var(--text-primary) 5%, transparent);
+      box-shadow: 0 4px 16px rgba(0,0,0,.04);
+    }
+    [data-template="showcase"] .product-item-card {
+      grid-template-columns: 100px minmax(0, 1fr);
+      padding: 6px;
+      border-radius: 16px;
+      transition: transform 180ms ease;
+    }
+    [data-template="showcase"] .product-item-card:hover { transform: translateY(-2px); }
+    [data-template="showcase"] .product-card-photo {
+      width: 100px;
+      height: 100px;
+      min-width: 0;
+      border-radius: 10px;
+    }
+    [data-template="showcase"] .product-card-body { padding: 0 0 0 10px; }
+    [data-template="showcase"] .card-item-title {
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow-wrap: anywhere;
+    }
+    [data-template="showcase"] .btn-view-item { border-radius: 9px; font-size: .75rem; padding: 4px 12px; }
+    [data-template="showcase"] .catalog-header-row { padding-bottom: 12px; gap: 8px; }
+    [data-template="showcase"] .section-heading { font-size: 1.2rem; text-transform: uppercase; overflow-wrap: anywhere; }
+    [data-template="showcase"] .btn-back-home { flex-shrink: 0; }
+    [data-template="showcase"] .subcategory-group { margin-bottom: 4px; }
+    [data-template="showcase"] .subcategory-header-collapsible { padding: 4px 2px; margin: 4px 0 8px; gap: 8px; }
+    [data-template="showcase"] .subcat-title-wrap { min-width: 0; }
+    [data-template="showcase"] .subcategory-title { overflow-wrap: anywhere; }
+    [data-template="showcase"] .subcat-indicator { height: 20px; flex-shrink: 0; }
+    [data-template="showcase"] .floating-controls-capsule {
+      background: transparent !important;
+      border: 0;
+      padding: 0;
+      gap: 10px;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+    [data-template="showcase"] .capsule-btn { background: var(--surface-color); box-shadow: 0 3px 12px rgba(0,0,0,.06); }
+    [data-template="showcase"] .capsule-divider { display: none; }
+    [data-template="showcase"] .no-hero-header { margin-top: 70px; }
+
     /* Variação Estrutural: Dark Glass & Neon */
     .menu-viewport[data-template="dark"] .showcase-hero-banner {
       border-radius: 18px;
@@ -2486,13 +2642,13 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     }
     .product-item-card {
       display: grid;
-      grid-template-columns: 104px 1fr;
-      min-height: 124px;
+      grid-template-columns: 104px minmax(0, 1fr);
+      min-height: 116px;
       height: auto;
       border-radius: 12px;
       overflow: hidden;
       cursor: pointer;
-      align-items: stretch;
+      align-items: center;
       box-sizing: border-box;
     }
     .product-card-photo {
@@ -2545,7 +2701,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       flex-direction: column;
       justify-content: space-between;
       min-width: 0;
-      height: 100%;
+      gap: 4px;
       box-sizing: border-box;
       overflow: hidden;
     }
@@ -3580,6 +3736,8 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   get homeBistroSvg(): SafeHtml | null { return this.cachedIcon('3d-bistro'); }
 
+  homeIcon(section: HomeIconSection) { return homeIconChoice(this.design?.customConfig, section); }
+
   highlightTitleIcon(key: '3d-combo' | '3d-bestseller'): SafeHtml | null {
     return this.cachedIcon(key);
   }
@@ -3623,7 +3781,11 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   get currentTemplate(): TemplateConfig {
-    return AVAILABLE_TEMPLATES.find(t => t.key === this.templateKey) || AVAILABLE_TEMPLATES[1];
+    return resolveMenuTemplate(this.design);
+  }
+
+  get isCurvedTemplate(): boolean {
+    return this.currentTemplate.key === 'editorial-arc' || this.currentTemplate.key === 'curve-panels';
   }
 
   get surfaceStyle(): string {
@@ -3928,4 +4090,4 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   onLogoError(event: Event): void {
     (event.target as HTMLImageElement).src = '/logo_img.webp';
   }
-}
+                        }

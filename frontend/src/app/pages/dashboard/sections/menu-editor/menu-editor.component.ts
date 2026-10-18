@@ -20,7 +20,7 @@ import { AuthService } from '../../../../services/auth.service';
             <h2 class="section-title">Categorias</h2>
             <p class="section-subtitle">{{ menuService.categories().length }} categorias configuradas</p>
           </div>
-          <button class="btn-cta" (click)="openCategoryModal()">
+          <button class="btn-cta" data-tour="new-category" (click)="openCategoryModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nova Categoria
           </button>
@@ -63,7 +63,7 @@ import { AuthService } from '../../../../services/auth.service';
 
       <!-- 1.5 Subcategories Management -->
       @if (selectedCategoryId) {
-        <section class="section-block subcategories-section" style="--i:0.5">
+        <section class="section-block subcategories-section" data-tour="subcategories" style="--i:0.5">
           <div class="section-header">
             <div>
               <h2 class="section-title">Subcategorias</h2>
@@ -131,7 +131,7 @@ import { AuthService } from '../../../../services/auth.service';
             <h2 class="section-title">Produtos do Cardápio</h2>
             <p class="section-subtitle">{{ filteredItems.length }} itens</p>
           </div>
-          <button class="btn-cta primary" (click)="openItemModal()">
+          <button class="btn-cta primary" data-tour="new-product" (click)="openItemModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Novo Produto
           </button>
@@ -2257,6 +2257,7 @@ export class MenuEditorComponent implements OnInit {
 
   filterBy(catId: string | null): void {
     this.selectedCategoryId = catId;
+    this.cdr.markForCheck();
   }
 
   // ── Categories ──

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, effect, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, effect, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -24,10 +24,14 @@ import { FeaturePreviewComponent } from './sections/feature-preview/feature-prev
 import { OwnerSessionState } from '../../services/owner-session-state.service';
 import { AnalyticsComponent } from './sections/analytics/analytics.component';
 import { QrComponent } from './sections/qr/qr.component';
+import { TutorialService } from './tutorial/tutorial.service';
+import type { TutorialStep } from './tutorial/tutorial.steps';
+import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  providers: [TutorialService],
   imports: [
     CommonModule,
     SidebarComponent,
@@ -39,7 +43,7 @@ import { QrComponent } from './sections/qr/qr.component';
     DesignEditorComponent,
     PreviewSectionComponent,
     LikesSectionComponent,
-    PingoLoaderComponent, SettingsComponent, FeaturePreviewComponent, AnalyticsComponent, QrComponent
+    PingoLoaderComponent, SettingsComponent, FeaturePreviewComponent, AnalyticsComponent, QrComponent, TutorialOverlayComponent
   ],
   template: `
     <div class="dashboard-shell" [attr.data-panel-theme]="panelTheme">
@@ -51,7 +55,7 @@ import { QrComponent } from './sections/qr/qr.component';
 
       <!-- 1. Sidebar -->
       <app-sidebar
-        [attr.inert]="settingsVisible ? '' : null"
+        [attr.inert]="settingsVisible || tutorial.active() ? '' : null"
         [analyticsEnabled]="commercial.analytics()"
         [qrEnabled]="commercial.qr()"
         (settingsOpen)="settingsVisible = true"
@@ -65,7 +69,7 @@ import { QrComponent } from './sections/qr/qr.component';
       </app-sidebar>
 
       <!-- 2. Main Content Area -->
-      <div class="main-viewport" [attr.inert]="settingsVisible ? '' : null">
+      <div class="main-viewport" [attr.inert]="settingsVisible || tutorial.active() ? '' : null">
         <!-- Topbar -->
         <app-topbar
           [businessName]="businessName"
@@ -81,7 +85,7 @@ import { QrComponent } from './sections/qr/qr.component';
 
         <div class="publication-toolbar">
           <p>Atualize o design e os vídeos do cardápio online.</p>
-          <button type="button" class="publish-menu-btn"
+          <button type="button" class="publish-menu-btn" data-tour="publish-menu"
             [disabled]="isInitialLoading || isPublishing"
             [attr.aria-busy]="isPublishing" (click)="publishMenu()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -92,7 +96,8 @@ import { QrComponent } from './sections/qr/qr.component';
         </div>
 
         <!-- Dynamic Content Section -->
-        <main class="content-canvas">
+        <main class="content-canvas" [style.padding-bottom.px]="tutorial.bottomReserve() || null"
+          [style.--tutorial-sheet-space]="tutorial.step()?.id === 'design-save' && tutorial.bottomReserve() ? tutorial.bottomReserve() + 'px' : null">
           @switch (activeSection) {
             @case ('dashboard') {
               <app-dashboard-home
@@ -138,7 +143,7 @@ import { QrComponent } from './sections/qr/qr.component';
       </div>
 
       <!-- 3. Right Panel: Phone Preview (Desktop Column) -->
-      <aside class="preview-panel" [class.preview-hidden]="!showDesktopPreview" [attr.inert]="settingsVisible ? '' : null">
+      <aside class="preview-panel" data-tour="preview-desktop" [class.preview-hidden]="!showDesktopPreview" [attr.inert]="settingsVisible || tutorial.active() ? '' : null">
         <div class="preview-panel-header">
           <div class="header-badge">
             <span class="pulse-dot"></span>
@@ -178,7 +183,17 @@ import { QrComponent } from './sections/qr/qr.component';
       }
 
       <!-- 5. Floating Toast Notification -->
-      @if(settingsVisible){<app-owner-settings [theme]="panelTheme" (close)="settingsVisible=false"></app-owner-settings>}
+      @if(settingsVisible){<app-owner-settings [theme]="panelTheme" (close)="settingsVisible=false" (tutorialOpen)="restartTutorial()"></app-owner-settings>}
+      @defer (when tutorial.active()) {
+        @if (tutorial.active()) { <app-tutorial-overlay /> }
+      } @error {
+        @if (tutorial.active()) {
+          <div class="tutorial-load-error" role="alert">
+            <p>Não foi possível carregar o guia. Atualize a página para tentar novamente.</p>
+            <button type="button" (click)="tutorial.closeForNow()">Voltar ao painel</button>
+          </div>
+        }
+      }
       @if (toastMessage) {
         <div class="toast-floating" role="alert">
           <div class="toast-icon">
@@ -198,6 +213,8 @@ import { QrComponent } from './sections/qr/qr.component';
       color: #F4F4F5;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
+    .tutorial-load-error{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:#180b15f0;color:#fff7f2;text-align:center}
+    .tutorial-load-error button{min-height:44px;padding:12px 20px;background:#ffd27a;color:#341625;border:0;border-radius:12px;font-weight:700;cursor:pointer}
 
     .dashboard-shell {
       display: grid;
@@ -526,6 +543,9 @@ import { QrComponent } from './sections/qr/qr.component';
   `]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  @ViewChild(MenuEditorComponent) private menuEditor?: MenuEditorComponent;
+  private tutorialSnapshot?: { section: ActiveSection; sidebar: boolean; preview: boolean; mobilePreview: boolean };
+  private resourcesWasOpen?: boolean;
   settingsVisible=false;
   private refreshTimer?:ReturnType<typeof setTimeout>;
   activeSection: ActiveSection = 'dashboard';
@@ -549,6 +569,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private router: Router,
     public commercial: CommercialService,
+    public tutorial: TutorialService,
     state:OwnerSessionState
   ) {
     effect(()=>{
@@ -562,6 +583,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(){clearTimeout(this.refreshTimer);}
 
   ngOnInit(): void {
+    this.tutorial.connect({ prepare: step => this.prepareTutorial(step), restore: () => this.restoreTutorial() });
     try {
       this.panelTheme = localStorage.getItem('pingo-chef-panel-theme') === 'light' ? 'light' : 'dark';
     } catch {
@@ -578,6 +600,51 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.designService.loadDesign()
       .pipe(finalize(() => this.completeInitialRequest()))
       .subscribe({error:()=>this.showToast('Não foi possível carregar o design. Confira sua conexão.')});
+  }
+
+  async restartTutorial(): Promise<void> {
+    this.settingsVisible = false;
+    await this.tutorial.start();
+    if (this.tutorial.error()) this.showToast(this.tutorial.error());
+    this.cdr.markForCheck();
+  }
+
+  private async prepareTutorial(step: TutorialStep): Promise<void> {
+    this.tutorialSnapshot ??= { section: this.activeSection, sidebar: this.mobileSidebarOpen,
+      preview: this.showDesktopPreview, mobilePreview: this.mobilePreviewOpen };
+    this.settingsVisible = false;
+    this.mobilePreviewOpen = false;
+    this.activeSection = step.section;
+    this.mobileSidebarOpen = step.prepare === 'navigation' && window.innerWidth <= 1024;
+    if (step.prepare === 'preview') this.showDesktopPreview = true;
+    // Section changes in this dashboard are local state, not separate URL routes.
+    this.cdr.detectChanges();
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    if (!this.tutorial.active()) return;
+    if (step.prepare === 'subcategory' && this.menuEditor && this.menuService.categories().length)
+      this.menuEditor.filterBy(this.menuService.categories()[0].id);
+    const resources = document.querySelector<HTMLDetailsElement>('[data-tour="resources-panel"]');
+    if (resources) {
+      if (step.prepare === 'resources') {
+        this.resourcesWasOpen ??= resources.open;
+        resources.open = true;
+      } else if (this.resourcesWasOpen !== undefined) {
+        resources.open = this.resourcesWasOpen;
+        this.resourcesWasOpen = undefined;
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
+  private restoreTutorial(): void {
+    const snapshot = this.tutorialSnapshot;
+    if (!snapshot) return;
+    this.activeSection = snapshot.section; this.mobileSidebarOpen = snapshot.sidebar;
+    this.showDesktopPreview = snapshot.preview; this.mobilePreviewOpen = snapshot.mobilePreview;
+    this.tutorialSnapshot = undefined; this.resourcesWasOpen = undefined;
+    this.cdr.markForCheck();
+    // The settings launch button can disappear while touring. Return to a visible, safe control.
+    setTimeout(() => document.querySelector<HTMLElement>('[data-tour="publish-menu"]')?.focus({ preventScroll: true }));
   }
 
   get businessName(): string {
@@ -649,5 +716,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.pendingInitialRequests = Math.max(0, this.pendingInitialRequests - 1);
     this.isInitialLoading = this.pendingInitialRequests > 0;
     this.cdr.markForCheck();
+    if (!this.isInitialLoading && !this.homeDataError) void this.tutorial.autoStart();
   }
 }

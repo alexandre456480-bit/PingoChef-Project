@@ -1,3 +1,4 @@
+import { isHomeIconId } from '../constants/home-icon-id';
 /** Public DTO helpers. No arbitrary administrative custom_config is serialized. */
 export function publicImage(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 6_000_000) return null;
@@ -63,6 +64,13 @@ export function publicCustomConfig(value: unknown): Record<string, unknown> {
     result: Record<string, unknown> = {};
   for (const flag of ["enable_likes", "enable_cart"])
     if (typeof config[flag] === "boolean") result[flag] = config[flag];
+  if (config.home_icons && typeof config.home_icons === 'object' && !Array.isArray(config.home_icons)) {
+    const icons = config.home_icons as Record<string, unknown>;
+    result.home_icons = Object.fromEntries(['home', 'promotion', 'most_liked', 'featured_product', 'combo', 'best_seller']
+      .filter(key => Object.hasOwn(icons, key) && (icons[key] === null ||
+        (typeof icons[key] === 'string' && isHomeIconId(icons[key] as string))))
+      .map(key => [key, icons[key]]));
+  }
   if (typeof config.welcome_tagline === "string")
     result.welcome_tagline = config.welcome_tagline.slice(0, 300);
   if (

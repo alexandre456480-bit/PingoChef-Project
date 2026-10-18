@@ -13,6 +13,18 @@ jest.mock("../services/business-eligibility.service", () => ({
   businessEligibility: { findPublicBusinessBySlug: jest.fn() },
 }));
 afterEach(() => jest.restoreAllMocks());
+test('public emoji choices preserve valid Unicode sequences and discard invented codepoints', () => {
+  expect(publicCustomConfig({ home_icons: { home: 'emoji-2764-fe0f', promotion: 'emoji-3c',
+    combo: '3d-fluent-trophy', most_liked: 'emoji-1f44b-1f3fd' } })).toEqual({ home_icons: {
+      home: 'emoji-2764-fe0f', combo: '3d-fluent-trophy', most_liked: 'emoji-1f44b-1f3fd'
+    } });
+});
+test('public home icons preserve absence and expose only safe icon identifiers', () => {
+  expect(publicCustomConfig({ home_icons: { home: null, combo: '3d-combo', promotion: '<svg onload=alert(1)>',
+    featured_product: 'javascript:alert(1)', privateToken: 'secret', best_seller: '3d-bestseller' } })).toEqual({
+      home_icons: { home: null, combo: '3d-combo', best_seller: '3d-bestseller' }
+    });
+});
 test("public presentation preserves consumer settings and strips administrative or redundant config", () => {
   expect(
     publicCustomConfig({

@@ -2,6 +2,7 @@ import { expect, test, Page } from '@playwright/test';
 
 async function openDesign(page: Page) {
   let design: any = {};
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.fulfill({ contentType: 'text/css', body: '' }));
   await page.addInitScript(() => localStorage.setItem('pingo-chef-panel-theme', 'light'));
   await page.route('**/api/v1/**', async route => {
     const request = route.request();
@@ -20,7 +21,7 @@ async function openDesign(page: Page) {
     return route.fulfill({ json: { success: true, data: [] } });
   });
   await page.goto('/dashboard');
-  await expect(page.locator('.dashboard-shell')).toBeVisible();
+  await expect(page.locator('.dashboard-shell')).toBeVisible({ timeout: 15_000 });
   const nav = page.getByRole('navigation').getByRole('button', { name: 'Design', exact: true });
   if (!await nav.isVisible()) await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
   await nav.click();
@@ -32,7 +33,7 @@ async function openDesign(page: Page) {
 test('sections collapse with keyboard without losing draft colors or typography, and save survives reload', async ({ page }) => {
   const editor = await openDesign(page);
   const sections = editor.locator('details.design-section');
-  await expect(sections).toHaveCount(7);
+  await expect(sections).toHaveCount(8);
   await expect(editor.locator('details[open]')).toHaveCount(1);
   await expect(editor.getByText('Animações', { exact: true })).toHaveCount(0);
   const structure = editor.locator('summary').filter({ hasText: 'Estrutura & Template' });
@@ -73,18 +74,24 @@ test('sections collapse with keyboard without losing draft colors or typography,
   await typography.locator('summary').click();
   await expect(typography.locator('.current-font-pill').first()).toHaveText('Oswald');
 
+  const showcase = editor.locator('.template-card').filter({ hasText: 'Curvas & Painéis' });
+  await expect(showcase).toHaveCount(1);
+  await showcase.click();
+  await expect(showcase).toHaveAttribute('aria-pressed', 'true');
+
   const save = page.waitForRequest(r => r.url().endsWith('/api/v1/design') && r.method() === 'PUT');
   await editor.getByRole('button', { name: 'Salvar Alterações', exact: true }).click();
   const payload = (await save).postDataJSON();
-  expect(payload).toMatchObject({ palette: { key: 'graphite_copper' }, font_heading: 'Oswald', font_body: 'Source Sans 3' });
+  expect(payload).toMatchObject({ template_key: 'showcase', custom_config: { template_variant: 'curve-panels' }, palette: { key: 'graphite_copper' }, font_heading: 'Oswald', font_body: 'Source Sans 3' });
   expect(payload).not.toHaveProperty('motion');
   expect(payload).not.toHaveProperty('paletteFilter');
   await expect(editor.locator('.saved-badge')).toBeVisible();
   await page.reload();
-  await expect(page.locator('.dashboard-shell')).toBeVisible();
+  await expect(page.locator('.dashboard-shell')).toBeVisible({ timeout: 15_000 });
   const nav = page.getByRole('navigation').getByRole('button', { name: 'Design', exact: true });
   if (!await nav.isVisible()) await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
   await nav.click();
+  await expect(showcase).toHaveAttribute('aria-pressed', 'true');
   await editor.locator('summary').filter({ has: page.getByRole('heading', { name: 'Paleta de Cores', exact: true }) }).click();
   await expect(editor.locator('.palette-card').filter({ hasText: 'Grafite & Cobre' })).toHaveAttribute('aria-pressed', 'true');
 });

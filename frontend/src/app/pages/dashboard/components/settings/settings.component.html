@@ -53,6 +53,13 @@
               <dd>{{ auth.currentBusiness()?.name }}</dd>
             </dl>
             <p>Os dados do estabelecimento podem ser ajustados na seção Empresa do painel.</p>
+            <div class="tutorial-entry">
+              <div><h3>Conheça seu painel</h3><p>Reveja o guia completo do painel.</p></div>
+              <button type="button" class="tutorial-button" data-tour="restart-tutorial" (click)="tutorialOpen.emit()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5L2 9Zm4 2v6c4 3 8 3 12 0v-6M22 9v6"/></svg>
+                Tutorial
+              </button>
+            </div>
           }
           @case ('plan') {
             <app-plan-usage (compare)="compare()"></app-plan-usage>

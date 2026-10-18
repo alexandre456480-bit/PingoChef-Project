@@ -1,5 +1,5 @@
 <div class="home" [attr.aria-busy]="loading">
-  <section class="home-card welcome" aria-labelledby="welcome-title">
+  <section class="home-card welcome" data-tour="home" aria-labelledby="welcome-title">
     <div class="welcome-copy">
       <h1 id="welcome-title">
         Olá,<br /><span>{{ businessName() }}</span>
@@ -315,7 +315,7 @@
       <div class="section-heading">
         <h2 id="quick-title"><svg [lucideIcon]="icons.quick" [size]="22"></svg>Ações rápidas</h2>
         @if (publicLink()) {
-          <button type="button" class="text-button copy-link" (click)="copyLink()">
+          <button type="button" class="text-button copy-link" data-tour="menu-link" (click)="copyLink()">
             Copiar link
           </button>
         }

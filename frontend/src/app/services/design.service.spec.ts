@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { AVAILABLE_PALETTES, contrastTextColor, DesignService } from './design.service';
+import { AVAILABLE_PALETTES, contrastTextColor, DesignService, resolveMenuTemplate } from './design.service';
 
 describe('Design settings persistence', () => {
   let service: DesignService;
@@ -12,6 +12,34 @@ describe('Design settings persistence', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+
+  it('saves independent home icons, round-trips no icon and restores defaults without changing unrelated design', () => {
+    const config = { home_icons: { home: '3d-bistro', most_liked: null }, enable_cart: false };
+    service.loadDesign().subscribe();
+    http.expectOne('/api/v1/design').flush({ success: true, data: { custom_config: config } });
+    const originalBlocks = service.draft().homeBlocks;
+    service.setHomeIcon('home', '2d-star');
+    service.setHomeIcon('featured_product', null);
+    expect(config.home_icons.home).toBe('3d-bistro');
+    expect(service.hasUnsavedChanges()).toBe(true);
+    service.saveDesign().subscribe();
+    const write = http.expectOne('/api/v1/design');
+    expect(write.request.body.custom_config).toMatchObject({ enable_cart: false,
+      home_icons: { home: '2d-star', most_liked: null, featured_product: null } });
+    write.flush({ success: true });
+    service.setHomeIcon('home', undefined);
+    expect(service.homeIcon('home')).toBeUndefined();
+    expect(service.homeIcon('most_liked')).toBeNull();
+    expect(service.draft().homeBlocks).toBe(originalBlocks);
+    service.resetDraft();
+    expect(service.homeIcon('home')).toBe('2d-star');
+    expect(service.homeIcon('featured_product')).toBeNull();
+    expect(service.hasUnsavedChanges()).toBe(false);
+    service.loadDesign().subscribe();
+    http.expectOne('/api/v1/design').flush({ success: true, data: write.request.body });
+    expect(service.homeIcon('home')).toBe('2d-star');
+    expect(service.homeIcon('most_liked')).toBeNull();
+  });
 
   it('round-trips a new palette and font pair, preserving unrelated settings and ignoring legacy motion', () => {
     const palette = AVAILABLE_PALETTES.find(p => p.key === 'graphite_copper')!;
@@ -39,6 +67,32 @@ describe('Design settings persistence', () => {
     service.loadDesign().subscribe();
     http.expectOne('/api/v1/design').flush({ success: true, data: { palette } });
     expect(service.draft().palette).toEqual(palette);
+  });
+
+  it.each(['brand-cover', 'editorial-arc', 'curve-panels'])('saves and restores %s through the existing API and clears it when switching templates', (variant) => {
+    const original = service.draft();
+    service.setTemplate(variant);
+    expect(service.currentTemplate().key).toBe(variant);
+    expect(service.draft()).toMatchObject({
+      templateKey: 'showcase', palette: original.palette,
+      fontHeading: original.fontHeading, fontBody: original.fontBody,
+      homeBlocks: original.homeBlocks, heroBanners: original.heroBanners, introCard: original.introCard
+    });
+    service.saveDesign().subscribe();
+    const saved = http.expectOne('/api/v1/design');
+    const payload = saved.request.body;
+    expect(payload).toMatchObject({ template_key: 'showcase', custom_config: { template_variant: variant } });
+    expect(payload.home_blocks).toContainEqual(expect.objectContaining({ id: variant, type: 'template_variant', enabled: false }));
+    expect(resolveMenuTemplate({ templateKey: payload.template_key, homeBlocks: payload.home_blocks, customConfig: {} }).key).toBe(variant);
+    saved.flush({ success: true });
+    service.loadDesign().subscribe();
+    http.expectOne('/api/v1/design').flush({ success: true, data: payload });
+    expect(service.currentTemplate().key).toBe(variant);
+    expect(service.draft().homeBlocks).toEqual(original.homeBlocks);
+    expect(service.hasUnsavedChanges()).toBe(false);
+    service.setTemplate('showcase');
+    expect(service.currentTemplate().key).toBe('showcase');
+    expect(service.draft().customConfig).not.toHaveProperty('template_variant');
   });
 });
 

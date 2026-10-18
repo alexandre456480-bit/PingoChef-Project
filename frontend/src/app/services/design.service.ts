@@ -2,6 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { API_BASE_URL } from '../constants/api';
+import { HomeIconChoice, HomeIconSection, homeIconChoice } from '../constants/home-icons';
 
 // ── Interfaces de Cores & Paletas ──
 
@@ -44,6 +45,8 @@ export function contrastTextColor(...backgrounds: string[]): '#000000' | '#FFFFF
 
 export interface TemplateConfig {
   key: string;
+  /** Variações visuais usam uma chave já aceita pela API. */
+  baseTemplateKey?: string;
   name: string;
   description: string;
   idealFor: string;
@@ -76,7 +79,7 @@ export interface FontPairPreset {
 
 export interface HomeBlock {
   id: string;
-  type: 'hero' | 'promotion' | 'most_liked' | 'featured_product' | 'categories' | 'combo' | 'best_seller';
+  type: 'hero' | 'promotion' | 'most_liked' | 'featured_product' | 'categories' | 'combo' | 'best_seller' | 'template_variant';
   label: string;
   enabled: boolean;
   position: number;
@@ -109,7 +112,7 @@ export interface DesignSettings {
   customConfig?: Record<string, unknown>;
 }
 
-// ── 1. Templates Disponíveis (4 Estruturas Únicas) ──
+// ── 1. Templates Disponíveis ──
 
 export const AVAILABLE_TEMPLATES: TemplateConfig[] = [
   {
@@ -163,8 +166,74 @@ export const AVAILABLE_TEMPLATES: TemplateConfig[] = [
     cardBorderRadius: 20,
     surfaceStyle: 'glassmorphism',
     cardShadow: 'neon-glow'
+  },
+  {
+    key: 'showcase',
+    name: 'Vitrine Compacta',
+    description: 'Capa com cantos arredondados, logo central sobreposta e produtos em cards horizontais compactos',
+    idealFor: 'Hamburguerias, lanchonetes, delivery e cardápios com muitas opções',
+    heroStyle: 'full-width',
+    logoPosition: 'hero-bottom-center',
+    categoryLayout: 'horizontal-scroll',
+    itemCardStyle: 'side-by-side',
+    cardBorderRadius: 16,
+    surfaceStyle: 'flat',
+    cardShadow: 'subtle'
+  },
+  {
+    key: 'brand-cover',
+    baseTemplateKey: 'showcase',
+    name: 'Capa da Casa',
+    description: 'Capa recuada com logo à esquerda e categorias compactas com cantos discretos',
+    idealFor: 'Uma vitrine que destaca a identidade do estabelecimento',
+    heroStyle: 'contained',
+    logoPosition: 'top-left',
+    categoryLayout: 'horizontal-scroll',
+    itemCardStyle: 'side-by-side',
+    cardBorderRadius: 16,
+    surfaceStyle: 'flat',
+    cardShadow: 'subtle'
+  },
+  {
+    key: 'editorial-arc',
+    baseTemplateKey: 'showcase',
+    name: 'Editorial Curvo',
+    description: 'Capa com recorte em arco, logo central e apresentação editorial com categorias retangulares',
+    idealFor: 'Uma apresentação expressiva com produtos em destaque',
+    heroStyle: 'full-width',
+    logoPosition: 'hero-bottom-center',
+    categoryLayout: 'horizontal-scroll',
+    itemCardStyle: 'side-by-side',
+    cardBorderRadius: 14,
+    surfaceStyle: 'flat',
+    cardShadow: 'subtle'
+  },
+  {
+    key: 'curve-panels',
+    baseTemplateKey: 'showcase',
+    name: 'Curvas & Painéis',
+    description: 'Capa curva com logo sobreposta, categorias em pílulas e subcategorias em painéis da sua paleta',
+    idealFor: 'Organização visual para qualquer tipo de cardápio',
+    heroStyle: 'full-width',
+    logoPosition: 'hero-bottom-center',
+    categoryLayout: 'horizontal-scroll',
+    itemCardStyle: 'side-by-side',
+    cardBorderRadius: 14,
+    surfaceStyle: 'flat',
+    cardShadow: 'subtle'
   }
 ];
+
+export function resolveMenuTemplate(design?: Partial<DesignSettings> | null): TemplateConfig {
+  const baseKey = design?.templateKey || 'modern';
+  // The public DTO exposes home blocks but deliberately filters custom_config.
+  // A disabled presentation marker carries the variant without a new API field.
+  const variantKey = design?.customConfig?.['template_variant'] ||
+    design?.homeBlocks?.find(block => block.type === 'template_variant' && !block.enabled)?.id;
+  const variant = AVAILABLE_TEMPLATES.find(template =>
+    template.baseTemplateKey === baseKey && template.key === variantKey);
+  return variant || AVAILABLE_TEMPLATES.find(template => !template.baseTemplateKey && template.key === baseKey) || AVAILABLE_TEMPLATES[1];
+}
 
 // ── 2. Paletas de Cores Profissionais com 7 Tokens Cada ──
 
@@ -439,7 +508,7 @@ export class DesignService {
 
   // Computed helpers
   currentTemplate = computed(() =>
-    AVAILABLE_TEMPLATES.find(t => t.key === this.draft().templateKey) || AVAILABLE_TEMPLATES[1]
+    resolveMenuTemplate(this.draft())
   );
 
   currentPalette = computed(() => this.draft().palette);
@@ -474,10 +543,14 @@ export class DesignService {
   setTemplate(key: string): void {
     const template = AVAILABLE_TEMPLATES.find(t => t.key === key);
     if (template) {
-      this.draft.update(d => ({
-        ...d,
-        templateKey: key
-      }));
+      this.draft.update(d => {
+        const { template_variant: _previousVariant, ...customConfig } = d.customConfig || {};
+        return {
+          ...d,
+          templateKey: template.baseTemplateKey || template.key,
+          customConfig: template.baseTemplateKey ? { ...customConfig, template_variant: template.key } : customConfig
+        };
+      });
     }
   }
 
@@ -651,6 +724,17 @@ export class DesignService {
     this.draft.update(d => ({ ...d, categoryStyle: style }));
   }
 
+  homeIcon(section: HomeIconSection): HomeIconChoice { return homeIconChoice(this.draft().customConfig, section); }
+
+  setHomeIcon(section: HomeIconSection, choice: HomeIconChoice): void {
+    this.draft.update(draft => {
+      const icons = { ...(draft.customConfig?.['home_icons'] as Record<string, unknown> || {}) };
+      if (choice === undefined) delete icons[section];
+      else icons[section] = choice;
+      return { ...draft, customConfig: { ...draft.customConfig, home_icons: icons } };
+    });
+  }
+
   toggleHomeBlock(blockId: string): void {
     this.draft.update(d => ({
       ...d,
@@ -749,7 +833,8 @@ export class DesignService {
           } : { ...DEFAULT_INTRO_CARD };
 
           // Merge inteligente garantindo que novos blocos como combo e best_seller estejam sempre disponíveis
-          const rawBlocks: HomeBlock[] = Array.isArray(res.data.home_blocks) ? res.data.home_blocks : [];
+          const rawBlocks: HomeBlock[] = Array.isArray(res.data.home_blocks)
+            ? res.data.home_blocks.filter((block: HomeBlock) => block.type !== 'template_variant') : [];
           const existingTypes = new Set(rawBlocks.map(b => b.type));
           let mergedBlocks = [...rawBlocks];
           DEFAULT_HOME_BLOCKS.forEach(defB => {
@@ -790,6 +875,7 @@ export class DesignService {
 
   saveDesign(): Observable<any> {
     const d = this.draft();
+    const template = resolveMenuTemplate(d);
     const customConfig = {
       ...(d.customConfig || {}),
       hero_banners: d.heroBanners,
@@ -804,7 +890,9 @@ export class DesignService {
       font_body: d.fontBody,
       font_pair: d.fontPair || 'custom',
       category_style: d.categoryStyle,
-      home_blocks: d.homeBlocks,
+      home_blocks: template.baseTemplateKey
+        ? [...d.homeBlocks, { id: template.key, type: 'template_variant', label: 'Visual do cabeçalho', enabled: false, position: d.homeBlocks.length }]
+        : d.homeBlocks,
       custom_config: customConfig
     };
     return this.http.put(`${this.apiUrl}/design`, body, this.getAuthHeaders()).pipe(

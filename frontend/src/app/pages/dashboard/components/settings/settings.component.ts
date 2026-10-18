@@ -25,6 +25,7 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
 export class SettingsComponent implements OnInit {
   @Input() theme: 'light' | 'dark' = 'light';
   @Output() close = new EventEmitter<void>();
+  @Output() tutorialOpen = new EventEmitter<void>();
   section = 'profile';
   sections = [
     { id: 'profile', label: 'Conta' },

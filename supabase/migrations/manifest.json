@@ -130,5 +130,9 @@
   {
     "file": "20261015000000_video_security_budgets.sql",
     "sha256": "f10793cca5814b156d23c91e1a1d475d3c38f788f90ee517779d474a59fb76a0"
+  },
+  {
+    "file": "20261018000000_owner_tutorial.sql",
+    "sha256": "910a53a58b4fc1b313b67a52fd71c955751e2016c504f6e207eb2d7b4687507d"
   }
 ]

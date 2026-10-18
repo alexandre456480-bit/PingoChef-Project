@@ -14,7 +14,7 @@ export class PublicVitalsService {
       (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl
     )
       return;
-    if (!['minimal', 'modern', 'premium', 'dark'].includes(templateCode)) return;
+    if (!['minimal', 'modern', 'premium', 'dark', 'showcase'].includes(templateCode)) return;
     const navigation = performance.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined;
     // Buffered document metrics from an earlier admin/login page must never be
     // attributed to a later menu reached through client-side navigation.

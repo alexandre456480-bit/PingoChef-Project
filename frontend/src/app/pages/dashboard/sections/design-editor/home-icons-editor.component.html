@@ -1,0 +1,82 @@
+<div class="icon-settings" [attr.inert]="editing() ? '' : null">
+  <p class="icons-intro">Escolha o ícone de cada título e do botão Início. Prefere um visual mais discreto? Selecione <strong>Sem ícone</strong> para manter apenas o texto.</p>
+  <div class="icon-rows">
+    @for (section of sections; track section.key) {
+      <button type="button" class="icon-row" [attr.aria-label]="'Escolher ícone de ' + section.label" (click)="open(section)">
+        <span class="icon-tile" [class.empty]="design.homeIcon(section.key) === null">
+          @if (design.homeIcon(section.key) === null) {
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>
+          } @else { <app-menu-home-icon [section]="section.key" [choice]="design.homeIcon(section.key)" /> }
+        </span>
+        <span class="row-copy"><strong>{{ section.label }}</strong><span>{{ label(design.homeIcon(section.key)) }}</span></span>
+        <span class="row-edit">Alterar <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg></span>
+      </button>
+    }
+  </div>
+  <p class="icons-hint">Os ícones dos produtos e das categorias cadastradas continuam sendo definidos na seção Menu. Esta escolha altera somente a página inicial.</p>
+</div>
+
+@if (editing(); as section) {
+    <dialog #picker class="icon-picker" aria-modal="true" aria-labelledby="icon-picker-title" aria-describedby="icon-picker-help" tabindex="-1"
+      appDialogFocus (dialogEscape)="editing.set(null)" (click)="backdrop($event)" (cancel)="$event.preventDefault(); editing.set(null)">
+      <header class="picker-header">
+        <div><span class="eyebrow">PERSONALIZE SEU CARDÁPIO</span><h2 id="icon-picker-title">Ícone de {{ section.label }}</h2></div>
+        <button class="picker-close" type="button" aria-label="Fechar seleção de ícone" (click)="editing.set(null)">×</button>
+      </header>
+      <p id="icon-picker-help" class="picker-help">{{ section.description }} Escolha uma opção e confira a prévia antes de aplicar.</p>
+      <div class="picker-content">
+        <div class="special-choices" role="group" aria-label="Opções de exibição">
+          <button type="button" class="special-option" [class.selected]="selected() === undefined" [attr.aria-pressed]="selected() === undefined" (click)="selected.set(undefined)">
+            <app-menu-home-icon [section]="section.key" /><span>Padrão</span>
+          </button>
+          <button type="button" class="special-option" [class.selected]="selected() === null" [attr.aria-pressed]="selected() === null" (click)="selected.set(null)">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg><span>Sem ícone</span>
+          </button>
+        </div>
+        <label class="search-label" for="home-icon-search">Buscar no catálogo</label>
+        <input id="home-icon-search" type="search" placeholder="Ex.: coração, estrela, troféu…" [ngModel]="query()" (ngModelChange)="query.set($event); pageSize.set(96)" />
+        <div class="picker-filters">
+          <div class="style-filters" role="group" aria-label="Estilo dos ícones">
+            @for (option of styles; track option.key) {
+              <button type="button" [attr.aria-pressed]="style() === option.key" (click)="setStyle(option.key)">{{ option.label }}</button>
+            }
+          </div>
+          <label class="group-filter">Grupo<select [ngModel]="group()" (ngModelChange)="group.set($event); style.set('all'); emojiGroup.set('all'); pageSize.set(96)"><option value="all">Todos os grupos</option>
+            @for (group of groups; track group) { <option [value]="group">{{ group }}</option> }
+          </select></label>
+        </div>
+        @if (style() === 'emoji' || group() === 'Emojis') {
+          <label class="emoji-group-filter">Categoria de emojis<select [ngModel]="emojiGroup()" (ngModelChange)="emojiGroup.set($event); pageSize.set(96)">
+            <option value="all">Todas as categorias</option>
+            @for (label of emojiGroups; track $index) { <option [value]="$index">{{ label }}</option> }
+          </select></label>
+          <p class="emoji-note">Unicode 17, incluindo tons de pele e bandeiras. A aparência depende do dispositivo; emojis recentes podem exigir um sistema atualizado.</p>
+        }
+        @if (emojiState() === 'loading') { <p class="catalog-count" role="status">Carregando emojis…</p> }
+        @else if (emojiState() === 'error') { <p class="catalog-error" role="status">Não foi possível carregar os emojis. <button type="button" (click)="loadEmojis()">Tentar novamente</button></p> }
+        <p class="catalog-count" role="status">{{ filtered().length }} ícones encontrados</p>
+        <div class="catalog-grid" role="group" aria-label="Catálogo de ícones">
+          @for (icon of visible(); track icon.id) {
+            <button type="button" class="catalog-option" [class.selected]="selected() === icon.id" [attr.aria-pressed]="selected() === icon.id"
+              [attr.aria-label]="icon.name + ' · ' + (icon.emoji ? 'Emoji' : icon.type.toUpperCase())" (click)="selected.set(icon.id)">
+              <app-menu-home-icon [choice]="icon.id" /><span>{{ icon.name }}</span><small>{{ icon.emoji ? 'Emoji' : icon.type.toUpperCase() }}{{ icon.source ? ' · ' + icon.source : '' }}</small>
+            </button>
+          } @empty {
+            <div class="catalog-empty"><strong>Nenhum ícone encontrado</strong><p>Tente outro nome ou remova os filtros.</p>
+              <button type="button" (click)="clearFilters()">Limpar filtros</button></div>
+          }
+        </div>
+        @if (visible().length < filtered().length) {
+          <button type="button" class="load-more" (click)="pageSize.set(pageSize() + 96)">Mostrar mais <span>({{ visible().length }} de {{ filtered().length }})</span></button>
+        }
+      </div>
+      <footer class="picker-footer">
+        <div class="selection-preview" aria-live="polite"><span class="preview-label">PRÉVIA</span><div>
+          @if (selected() !== null) { <app-menu-home-icon [section]="section.key" [choice]="selected()" /> }
+          <strong>{{ section.label }}</strong></div><span>{{ label(selected()) }}</span></div>
+        <p class="save-hint">Aplicar atualiza a prévia. Depois, use Salvar Alterações no Design.</p>
+        <div class="picker-actions"><button type="button" class="cancel" (click)="editing.set(null)">Cancelar</button>
+          <button type="button" class="apply" (click)="apply()">Aplicar ícone</button></div>
+      </footer>
+    </dialog>
+}

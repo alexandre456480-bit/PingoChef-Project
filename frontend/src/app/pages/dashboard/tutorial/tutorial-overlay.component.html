@@ -1,0 +1,49 @@
+<div class="tour-layer" [attr.data-step]="tour.step().id">
+  <svg class="tour-dimmer" aria-hidden="true" width="100%" height="100%">
+    <path [attr.d]="mask()" fill-rule="evenodd" />
+  </svg>
+  <!-- A visual cutout never authorizes clicking a save, upload or publish action. -->
+  <div class="tour-shield" aria-hidden="true"></div>
+  @if (rect(); as box) {
+    <div class="tour-spotlight" aria-hidden="true" [style.left.px]="box.left" [style.top.px]="box.top"
+      [style.width.px]="box.width" [style.height.px]="box.height"></div>
+  }
+  <section #dialog class="tour-dialog" [class.tour-celebration]="tour.step().id === 'welcome' || tour.step().id === 'finish'"
+    role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"
+    appDialogFocus (dialogEscape)="confirmSkip(true)"
+    [style.width.px]="dialogWidth()"
+    [style.left.px]="position().left" [style.top.px]="position().top" [attr.aria-busy]="preparing() || tour.busy()">
+    <div class="tour-heading">
+      <div class="tour-mascot"><app-tutorial-mascot [pose]="tour.step().mascot" /></div>
+      <div class="tour-eyebrow"><span class="tour-label">SEU GUIA PINGOCHEF</span>
+        <span class="tour-count">Passo {{ tour.index() + 1 }} de {{ tour.steps().length }}</span></div>
+    </div>
+    <div class="tour-progress" role="progressbar" aria-label="Progresso do tutorial" aria-valuemin="0"
+      [attr.aria-valuemax]="tour.steps().length" [attr.aria-valuenow]="tour.index() + 1">
+      <span [style.width.%]="((tour.index() + 1) / tour.steps().length) * 100"></span>
+    </div>
+    @if (tour.restored()) { <p class="tour-resumed" role="status">Continuando de onde você parou.</p> }
+    <div class="tour-copy" aria-live="polite" aria-atomic="true">
+      <h2 id="tutorial-title">{{ confirming() ? 'Pular o tutorial?' : tour.step().title }}</h2>
+      <p id="tutorial-description">{{ confirming() ? 'Você poderá iniciá-lo novamente em Configurações → Conta → Tutorial.' : tour.step().description }}</p>
+      @if (!confirming() && tour.step().note) { <p class="tour-note">{{ tour.step().note }}</p> }
+    </div>
+    @if (tour.error()) { <p class="tour-error" role="alert">{{ tour.error() }}</p> }
+    <footer class="tour-actions">
+      @if (confirming()) {
+        <button type="button" class="tour-back" data-confirm-cancel [disabled]="tour.busy()" (click)="confirmSkip(false)">Continuar guia</button>
+        <button type="button" class="tour-next" [disabled]="tour.busy()" (click)="tour.finish(true)">Confirmar e pular</button>
+      } @else {
+        <button type="button" class="tour-skip" [disabled]="tour.busy()" (click)="confirmSkip(true)">Pular tutorial</button>
+        <div class="tour-navigation">
+          @if (tour.index() > 0) { <button type="button" class="tour-back" [disabled]="tour.busy() || preparing()" (click)="tour.move(-1)">Voltar</button> }
+          <button type="button" class="tour-next" [disabled]="tour.busy() || preparing()"
+            (click)="tour.index() === tour.steps().length - 1 ? tour.finish(false) : tour.move(1)">
+            {{ tour.index() === tour.steps().length - 1 ? 'Finalizar tutorial' : 'Próximo' }}
+            @if (tour.index() < tour.steps().length - 1) { <span aria-hidden="true">→</span> }
+          </button>
+        </div>
+      }
+    </footer>
+  </section>
+</div>

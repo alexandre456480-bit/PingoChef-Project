@@ -12,7 +12,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
     <div class="business-container">
       <!-- Card Principal de Informações do Estabelecimento -->
       <div class="business-card clay-card" style="--i:0">
-        <div class="card-header">
+        <div class="card-header" data-tour="company">
           <div class="header-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -244,7 +244,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
 
           <!-- ── 4. Ações do Formulário ── -->
           <div class="form-actions" style="--i:6">
-            <button type="submit" class="btn-save" [disabled]="isSaving">
+            <button type="submit" class="btn-save" data-tour="company-save" [disabled]="isSaving">
               @if (isSaving) {
                 <span class="spinner"></span>
                 <span>Salvando...</span>

@@ -11,7 +11,7 @@ export function menuLayoutHint(design?: Partial<DesignSettings> | null): MenuLay
   const colors = design?.palette?.colors;
   const safeColor = (value: string | undefined, fallback: string) =>
     /^#(?:[a-f\d]{3}|[a-f\d]{6}|[a-f\d]{8})$/i.test(value || '') ? value! : fallback;
-  const templateKey = ['minimal', 'modern', 'premium', 'dark'].includes(design?.templateKey || '')
+  const templateKey = ['minimal', 'modern', 'premium', 'dark', 'showcase'].includes(design?.templateKey || '')
     ? design!.templateKey!
     : 'unknown';
   return {

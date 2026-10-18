@@ -1,13 +1,19 @@
+import extraIcons from './icon-catalog-extra.json';
+import { emojiIcon } from './emoji-catalog';
+
 export interface CatalogIcon {
   id: string;
   name: string;
   type: '2d' | '3d';
-  group: 'Lanches' | 'Bebidas' | 'Pratos & Carnes' | 'Pizzas & Massas' | 'Sobremesas' | 'Saudável & Veg' | 'Especiais' | 'Japonês & Oriental' | 'Padaria & Café';
+  group: string;
+  source?: string;
+  emoji?: string;
+  emojiGroup?: number;
   tags: string[];
   svg: string;
 }
 
-export const ICON_GROUPS: Array<CatalogIcon['group']> = [
+const LEGACY_GROUPS: Array<CatalogIcon['group']> = [
   'Lanches',
   'Bebidas',
   'Pratos & Carnes',
@@ -19,7 +25,7 @@ export const ICON_GROUPS: Array<CatalogIcon['group']> = [
   'Especiais'
 ];
 
-export const ICON_CATALOG: CatalogIcon[] = [
+const LEGACY_ICONS: CatalogIcon[] = [
   // ══════════════════════════════════════════════════
   // ── LANCHES & FAST FOOD ──
   // ══════════════════════════════════════════════════
@@ -1837,7 +1843,16 @@ export const ICON_CATALOG: CatalogIcon[] = [
   }
 ];
 
+// Keep the first legacy entry: existing saved IDs retain their original artwork.
+const uniqueIcons = new Map<string, CatalogIcon>();
+for (const icon of [...LEGACY_ICONS, ...extraIcons as CatalogIcon[]]) {
+  if (!uniqueIcons.has(icon.id)) uniqueIcons.set(icon.id, icon);
+}
+export const ICON_CATALOG = [...uniqueIcons.values()];
+export const ICON_GROUPS = [...new Set([...LEGACY_GROUPS, ...ICON_CATALOG.map(icon => icon.group)])];
+const byId = new Map(ICON_CATALOG.map(icon => [icon.id, icon]));
+
 export function findCatalogIcon(keyOrId?: string | null): CatalogIcon | undefined {
   if (!keyOrId) return undefined;
-  return ICON_CATALOG.find(i => i.id === keyOrId || i.id === `2d-${keyOrId}` || i.id === `3d-${keyOrId}`);
+  return byId.get(keyOrId) ?? byId.get(`2d-${keyOrId}`) ?? byId.get(`3d-${keyOrId}`) ?? emojiIcon(keyOrId);
 }

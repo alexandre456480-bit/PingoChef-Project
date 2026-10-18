@@ -77,7 +77,7 @@ import { FormsModule } from '@angular/forms';
         </button>
 
         <!-- Mobile preview toggle -->
-        <button type="button" class="preview-toggle-btn" (click)="togglePreview.emit()" title="Preview do Cardápio" aria-label="Preview do Cardápio">
+        <button type="button" class="preview-toggle-btn" data-tour="preview-mobile" (click)="togglePreview.emit()" title="Preview do Cardápio" aria-label="Preview do Cardápio">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
             <line x1="12" y1="18" x2="12.01" y2="18"/>
@@ -301,6 +301,9 @@ import { FormsModule } from '@angular/forms';
     }
 
     /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .preview-toggle-btn { display: flex; }
+    }
     @media (max-width: 1024px) {
       .hamburger-btn {
         display: flex;

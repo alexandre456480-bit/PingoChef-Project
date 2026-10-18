@@ -25,6 +25,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
           @for (item of navItems; track item.section; let i = $index) {
             <button
               class="nav-item"
+              [attr.data-tour]="'nav-' + item.section"
               [class.active]="activeSection === item.section"
               [attr.aria-current]="activeSection === item.section ? 'page' : null"
               (click)="navigate(item.section)"
