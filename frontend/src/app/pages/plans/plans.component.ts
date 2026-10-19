@@ -75,7 +75,7 @@ import { CommercialService, PlanCard } from '../../services/commercial.service';
     </p>
     <p class="price-note">
       <a routerLink="/dashboard">Já tem um plano? Voltar ao painel</a> ·
-      <a href="mailto:pingochef@gmail.com">Fale com o PingoChef</a>
+      <a href="mailto:pingochefcardapio@gmail.com">Fale com o PingoChef</a>
     </p>
   </div>`,
 })

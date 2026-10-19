@@ -479,6 +479,14 @@
   box-shadow: var(--panel-shadow-inset) !important;
 }
 
+@media (max-width: 640px) {
+  .dashboard-shell app-design-editor .design-footer {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
 .dashboard-shell :is(.btn-cta, .btn-save, .upload-button, .btn-add-banner, .btn-publish) {
   color: #fffaf0 !important;
   background: var(--panel-action) !important;

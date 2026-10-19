@@ -58,6 +58,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
         [attr.inert]="settingsVisible || tutorial.active() ? '' : null"
         [analyticsEnabled]="commercial.analytics()"
         [qrEnabled]="commercial.qr()"
+        (themeToggle)="togglePanelTheme()"
         (settingsOpen)="settingsVisible = true"
         [activeSection]="activeSection"
         [isDarkTheme]="panelTheme === 'dark'"
@@ -74,26 +75,14 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
         <app-topbar
           [businessName]="businessName"
           [logoUrl]="businessLogo"
-          [searchQuery]="searchQuery"
-          [isDarkTheme]="panelTheme === 'dark'"
-          (searchChange)="searchQuery = $event"
-          (themeToggle)="togglePanelTheme()"
-          (settingsOpen)="settingsVisible = true"
+          [sidebarOpen]="mobileSidebarOpen"
+          [previewOpen]="mobilePreviewOpen"
+          [publishDisabled]="isInitialLoading || isPublishing"
+          [isPublishing]="isPublishing"
+          (publishRequested)="publishMenu()"
           (toggleSidebar)="mobileSidebarOpen = !mobileSidebarOpen"
           (togglePreview)="mobilePreviewOpen = !mobilePreviewOpen">
         </app-topbar>
-
-        <div class="publication-toolbar">
-          <p>Atualize o design e os vídeos do cardápio online.</p>
-          <button type="button" class="publish-menu-btn" data-tour="publish-menu"
-            [disabled]="isInitialLoading || isPublishing"
-            [attr.aria-busy]="isPublishing" (click)="publishMenu()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/>
-            </svg>
-            <span>{{ isPublishing ? 'Publicando...' : 'Publicar Cardápio' }}</span>
-          </button>
-        </div>
 
         <!-- Dynamic Content Section -->
         <main class="content-canvas" [style.padding-bottom.px]="tutorial.bottomReserve() || null"
@@ -241,31 +230,6 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
       background: radial-gradient(circle at 50% 0%, #17171C 0%, #0E0E11 75%);
       position: relative;
       border-right: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .publication-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; padding: 0 32px 18px; flex-shrink: 0;
-    }
-    .publication-toolbar p { margin: 0; color: var(--panel-text-muted); font-size: .78rem; line-height: 1.5; }
-    .publish-menu-btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      min-height: 44px; padding: 10px 18px; flex-shrink: 0; white-space: nowrap;
-      border: 1px solid rgba(255,255,255,.12); border-radius: 14px;
-      background: var(--panel-action); color: #fff; box-shadow: var(--panel-action-shadow);
-      font: 600 .85rem 'Inter', sans-serif; cursor: pointer;
-      transition: background .15s ease, transform .15s ease;
-    }
-    .publish-menu-btn:hover:not(:disabled) { background: var(--panel-action-hover); }
-    .publish-menu-btn:active:not(:disabled) { transform: translateY(1px); }
-    .publish-menu-btn:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 3px; }
-    .publish-menu-btn:disabled { opacity: .65; cursor: wait; }
-    .publish-menu-btn svg { flex-shrink: 0; }
-    @media(max-width:1100px) { .publication-toolbar { padding: 0 20px 16px; } }
-    @media(max-width:1024px) { .publication-toolbar { padding: 0 14px 12px; } }
-    @media(max-width:640px) {
-      .publication-toolbar p { display: none; }
-      .publish-menu-btn { width: 100%; }
     }
 
     .content-canvas {
@@ -549,7 +513,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   settingsVisible=false;
   private refreshTimer?:ReturnType<typeof setTimeout>;
   activeSection: ActiveSection = 'dashboard';
-  searchQuery = '';
   toastMessage: string | null = null;
   mobileSidebarOpen = false;
   mobilePreviewOpen = false;

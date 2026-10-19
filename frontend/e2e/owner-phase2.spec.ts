@@ -1,3 +1,4 @@
+import { togglePanelTheme } from './helpers/panel-theme';
 import { expect, test, Page } from '@playwright/test';
 import { analyticsOptions, analyticsReport } from './analytics-fixture';
 
@@ -274,8 +275,8 @@ for (const code of Object.keys(matrix) as (keyof typeof matrix)[]) {
     );
     await page.getByRole('button', { name: 'Suporte', exact: true }).click();
     await expect(
-      page.getByRole('link', { name: 'pingochef@gmail.com', exact: true }),
-    ).toHaveAttribute('href', 'mailto:pingochef@gmail.com');
+      page.getByRole('link', { name: 'pingochefcardapio@gmail.com', exact: true }),
+    ).toHaveAttribute('href', 'mailto:pingochefcardapio@gmail.com');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
@@ -308,11 +309,7 @@ test('menu containers fit narrow screens, category actions are independent and m
     expect((await editor.locator('.subcat-name').boundingBox())!.height).toBeLessThan(110);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
-  const controls = await page.locator('app-topbar').evaluate(element => ['.mobile-settings-toggle', '.preview-toggle-btn'].map(selector => {
-    const style = getComputedStyle(element.querySelector(selector)!);
-    return { color: style.color, background: style.backgroundColor, border: style.borderColor };
-  }));
-  expect(controls[0]).toEqual(controls[1]);
+  await expect(page.locator('app-topbar .mobile-settings-toggle')).toHaveCount(0);
   const theme = await page.locator('.dashboard-shell').evaluate(element => ({
     main: getComputedStyle(element.querySelector('.main-viewport')!).getPropertyValue('--panel-surface').trim(),
     right: getComputedStyle(element.querySelector('.preview-panel')!).getPropertyValue('--panel-surface').trim(),
@@ -487,7 +484,7 @@ test('settings fit desktop, notebook, tablet and mobile in both themes', async (
     await page.getByRole('button', { name: 'Fechar configurações' }).click();
     if (width === 1600) await page.locator('app-sidebar .sidebar').screenshot({ path: testInfo.outputPath('sidebar-dark.png') });
   }
-  await page.getByRole('button', { name: 'Ativar tema claro' }).click();
+  await togglePanelTheme(page);
   await settings(page);
   await expect(page.getByRole('dialog')).toHaveAttribute('data-theme', 'light');
   await page.keyboard.press('Escape');

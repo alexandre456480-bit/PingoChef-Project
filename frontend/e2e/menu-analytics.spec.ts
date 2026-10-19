@@ -1,3 +1,4 @@
+import { togglePanelTheme } from './helpers/panel-theme';
 import { expect, test, Page } from '@playwright/test';
 import { analyticsOptions, analyticsReport, AnalyticsPlan, productRows } from './analytics-fixture';
 
@@ -186,7 +187,7 @@ for (const plan of ['FREE', 'BASIC', 'MEDIUM', 'PRO'] as const) {
         animations: 'disabled',
       });
       await page.setViewportSize({ width: 1440, height: 1000 });
-      await page.getByRole('button', { name: 'Ativar tema claro', exact: true }).click();
+      await togglePanelTheme(page);
       await expect(page.locator('.dashboard-shell')).toHaveAttribute('data-panel-theme', 'light');
       await page.screenshot({
         path: '../.tools/phase3-analytics-desktop-light.png',
@@ -417,7 +418,7 @@ test('charts show exact values with pointer, touch and keyboard; tooltips remain
     fullPage: true,
     animations: 'disabled',
   });
-  await page.getByRole('button', { name: 'Ativar tema claro', exact: true }).click();
+  await togglePanelTheme(page);
   await expect(page.locator('.dashboard-shell')).toHaveAttribute('data-panel-theme', 'light');
   await page.screenshot({
     path: `../.tools/analytics-redesign-${isMobile ? 'mobile' : 'desktop'}-light.png`,

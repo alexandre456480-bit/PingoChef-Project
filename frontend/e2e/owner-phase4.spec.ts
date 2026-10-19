@@ -1,3 +1,4 @@
+import { togglePanelTheme } from './helpers/panel-theme';
 import { expect, test, Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -197,33 +198,6 @@ test('QR deletion requires confirmation and frees the saved slot', async ({ page
   expect(deletion?.body).toEqual({ revision: 1 });
   expect(deletion?.headers['x-csrf-token']).toBe('a'.repeat(64));
 });
-test('mobile search and settings buttons have equal size and open settings', async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== 'phase4-mobile', 'Mobile layout');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await mock(page, 'PRO');
-  await page.goto('/dashboard');
-  const topbar = page.locator('app-topbar');
-  const search = topbar.getByRole('button', { name: 'Abrir pesquisa', exact: true });
-  const settings = topbar.getByRole('button', { name: 'Abrir configurações', exact: true });
-  for (const width of [320, 390]) {
-    await page.setViewportSize({ width, height: 844 });
-    await expect(settings).toBeVisible();
-    const a = (await search.boundingBox())!,
-      b = (await settings.boundingBox())!;
-    expect(a.width).toBeCloseTo(44, 2);
-    expect(b.width).toBeCloseTo(a.width, 2);
-    expect(b.height).toBeCloseTo(a.height, 2);
-    expect(Math.abs(a.y - b.y)).toBeLessThan(1);
-    expect(b.x).toBeGreaterThan(a.x + a.width);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-      true,
-    );
-  }
-  await settings.click();
-  await expect(page.getByRole('dialog', { name: 'Configurações', exact: true })).toBeVisible();
-});
 for (const plan of ['FREE', 'BASIC'] as const)
   test(`${plan}: demo makes no real QR request, including DevTools local plan storage`, async ({
     page,
@@ -302,7 +276,7 @@ for (const plan of ['MEDIUM', 'PRO'] as const)
     expect(dimensions!.width).toBeLessThanOrEqual(info.project.use.viewport!.width);
     const linkColor = await page.locator('.menu-link').evaluate((el) => getComputedStyle(el).color);
     expect(linkColor).toBe('rgb(255, 248, 230)');
-    await page.getByRole('button', { name: 'Ativar tema claro' }).click();
+    await togglePanelTheme(page);
     await expect(page.locator('.dashboard-shell')).toHaveAttribute('data-panel-theme', 'light');
     expect(await page.locator('.menu-link').evaluate((el) => getComputedStyle(el).color)).toBe(
       'rgb(46, 18, 52)',

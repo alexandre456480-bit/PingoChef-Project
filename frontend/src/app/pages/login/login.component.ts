@@ -150,7 +150,7 @@ export class LoginComponent implements OnInit {
       this.email = router.getCurrentNavigation()?.extras.state?.['email'] || history.state?.email || '';
     }
     if (route.snapshot.queryParamMap.get('account') === 'unavailable') this.notice = 'Sua conta está indisponível. Entre em contato com o suporte.';
-    if (route.snapshot.queryParamMap.get('account') === 'deletion-scheduled') this.notice = 'Exclusão agendada para daqui a 30 dias. Seu cardápio foi retirado do ar. Para ajuda, fale com pingochef@gmail.com.';
+    if (route.snapshot.queryParamMap.get('account') === 'deletion-scheduled') this.notice = 'Exclusão agendada para daqui a 30 dias. Seu cardápio foi retirado do ar. Para ajuda, fale com pingochefcardapio@gmail.com.';
     if (route.snapshot.queryParamMap.get('password') === 'changed') this.notice = 'Senha atualizada e sessões encerradas. Entre com sua nova senha.';
     const session=route.snapshot.queryParamMap.get('session');
     if(session==='expired')this.notice='Sua sessão expirou. Entre novamente para continuar.';

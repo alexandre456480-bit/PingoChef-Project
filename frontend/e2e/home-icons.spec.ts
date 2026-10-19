@@ -1,3 +1,4 @@
+import { togglePanelTheme } from './helpers/panel-theme';
 import { expect as baseExpect, Page, test } from '@playwright/test';
 
 const expect = baseExpect.configure({ timeout: 20_000 });
@@ -114,7 +115,7 @@ test('picker fits narrow screens and themes, filters the catalog and restores de
     await page.screenshot({ path: info.outputPath(`home-icons-picker-${width}.png`) });
     await page.keyboard.press('Escape'); await expect(dialog).toHaveCount(0);
   }
-  await page.locator('.theme-toggle-btn').click();
+  await togglePanelTheme(page);
   await editor.getByRole('button', { name: 'Escolher ícone de Promoções & Ofertas', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Aplicar ícone', exact: true })).toBeInViewport();

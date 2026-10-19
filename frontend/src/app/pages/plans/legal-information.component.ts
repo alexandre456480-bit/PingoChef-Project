@@ -54,7 +54,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
         <h2>Contato</h2>
         <p>
           Para dúvidas sobre dados ou solicitação de exclusão, contate
-          <a href="mailto:pingochef@gmail.com">pingochef&#64;gmail.com</a>.
+          <a href="mailto:pingochefcardapio@gmail.com">pingochefcardapio&#64;gmail.com</a>.
         </p>
       } @else {
         <h2>Etapa atual</h2>
@@ -83,7 +83,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
           Durante esse período, fale com o suporte para solicitar ajuda ou cancelamento.
         </p>
         <h2>Suporte</h2>
-        <p><a href="mailto:pingochef@gmail.com">pingochef&#64;gmail.com</a></p>
+        <p><a href="mailto:pingochefcardapio@gmail.com">pingochefcardapio&#64;gmail.com</a></p>
       }
     </main>
   </div>`,

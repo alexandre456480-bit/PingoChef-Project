@@ -98,7 +98,7 @@ Configurações utiliza diálogo central no desktop, tela inteira no mobile e na
 - **Conta:** nome, e-mail, verificação e estabelecimento.
 - **Plano e uso:** plano atual, produtos/categorias/vídeos, limites e recursos concedidos.
 - **Segurança:** troca de senha e saída de todos os dispositivos.
-- **Suporte:** `pingochef@gmail.com`.
+- **Suporte:** `pingochefcardapio@gmail.com`.
 - **Gerenciar conta:** sair e solicitar exclusão.
 
 O diálogo prende o foco, oferece Escape e fechamento explícito e torna o painel ao fundo inerte. A sidebar fechada no mobile deixa de receber foco. As telas seguem `prefers-reduced-motion`.

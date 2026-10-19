@@ -1022,7 +1022,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
               <polyline points="17 21 17 13 7 13 7 21"/>
               <polyline points="7 3 7 8 15 8"/>
             </svg>
-            Salvar Alterações
+            <span class="save-label-desktop">Salvar Alterações</span>
+            <span class="save-label-mobile">Salvar e Sincronizar</span>
           </button>
         </div>
       </footer>
@@ -2091,6 +2092,15 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
       cursor: pointer;
       box-shadow: 0 4px 16px rgba(244, 123, 32, 0.35);
       transition: all 0.2s ease;
+    }
+    .save-label-mobile { display: none; }
+    @media (max-width: 640px) {
+      .design-container { padding-bottom: 0; }
+      .design-footer { box-sizing: border-box; width: 100%; min-width: 0; margin: 0; padding: 0; bottom: calc(12px + env(safe-area-inset-bottom, 0px) + var(--tutorial-sheet-space, 0px)); backdrop-filter: none; }
+      .footer-left, .btn-reset, .save-label-desktop { display: none; }
+      .save-label-mobile { display: inline; }
+      .footer-actions { width: 100%; min-width: 0; }
+      .btn-save { box-sizing: border-box; width: 100%; min-height: 48px; justify-content: center; padding: 12px 16px; font-size: 14px; line-height: 1.4; }
     }
     .btn-save:hover {
       transform: translateY(-1px);

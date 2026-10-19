@@ -1,403 +1,90 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-topbar',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  selector: 'app-topbar', standalone: true,
   template: `
     <header class="topbar">
-      <div class="mobile-tools"><button
-        class="mobile-search-toggle"
-        type="button"
-        [attr.aria-label]="mobileSearchOpen ? 'Fechar pesquisa' : 'Abrir pesquisa'"
-        [attr.aria-expanded]="mobileSearchOpen"
-        aria-controls="panel-search"
-        (click)="mobileSearchOpen = !mobileSearchOpen">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </button>
-
-      <button class="mobile-settings-toggle" type="button" aria-label="Abrir configurações" (click)="settingsOpen.emit()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
-      </button></div>
-      <!-- Mobile hamburger -->
-      <button class="hamburger-btn" type="button" aria-label="Abrir menu" (click)="toggleSidebar.emit()">
-        <svg class="hamburger-lines" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4" y1="6" x2="20" y2="6"/>
-          <line x1="4" y1="12" x2="16" y2="12"/>
-          <line x1="4" y1="18" x2="12" y2="18"/>
-        </svg>
-        <img class="mobile-menu-logo" src="/icon_pinguim.webp" alt="" />
-      </button>
-
-      <!-- Search -->
-      <div id="panel-search" class="search-box" [class.mobile-open]="mobileSearchOpen">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input
-          type="text"
-          [placeholder]="searchPlaceholder"
-          [ngModel]="searchQuery"
-          (ngModelChange)="searchChange.emit($event)"
-          class="search-input"
-        />
-        @if (searchQuery) {
-          <button class="search-clear" (click)="searchChange.emit('')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        }
-      </div>
-
-      <!-- Right side -->
-      <div class="topbar-right">
-        <button
-          class="theme-toggle-btn"
-          type="button"
-          (click)="themeToggle.emit()"
-          [attr.aria-pressed]="isDarkTheme"
-          [attr.aria-label]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'"
-          [title]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'">
-          @if (isDarkTheme) {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.41M17.66 6.34l1.41-1.41"/>
-            </svg>
-          } @else {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20.8 15.1A8.5 8.5 0 0 1 8.9 3.2 8.5 8.5 0 1 0 20.8 15.1Z"/>
-            </svg>
-          }
+      <div class="topbar-identity">
+        <button class="hamburger-btn" type="button" aria-label="Abrir menu" aria-controls="panel-sidebar"
+          [attr.aria-expanded]="sidebarOpen" (click)="toggleSidebar.emit()">
+          <svg class="hamburger-lines" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h12M4 18h8"/></svg>
+          <img class="mobile-menu-logo" src="/icon_pinguim.webp" alt="" width="48" height="48" />
         </button>
-
-        <!-- Mobile preview toggle -->
-        <button type="button" class="preview-toggle-btn" data-tour="preview-mobile" (click)="togglePreview.emit()" title="Preview do Cardápio" aria-label="Preview do Cardápio">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
-            <line x1="12" y1="18" x2="12.01" y2="18"/>
-          </svg>
-        </button>
-
-        <!-- User pill -->
         <div class="user-pill">
           <div class="user-avatar">
-            @if (logoUrl) {
-              <img [src]="logoUrl" [alt]="businessName" class="topbar-logo-img" />
-            } @else {
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            }
+            @if (logoUrl) { <img [src]="logoUrl" alt="" class="topbar-logo-img" /> }
+            @else { <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> }
           </div>
-          <span class="user-name">{{ businessName }}</span>
-          <span class="status-dot"></span>
+          <span class="user-name">{{ businessName }}</span><span class="status-dot" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="preview-toggle-btn" data-tour="preview-mobile" (click)="togglePreview.emit()"
+          title="Preview do Cardápio" aria-label="Preview do Cardápio" [attr.aria-expanded]="previewOpen">
+          <svg class="preview-phone-icon" width="34" height="42" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <defs>
+    <linearGradient id="rim" x1="12" y1="2" x2="55" y2="77" gradientUnits="userSpaceOnUse"><stop stop-color="#ffc0cb"/><stop offset=".18" stop-color="#d94c69"/><stop offset=".52" stop-color="#760c29"/><stop offset=".77" stop-color="#f7607b"/><stop offset="1" stop-color="#840b28"/></linearGradient>
+    <linearGradient id="glass" x1="19" y1="7" x2="47" y2="71" gradientUnits="userSpaceOnUse"><stop stop-color="#672237"/><stop offset=".45" stop-color="#280a18"/><stop offset="1" stop-color="#08070d"/></linearGradient>
+    <linearGradient id="wave" x1="20" y1="15" x2="47" y2="66" gradientUnits="userSpaceOnUse"><stop stop-color="#fd8b9f"/><stop offset=".45" stop-color="#b32648"/><stop offset="1" stop-color="#380917"/></linearGradient>
+    <linearGradient id="shine" x1="15" y1="4" x2="46" y2="65" gradientUnits="userSpaceOnUse"><stop stop-color="white" stop-opacity=".48"/><stop offset=".65" stop-color="white" stop-opacity="0"/></linearGradient>
+  </defs>
+  <ellipse cx="33" cy="75" rx="19" ry="3" fill="#17030a" fill-opacity=".3"/>
+  <rect x="12" y="4" width="42" height="72" rx="10" fill="#44091b"/>
+  <rect x="10" y="2" width="42" height="72" rx="10" fill="url(#rim)"/>
+  <rect x="12" y="4" width="38" height="68" rx="8" fill="#160910" stroke="#ff8aa3" stroke-width=".7"/>
+  <rect x="14" y="6" width="34" height="64" rx="6" fill="url(#glass)"/>
+  <path d="M30 6c-15 20-8 33 18 40v18C23 53 12 35 14 19v-7a6 6 0 0 1 6-6z" fill="url(#wave)"/>
+  <path d="M30 7c-14 20-8 32 18 39M14 33c7 17 17 24 34 31" stroke="#ffadba" stroke-opacity=".34" stroke-width=".8"/>
+  <rect x="24" y="8" width="15" height="4" rx="2" fill="#100910"/>
+  <circle cx="36" cy="10" r="1" fill="#282538"/>
+  <path d="M20 4h20a9 9 0 0 1 9 9v28" stroke="url(#shine)" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M11 19v11m42-8v10" stroke="#d64a68" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M27 67h10" stroke="#e7bbc8" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/>
+</svg>
+        </button>
+        <div class="publication-toolbar">
+          <button type="button" class="publish-menu-btn" data-tour="publish-menu" [disabled]="publishDisabled"
+            [attr.aria-busy]="isPublishing" (click)="publishRequested.emit()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/></svg>
+            <span>{{ isPublishing ? 'Publicando...' : 'Publicar Cardápio' }}</span>
+          </button>
         </div>
       </div>
     </header>
   `,
   styles: [`
-    :host {
-      display: block;
-      flex-shrink: 0;
+    :host{display:block;flex-shrink:0;padding:22px 32px 18px}*{box-sizing:border-box}
+    .topbar,.topbar-identity,.topbar-actions{display:flex;align-items:center;gap:12px;min-width:0}
+    .topbar{justify-content:space-between}.topbar-actions{margin-left:auto;flex-shrink:0}
+    button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:2px solid var(--panel-accent);outline-offset:4px}
+    .hamburger-btn,.preview-toggle-btn{align-items:center;justify-content:center;width:48px;height:48px;padding:0;flex-shrink:0;border:1px solid var(--panel-border);border-radius:15px;background:var(--panel-surface);box-shadow:var(--panel-shadow-soft);color:var(--panel-text-muted);transition:transform 160ms ease}
+    .hamburger-btn,.mobile-menu-logo,.preview-toggle-btn{display:none}.hamburger-btn:hover,.preview-toggle-btn:hover{transform:translateY(-1px)}
+    .preview-toggle-btn .preview-phone-icon{display:block;object-fit:contain;filter:drop-shadow(0 3px 3px #690a1a30)}
+    .user-pill{display:flex;align-items:center;gap:10px;padding:7px 12px 7px 8px;min-width:0;border:1px solid var(--panel-border);border-radius:14px;background:var(--panel-surface)}
+    .user-avatar{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;border-radius:10px;background:var(--panel-surface-muted);color:var(--panel-wine)}
+    .topbar-logo-img{width:100%;height:100%;object-fit:cover;border-radius:10px}.user-name{font-size:13px;font-weight:600;color:var(--panel-text);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .status-dot{width:7px;height:7px;flex-shrink:0;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e55}.publication-toolbar{min-width:0}
+    .publish-menu-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 18px;border:1px solid #ffffff20;border-radius:16px;background:var(--panel-action);color:#fff;box-shadow:var(--panel-action-shadow);font:650 13px/1.3 Inter,system-ui,sans-serif;white-space:nowrap;transition:transform 160ms ease,box-shadow 160ms ease}
+    .publish-menu-btn svg{flex-shrink:0}.publish-menu-btn:hover:not(:disabled){background:var(--panel-action-hover);transform:translateY(-1px)}.publish-menu-btn:active:not(:disabled){transform:translateY(1px)}.publish-menu-btn:disabled{opacity:.65;cursor:wait}
+    @media(max-width:1100px){:host{padding:18px 20px 16px}.preview-toggle-btn{display:flex}}
+    @media(max-width:1024px){:host{padding:14px}.hamburger-btn{display:flex}.user-name{max-width:160px}}
+    @media(max-width:640px){
+      :host{padding:12px 14px}.topbar{gap:10px;padding:12px;border:1px solid var(--panel-border);border-radius:24px;background:linear-gradient(145deg,var(--panel-surface-strong),var(--panel-surface));box-shadow:var(--panel-shadow-soft),inset 0 1px 1px #ffffff0d}
+      .topbar-identity{flex-shrink:0}.topbar-actions{flex:1;gap:10px}.hamburger-btn{border-radius:50%;overflow:hidden}.hamburger-lines,.user-pill{display:none}
+      .mobile-menu-logo{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}.preview-toggle-btn{border-radius:16px}.publication-toolbar{flex:1}.publish-menu-btn{width:100%;min-height:48px;padding:10px 12px;border-radius:17px;font-size:13px}
     }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 0 0 20px 0;
-      animation: topbarIn 0.5s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
-    }
-
-    /* ── Hamburger (mobile only) ── */
-    .hamburger-btn {
-      display: none;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: #A1A1AA;
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex-shrink: 0;
-    }
-    .hamburger-btn:hover {
-      background: rgba(244, 123, 32, 0.1);
-      color: #F47B20;
-    }
-    .mobile-menu-logo, .mobile-tools {
-      display: none;
-    }
-
-    /* ── Search ── */
-    .search-box {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 14px;
-      padding: 10px 18px;
-      flex: 1;
-      max-width: 520px;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(8px);
-    }
-    .search-box:focus-within {
-      border-color: rgba(244, 123, 32, 0.3);
-      box-shadow: 0 0 0 3px rgba(244, 123, 32, 0.08);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .search-icon {
-      color: #52525B;
-      flex-shrink: 0;
-    }
-
-    .search-input {
-      background: transparent;
-      border: none;
-      color: #E4E4E7;
-      outline: none;
-      width: 100%;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.88rem;
-    }
-    .search-input::placeholder {
-      color: #52525B;
-    }
-
-    .search-clear {
-      background: none;
-      border: none;
-      color: #52525B;
-      cursor: pointer;
-      display: flex;
-      padding: 2px;
-      border-radius: 4px;
-      transition: color 0.15s;
-    }
-    .search-clear:hover {
-      color: #F47B20;
-    }
-
-    /* ── Right side ── */
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    .theme-toggle-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 13px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: #F47B20;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .theme-toggle-btn:hover {
-      transform: translateY(-2px) rotate(-6deg);
-      color: #8B1A3A;
-    }
-
-    .theme-toggle-btn:focus-visible {
-      outline: 3px solid rgba(244, 123, 32, 0.25);
-      outline-offset: 2px;
-    }
-
-    .preview-toggle-btn {
-      display: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: rgba(244, 123, 32, 0.1);
-      border: 1px solid rgba(244, 123, 32, 0.2);
-      color: #F47B20;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .preview-toggle-btn:hover {
-      background: rgba(244, 123, 32, 0.18);
-      transform: translateY(-1px);
-    }
-
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 7px 14px 7px 8px;
-      border-radius: 14px;
-      transition: all 0.2s;
-    }
-    .user-pill:hover {
-      border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, rgba(244, 123, 32, 0.15), rgba(244, 123, 32, 0.08));
-      color: #F47B20;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .user-name {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #E4E4E7;
-      max-width: 160px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #22C55E;
-      box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
-      flex-shrink: 0;
-    }
-
-    .topbar-logo-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-
-    /* ── Animations ── */
-    @keyframes topbarIn {
-      from { opacity: 0; transform: translateY(-12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 1100px) {
-      .preview-toggle-btn { display: flex; }
-    }
-    @media (max-width: 1024px) {
-      .hamburger-btn {
-        display: flex;
-      }
-      .preview-toggle-btn {
-        display: flex;
-      }
-      .user-name {
-        display: none;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .topbar {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
-        gap: 10px 8px;
-      }
-      .hamburger-btn {
-        grid-column: 2;
-        grid-row: 1;
-        width: 48px;
-        height: 48px;
-        padding: 0;
-        border-radius: 50%;
-        overflow: hidden;
-      }
-      .hamburger-lines { display: none; }
-      .mobile-menu-logo {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-      }
-      .mobile-tools { display: flex; gap: 6px; grid-column: 1; grid-row: 1; }
-      .mobile-search-toggle, .mobile-settings-toggle {
-        grid-column: 1;
-        grid-row: 1;
-        justify-self: start;
-        align-self: center;
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border: 1px solid var(--panel-border);
-        border-radius: 12px;
-        background: var(--panel-surface);
-        box-shadow: var(--panel-shadow-soft);
-        color: var(--panel-text-muted);
-        cursor: pointer;
-      }
-      .mobile-search-toggle:focus-visible,
-      .mobile-settings-toggle:focus-visible,
-      .hamburger-btn:focus-visible {
-        outline: 2px solid var(--panel-accent);
-        outline-offset: 2px;
-      }
-      .topbar-right {
-        grid-column: 3;
-        grid-row: 1;
-        justify-self: end;
-        align-self: center;
-        gap: 8px;
-      }
-      .search-box {
-        display: none;
-        grid-column: 1 / -1;
-        grid-row: 2;
-        width: 100%;
-        max-width: none;
-        box-sizing: border-box;
-      }
-      .search-box.mobile-open { display: flex; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .topbar { animation: none; }
-    }
+    @media(max-width:360px){:host{padding:10px}.topbar{gap:8px;padding:10px;border-radius:21px}.topbar-actions{gap:8px}.hamburger-btn,.preview-toggle-btn{width:44px;height:48px}.hamburger-btn{height:44px}.publish-menu-btn{padding:10px 8px;gap:6px;font-size:12px}}
+    @media(prefers-reduced-motion:reduce){button{transition:none!important}}
   `]
 })
 export class TopbarComponent {
-  mobileSearchOpen = false;
   @Input() businessName = 'Seu Estabelecimento';
   @Input() logoUrl: string | null = null;
-  @Input() searchQuery = '';
-  @Input() searchPlaceholder = 'Buscar produtos, categorias...';
-  @Input() isDarkTheme = false;
-  @Output() searchChange = new EventEmitter<string>();
-  @Output() themeToggle = new EventEmitter<void>();
+  @Input() sidebarOpen = false;
+  @Input() previewOpen = false;
+  @Input() publishDisabled = false;
+  @Input() isPublishing = false;
   @Output() toggleSidebar = new EventEmitter<void>();
   @Output() togglePreview = new EventEmitter<void>();
-  @Output() settingsOpen = new EventEmitter<void>();
+  @Output() publishRequested = new EventEmitter<void>();
 }

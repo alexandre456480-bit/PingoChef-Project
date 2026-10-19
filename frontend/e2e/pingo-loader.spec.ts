@@ -1,3 +1,4 @@
+import { togglePanelTheme } from './helpers/panel-theme';
 import { expect, test } from '@playwright/test';
 
 test.setTimeout(120_000);
@@ -31,13 +32,17 @@ test('uses dark as the dashboard default and preserves a light preference', asyn
   const pendingResponses = new Promise<void>(resolve => releaseRequests = resolve);
 
   await page.addInitScript(() => {
-    localStorage.setItem('access_token', 'e2e-token');
-    localStorage.setItem('user_data', JSON.stringify({ id: 'e2e-user', name: 'Teste' }));
-    localStorage.setItem('business_data', JSON.stringify({ name: 'Pingo Teste', slug: 'pingo-teste' }));
     localStorage.removeItem('pingo-chef-panel-theme');
   });
 
   await page.route('**/api/v1/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/auth/me')) return route.fulfill({ json: { success: true, data: {
+      user: { id: 'e2e-user', name: 'Teste' }, business: { id: 'business', name: 'Pingo Teste', slug: 'pingo-teste' },
+      accountActive: true, csrfToken: 'a'.repeat(64), plan: { code: 'FREE' }, entitlements: {},
+      usage: { products: 0, categories: 0, videos: 0 }, onboarding: { designConfigured: true }
+    } } });
+    if (path.endsWith('/business/tutorial')) return route.fulfill({ json: { success: true, data: { tutorial_status: 'COMPLETED' } } });
     await pendingResponses;
     const isDesign = new URL(route.request().url()).pathname.endsWith('/design');
     await route.fulfill({
@@ -49,14 +54,13 @@ test('uses dark as the dashboard default and preserves a light preference', asyn
 
   await page.goto('/dashboard');
   const shell = page.locator('.dashboard-shell');
-  await expect(shell).toHaveAttribute('data-panel-theme', 'dark');
-  await expect(page.getByRole('status')).toBeVisible();
+  await expect(shell).toHaveAttribute('data-panel-theme', 'dark', { timeout: 15_000 });
+  const loader = page.locator('.pingo-loader--fullscreen');
+  await expect(loader).toBeVisible();
   releaseRequests();
-  await expect(page.getByRole('status')).not.toBeVisible();
+  await expect(loader).not.toBeVisible();
 
-  const themeButton = page.getByRole('button', { name: 'Ativar tema claro' });
-  await expect(themeButton).toBeVisible();
-  await themeButton.click();
+  await togglePanelTheme(page);
   await expect(shell).toHaveAttribute('data-panel-theme', 'light');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('pingo-chef-panel-theme'))).toBe('light');
 });

@@ -13,7 +13,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       <div class="sidebar-overlay" (click)="closeMobile()"></div>
     }
 
-    <aside class="sidebar" [class.mobile-open]="mobileOpen">
+    <aside id="panel-sidebar" class="sidebar" [class.mobile-open]="mobileOpen">
       <div class="sidebar-top">
         <!-- Brand -->
         <div class="sidebar-brand">
@@ -128,6 +128,14 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
 
       <!-- Bottom actions -->
       <div class="sidebar-bottom">
+        <button class="icon-round-btn theme-toggle-btn" type="button" (click)="themeToggle.emit(); mobileClose.emit()"
+          [attr.aria-pressed]="isDarkTheme" [attr.aria-label]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'"
+          [title]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            @if (isDarkTheme) { <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.41M17.66 6.34l1.41-1.41"/> }
+            @else { <path d="M20.8 15.1A8.5 8.5 0 0 1 8.9 3.2 8.5 8.5 0 1 0 20.8 15.1Z"/> }
+          </svg>
+        </button>
         <button class="icon-round-btn" title="Configurações" aria-label="Abrir configurações" (click)="settingsOpen.emit(); mobileClose.emit()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -346,8 +354,8 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
     }
 
     .icon-round-btn {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.06);
@@ -441,6 +449,7 @@ export class SidebarComponent {
   @Input() analyticsEnabled=false;
   @Input() qrEnabled=false;
   @Output() settingsOpen=new EventEmitter<void>();
+  @Output() themeToggle = new EventEmitter<void>();
   @Input() isDarkTheme = false;
   @Input() activeSection: ActiveSection = 'dashboard';
   @Input() mobileOpen = false;

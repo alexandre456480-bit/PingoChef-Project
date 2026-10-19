@@ -1,3 +1,4 @@
+import { togglePanelTheme } from './helpers/panel-theme';
 import { expect, test, Page } from '@playwright/test';
 
 async function openDesign(page: Page) {
@@ -102,7 +103,7 @@ test('expanded controls fit narrow screens in light and dark panel themes', asyn
   const summaries = await editor.locator('details > summary').all();
   for (const summary of summaries.slice(1)) await summary.click();
   for (const theme of ['light', 'dark']) {
-    if (theme === 'dark') await page.locator('.theme-toggle-btn').click();
+    if (theme === 'dark') await togglePanelTheme(page);
     await expect(page.locator('.dashboard-shell')).toHaveAttribute('data-panel-theme', theme);
     const overflow = await editor.evaluate(element => Array.from(element.querySelectorAll('.design-section, .design-filters, .fonts-selection-grid, .palettes-grid, .btn-preset-pill')).filter(node => {
       const rect = node.getBoundingClientRect();
