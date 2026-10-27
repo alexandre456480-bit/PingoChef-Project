@@ -42,9 +42,9 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
           <div>
             <div class="title-with-pill">
               <h2 class="section-title">Estrutura & Template</h2>
-              <span class="safe-badge">Cores e fontes preservadas</span>
+              <span class="safe-badge">Personalização preservada</span>
             </div>
-            <p class="section-sub">Define a posição dos elementos, estilo visual (Claymorphism, Glassmorphism, Flat) e formato da Hero Section.</p>
+            <p class="section-sub">O template organiza capa, logo, descrição, categorias, botões e produtos. Suas cores, fontes, ícones, conteúdos e recursos continuam nas configurações abaixo.</p>
           </div>
           <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </summary>
@@ -59,46 +59,23 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
               (click)="selectTemplate(tmpl.key)"
               [style.--ti]="i">
 
-              <!-- Mini Mockup Estrutural Visual -->
-              <div class="tmpl-preview" [attr.data-tmpl]="tmpl.key">
-                <!-- Topbar Mockup -->
-                <div class="tmpl-mini-header" [attr.data-logo-pos]="tmpl.logoPosition">
-                  @if (tmpl.logoPosition === 'above-hero' || tmpl.logoPosition === 'top-center') {
-                    <div class="tmpl-mini-logo top-center-logo"></div>
-                  } @else {
-                    <div class="tmpl-mini-logo"></div>
-                    <div class="tmpl-mini-nav"></div>
-                  }
-                </div>
-
-                <!-- Hero Section Mockup -->
-                <div class="tmpl-mini-hero" [attr.data-hero]="tmpl.heroStyle">
-                  @if (tmpl.key === 'brand-cover') {
-                    <div class="tmpl-mini-brand-logo"></div>
-                  }
-                  @if (tmpl.logoPosition === 'hero-bottom-center') {
-                    <div class="tmpl-hero-overlap-logo"></div>
-                  }
-                  <div class="tmpl-hero-badge"></div>
-                </div>
-
-                <!-- Categories Mockup -->
-                <div class="tmpl-mini-cats" [attr.data-layout]="tmpl.categoryLayout">
-                  <span></span><span></span><span></span>
-                </div>
-
-                <!-- Products Grid Mockup -->
-                <div class="tmpl-mini-grid" [attr.data-cards]="tmpl.itemCardStyle" [attr.data-surface]="tmpl.surfaceStyle">
-                  <div class="mini-card-sample"></div>
-                  <div class="mini-card-sample"></div>
-                </div>
+              <div class="tmpl-preview" [attr.data-tmpl]="tmpl.key" aria-hidden="true"
+                [style.background]="designService.draft().palette.colors.background"
+                [style.--sample-surface]="designService.draft().palette.colors.surface"
+                [style.--sample-primary]="designService.draft().palette.colors.primary"
+                [style.--sample-text]="designService.draft().palette.colors.textSecondary">
+                <div class="tmpl-mini-hero"></div>
+                <div class="tmpl-mini-identity"><span class="tmpl-mini-logo"></span><span class="tmpl-mini-line"></span></div>
+                <div class="tmpl-mini-description"></div>
+                <div class="tmpl-mini-cats"><span></span><span></span><span></span></div>
+                <div class="tmpl-mini-grid"><div class="mini-card-sample"></div><div class="mini-card-sample"></div></div>
               </div>
 
               <!-- Template Info -->
               <div class="tmpl-info">
                 <div class="tmpl-header-row">
                   <h3 class="tmpl-name">{{ tmpl.name }}</h3>
-                  <span class="tmpl-surface-pill">{{ tmpl.surfaceStyle }}</span>
+                  <span class="tmpl-surface-pill">{{ designService.currentTemplate().key === tmpl.key ? 'Ativo' : 'Disponível' }}</span>
                 </div>
                 <p class="tmpl-desc">{{ tmpl.description }}</p>
                 <span class="tmpl-ideal">{{ tmpl.idealFor }}</span>
@@ -653,7 +630,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
           <div>
             <div class="title-with-pill">
               <h2 class="section-title">Descrição de Apresentação</h2>
-              <span class="safe-badge">Fixo no Topo · Início</span>
+              <span class="safe-badge">Apresentação · Início</span>
             </div>
             <p class="section-sub">Uma caixa elegante translúcida (Glassmorphism) com bordas arredondadas exibida no topo do cardápio inicial, acima da Hero Section. Acompanha a paleta de cores e tipografia selecionadas e se oculta automaticamente nas categorias.</p>
           </div>
@@ -749,9 +726,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
                   <p
                     class="preview-card-desc"
                     [style.font-family]="designService.draft().fontBody + ', sans-serif'"
-                    [style.color]="designService.draft().palette.colors.textSecondary">
-                    {{ designService.introCard().description || 'Sua descrição de apresentação aparecerá aqui com efeito translúcido e elegante.' }}
-                  </p>
+                    [style.color]="designService.draft().palette.colors.textSecondary"
+                    [textContent]="designService.introCard().description || 'Sua descrição de apresentação aparecerá aqui com efeito translúcido e elegante.'"></p>
                 </div>
               </div>
 
@@ -1131,186 +1107,43 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
     /* ══════════════════════════════════════════════════ */
     /* ── 1. TEMPLATES GRID ── */
     /* ══════════════════════════════════════════════════ */
-    .templates-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
+    .templates-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
     .template-card {
-      background: #18181D;
-      border: 2px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
-      padding: 16px;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      background: var(--panel-surface); border: 1px solid var(--panel-border);
+      border-radius: 16px; padding: 18px; cursor: pointer; position: relative;
+      display: flex; flex-direction: column; gap: 16px;
     }
-    .template-card:hover {
-      border-color: rgba(244, 123, 32, 0.4);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-    }
-    .template-card.selected {
-      border-color: #F47B20;
-      background: #1D1815;
-      box-shadow: 0 0 0 1px #F47B20, 0 8px 24px rgba(244, 123, 32, 0.2);
-    }
+    .template-card.selected { border-color: var(--panel-accent); }
+    .tmpl-preview { border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .tmpl-mini-hero { height: 72px; border-radius: 10px; background: color-mix(in srgb, var(--sample-primary) 20%, var(--sample-surface)); }
+    .tmpl-mini-identity { display: flex; align-items: flex-end; gap: 10px; padding: 0 10px; margin-top: -28px; }
+    .tmpl-mini-logo { width: 34px; height: 34px; border-radius: 9px; background: var(--sample-primary); border: 3px solid var(--sample-surface); }
+    .tmpl-mini-line { width: 32%; height: 7px; border-radius: 3px; background: var(--sample-text); }
+    .tmpl-mini-description { height: 24px; border-radius: 6px; background: var(--sample-surface); }
+    .tmpl-mini-cats { display: flex; gap: 6px; }
+    .tmpl-mini-cats span { height: 12px; width: 44px; border-radius: 4px; background: var(--sample-primary); opacity: .65; }
+    .tmpl-mini-grid { display: grid; gap: 6px; }
+    .mini-card-sample { height: 28px; border-radius: 6px; background: linear-gradient(90deg, color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)) 18%, var(--sample-surface) 18%); }
 
-    .tmpl-preview {
-      background: #0D0D10;
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      min-height: 110px;
-    }
+    .tmpl-preview:is([data-tmpl="centered-cover"], [data-tmpl="arched-cover"]) .tmpl-mini-hero { margin-inline: -12px; border-radius: 12px; }
+    .tmpl-preview:is([data-tmpl="centered-cover"], [data-tmpl="arched-cover"]) .tmpl-mini-identity { flex-direction: column; align-items: center; gap: 6px; }
+    .tmpl-preview:is([data-tmpl="centered-cover"], [data-tmpl="arched-cover"]) .tmpl-mini-logo { border-radius: 50%; }
+    .tmpl-preview[data-tmpl="centered-cover"] .tmpl-mini-description { order: -1; }
 
-    .tmpl-mini-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 12px;
-    }
-    .tmpl-mini-header[data-logo-pos="above-hero"] {
-      justify-content: center;
-    }
-    .tmpl-mini-logo {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #F47B20;
-    }
-    .top-center-logo {
-      width: 18px;
-      height: 18px;
-      box-shadow: 0 0 6px rgba(244, 123, 32, 0.4);
-    }
-    .tmpl-mini-nav {
-      width: 20px;
-      height: 6px;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.2);
-    }
+    .tmpl-preview[data-tmpl="arched-cover"] .tmpl-mini-hero { border-radius: 0 0 50% 50% / 0 0 20% 20%; }
+    .tmpl-preview[data-tmpl="arched-cover"] .tmpl-mini-cats span { border-radius: 999px; }
 
-    .tmpl-mini-hero {
-      height: 38px;
-      border-radius: 6px;
-      background: linear-gradient(135deg, #27272A, #18181B);
-      position: relative;
-      display: flex;
-      align-items: center;
-      padding: 0 8px;
-    }
-    .tmpl-preview[data-tmpl="modern"] .tmpl-mini-hero {
-      border-radius: 12px;
-      box-shadow: inset 1px 1px 2px rgba(255,255,255,0.2), 2px 2px 6px rgba(0,0,0,0.3);
-    }
-    .tmpl-preview[data-tmpl="premium"] .tmpl-mini-hero {
-      border-radius: 0;
-      margin: -4px -12px 0;
-      height: 42px;
-      background: linear-gradient(180deg, #3F3F46 0%, #18181B 100%);
-    }
-    .tmpl-preview[data-tmpl="dark"] .tmpl-mini-hero {
-      border: 1px solid rgba(139, 92, 246, 0.4);
-      box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
-    }
+    .tmpl-preview[data-tmpl="brand-hero"] .tmpl-mini-description { order: -1; }
+    .tmpl-preview[data-tmpl="brand-hero"] .tmpl-mini-identity { flex-direction: column; align-items: flex-start; gap: 5px; margin-top: -72px; min-height: 62px; }
+    .tmpl-preview[data-tmpl="brand-hero"] .tmpl-mini-logo { width: 28px; height: 28px; }
+    .tmpl-preview[data-tmpl="brand-hero"] .mini-card-sample { height: 38px; background: linear-gradient(90deg, color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)) 46%, var(--sample-surface) 46%); }
 
-    .tmpl-hero-overlap-logo {
-      position: absolute;
-      bottom: -6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #D4AF37;
-      border: 1.5px solid #18181B;
-      box-shadow: 0 0 6px rgba(212, 175, 55, 0.6);
-      z-index: 2;
-    }
-
-    .tmpl-mini-cats {
-      display: flex;
-      gap: 4px;
-    }
-    .tmpl-mini-cats span {
-      height: 6px;
-      width: 24px;
-      border-radius: 3px;
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    .tmpl-mini-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .mini-card-sample {
-      height: 24px;
-      border-radius: 6px;
-      background: #27272A;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .tmpl-mini-grid[data-surface="claymorphism"] .mini-card-sample {
-      border-radius: 10px;
-      box-shadow: 2px 2px 4px rgba(0,0,0,0.4), inset 1px 1px 2px rgba(255,255,255,0.15);
-    }
-    .tmpl-mini-grid[data-surface="glassmorphism"] .mini-card-sample {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(6, 182, 212, 0.4);
-      box-shadow: 0 0 6px rgba(6, 182, 212, 0.15);
-    }
-
-    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-header { display: none; }
-    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-hero {
-      height: 54px;
-      margin: -12px -12px 6px;
-      border-radius: 12px 12px 18px 18px;
-      background: linear-gradient(140deg, #8B1A3A, #E7BB9B);
-    }
-    .tmpl-preview[data-tmpl="showcase"] .tmpl-hero-overlap-logo {
-      width: 26px;
-      height: 26px;
-      bottom: -10px;
-      background: #F47B20;
-      border: 3px solid #0D0D10;
-      box-shadow: none;
-    }
-    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-cats span { height: 10px; border-radius: 999px; }
-    .tmpl-preview[data-tmpl="showcase"] .tmpl-mini-grid { grid-template-columns: 1fr; }
-    .tmpl-preview[data-tmpl="showcase"] .mini-card-sample {
-      height: 22px;
-      background: linear-gradient(90deg, #52525B 22%, #27272A 22%);
-    }
-
-    .tmpl-preview[data-tmpl="brand-cover"] .tmpl-mini-header { display: none; }
-    .tmpl-preview[data-tmpl="brand-cover"] .tmpl-mini-hero {
-      height: 58px;
-      border-radius: 8px;
-      background: linear-gradient(110deg, #211510, #7B4324);
-    }
-    .tmpl-mini-brand-logo { width: 20px; height: 20px; border-radius: 4px; background: #F47B20; align-self: flex-start; margin-top: 8px; }
-    .tmpl-preview[data-tmpl="brand-cover"] .tmpl-mini-cats span { height: 10px; border-radius: 3px; }
-
-    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-mini-header { display: none; }
-    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-mini-hero {
-      height: 62px;
-      margin: -12px -12px 8px;
-      background: linear-gradient(120deg, #3E2018, #975B36);
-    }
-    .tmpl-preview[data-tmpl="editorial-arc"] .tmpl-mini-hero { border-radius: 12px 12px 45% 45% / 12px 12px 12% 12%; }
-    .tmpl-preview[data-tmpl="editorial-arc"] .tmpl-mini-cats span { height: 12px; border-radius: 4px; }
-    .tmpl-preview[data-tmpl="curve-panels"] .tmpl-mini-hero { border-radius: 12px 12px 50% 50% / 12px 12px 26% 26%; background: linear-gradient(145deg, #42788B, #BEC7CA); }
-    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-hero-overlap-logo { background: #F47B20; border-color: #0D0D10; box-shadow: none; }
-    .tmpl-preview:is([data-tmpl="editorial-arc"], [data-tmpl="curve-panels"]) .tmpl-mini-grid { grid-template-columns: 1fr; }
-    .tmpl-preview[data-tmpl="curve-panels"] .mini-card-sample { border-top: 6px solid #8B1A3A; }
+    .tmpl-preview[data-tmpl="signature-cover"] .tmpl-mini-hero { border-radius: 0; mask-image: radial-gradient(ellipse 55% 12px at 50% calc(100% + 4px), transparent calc(100% - 1px), #000 100%); }
+    .tmpl-preview[data-tmpl="signature-cover"] .tmpl-mini-identity { flex-direction: column; align-items: center; gap: 6px; }
+    .tmpl-preview[data-tmpl="signature-cover"] .tmpl-mini-logo { border-radius: 50%; }
+    .tmpl-preview[data-tmpl="signature-cover"] .tmpl-mini-line { width: 70%; background: linear-gradient(90deg, var(--sample-primary) 25%, transparent 25% 32%, var(--sample-text) 32% 68%, transparent 68% 75%, var(--sample-primary) 75%); }
+    .tmpl-preview[data-tmpl="signature-cover"] .mini-card-sample { height: 36px; padding: 3px; background: var(--sample-surface); }
+    .tmpl-preview[data-tmpl="signature-cover"] .mini-card-sample::before { content: ''; display: block; width: 30px; height: 30px; border-radius: 4px; background: color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)); }
 
     .tmpl-info {
       display: flex;
@@ -2373,6 +2206,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
       font-size: 0.82rem;
       margin: 0;
       line-height: 1.5;
+      white-space: break-spaces;
+      overflow-wrap: anywhere;
     }
     .preview-disabled-badge {
       position: absolute;
@@ -2888,7 +2723,7 @@ export class DesignEditorComponent {
 
   selectTemplate(key: string): void {
     this.designService.setTemplate(key);
-    this.onToast.emit('Estrutura do template atualizada. Suas cores e fontes continuam salvas!');
+    this.onToast.emit('Template atualizado. Sua personaliza\u00e7\u00e3o foi preservada.');
   }
 
   selectPalette(pal: PaletteConfig): void {
@@ -3071,7 +2906,7 @@ export class DesignEditorComponent {
   saveDraft(): void {
     this.designService.saveDesign().subscribe({
       next: () => this.onToast.emit('Configurações de design salvas com sucesso!'),
-      error: () => this.onToast.emit('Design salvo localmente.')
+      error: () => this.onToast.emit('Não foi possível salvar o design. Tente novamente.')
     });
   }
 

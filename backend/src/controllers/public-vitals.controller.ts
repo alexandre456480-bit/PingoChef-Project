@@ -1,3 +1,4 @@
+import { ACCEPTED_TEMPLATE_KEYS, normalizeTemplateKey } from '../constants/menu-template';
 import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { businessEligibility } from "../services/business-eligibility.service";
@@ -11,7 +12,7 @@ const thresholds = {
 };
 const vitalsSchema = z
   .object({
-    templateCode: z.enum(["minimal", "modern", "premium", "dark", "showcase"]),
+    templateCode: z.enum(ACCEPTED_TEMPLATE_KEYS).transform(normalizeTemplateKey),
     deviceClass: z.enum(["mobile", "tablet", "desktop"]),
     metrics: z
       .array(

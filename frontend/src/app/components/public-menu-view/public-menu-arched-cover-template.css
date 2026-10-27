@@ -1,0 +1,12 @@
+/* A curved cover and pill navigation; all customer branding and actions remain shared. */
+.menu-viewport[data-template="arched-cover"] .showcase-scrollable { padding-top: 0; }
+.menu-viewport[data-template="arched-cover"]:has(.search-drawer) .showcase-scrollable { padding-top: 64px; }
+.menu-viewport[data-template="arched-cover"] .showcase-hero-banner {
+  border-radius: var(--template-hero-radius) var(--template-hero-radius) 50% 50% /
+    var(--template-hero-radius) var(--template-hero-radius) 20% 20%;
+}
+.menu-viewport[data-template="arched-cover"] .hero-banner-overlay { align-items: flex-start; padding: 12px 20px 40px; }
+.menu-viewport[data-template="arched-cover"] .category-nav-pill {
+  min-height: 48px; padding: 10px 16px;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text-primary) 8%, transparent);
+}

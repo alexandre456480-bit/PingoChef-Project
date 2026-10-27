@@ -1,3 +1,4 @@
+import { ACCEPTED_TEMPLATE_KEYS, DEFAULT_TEMPLATE_KEY, normalizeTemplateKey, withoutTemplateBlocks, withoutTemplateVariant } from '../constants/menu-template';
 import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
@@ -13,11 +14,11 @@ const homeIconSchema = z.string().max(180).refine(isHomeIconId, 'Ícone inválid
 const introCardSchema = z.object({
   enabled: z.boolean().default(true),
   title: z.string().trim().max(150).default(''),
-  description: z.string().trim().max(1200).default('')
+  description: z.string().max(1200).default('')
 }).optional();
 
 const designSchema = z.object({
-  template_key: z.enum(['minimal', 'modern', 'premium', 'dark', 'showcase']).default('modern'),
+  template_key: z.enum(ACCEPTED_TEMPLATE_KEYS).default(DEFAULT_TEMPLATE_KEY).transform(normalizeTemplateKey),
   palette: z.object({
     key: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/),
     name: z.string().trim().max(50),
@@ -86,7 +87,7 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
       }
 
       if (data) {
-        const existingBlocks: any[] = Array.isArray(data.home_blocks) ? data.home_blocks : [];
+        const existingBlocks: any[] = Array.isArray(data.home_blocks) ? withoutTemplateBlocks(data.home_blocks) : [];
         const existingTypes = new Set(existingBlocks.map(b => b.type));
         
         const defaultBlocks = [
@@ -109,14 +110,14 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
         return res.status(200).json({
           success: true,
           data: {
-            template_key: data.template_key || 'modern',
+            template_key: normalizeTemplateKey(data.template_key),
             palette: data.palette,
             font_heading: data.font_heading || 'Outfit',
             font_body: data.font_body || 'Inter',
             font_pair: data.font_pair || 'modern_clean',
             category_style: data.category_style || 'icon_name',
             home_blocks: mergedBlocks,
-            custom_config: data.custom_config || {}
+            custom_config: withoutTemplateVariant(data.custom_config || {})
           }
         });
       }
@@ -130,7 +131,7 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
     }
 
     const localSettings = localDb.designSettings[businessId] || {
-      template_key: 'modern',
+      template_key: DEFAULT_TEMPLATE_KEY,
       palette: {
         key: 'gourmet_royal',
         name: 'Gourmet Royal',
@@ -171,7 +172,9 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
 
     return res.status(200).json({
       success: true,
-      data: localSettings
+      data: { ...localSettings, template_key: normalizeTemplateKey(localSettings.template_key),
+        home_blocks: withoutTemplateBlocks(localSettings.home_blocks || []),
+        custom_config: withoutTemplateVariant(localSettings.custom_config || {}) }
     });
   } catch (error) {
     next(error);
@@ -189,6 +192,9 @@ export const saveDesignController = async (req: AuthenticatedRequest, res: Respo
     }
 
     const { motion: _legacyMotion, ...validatedData } = designSchema.parse(req.body);
+
+    validatedData.home_blocks = withoutTemplateBlocks(validatedData.home_blocks);
+    validatedData.custom_config = withoutTemplateVariant(validatedData.custom_config);
 
     // Sanitização e validação de segurança para o bloco de apresentação
     if (validatedData.custom_config && validatedData.custom_config.intro_card) {

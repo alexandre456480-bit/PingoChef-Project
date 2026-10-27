@@ -16,7 +16,7 @@ describe('anonymous public Web Vitals', () => {
   it('sends a bounded batch without credentials, visitor identifiers, URLs or selectors', async () => {
     const send = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}'));
     const service = TestBed.inject(PublicVitalsService);
-    await service.start('bistro', 'modern');
+    await service.start('bistro', 'default');
     const report = (webVitals.onLCP as any).mock.calls[0][0];
     report({
       name: 'LCP',
@@ -31,7 +31,7 @@ describe('anonymous public Web Vitals', () => {
     expect(url).toBe('/api/v1/public/menu/bistro/vitals');
     expect(options?.credentials).toBe('omit');
     expect(JSON.parse(options?.body as string)).toEqual({
-      templateCode: 'modern',
+      templateCode: 'default',
       deviceClass: expect.stringMatching(/^(mobile|tablet|desktop)$/),
       metrics: [{ name: 'LCP', value: 1200 }],
     });
@@ -45,7 +45,7 @@ describe('anonymous public Web Vitals', () => {
   it('does not attribute a preceding admin document to a menu opened through SPA navigation', async () => {
     vi.spyOn(performance, 'getEntriesByType').mockReturnValue([{ name:'https://example.test/dashboard' }] as any);
     const service = TestBed.inject(PublicVitalsService);
-    await service.start('bistro', 'modern');
+    await service.start('bistro', 'default');
     expect(webVitals.onLCP).not.toHaveBeenCalled();
   });
 });

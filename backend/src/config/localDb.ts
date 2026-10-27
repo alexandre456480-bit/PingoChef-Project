@@ -148,7 +148,7 @@ class LocalDatabase {
 
     // Configuração de design padrão
     this.designSettings[businessId] = {
-      template_key: 'modern',
+      template_key: 'default',
       palette: {
         key: 'gourmet_royal',
         name: 'Gourmet Royal',

@@ -134,5 +134,25 @@
   {
     "file": "20261018000000_owner_tutorial.sql",
     "sha256": "910a53a58b4fc1b313b67a52fd71c955751e2016c504f6e207eb2d7b4687507d"
+  },
+  {
+    "file": "20261024000000_reset_menu_templates.sql",
+    "sha256": "224773df41097465da3d0ae4b2a733adeac43fbc54ff7473effe0f858073bf9f"
+  },
+  {
+    "file": "20261025000000_add_centered_cover_template.sql",
+    "sha256": "7df3ec07c9e9a05da4c2d5d561553bafdecb17b24d8e9ad3aba2899cc6c85555"
+  },
+  {
+    "file": "20261025010000_add_arched_cover_template.sql",
+    "sha256": "aff442e2891a923a3a283e65acd8b7911cb623a4de1bb061d38fc331317cbba4"
+  },
+  {
+    "file": "20261026000000_add_brand_hero_template.sql",
+    "sha256": "bcf31f669de7b9d314275728af700c0cdbac6552a2bc3971078b1ff301458bb8"
+  },
+  {
+    "file": "20261026010000_add_signature_cover_template.sql",
+    "sha256": "81f5f13136b068e97c0afbf66c797db3daa4cd9b950ce3d8bf772a750fca1cb6"
   }
 ]

@@ -1,3 +1,4 @@
+import { resolveMenuTemplate } from '../../constants/menu-templates';
 import { Component, Input } from '@angular/core';
 import type { DesignSettings } from '../../services/design.service';
 
@@ -11,9 +12,7 @@ export function menuLayoutHint(design?: Partial<DesignSettings> | null): MenuLay
   const colors = design?.palette?.colors;
   const safeColor = (value: string | undefined, fallback: string) =>
     /^#(?:[a-f\d]{3}|[a-f\d]{6}|[a-f\d]{8})$/i.test(value || '') ? value! : fallback;
-  const templateKey = ['minimal', 'modern', 'premium', 'dark', 'showcase'].includes(design?.templateKey || '')
-    ? design!.templateKey!
-    : 'unknown';
+  const templateKey = resolveMenuTemplate(design).key;
   return {
     templateKey,
     background: safeColor(colors?.background, '#faf5f0'),
@@ -102,25 +101,6 @@ export function menuLayoutHint(design?: Partial<DesignSettings> | null): MenuLay
         max-width: 300px;
         height: 56px;
         margin-top: 28px;
-      }
-      [data-template='modern'] .skeleton-action {
-        border-radius: 24px;
-        box-shadow:
-          4px 5px 10px #0000000b,
-          inset 1px 1px 0 #ffffff66;
-      }
-      [data-template='minimal'] .skeleton-action {
-        border-radius: 14px;
-      }
-      [data-template='premium'] .skeleton-action {
-        border-radius: 18px;
-      }
-      [data-template='premium'] .skeleton-title {
-        height: 54px;
-      }
-      [data-template='dark'] .skeleton-action {
-        border-radius: 20px;
-        border: 1px solid #ffffff16;
       }
       @keyframes skeleton-breathe {
         from {

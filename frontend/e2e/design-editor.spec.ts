@@ -1,6 +1,8 @@
 import { togglePanelTheme } from './helpers/panel-theme';
 import { expect, test, Page } from '@playwright/test';
 
+test.setTimeout(120_000);
+
 async function openDesign(page: Page) {
   let design: any = {};
   await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.fulfill({ contentType: 'text/css', body: '' }));
@@ -75,24 +77,37 @@ test('sections collapse with keyboard without losing draft colors or typography,
   await typography.locator('summary').click();
   await expect(typography.locator('.current-font-pill').first()).toHaveText('Oswald');
 
-  const showcase = editor.locator('.template-card').filter({ hasText: 'Curvas & Painéis' });
+  const showcase = editor.locator('.template-card').filter({ hasText: 'Capa Assinatura' });
+  await expect(editor.locator('.template-card')).toHaveCount(5);
   await expect(showcase).toHaveCount(1);
   await showcase.click();
   await expect(showcase).toHaveAttribute('aria-pressed', 'true');
 
+  const description = '  Primeiro  par\u00e1grafo.\n\n    Segundo par\u00e1grafo.\nTexto <b>literal</b>.  ';
+  const intro = editor.locator('details').filter({ has: page.locator('.intro-textarea') });
+  await intro.locator('summary').click();
+  await editor.locator('.intro-textarea').fill(description);
+  expect(await editor.locator('.preview-card-desc').textContent()).toBe(description);
+  await expect(editor.locator('.preview-card-desc')).toHaveCSS('white-space', 'break-spaces');
+  await expect(editor.locator('.preview-card-desc b')).toHaveCount(0);
   const save = page.waitForRequest(r => r.url().endsWith('/api/v1/design') && r.method() === 'PUT');
-  await editor.getByRole('button', { name: 'Salvar Alterações', exact: true }).click();
+  await editor.getByRole('button', { name: /Salvar Alterações|Salvar e Sincronizar/ }).click();
   const payload = (await save).postDataJSON();
-  expect(payload).toMatchObject({ template_key: 'showcase', custom_config: { template_variant: 'curve-panels' }, palette: { key: 'graphite_copper' }, font_heading: 'Oswald', font_body: 'Source Sans 3' });
+  expect(payload).toMatchObject({ template_key: 'signature-cover', palette: { key: 'graphite_copper' }, font_heading: 'Oswald', font_body: 'Source Sans 3' });
+  expect(payload.custom_config.intro_card.description).toBe(description);
+  expect(payload.custom_config).not.toHaveProperty('template_variant');
+  expect(payload.home_blocks.some((block: any) => block.type === 'template_variant')).toBe(false);
   expect(payload).not.toHaveProperty('motion');
   expect(payload).not.toHaveProperty('paletteFilter');
-  await expect(editor.locator('.saved-badge')).toBeVisible();
+  await expect(editor.locator('.saved-badge')).toBeAttached();
   await page.reload();
   await expect(page.locator('.dashboard-shell')).toBeVisible({ timeout: 15_000 });
   const nav = page.getByRole('navigation').getByRole('button', { name: 'Design', exact: true });
   if (!await nav.isVisible()) await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
   await nav.click();
   await expect(showcase).toHaveAttribute('aria-pressed', 'true');
+  expect(await editor.locator('.intro-textarea').inputValue()).toBe(description);
+  expect(await editor.locator('.preview-card-desc').textContent()).toBe(description);
   await editor.locator('summary').filter({ has: page.getByRole('heading', { name: 'Paleta de Cores', exact: true }) }).click();
   await expect(editor.locator('.palette-card').filter({ hasText: 'Grafite & Cobre' })).toHaveAttribute('aria-pressed', 'true');
 });

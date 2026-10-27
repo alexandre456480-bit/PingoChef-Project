@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
     route.fulfill({ contentType: 'text/css', body: '' }),
   );
 });
-function fixture(template = 'modern', slug = 'optimization', empty = false) {
+function fixture(template = 'default', slug = 'optimization', empty = false) {
   return {
     success: true,
     data: {
@@ -19,7 +19,7 @@ function fixture(template = 'modern', slug = 'optimization', empty = false) {
       },
       design: {
         templateKey: template,
-        fontHeading: template === 'minimal' ? 'Playfair Display' : 'Outfit',
+        fontHeading: 'Outfit',
         fontBody: 'Inter',
         heroBanners: [],
         palette: {
@@ -139,7 +139,7 @@ async function enter(page: Page) {
   await page.getByRole('button', { name: 'Ver o Cardápio' }).click();
 }
 
-for (const template of ['modern', 'minimal']) {
+for (const template of ['default']) {
   test(`${template}: responsive storefront, local discovery, keyboard detail and original template identity`, async ({
     page,
   }, info) => {
@@ -180,7 +180,7 @@ for (const template of ['modern', 'minimal']) {
       await expect(page.locator('.product-item-card')).toHaveCount(1);
       await page
         .locator('.product-item-card')
-        .getByRole('button', { name: 'Ver', exact: true })
+        .getByRole('button', { name: /^Ver detalhes de / })
         .click();
       const dialog = page.getByRole('dialog', { name: 'Açaí da casa', exact: true });
       await expect(dialog).toBeVisible();
@@ -249,7 +249,7 @@ test('slow initial data has a local compatible skeleton, no competing mascot dow
     sessionStorage.setItem(
       'pc-menu-layout:optimization',
       JSON.stringify({
-        templateKey: 'minimal',
+        templateKey: 'default',
         background: '#fff9f4',
         surface: '#fff',
         primary: '#672138',
@@ -259,7 +259,7 @@ test('slow initial data has a local compatible skeleton, no competing mascot dow
   await mock(page, { delay: 700, deny: true });
   await page.goto('/m/optimization', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.public-app-container')).toBeVisible();
-  await expect(page.locator('.menu-skeleton')).toHaveAttribute('data-template', 'minimal');
+  await expect(page.locator('.menu-skeleton')).toHaveAttribute('data-template', 'default');
   await expect(page.locator('.menu-skeleton')).toHaveClass(/is-visible/);
   await expect(
     page.getByRole('heading', { name: 'Não conseguimos abrir este cardápio.' }),
@@ -308,7 +308,7 @@ test('video downloads nothing before explicit Play, authorizes signed playback a
   await page
     .locator('.product-item-card')
     .filter({ hasText: 'Açaí da casa' })
-    .getByRole('button', { name: 'Ver', exact: true })
+    .getByRole('button', { name: /^Ver detalhes de / })
     .click();
   await expect(page.locator('mux-player')).toHaveCount(0);
   expect(muxRequests).toBe(0);

@@ -1,0 +1,130 @@
+/* Geometry belongs to the template; every brand color/font comes from the customer's tokens. */
+.menu-viewport[data-template] .showcase-scrollable { padding-top: 64px; gap: 20px; container-type: inline-size; }
+.menu-viewport[data-template] .showcase-scrollable > * { flex-shrink: 0; }
+.menu-viewport[data-template] .showcase-hero-banner {
+  flex-shrink: 0;
+  aspect-ratio: var(--template-hero-ratio);
+  min-height: 0;
+  border-radius: var(--template-hero-radius);
+  background: var(--surface-color);
+  box-shadow: none;
+}
+.menu-viewport[data-template] .hero-banner-overlay {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  align-items: flex-end;
+  padding: 16px;
+  background: linear-gradient(180deg, transparent 70%, color-mix(in srgb, var(--bg-color) 25%, transparent));
+}
+.menu-viewport[data-template] .carousel-dot {
+  width: 28px;
+  height: 28px;
+  border: 9px solid transparent;
+  background-clip: padding-box;
+}
+.menu-viewport[data-template] .carousel-dot.active { box-shadow: none; }
+.template-brand-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: -44px;
+  padding: 0 16px;
+  position: relative;
+  z-index: 3;
+}
+.template-logo-wrap {
+  width: var(--template-logo-size);
+  height: var(--template-logo-size);
+  flex-shrink: 0;
+  padding: 5px;
+  border-radius: var(--template-logo-radius);
+  background: var(--surface-color);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--text-primary) 10%, transparent);
+  box-sizing: border-box;
+}
+.template-logo { width: 100%; height: 100%; object-fit: contain; border-radius: calc(var(--template-logo-radius) - 5px); }
+.template-brand-copy { min-width: 0; padding-top: 32px; }
+.template-brand-copy h2 {
+  font-family: var(--heading-font);
+  font-size: clamp(1.1rem, var(--menu-title-responsive-size, 3vw), 1.5rem);
+  line-height: 1.25;
+  color: var(--text-primary);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.template-brand-copy p { color: var(--text-secondary); font-size: .82rem; line-height: 1.5; margin: 6px 0 0; overflow-wrap: anywhere; }
+.menu-viewport[data-template] .intro-description-wrapper { padding: 0; text-align: var(--template-description-align); }
+.menu-viewport[data-template] .intro-description-card {
+  padding: 18px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--surface-color) 90%, transparent),
+    color-mix(in srgb, var(--surface-color) 52%, transparent));
+  border: 1px solid color-mix(in srgb, var(--surface-color) 75%, var(--text-primary));
+  border-radius: var(--template-item-radius);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text-primary) 14%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 60%),
+    inset 0 -1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+}
+.menu-viewport[data-template] .no-hero-header { margin-top: 0; border-radius: var(--template-item-radius); }
+.menu-viewport[data-template] .no-hero-logo-wrap {
+  width: var(--template-logo-size); height: var(--template-logo-size);
+  border-radius: var(--template-logo-radius);
+}
+.menu-viewport[data-template] .no-hero-logo-img { object-fit: contain; }
+.menu-viewport[data-template] .cat-nav-scroll { padding: 4px 0 10px; gap: 8px; }
+.menu-viewport[data-template] .category-nav-pill { min-height: 44px; border-radius: var(--template-category-radius); }
+.menu-viewport[data-template] .product-item-card {
+  --item-photo-size: var(--template-item-image-size);
+  --item-content-size: max(var(--item-photo-size), 88px);
+  grid-template-columns: var(--item-photo-size) minmax(0, 1fr);
+  height: calc(var(--item-content-size) + 18px);
+  border-radius: var(--template-item-radius);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+  padding: 8px;
+  gap: 10px;
+  min-height: 0;
+}
+.menu-viewport[data-template] .product-card-photo {
+  width: var(--item-photo-size); height: var(--item-photo-size);
+  align-self: center; aspect-ratio: 1;
+  min-width: 0; border-radius: var(--template-button-radius);
+}
+.menu-viewport[data-template] :is(.product-photo-img, .photo-placeholder-box) { position: absolute; inset: 0; aspect-ratio: 1; }
+.menu-viewport[data-template] .product-card-body {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 18px minmax(0, 1fr) 32px;
+  height: var(--item-content-size); min-height: 0;
+  padding: 0; min-width: 0; gap: 2px 6px;
+}
+.menu-viewport[data-template] .card-title-row { display: contents; }
+.menu-viewport[data-template] .card-item-title { grid-column: 1; grid-row: 1; align-self: center; }
+.menu-viewport[data-template] .item-like-btn { grid-column: 2; grid-row: 1 / span 2; align-self: start; min-height: 36px; }
+.menu-viewport[data-template] .card-item-desc { grid-column: 1; grid-row: 2; align-self: start; -webkit-line-clamp: 2; }
+.menu-viewport[data-template] .card-bottom-row { grid-column: 1 / -1; grid-row: 3; }
+.menu-viewport[data-template] .btn-back-home { min-height: 44px; border-radius: var(--template-button-radius); }
+.menu-viewport[data-template] .btn-view-item {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 32px; min-width: 32px; height: 32px; min-height: 32px;
+  padding: 0; box-sizing: border-box; border: 1px solid transparent; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent-color) 6%, transparent);
+  cursor: pointer; transition: background .18s ease, border-color .18s ease;
+}
+.menu-viewport[data-template] .btn-view-item:hover {
+  background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent-color) 20%, transparent);
+}
+.menu-viewport[data-template] .btn-view-item:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.menu-viewport[data-template] .btn-view-item:active { background: color-mix(in srgb, var(--accent-color) 18%, transparent); }
+.menu-viewport[data-template] .card-item-title { overflow-wrap: anywhere; }
+@container (max-width: 480px) {
+  .menu-viewport[data-template="default"] .showcase-hero-banner { aspect-ratio: 16 / 9; }
+}
+@container (max-width: 360px) {
+  .menu-viewport[data-template] .product-item-card { --item-photo-size: 72px; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-viewport[data-template] .hero-carousel-slide { transition: none; transform: none; }
+}

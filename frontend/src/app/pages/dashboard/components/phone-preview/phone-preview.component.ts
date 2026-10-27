@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PublicMenuViewComponent } from '../../../../components/public-menu-view/public-menu-view.component';
 import { DesignService } from '../../../../services/design.service';
@@ -10,7 +10,7 @@ import { DesignService } from '../../../../services/design.service';
   template: `
     <div class="phone-wrapper">
       <!-- Phone Frame (Smartphone Mockup) -->
-      <div class="phone-frame">
+      <div class="phone-frame" [style.width.px]="390 * scale() + 8">
         <!-- Dynamic Island / Notch -->
         <div class="phone-notch">
           <div class="notch-camera"></div>
@@ -40,8 +40,10 @@ import { DesignService } from '../../../../services/design.service';
         </div>
 
         <!-- Phone Screen Content (EXATAMENTE A MESMA EXPERIÊNCIA DO CLIENTE FINAL) -->
-        <div class="phone-screen-container">
-          <app-public-menu-view [isPhonePreview]="true"></app-public-menu-view>
+        <div class="phone-screen-container" [style.height.px]="740 * scale()">
+          <div class="phone-screen-viewport" [style.transform]="'scale(' + scale() + ')'">
+            <app-public-menu-view #menu [isPhonePreview]="true"></app-public-menu-view>
+          </div>
         </div>
 
         <!-- Home indicator -->
@@ -50,6 +52,8 @@ import { DesignService } from '../../../../services/design.service';
 
       <!-- Preview Live Badge -->
       <div class="preview-info">
+        <span class="info-label">390 × 740 px</span>
+        <button type="button" class="restart-preview" (click)="menu.resetToWelcome()">Reiniciar prévia</button>
         <div class="sync-indicator">
           <span class="sync-dot"></span>
           <span>Sincronizado em tempo real</span>
@@ -59,7 +63,7 @@ import { DesignService } from '../../../../services/design.service';
     </div>
   `,
   styles: [`
-    :host { display: block; }
+    :host { display: block; width: 100%; max-width: 320px; }
 
     .phone-wrapper {
       display: flex;
@@ -72,8 +76,8 @@ import { DesignService } from '../../../../services/design.service';
 
     /* ── Phone Frame ── */
     .phone-frame {
-      width: 290px;
-      height: 590px;
+      box-sizing: border-box;
+      flex-shrink: 0;
       background: #18181B;
       border-radius: 40px;
       border: 4px solid #27272A;
@@ -169,13 +173,21 @@ import { DesignService } from '../../../../services/design.service';
 
     /* Phone Screen Container */
     .phone-screen-container {
-      flex: 1;
+      flex-shrink: 0;
       width: 100%;
-      height: 520px;
-      max-height: 520px;
       overflow: hidden;
       position: relative;
     }
+
+    .phone-screen-viewport {
+      width: 390px; height: 740px; transform-origin: top left;
+      position: relative; overflow: hidden; contain: layout paint;
+    }
+    .restart-preview {
+      border: 0; background: transparent; color: var(--panel-accent, #F47B20);
+      font: inherit; font-size: .72rem; padding: 4px 8px; cursor: pointer;
+    }
+    .restart-preview:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
     /* Home Indicator */
     .phone-home-indicator {
@@ -228,8 +240,30 @@ import { DesignService } from '../../../../services/design.service';
     }
   `]
 })
-export class PhonePreviewComponent {
-  constructor(private designService: DesignService) {}
+export class PhonePreviewComponent implements AfterViewInit, OnDestroy {
+  readonly scale = signal(312 / 390);
+  private resizeObserver?: ResizeObserver;
+
+  constructor(private designService: DesignService, private host: ElementRef<HTMLElement>) {}
+
+  ngAfterViewInit(): void {
+    const element = this.host.nativeElement;
+    const stage = element.parentElement;
+    if (!stage) return;
+    this.resizeObserver = new ResizeObserver(() => {
+      const style = getComputedStyle(stage);
+      const availableHeight = stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      const widthScale = Math.max(0, element.clientWidth - 8) / 390;
+      // Reserve space for the frame, system bars and preview controls.
+      const heightScale = Math.max(0, availableHeight - 124) / 740;
+      // Keep the menu readable; shorter panels can scroll instead of shrinking it further.
+      if (widthScale > 0 && heightScale > 0) this.scale.set(Math.min(widthScale, Math.max(heightScale, .76), 1));
+    });
+    this.resizeObserver.observe(stage);
+    this.resizeObserver.observe(element);
+  }
+
+  ngOnDestroy(): void { this.resizeObserver?.disconnect(); }
 
   get templateName(): string {
     return this.designService.currentTemplate().name;

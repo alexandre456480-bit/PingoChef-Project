@@ -31,6 +31,7 @@ type GallerySlide =
   standalone: true,
   imports: [CommonModule, MenuImageDirective],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  host: { '[class.mobile-preview]': 'previewMode' },
   template: `
     @if (slides.length > 0) {
       <section
@@ -310,6 +311,11 @@ type GallerySlide =
       .expanded-player-shell { max-width: 96vw; max-height: 82vh; border-radius: 18px; }
       .expanded-player-topbar { padding-left: 13px; }
     }
+    :host(.mobile-preview) .media-stage { touch-action: pan-y; }
+    :host(.mobile-preview) .nav-button { display: none; }
+    :host(.mobile-preview) .video-lightbox { padding: 14px; }
+    :host(.mobile-preview) .expanded-player-shell { max-width: 374.4px; max-height: 606.8px; border-radius: 18px; }
+    :host(.mobile-preview) .expanded-player-topbar { padding-left: 13px; }
     @media (prefers-reduced-motion: reduce) {
       .play-button, .gallery-dot { transition: none; }
       .loading-ring { animation-duration: 1.4s; }
@@ -489,8 +495,8 @@ export class ProductMediaGalleryComponent implements OnDestroy {
   private applyPlayerLayout(aspectRatio: ProductGalleryMedia['aspectRatio']): void {
     const numericRatio = aspectRatio === '9:16' ? 9 / 16 : 16 / 9;
     const widthLimit = aspectRatio === '9:16' ? 520 : 960;
-    const availableWidth = this.previewMode ? 330 : window.innerWidth * .94;
-    const availableHeight = this.previewMode ? 470 : window.innerHeight * .84;
+    const availableWidth = (this.previewMode ? 390 : window.innerWidth) * .94;
+    const availableHeight = (this.previewMode ? 740 : window.innerHeight) * .84;
     const maxWidth = Math.min(availableWidth, availableHeight * numericRatio, widthLimit);
     this.playerAspectRatio = this.cssAspectRatio(aspectRatio);
     this.expandedPlayerWidth = `${Math.max(220, Math.round(maxWidth))}px`;

@@ -8,7 +8,7 @@ import { restrictionSettings } from './configure-mux-playback-restriction.mjs';
 
 const run=(script,input='',env={})=>spawnSync(process.execPath,[fileURLToPath(new URL(script,import.meta.url))],{
   input,encoding:'utf8',env:{SystemRoot:process.env.SystemRoot,NODE_ENV:'test',...env},timeout:10000});
-test('official migration manifest is complete, ordered and unique',async()=>assert.equal((await checkedMigrations()).length,33));
+test('official migration manifest is complete, ordered and unique',async()=>assert.equal((await checkedMigrations()).length,39));
 test('staging proxy preserves headers but cannot point to production',()=>{
   const base={headers:[{source:'/(.*)',headers:[{key:'security',value:'keep'}]}],rewrites:[{source:'/api/:path*',destination:'https://production.example/api/:path*'},{source:'/(.*)',destination:'/index.html'}]};
   const safe=stagingConfig(base,'https://staging.example','https://production.example');

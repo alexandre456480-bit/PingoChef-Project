@@ -1,3 +1,4 @@
+import { TemplateConfig, resolveMenuTemplate } from '../../constants/menu-templates';
 import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild, ChangeDetectionStrategy, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -5,8 +6,6 @@ import { Category, MenuItem, MenuService, Subcategory } from '../../services/men
 import {
   DesignService,
   DesignSettings,
-  TemplateConfig,
-  resolveMenuTemplate,
   AVAILABLE_PALETTES,
   AVAILABLE_FONT_PAIRS,
   contrastTextColor,
@@ -37,10 +36,15 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       class="menu-viewport"
       [class.in-phone]="isPhonePreview"
       [attr.data-template]="templateKey"
-      [attr.data-header-template]="currentTemplate.key"
-      [attr.data-template-family]="isCurvedTemplate ? 'curved' : null"
-      [attr.data-surface]="surfaceStyle"
-      [attr.data-logo-pos]="logoPosition"
+      [style.--template-hero-ratio]="currentTemplate.heroRatio"
+      [style.--template-hero-radius.px]="currentTemplate.heroRadius"
+      [style.--template-logo-size.px]="currentTemplate.logoSize"
+      [style.--template-logo-radius.px]="currentTemplate.logoRadius"
+      [style.--template-description-align]="currentTemplate.descriptionAlign"
+      [style.--template-category-radius.px]="currentTemplate.categoryRadius"
+      [style.--template-button-radius.px]="currentTemplate.buttonRadius"
+      [style.--template-item-radius.px]="currentTemplate.itemRadius"
+      [style.--template-item-image-size.px]="currentTemplate.itemImageSize"
       [style.--bg-color]="screenBg"
       [style.--surface-color]="surfaceColor"
       [style.--primary-color]="primaryColor"
@@ -130,6 +134,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
           [style.background]="screenBg">
 
           <!-- Floating Control Capsule (Search, Cart & Reset) -->
+          <ng-template #controlsTemplate>
           <div class="floating-controls-capsule" [style.background]="surfaceColor + 'D9'">
             <button
               type="button"
@@ -162,23 +167,16 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               </button>
             }
 
-            @if (isPhonePreview) {
-              <div class="capsule-divider"></div>
-              <button
-                type="button"
-                class="capsule-btn reset"
-                (click)="resetToWelcome()"
-                title="Reiniciar e rever tela inicial">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-                </svg>
-              </button>
-            }
+
           </div>
+          </ng-template>
+          @if (!heroControlsInside) {
+            <ng-container *ngTemplateOutlet="controlsTemplate"></ng-container>
+          }
 
           <!-- Search Expandable Bar -->
           @if (searchActive) {
-            <div id="public-menu-search" class="search-drawer" [style.padding-right.px]="82 + (enableCart ? 48 : 0) + (isPhonePreview ? 48 : 0)" [style.background]="surfaceColor + 'F2'">
+            <div id="public-menu-search" class="search-drawer" [style.padding-right.px]="82 + (enableCart ? 48 : 0)" [style.background]="surfaceColor + 'F2'">
               <div class="search-field-wrap">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input
@@ -199,16 +197,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
           <!-- Scrollable Showcase Body -->
           <div class="showcase-scrollable" #showcaseScroller>
 
-            <!-- 0. ESTRUTURA MINIMAL: APENAS A LOGO CENTRALIZADA ACIMA DO HERO -->
-            @if (logoPosition === 'above-hero' && !searchFilter && showHeroBlock) {
-              <div class="above-hero-section">
-                <div class="above-hero-logo-wrap">
-                  <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="above-hero-logo-img" />
-                </div>
-              </div>
-            }
-
-            <!-- CABEÇALHO ELEGANTE QUANDO A HERO SECTION ESTÁ DESATIVADA -->
             @if (!(activeCatId ? isCategoryHeroEnabled : showHeroBlock) && !searchFilter) {
               <div class="no-hero-header" [style.background]="surfaceColor" [style.border-bottom]="'1px solid ' + surfaceColor + '30'">
                 <div class="no-hero-brand">
@@ -217,20 +205,31 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   </div>
                   <div class="no-hero-texts">
                     <h2 class="no-hero-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ businessName }}</h2>
-                    @if (!isCurvedTemplate) {
-                      <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
-                    }
+                    <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
                   </div>
                 </div>
               </div>
             }
 
             <!-- TEMPLATE REUTILIZÁVEL: HERO BANNER SECTION (Exibido no Início e nas Categorias) -->
+            <ng-template #brandIdentityTemplate>
+              <div class="template-brand-header">
+                <div class="template-logo-wrap">
+                  <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="template-logo" />
+                </div>
+                <div class="template-brand-copy">
+                  <h2>{{ businessName }}</h2>
+                  @if (businessDescription.trim()) {
+                    <p>{{ businessDescription }}</p>
+                  }
+                </div>
+              </div>
+            </ng-template>
+
             <ng-template #heroBannerTemplate>
               <div
                 class="showcase-hero-banner"
                 appMenuReveal
-                [attr.data-hero-style]="currentTemplate.heroStyle"
                 (mouseenter)="stopBannerTimer()"
                 (mouseleave)="startBannerTimer()">
                 <div class="hero-carousel-track">
@@ -246,7 +245,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   }
                 </div>
 
-                <div class="hero-banner-overlay" [style.background]="'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.45) 80%, ' + screenBg + ' 100%)'">
+                @if (heroControlsInside) {
+                  <ng-container *ngTemplateOutlet="controlsTemplate"></ng-container>
+                }
+                @if (currentTemplate.brandPosition === 'inside-hero') {
+                  <ng-container *ngTemplateOutlet="brandIdentityTemplate"></ng-container>
+                }
+
+                <div class="hero-banner-overlay">
                   @if (heroBanners.length > 1) {
                     <div class="carousel-dots-wrap">
                       @for (banner of heroBanners; track $index; let dIdx = $index) {
@@ -263,55 +269,21 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   }
                 </div>
 
-                @if (currentTemplate.key === 'editorial-arc' && hasIntroCard && introCard.title) {
-                  <div class="editorial-hero-copy">
-                    <h2 [style.font-family]="headingFont + ', sans-serif'">{{ introCard.title }}</h2>
-                  </div>
-                }
-                @if (currentTemplate.key === 'brand-cover') {
-                  <div class="brand-cover-identity">
-                    <img class="brand-cover-logo" [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" />
-                    <h2 class="brand-cover-name" [style.font-family]="headingFont + ', sans-serif'">{{ businessName }}</h2>
-                    @if (businessDescription.trim()) {
-                      <p class="brand-cover-description" [style.font-family]="bodyFont + ', sans-serif'">{{ businessDescription }}</p>
-                    }
-                  </div>
-                }
-                @if (logoPosition === 'hero-bottom-center' && templateKey !== 'showcase') {
-                  <div class="hero-overlap-logo-container">
-                    <div class="hero-overlap-ring">
-                      <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="hero-overlap-img" />
-                    </div>
-                  </div>
-                }
               </div>
-              @if (templateKey === 'showcase' && logoPosition === 'hero-bottom-center') {
-                <div class="hero-overlap-logo-container">
-                  <div class="hero-overlap-ring">
-                    <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="hero-overlap-img" />
-                  </div>
-                </div>
-              }
-              @if (currentTemplate.key === 'editorial-arc') {
-                <div class="editorial-brand-line"><span>{{ businessName }}</span></div>
+              @if (currentTemplate.brandPosition === 'below-hero') {
+                <ng-container *ngTemplateOutlet="brandIdentityTemplate"></ng-container>
               }
             </ng-template>
-
-            @if (templateKey === 'showcase' && !searchFilter && isCategoryHeroEnabled) {
-              <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
-            }
 
             <ng-template #introDescriptionTemplate>
               @if (hasIntroCard) {
                 <div class="intro-description-wrapper">
                   <div
                     class="intro-description-card"
-                    appMenuReveal
-                    [style.background]="surfaceColor + '18'"
-                    [style.border-color]="surfaceColor + '35'">
+                    appMenuReveal>
 
                     <div class="intro-card-body">
-                      @if (introCard.title && !(currentTemplate.key === 'editorial-arc' && isCategoryHeroEnabled)) {
+                      @if (introCard.title) {
                         <h3
                           class="intro-card-title"
                           [style.font-family]="headingFont + ', sans-serif'"
@@ -323,9 +295,8 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         <p
                           class="intro-card-desc"
                           [style.font-family]="bodyFont + ', sans-serif'"
-                          [style.color]="textSecondary">
-                          {{ introCard.description }}
-                        </p>
+                          [style.color]="textSecondary"
+                          [textContent]="introCard.description"></p>
                       }
                     </div>
                   </div>
@@ -333,29 +304,29 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               }
             </ng-template>
 
-            @if (isCurvedTemplate && hasIntroCard && !searchFilter) {
-              <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
-            }
-
-            <!-- 1. VITRINE DINÂMICA REORDENÁVEL (QUANDO EM 'INÍCIO' E SEM BUSCA) -->
+            <!-- Home block order and enabled flags belong to the customer. -->
             @if (!searchFilter && !activeCatId) {
-
-              <!-- BLOCO DE APRESENTAÇÃO / DESCRIÇÃO INICIAL (FIXO NO INÍCIO ACIMA DA HERO) -->
-              @if (!isCurvedTemplate) {
+              @if (!showHeroBlock) {
                 <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
               }
 
               @for (block of orderedHomeBlocks; track block.id) {
                 <!-- BLOCO HERO / BANNER -->
                 @if (block.type === 'hero') {
-                  @if (showHeroBlock && templateKey !== 'showcase') {
+                  @if (showHeroBlock) {
+                    @if (currentTemplate.descriptionPosition === 'before-hero') {
+                      <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
+                    }
                     <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
+                    @if (currentTemplate.descriptionPosition === 'after-hero') {
+                      <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
+                    }
                   }
                 }
 
                 <!-- BLOCO DE CATEGORIAS -->
                 @else if (block.type === 'categories' && showCategoriesBlock) {
-                  <div class="categories-nav-section" appMenuReveal [attr.data-cat-layout]="currentTemplate.categoryLayout">
+                  <div class="categories-nav-section" appMenuReveal>
                     <div class="cat-nav-scroll">
                       <!-- Botão Início com Ícone Personalizado de Bistrô/Fachada Gastronômica -->
                       <button
@@ -697,13 +668,13 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               }
             } @else if (!searchFilter) {
               <!-- Hero Section nas outras categorias (mantendo a descrição/intro card oculta) -->
-              @if (isCategoryHeroEnabled && templateKey !== 'showcase') {
+              @if (isCategoryHeroEnabled) {
                 <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
               }
 
               <!-- Barra de Categorias fixa se estiver navegando por categoria -->
               @if (showCategoriesBlock) {
-                <div class="categories-nav-section" [attr.data-cat-layout]="currentTemplate.categoryLayout">
+                <div class="categories-nav-section">
                   <div class="cat-nav-scroll">
                     <!-- Botão Início com Ícone Personalizado de Bistrô/Fachada Gastronômica -->
                     <button
@@ -801,7 +772,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         </div>
 
                         @if (!isSubcategoryCollapsed(sub.id)) {
-                          <div class="items-grid" [attr.data-card-style]="currentTemplate.itemCardStyle">
+                          <div class="items-grid">
                             @for (item of getItemsBySubcategory(sub.id); track item.id; let idx = $index) {
                               <div
                                 class="product-item-card"
@@ -865,13 +836,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                       <button
                                         type="button"
                                         class="btn-view-item"
-                                        [style.background]="accentColor + '18'"
                                         [style.color]="accentColor"
-                                        [style.border-color]="accentColor + '40'"
+                                        [attr.aria-label]="'Ver detalhes de ' + item.name"
                                         (click)="openProductDetail(item); $event.stopPropagation()">
-                                        Ver
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                                        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                          <path d="M7 17 17 7M7 7h10v10"/>
                                         </svg>
                                       </button>
                                     </div>
@@ -908,7 +877,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       </div>
 
                       @if (!isSubcategoryCollapsed('__other__')) {
-                        <div class="items-grid" [attr.data-card-style]="currentTemplate.itemCardStyle">
+                        <div class="items-grid">
                           @for (item of getItemsWithoutSubcategory(); track item.id; let idx = $index) {
                             <div
                               class="product-item-card"
@@ -971,13 +940,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                     <button
                                       type="button"
                                       class="btn-view-item"
-                                      [style.background]="accentColor + '18'"
                                       [style.color]="accentColor"
-                                      [style.border-color]="accentColor + '40'"
+                                      [attr.aria-label]="'Ver detalhes de ' + item.name"
                                       (click)="openProductDetail(item); $event.stopPropagation()">
-                                      Ver
-                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                      <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M7 17 17 7M7 7h10v10"/>
                                       </svg>
                                     </button>
                                   </div>
@@ -990,7 +957,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     </div>
                   }
                 } @else {
-                  <div class="items-grid" [attr.data-card-style]="currentTemplate.itemCardStyle">
+                  <div class="items-grid">
                     @for (item of displayItems; track item.id; let idx = $index) {
                       <div
                         class="product-item-card"
@@ -1054,13 +1021,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                               <button
                                 type="button"
                                 class="btn-view-item"
-                                [style.background]="accentColor + '18'"
                                 [style.color]="accentColor"
-                                [style.border-color]="accentColor + '40'"
+                                [attr.aria-label]="'Ver detalhes de ' + item.name"
                                 (click)="openProductDetail(item); $event.stopPropagation()">
-                                Ver
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                                <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M7 17 17 7M7 7h10v10"/>
                                 </svg>
                               </button>
                             </div>
@@ -1299,7 +1264,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     </div>
   `,
-  styleUrls: ['./public-menu-header-templates.css', './public-menu-curved-templates.css'],
+  styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css'],
   styles: [`
     :host {
       display: block;
@@ -1353,9 +1318,8 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     /* Phone preview embedded mode */
     .menu-viewport.in-phone {
-      height: 520px;
-      min-height: 520px;
-      max-height: 520px;
+      height: 100%;
+      --menu-title-responsive-size: 11.7px;
     }
 
     /* ══════════════════════════════════════════════════ */
@@ -1716,7 +1680,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       line-height: 1.55;
       word-break: break-word;
       opacity: 0.95;
-      white-space: pre-line;
+      white-space: break-spaces;
     }
     @keyframes introFadeSlideIn {
       from { opacity: 0; transform: translateY(-8px); }
@@ -1726,35 +1690,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     /* ══════════════════════════════════════════════════ */
     /* ── ESTRUTURAS ESPECÍFICAS DOS TEMPLATES ── */
     /* ══════════════════════════════════════════════════ */
-
-    /* Template 1: Minimalist Clean */
-    .above-hero-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 14px 16px 4px;
-      gap: 6px;
-    }
-    .above-hero-logo-wrap {
-      width: 66px;
-      height: 66px;
-      border-radius: 50%;
-      overflow: hidden;
-    }
-    .above-hero-logo-img { width: 100%; height: 100%; object-fit: cover; }
-    .above-hero-brand-name {
-      font-size: 1.28rem;
-      font-weight: 800;
-      margin: 0;
-      line-height: 1.2;
-    }
-    .above-hero-tagline {
-      font-size: 0.78rem;
-      margin: 0;
-      max-width: 260px;
-      line-height: 1.35;
-    }
 
     /* Hero Banner Geral com Carrossel Suave */
     .showcase-hero-banner {
@@ -1800,31 +1735,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       min-height: 125px;
       box-sizing: border-box;
     }
-    .hero-chip {
-      display: inline-block;
-      align-self: flex-start;
-      font-size: 0.62rem;
-      font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 10px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .hero-banner-title {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: #FFF;
-      margin: 0;
-      line-height: 1.2;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-    .hero-banner-desc {
-      font-size: 0.72rem;
-      color: #E4E4E7;
-      margin: 2px 0 0 0;
-      line-height: 1.3;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-    }
     .carousel-dots-wrap {
       display: flex;
       align-items: center;
@@ -1848,223 +1758,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       box-shadow: 0 0 10px var(--dot-accent, #F47B20);
     }
 
-    /* Variação Estrutural: Minimal */
-    .menu-viewport[data-template="minimal"] .showcase-hero-banner {
-      margin: 0 10px 4px;
-      border-radius: 14px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-    .menu-viewport[data-template="minimal"] .product-item-card,
-    .menu-viewport[data-template="minimal"] .category-nav-pill:not(.active) {
-      border-radius: 12px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      transition: transform 0.2s ease;
-    }
-    .menu-viewport[data-template="minimal"] .product-item-card:hover {
-      border-color: var(--accent-color);
-      transform: translateY(-2px);
-    }
-
-    /* Variação Estrutural: Modern Claymorphism */
-    .menu-viewport[data-template="modern"] .showcase-hero-banner {
-      margin: 0 6px 6px;
-      border-radius: 24px;
-      box-shadow: 6px 6px 16px rgba(0,0,0,0.22), -3px -3px 10px rgba(255,255,255,0.06), inset 1px 1px 2px rgba(255,255,255,0.15);
-    }
-    .menu-viewport[data-template="modern"] .category-nav-pill {
-      border-radius: 18px;
-      box-shadow: 6px 6px 18px rgba(0,0,0,0.18), -3px -3px 10px rgba(255,255,255,0.06), inset 1px 1px 2px rgba(255,255,255,0.12);
-    }
-    .menu-viewport[data-template="modern"] .product-item-card {
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 6px 6px 18px rgba(0,0,0,0.18), -3px -3px 10px rgba(255,255,255,0.06), inset 1px 1px 2px rgba(255,255,255,0.12);
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .menu-viewport[data-template="modern"] .product-item-card:hover {
-      transform: translateY(-3px) scale(1.01);
-      box-shadow: 8px 8px 22px rgba(0,0,0,0.25), -4px -4px 12px rgba(255,255,255,0.08);
-    }
-    .menu-viewport[data-template="modern"] .btn-quick-view {
-      border-radius: 12px;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.15), inset 1px 1px 2px rgba(255,255,255,0.2);
-    }
-
-    /* Variação Estrutural: Premium Dining */
-    .menu-viewport[data-template="premium"] .showcase-hero-banner {
-      border-radius: 0;
-      margin: -10px -12px 0;
-      height: 160px;
-    }
-    .hero-overlap-logo-container {
-      position: relative;
-      margin-top: -38px;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: center;
-      z-index: 25;
-    }
-    .hero-overlap-ring {
-      width: 76px;
-      height: 76px;
-      border-radius: 50%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .hero-overlap-img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .menu-viewport[data-template="premium"] .product-item-card,
-    .menu-viewport[data-template="premium"] .category-nav-pill:not(.active) {
-      border-radius: 16px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
-      transition: transform 0.25s ease;
-    }
-    .menu-viewport[data-template="premium"] .product-item-card:hover {
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
-      border-color: var(--accent-color);
-      transform: translateY(-2px);
-    }
-
-    /* Vitrine Compacta: capa de ponta a ponta e logo fora da área recortada. */
-    [data-template="showcase"] .showcase-scrollable {
-      padding-top: 0;
-      gap: 12px;
-    }
-    [data-template="showcase"] .showcase-scrollable > * {
-      flex-shrink: 0;
-    }
-    [data-template="showcase"] .showcase-hero-banner {
-      margin: 0 -12px;
-      height: auto;
-      min-height: 0;
-      aspect-ratio: 2.5;
-      border-radius: 0 0 32px 32px;
-      box-shadow: none;
-    }
-    [data-template="showcase"] .hero-banner-overlay {
-      position: absolute;
-      inset: 0;
-      min-height: 0;
-      background: linear-gradient(180deg, transparent 70%, rgba(0,0,0,.12)) !important;
-      justify-content: flex-start;
-      padding-top: 18px;
-    }
-    [data-template="showcase"] .carousel-dots-wrap { margin-top: 0; }
-    [data-template="showcase"] .hero-overlap-logo-container {
-      margin: -62px 0 0;
-      pointer-events: none;
-    }
-    [data-template="showcase"] .hero-overlap-ring {
-      width: 88px;
-      height: 88px;
-      border: 5px solid var(--bg-color);
-      background: var(--surface-color);
-      box-sizing: border-box;
-      box-shadow: 0 6px 18px rgba(0,0,0,.07);
-    }
-    [data-template="showcase"] .hero-overlap-img { object-fit: contain; }
-    [data-template="showcase"] .intro-description-wrapper { text-align: center; padding: 0 8px; }
-    [data-template="showcase"] .intro-description-card {
-      padding: 6px 0;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-      background: transparent !important;
-    }
-    [data-template="showcase"] .categories-nav-section { margin: 0 -12px; }
-    [data-template="showcase"] .cat-nav-scroll { padding: 6px 14px 12px; gap: 8px; }
-    [data-template="showcase"] .category-nav-pill {
-      border-radius: 999px;
-      padding: 10px 18px;
-      min-height: 44px;
-    }
-    [data-template="showcase"] .product-item-card,
-    [data-template="showcase"] .category-nav-pill:not(.active) {
-      border: 1px solid color-mix(in srgb, var(--text-primary) 5%, transparent);
-      box-shadow: 0 4px 16px rgba(0,0,0,.04);
-    }
-    [data-template="showcase"] .product-item-card {
-      grid-template-columns: 100px minmax(0, 1fr);
-      padding: 6px;
-      border-radius: 16px;
-      transition: transform 180ms ease;
-    }
-    [data-template="showcase"] .product-item-card:hover { transform: translateY(-2px); }
-    [data-template="showcase"] .product-card-photo {
-      width: 100px;
-      height: 100px;
-      min-width: 0;
-      border-radius: 10px;
-    }
-    [data-template="showcase"] .product-card-body { padding: 0 0 0 10px; }
-    [data-template="showcase"] .card-item-title {
-      white-space: normal;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow-wrap: anywhere;
-    }
-    [data-template="showcase"] .btn-view-item { border-radius: 9px; font-size: .75rem; padding: 4px 12px; }
-    [data-template="showcase"] .catalog-header-row { padding-bottom: 12px; gap: 8px; }
-    [data-template="showcase"] .section-heading { font-size: 1.2rem; text-transform: uppercase; overflow-wrap: anywhere; }
-    [data-template="showcase"] .btn-back-home { flex-shrink: 0; }
-    [data-template="showcase"] .subcategory-group { margin-bottom: 4px; }
-    [data-template="showcase"] .subcategory-header-collapsible { padding: 4px 2px; margin: 4px 0 8px; gap: 8px; }
-    [data-template="showcase"] .subcat-title-wrap { min-width: 0; }
-    [data-template="showcase"] .subcategory-title { overflow-wrap: anywhere; }
-    [data-template="showcase"] .subcat-indicator { height: 20px; flex-shrink: 0; }
-    [data-template="showcase"] .floating-controls-capsule {
-      background: transparent !important;
-      border: 0;
-      padding: 0;
-      gap: 10px;
-      box-shadow: none;
-      backdrop-filter: none;
-    }
-    [data-template="showcase"] .capsule-btn { background: var(--surface-color); box-shadow: 0 3px 12px rgba(0,0,0,.06); }
-    [data-template="showcase"] .capsule-divider { display: none; }
-    [data-template="showcase"] .no-hero-header { margin-top: 70px; }
-
-    /* Variação Estrutural: Dark Glass & Neon */
-    .menu-viewport[data-template="dark"] .showcase-hero-banner {
-      border-radius: 18px;
-      margin: 0 4px 6px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-    }
-    .menu-viewport[data-template="dark"] .product-item-card,
-    .menu-viewport[data-template="dark"] .category-nav-pill:not(.active) {
-      border-radius: 20px;
-      background: rgba(22, 22, 34, 0.72) !important;
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-      transition: transform 0.25s ease;
-    }
-    .menu-viewport[data-template="dark"] .product-item-card:hover {
-      border-color: var(--accent-color);
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6), 0 0 16px var(--accent-color);
-      transform: translateY(-2px);
-    }
-    .menu-viewport[data-template="dark"] .price-regular,
-    .menu-viewport[data-template="dark"] .active-price {
-      text-shadow: 0 0 8px var(--accent-color);
-    }
-
-    /* ══════════════════════════════════════════════════ */
-    /* ── CATEGORIAS, PROMOS & PRODUTOS ── */
-    /* ══════════════════════════════════════════════════ */
     .categories-nav-section {
       margin: 2px 0 6px;
     }
@@ -2791,24 +2484,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       align-items: center;
       z-index: 2;
     }
-    .btn-view-item {
-      font-size: 0.62rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      cursor: pointer;
-      flex-shrink: 0;
-      white-space: nowrap;
-      transition: transform 0.2s ease;
-    }
-    .btn-view-item:hover {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
-    }
 
     .empty-products-msg {
       text-align: center;
@@ -2861,7 +2536,10 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       animation: sheetUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .product-modal-sheet.video-expanded { overflow: visible; }
-    .menu-viewport.in-phone .product-modal-sheet { max-height: 500px; }
+    .menu-viewport.in-phone .product-modal-backdrop,
+    .menu-viewport.in-phone .cart-modal-backdrop { position: absolute; }
+    .menu-viewport.in-phone .product-modal-sheet { max-height: min(92%, 760px); }
+    .menu-viewport.in-phone .cart-drawer-sheet { max-height: 85%; }
     @keyframes sheetUp {
       from { transform: translateY(12px); opacity:0; }
       to { transform: translateY(0); }
@@ -2967,27 +2645,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       display: flex;
       align-items: center;
       gap: 6px;
-    }
-    .btn-view-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 10px;
-      border-radius: 8px;
-      font-size: 0.8125rem;
-      font-weight: 700;
-      border: 1px solid;
-      cursor: pointer;
-      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      white-space: nowrap;
-    }
-    .btn-view-item:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.1);
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
-    }
-    .btn-view-item:active {
-      transform: scale(0.96);
     }
     .btn-add-cart-circle {
       width: 32px;
@@ -3776,24 +3433,14 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return this.publicMenuService.menuData()?.design || this.designService.draft();
   }
 
-  get templateKey(): string {
-    return this.design?.templateKey || 'modern';
+  get templateKey(): string { return this.currentTemplate.key; }
+
+  get heroControlsInside(): boolean {
+    return this.currentTemplate.brandPosition === 'inside-hero' && !this.searchActive && !this.searchFilter && this.isCategoryHeroEnabled;
   }
 
   get currentTemplate(): TemplateConfig {
     return resolveMenuTemplate(this.design);
-  }
-
-  get isCurvedTemplate(): boolean {
-    return this.currentTemplate.key === 'editorial-arc' || this.currentTemplate.key === 'curve-panels';
-  }
-
-  get surfaceStyle(): string {
-    return this.currentTemplate?.surfaceStyle || 'claymorphism';
-  }
-
-  get logoPosition(): string {
-    return this.currentTemplate?.logoPosition || 'top-left';
   }
 
   get categories(): Category[] { return this.categoryList(); }

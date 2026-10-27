@@ -77,14 +77,14 @@ it.each([undefined, 'slide'])('saves new palette/fonts without motion, accepting
   expect(response.body.data).not.toHaveProperty('motion');
 });
 
-it('saves the compact showcase template and publishes the owner menu', async () => {
+it('saves the default template and publishes the owner menu', async () => {
   const api = app();
   const response = await request(api).put('/design').send({
-    template_key: 'showcase', palette, font_heading: 'Oswald', font_body: 'Source Sans 3'
+    template_key: 'default', palette, font_heading: 'Oswald', font_body: 'Source Sans 3'
   });
   expect(response.status).toBe(200);
   expect(upsert.mock.calls[0][0]).toMatchObject({
-    template_key: 'showcase', palette, font_heading: 'Oswald', font_body: 'Source Sans 3'
+    template_key: 'default', palette, font_heading: 'Oswald', font_body: 'Source Sans 3'
   });
   const published = await request(api).post('/business/publish').send({});
   expect(published.status).toBe(200);
@@ -103,4 +103,40 @@ it.each([
   const response = await request(app()).put('/design').send({ palette, ...extra });
   expect(response.status).toBe(400);
   expect(upsert).not.toHaveBeenCalled();
+});
+
+it.each(['minimal', 'modern', 'premium', 'dark', 'showcase', 'brand-cover', 'editorial-arc', 'curve-panels'])(
+  'normalizes cached %s clients without persisting presentation markers', async key => {
+    const block = { id: 'hero', type: 'hero', label: 'Capa', enabled: false, position: 4 };
+    const response = await request(app()).put('/design').send({ template_key: key, palette,
+      home_blocks: [block, { id: key, type: 'template_variant', label: 'Legacy', enabled: false, position: 5 }],
+      custom_config: { template_variant: key, enable_cart: false, home_icons: { combo: null } } });
+    expect(response.status).toBe(200);
+    expect(upsert.mock.calls[0][0]).toMatchObject({ business_id: 'owner-business', template_key: 'default', palette,
+      home_blocks: [block], custom_config: { enable_cart: false, home_icons: { combo: null } } });
+    expect(response.body.data.custom_config).not.toHaveProperty('template_variant');
+  });
+it('rejects unknown template keys before writing', async () => {
+  const response = await request(app()).put('/design').send({ template_key: 'arbitrary', palette });
+  expect(response.status).toBe(400); expect(upsert).not.toHaveBeenCalled();
+});
+
+it('preserves description whitespace exactly when saving and returning the design', async () => {
+  const description = '  Primeiro  parágrafo.\n\n    Segundo parágrafo.\nTexto <b>literal</b>.  ';
+  const response = await request(app()).put('/design').send({ palette,
+    custom_config: { intro_card: { enabled: true, title: 'Apresentação', description } } });
+  expect(response.status).toBe(200);
+  expect(upsert.mock.calls[0][0].custom_config.intro_card.description).toBe(description);
+  expect(response.body.data.custom_config.intro_card.description).toBe(description);
+});
+
+it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover'])('persists %s independently of customer branding, optional sections and features', async template => {
+  const block = { id: 'hero', type: 'hero', label: 'Capa', enabled: false, position: 3 };
+  const response = await request(app()).put('/design').send({ template_key: template, palette,
+    font_heading: 'Oswald', font_body: 'Lora', home_blocks: [block],
+    custom_config: { enable_cart: false, home_icons: { home: null }, hero_scope: 'home_only' } });
+  expect(response.status).toBe(200);
+  expect(upsert.mock.calls[0][0]).toMatchObject({ business_id: 'owner-business', template_key: template,
+    palette, font_heading: 'Oswald', font_body: 'Lora', home_blocks: [block],
+    custom_config: { enable_cart: false, home_icons: { home: null }, hero_scope: 'home_only' } });
 });

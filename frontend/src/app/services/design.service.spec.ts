@@ -50,11 +50,11 @@ describe('Design settings persistence', () => {
     } });
     expect(service.hasUnsavedChanges()).toBe(false);
     expect(service.draft()).not.toHaveProperty('motion');
-    service.setTemplate('premium');
+    service.setTemplate('default');
     service.saveDesign().subscribe();
     const saved = http.expectOne('/api/v1/design');
     expect(saved.request.body).toMatchObject({
-      template_key: 'premium', palette, font_heading: 'Oswald', font_body: 'Source Sans 3', font_pair: 'bold_street',
+      template_key: 'default', palette, font_heading: 'Oswald', font_body: 'Source Sans 3', font_pair: 'bold_street',
       custom_config: { enable_cart: false, hero_banners: ['https://example.test/banner.webp'], intro_card: { title: 'Boas-vindas' } }
     });
     expect(saved.request.body).not.toHaveProperty('motion');
@@ -69,31 +69,56 @@ describe('Design settings persistence', () => {
     expect(service.draft().palette).toEqual(palette);
   });
 
-  it.each(['brand-cover', 'editorial-arc', 'curve-panels'])('saves and restores %s through the existing API and clears it when switching templates', (variant) => {
+  it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover'])('round-trips %s without changing customer personalization or features', template => {
     const original = service.draft();
-    service.setTemplate(variant);
-    expect(service.currentTemplate().key).toBe(variant);
-    expect(service.draft()).toMatchObject({
-      templateKey: 'showcase', palette: original.palette,
-      fontHeading: original.fontHeading, fontBody: original.fontBody,
-      homeBlocks: original.homeBlocks, heroBanners: original.heroBanners, introCard: original.introCard
-    });
+    service.setTemplate(template);
+    expect(service.draft()).toEqual({ ...original, templateKey: template });
     service.saveDesign().subscribe();
-    const saved = http.expectOne('/api/v1/design');
-    const payload = saved.request.body;
-    expect(payload).toMatchObject({ template_key: 'showcase', custom_config: { template_variant: variant } });
-    expect(payload.home_blocks).toContainEqual(expect.objectContaining({ id: variant, type: 'template_variant', enabled: false }));
-    expect(resolveMenuTemplate({ templateKey: payload.template_key, homeBlocks: payload.home_blocks, customConfig: {} }).key).toBe(variant);
-    saved.flush({ success: true });
+    const write = http.expectOne('/api/v1/design');
+    expect(write.request.body.template_key).toBe(template);
+    expect(write.request.body.custom_config).not.toHaveProperty('template_variant');
+    write.flush({ success: true });
     service.loadDesign().subscribe();
-    http.expectOne('/api/v1/design').flush({ success: true, data: payload });
-    expect(service.currentTemplate().key).toBe(variant);
+    http.expectOne('/api/v1/design').flush({ success: true, data: write.request.body });
+    expect(service.currentTemplate().key).toBe(template);
+    expect(service.draft().palette).toEqual(original.palette);
     expect(service.draft().homeBlocks).toEqual(original.homeBlocks);
-    expect(service.hasUnsavedChanges()).toBe(false);
-    service.setTemplate('showcase');
-    expect(service.currentTemplate().key).toBe('showcase');
-    expect(service.draft().customConfig).not.toHaveProperty('template_variant');
+    service.setTemplate('default');
+    expect(service.currentTemplate().key).toBe('default');
   });
+
+  it.each(['minimal', 'modern', 'premium', 'dark', 'showcase', 'brand-cover', 'editorial-arc', 'curve-panels'])(
+    'replaces legacy %s without changing customer content, branding or feature flags', key => {
+      const palette = { ...AVAILABLE_PALETTES[0], colors: { ...AVAILABLE_PALETTES[0].colors, primary: '#123456' } };
+      const blocks = [{ id: 'hero', type: 'hero', enabled: false, position: 2 }];
+      const config = { template_variant: key, home_icons: { home: null, combo: '2d-star' }, enable_cart: false,
+        enable_likes: false, hero_scope: 'home_only', category_hero_configs: { drinks: { enabled: false, banners: [] } },
+        hero_banners: ['https://example.test/banner.webp'], intro_card: { enabled: true, title: 'Cliente', description: 'Texto original' } };
+      service.loadDesign().subscribe();
+      http.expectOne('/api/v1/design').flush({ success: true, data: { template_key: key, palette,
+        font_heading: 'Oswald', font_body: 'Lora', category_style: 'name',
+        home_blocks: [...blocks, { id: key, type: 'template_variant', enabled: false, position: 8 }], custom_config: config } });
+      expect(service.currentTemplate().key).toBe('default');
+      expect(service.draft().palette).toEqual(palette);
+      expect(service.draft().homeBlocks).toContainEqual(blocks[0]);
+      expect(service.hasUnsavedChanges()).toBe(false);
+      const original = service.draft();
+      service.setTemplate('default');
+      expect(service.draft()).toEqual(original);
+      service.setTemplate(key);
+      expect(service.draft()).toEqual(original);
+      service.saveDesign().subscribe();
+      const write = http.expectOne('/api/v1/design');
+      expect(write.request.body).toMatchObject({ template_key: 'default', palette, font_heading: 'Oswald', font_body: 'Lora',
+        category_style: 'name', custom_config: { home_icons: config.home_icons, enable_cart: false, enable_likes: false,
+          hero_scope: 'home_only', category_hero_configs: config.category_hero_configs, hero_banners: config.hero_banners,
+          intro_card: config.intro_card } });
+      expect(write.request.body.custom_config).not.toHaveProperty('template_variant');
+      expect(write.request.body.home_blocks.some((block: any) => block.type === 'template_variant')).toBe(false);
+      write.flush({ success: true });
+      expect(resolveMenuTemplate({ templateKey: 'unknown' }).key).toBe('default');
+    });
+
 });
 
 function luminance(hex: string): number {

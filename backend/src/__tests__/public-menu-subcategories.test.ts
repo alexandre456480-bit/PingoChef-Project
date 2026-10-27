@@ -31,7 +31,30 @@ describe('Cardápio público com subconjuntos', () => {
     const response = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
 
     expect(response.status).toBe(200);
+    expect(response.body.data.design.templateKey).toBe('default');
     expect(response.body.data.subcategories).toEqual([{ id: 'test_sub', categoryId: 'test_cat', name: 'Artesanais', displayOrder: 0 }]);
     expect(response.body.data.items).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'test_item', subcategoryId: 'test_sub' })]));
+
+    localDb.designSettings[businessId] = {
+      template_key: 'showcase', font_heading: 'Oswald', font_body: 'Lora',
+      home_blocks: [{ id: 'hero', type: 'hero', enabled: false, position: 3 },
+        { id: 'curve-panels', type: 'template_variant', enabled: false, position: 9 }],
+      custom_config: { template_variant: 'curve-panels', enable_cart: false, home_icons: { home: null },
+        intro_card: { enabled: true, title: 'Cliente', description: 'Original' } }
+    };
+    const migrated = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
+    expect(migrated.status).toBe(200);
+    expect(migrated.body.data.design).toMatchObject({ templateKey: 'default', fontHeading: 'Oswald', fontBody: 'Lora',
+      customConfig: { enable_cart: false, home_icons: { home: null }, intro_card: { title: 'Cliente', description: 'Original' } } });
+    expect(migrated.body.data.design.homeBlocks).toContainEqual({ id: 'hero', type: 'hero', enabled: false, position: 3 });
+    expect(migrated.body.data.design.homeBlocks.some((block: any) => block.type === 'template_variant')).toBe(false);
+    expect(migrated.body.data.design.customConfig).not.toHaveProperty('template_variant');
+    localDb.designSettings[businessId].template_key = 'centered-cover';
+    const centered = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
+    expect(centered.body.data.design.templateKey).toBe('centered-cover');
+    localDb.designSettings[businessId].template_key = 'brand-hero';
+    const branded = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
+    expect(branded.body.data.design.templateKey).toBe('brand-hero');
+    expect(branded.body.data.design.customConfig).toEqual(centered.body.data.design.customConfig);
   });
 });

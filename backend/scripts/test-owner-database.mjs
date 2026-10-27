@@ -8,6 +8,7 @@ import { createServer } from 'node:net';
 import pg from 'pg';
 import { verifyOwnerDatabase } from './verify-owner-database.mjs';
 import { verifyOwnerTutorial } from './verify-owner-tutorial.mjs';
+import { verifyTemplateMigration, verifyAdditionalTemplate } from './verify-template-migration.mjs';
 import { verifyMenuAnalytics } from './verify-menu-analytics.mjs';
 import { verifyQrSecurity } from './verify-qr-security.mjs';
 import { benchmarkAnalyticsIndex } from './benchmark-analytics-index.mjs';
@@ -73,7 +74,15 @@ try {
   for (const {file} of await checkedMigrations()) {
     // The optional synthetic benchmark needs the pre-index schema.
     if (file === '20261014010000_analytics_product_trend_index.sql') await benchmarkAnalyticsIndex(pool);
-    try { await pool.query(await migrationSql(file)); }
+    try {
+      const sql = await migrationSql(file);
+      if (file === '20261024000000_reset_menu_templates.sql') await verifyTemplateMigration(pool, sql);
+      else if (file === '20261025000000_add_centered_cover_template.sql') await verifyAdditionalTemplate(pool, sql, 'centered-cover');
+      else if (file === '20261025010000_add_arched_cover_template.sql') await verifyAdditionalTemplate(pool, sql, 'arched-cover');
+      else if (file === '20261026000000_add_brand_hero_template.sql') await verifyAdditionalTemplate(pool, sql, 'brand-hero');
+      else if (file === '20261026010000_add_signature_cover_template.sql') await verifyAdditionalTemplate(pool, sql, 'signature-cover');
+      else await pool.query(sql);
+    }
     catch (error) { throw new Error(`Migration ${file}: ${error.message}`, { cause: error }); }
   }
   console.log(`OK full migration chain (PostgreSQL 16; source: ${process.env.MIGRATIONS_FROM_GIT_INDEX==='true'?'Git index':'working tree'})`);

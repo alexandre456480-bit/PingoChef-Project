@@ -324,9 +324,10 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
 
     .preview-device-stage {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       padding: 24px 16px;
       scrollbar-width: none;
@@ -410,6 +411,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
 
     .modal-stage {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       display: flex;

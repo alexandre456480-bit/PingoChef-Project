@@ -1,3 +1,4 @@
+import { AVAILABLE_TEMPLATES } from '../constants/menu-templates';
 import { Injectable } from '@angular/core';
 import { API_BASE_URL } from '../constants/api';
 import type { Metric } from 'web-vitals';
@@ -14,7 +15,7 @@ export class PublicVitalsService {
       (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl
     )
       return;
-    if (!['minimal', 'modern', 'premium', 'dark', 'showcase'].includes(templateCode)) return;
+    if (!AVAILABLE_TEMPLATES.some(template => template.key === templateCode)) return;
     const navigation = performance.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined;
     // Buffered document metrics from an earlier admin/login page must never be
     // attributed to a later menu reached through client-side navigation.

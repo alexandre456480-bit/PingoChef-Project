@@ -1,3 +1,4 @@
+import { DEFAULT_TEMPLATE_KEY, normalizeTemplateKey, withoutTemplateBlocks } from '../constants/menu-template';
 import { Request, Response, NextFunction } from 'express';
 import { createHmac, randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -123,7 +124,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         const { data: dData } = designResult;
 
         design = dData || {
-          template_key: 'modern',
+          template_key: DEFAULT_TEMPLATE_KEY,
           palette: {
             key: 'gourmet_royal',
             name: 'Gourmet Royal',
@@ -259,7 +260,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
 
       const businessId = business.id;
       design = localDb.designSettings[businessId] || {
-        template_key: 'modern',
+        template_key: DEFAULT_TEMPLATE_KEY,
         palette: {
           key: 'gourmet_royal',
           name: 'Gourmet Royal',
@@ -332,7 +333,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
     res.setHeader('Expires', '0');
 
     // Garantir blocos padrão caso ausentes
-    const existingBlocks: any[] = Array.isArray(design.home_blocks) ? design.home_blocks : [];
+    const existingBlocks: any[] = Array.isArray(design.home_blocks) ? withoutTemplateBlocks(design.home_blocks) : [];
     const existingTypes = new Set(existingBlocks.map(b => b.type));
     const defaultBlocks = [
       { id: 'block_hero', type: 'hero', label: 'Hero / Capa', enabled: true, position: 0 },
@@ -366,7 +367,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           whatsapp: business.whatsapp || null
         },
         design: {
-          templateKey: design.template_key || 'modern',
+          templateKey: normalizeTemplateKey(design.template_key),
           palette: design.palette,
           fontPair: design.font_pair || 'modern_clean',
           fontHeading: design.font_heading || 'Outfit',

@@ -2,7 +2,9 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { API_BASE_URL } from '../constants/api';
+import { AVAILABLE_TEMPLATES, DEFAULT_TEMPLATE_KEY, resolveMenuTemplate } from '../constants/menu-templates';
 import { HomeIconChoice, HomeIconSection, homeIconChoice } from '../constants/home-icons';
+export { AVAILABLE_TEMPLATES, resolveMenuTemplate } from '../constants/menu-templates';
 
 // ── Interfaces de Cores & Paletas ──
 
@@ -41,26 +43,6 @@ export function contrastTextColor(...backgrounds: string[]): '#000000' | '#FFFFF
   return blackContrast >= whiteContrast ? '#000000' : '#FFFFFF';
 }
 
-// ── Interfaces de Estrutura de Templates ──
-
-export interface TemplateConfig {
-  key: string;
-  /** Variações visuais usam uma chave já aceita pela API. */
-  baseTemplateKey?: string;
-  name: string;
-  description: string;
-  idealFor: string;
-  heroStyle: 'full-width' | 'contained' | 'split' | 'overlay';
-  logoPosition: 'top-center' | 'above-hero' | 'hero-center' | 'hero-bottom-center' | 'top-left';
-  categoryLayout: 'horizontal-scroll' | 'grid' | 'tabs';
-  itemCardStyle: 'minimal' | 'photo-dominant' | 'side-by-side' | 'overlay';
-  cardBorderRadius: number;
-  surfaceStyle: 'flat' | 'glassmorphism' | 'claymorphism';
-  cardShadow: 'none' | 'subtle' | 'layered-deep' | 'clay-3d' | 'neon-glow';
-}
-
-// ── Interfaces de Tipografia ──
-
 export interface FontOption {
   key: string;
   name: string;
@@ -79,7 +61,7 @@ export interface FontPairPreset {
 
 export interface HomeBlock {
   id: string;
-  type: 'hero' | 'promotion' | 'most_liked' | 'featured_product' | 'categories' | 'combo' | 'best_seller' | 'template_variant';
+  type: 'hero' | 'promotion' | 'most_liked' | 'featured_product' | 'categories' | 'combo' | 'best_seller';
   label: string;
   enabled: boolean;
   position: number;
@@ -112,130 +94,7 @@ export interface DesignSettings {
   customConfig?: Record<string, unknown>;
 }
 
-// ── 1. Templates Disponíveis ──
-
-export const AVAILABLE_TEMPLATES: TemplateConfig[] = [
-  {
-    key: 'minimal',
-    name: 'Minimalist Clean',
-    description: 'Design arejado, logo acima da hero section, cards flat e respiro elegante',
-    idealFor: 'Cafés autorais, bistrôs, confeitarias artesanais',
-    heroStyle: 'contained',
-    logoPosition: 'above-hero',
-    categoryLayout: 'horizontal-scroll',
-    itemCardStyle: 'minimal',
-    cardBorderRadius: 14,
-    surfaceStyle: 'flat',
-    cardShadow: 'subtle'
-  },
-  {
-    key: 'modern',
-    name: 'Claymorphism 3D',
-    description: 'Sombras 3D táteis e orgânicas, cantos inflados (24px) e botões volumétricos',
-    idealFor: 'Hamburguerias, açaí, street food, fast casual',
-    heroStyle: 'split',
-    logoPosition: 'top-left',
-    categoryLayout: 'horizontal-scroll',
-    itemCardStyle: 'side-by-side',
-    cardBorderRadius: 24,
-    surfaceStyle: 'claymorphism',
-    cardShadow: 'clay-3d'
-  },
-  {
-    key: 'premium',
-    name: 'Premium Dining',
-    description: 'Hero full-width cinematográfico, logo flutuante no centro inferior da capa',
-    idealFor: 'Restaurantes sofisticados, steakhouses, culinária japonesa',
-    heroStyle: 'full-width',
-    logoPosition: 'hero-bottom-center',
-    categoryLayout: 'tabs',
-    itemCardStyle: 'photo-dominant',
-    cardBorderRadius: 18,
-    surfaceStyle: 'flat',
-    cardShadow: 'layered-deep'
-  },
-  {
-    key: 'dark',
-    name: 'Dark Glass & Neon',
-    description: 'Superfícies translúcidas glassmorphism com blur, iluminação ambiente e neon glow',
-    idealFor: 'Bares noturnos, pubs, lounges, hamburguerias artesanais',
-    heroStyle: 'overlay',
-    logoPosition: 'top-left',
-    categoryLayout: 'horizontal-scroll',
-    itemCardStyle: 'overlay',
-    cardBorderRadius: 20,
-    surfaceStyle: 'glassmorphism',
-    cardShadow: 'neon-glow'
-  },
-  {
-    key: 'showcase',
-    name: 'Vitrine Compacta',
-    description: 'Capa com cantos arredondados, logo central sobreposta e produtos em cards horizontais compactos',
-    idealFor: 'Hamburguerias, lanchonetes, delivery e cardápios com muitas opções',
-    heroStyle: 'full-width',
-    logoPosition: 'hero-bottom-center',
-    categoryLayout: 'horizontal-scroll',
-    itemCardStyle: 'side-by-side',
-    cardBorderRadius: 16,
-    surfaceStyle: 'flat',
-    cardShadow: 'subtle'
-  },
-  {
-    key: 'brand-cover',
-    baseTemplateKey: 'showcase',
-    name: 'Capa da Casa',
-    description: 'Capa recuada com logo à esquerda e categorias compactas com cantos discretos',
-    idealFor: 'Uma vitrine que destaca a identidade do estabelecimento',
-    heroStyle: 'contained',
-    logoPosition: 'top-left',
-    categoryLayout: 'horizontal-scroll',
-    itemCardStyle: 'side-by-side',
-    cardBorderRadius: 16,
-    surfaceStyle: 'flat',
-    cardShadow: 'subtle'
-  },
-  {
-    key: 'editorial-arc',
-    baseTemplateKey: 'showcase',
-    name: 'Editorial Curvo',
-    description: 'Capa com recorte em arco, logo central e apresentação editorial com categorias retangulares',
-    idealFor: 'Uma apresentação expressiva com produtos em destaque',
-    heroStyle: 'full-width',
-    logoPosition: 'hero-bottom-center',
-    categoryLayout: 'horizontal-scroll',
-    itemCardStyle: 'side-by-side',
-    cardBorderRadius: 14,
-    surfaceStyle: 'flat',
-    cardShadow: 'subtle'
-  },
-  {
-    key: 'curve-panels',
-    baseTemplateKey: 'showcase',
-    name: 'Curvas & Painéis',
-    description: 'Capa curva com logo sobreposta, categorias em pílulas e subcategorias em painéis da sua paleta',
-    idealFor: 'Organização visual para qualquer tipo de cardápio',
-    heroStyle: 'full-width',
-    logoPosition: 'hero-bottom-center',
-    categoryLayout: 'horizontal-scroll',
-    itemCardStyle: 'side-by-side',
-    cardBorderRadius: 14,
-    surfaceStyle: 'flat',
-    cardShadow: 'subtle'
-  }
-];
-
-export function resolveMenuTemplate(design?: Partial<DesignSettings> | null): TemplateConfig {
-  const baseKey = design?.templateKey || 'modern';
-  // The public DTO exposes home blocks but deliberately filters custom_config.
-  // A disabled presentation marker carries the variant without a new API field.
-  const variantKey = design?.customConfig?.['template_variant'] ||
-    design?.homeBlocks?.find(block => block.type === 'template_variant' && !block.enabled)?.id;
-  const variant = AVAILABLE_TEMPLATES.find(template =>
-    template.baseTemplateKey === baseKey && template.key === variantKey);
-  return variant || AVAILABLE_TEMPLATES.find(template => !template.baseTemplateKey && template.key === baseKey) || AVAILABLE_TEMPLATES[1];
-}
-
-// ── 2. Paletas de Cores Profissionais com 7 Tokens Cada ──
+// ── Paletas disponíveis (independentes do template) ──
 
 export const AVAILABLE_PALETTES: PaletteConfig[] = [
   {
@@ -486,7 +345,7 @@ export class DesignService {
 
   // Rascunho local (editável, para preview em tempo real)
   draft = signal<DesignSettings>({
-    templateKey: 'modern',
+    templateKey: DEFAULT_TEMPLATE_KEY,
     palette: AVAILABLE_PALETTES[0], // Gourmet Royal
     fontHeading: 'Outfit',
     fontBody: 'Inter',
@@ -541,16 +400,8 @@ export class DesignService {
    * Paletas de cores e fontes permanecem 100% inalteradas!
    */
   setTemplate(key: string): void {
-    const template = AVAILABLE_TEMPLATES.find(t => t.key === key);
-    if (template) {
-      this.draft.update(d => {
-        const { template_variant: _previousVariant, ...customConfig } = d.customConfig || {};
-        return {
-          ...d,
-          templateKey: template.baseTemplateKey || template.key,
-          customConfig: template.baseTemplateKey ? { ...customConfig, template_variant: template.key } : customConfig
-        };
-      });
+    if (AVAILABLE_TEMPLATES.some(template => template.key === key)) {
+      this.draft.update(design => ({ ...design, templateKey: key }));
     }
   }
 
@@ -817,12 +668,8 @@ export class DesignService {
       tap((res: any) => {
         if (res.success && res.data) {
           const rawPal = res.data.palette;
-          const matchedPal = AVAILABLE_PALETTES.find(p => p.key === rawPal?.key);
-          const palette: PaletteConfig = rawPal?.isCustom || rawPal?.key === 'custom'
-            ? rawPal
-            : (matchedPal || AVAILABLE_PALETTES[0]);
-
-          const customCfg = res.data.custom_config || {};
+          const palette: PaletteConfig = rawPal?.colors ? rawPal : AVAILABLE_PALETTES[0];
+          const { template_variant: _legacyVariant, ...customCfg } = res.data.custom_config || {};
           const heroBanners = customCfg.hero_banners || res.data.hero_banners || [...DEFAULT_HERO_BANNERS];
           const categoryHeroConfigs: Record<string, CategoryHeroConfig> = customCfg.category_hero_configs || res.data.category_hero_configs || {};
           const rawIntro = customCfg.intro_card || res.data.intro_card;
@@ -834,7 +681,7 @@ export class DesignService {
 
           // Merge inteligente garantindo que novos blocos como combo e best_seller estejam sempre disponíveis
           const rawBlocks: HomeBlock[] = Array.isArray(res.data.home_blocks)
-            ? res.data.home_blocks.filter((block: HomeBlock) => block.type !== 'template_variant') : [];
+            ? res.data.home_blocks.filter((block: { type: string }) => block.type !== 'template_variant') : [];
           const existingTypes = new Set(rawBlocks.map(b => b.type));
           let mergedBlocks = [...rawBlocks];
           DEFAULT_HOME_BLOCKS.forEach(defB => {
@@ -846,7 +693,7 @@ export class DesignService {
           const heroScope: 'all' | 'home_only' = customCfg.hero_scope === 'home_only' ? 'home_only' : 'all';
 
           const settings: DesignSettings = {
-            templateKey: res.data.template_key || 'modern',
+            templateKey: resolveMenuTemplate({ templateKey: res.data.template_key }).key,
             palette,
             fontHeading: res.data.font_heading || 'Outfit',
             fontBody: res.data.font_body || 'Inter',
@@ -875,7 +722,6 @@ export class DesignService {
 
   saveDesign(): Observable<any> {
     const d = this.draft();
-    const template = resolveMenuTemplate(d);
     const customConfig = {
       ...(d.customConfig || {}),
       hero_banners: d.heroBanners,
@@ -884,15 +730,13 @@ export class DesignService {
       intro_card: d.introCard
     };
     const body = {
-      template_key: d.templateKey,
+      template_key: resolveMenuTemplate(d).key,
       palette: d.palette,
       font_heading: d.fontHeading,
       font_body: d.fontBody,
       font_pair: d.fontPair || 'custom',
       category_style: d.categoryStyle,
-      home_blocks: template.baseTemplateKey
-        ? [...d.homeBlocks, { id: template.key, type: 'template_variant', label: 'Visual do cabeçalho', enabled: false, position: d.homeBlocks.length }]
-        : d.homeBlocks,
+      home_blocks: d.homeBlocks,
       custom_config: customConfig
     };
     return this.http.put(`${this.apiUrl}/design`, body, this.getAuthHeaders()).pipe(
