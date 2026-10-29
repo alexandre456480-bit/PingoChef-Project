@@ -39,6 +39,23 @@ async function openDesign(page: Page) {
   await page.getByRole('heading', { name: 'Ícones da Página Inicial', exact: true }).click();
   return page.locator('app-home-icons-editor');
 }
+test('pixel collection can be selected, saved and rendered using the customer color', async ({ page }) => {
+  const data = await fixture(page);
+  const editor = await openDesign(page);
+  await editor.getByRole('button', { name: 'Escolher ícone de Início', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('combobox', { name: 'Grupo', exact: true }).selectOption('Pixel & Arcade');
+  await expect(dialog.locator('.catalog-option')).toHaveCount(12);
+  await dialog.getByRole('button', { name: 'Início Pixel · 2D', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Aplicar ícone', exact: true }).click();
+  await page.getByRole('button', { name: /Salvar Alterações|Salvar e Sincronizar/ }).click();
+  await expect.poll(() => data.saved().custom_config.home_icons?.home).toBe('2d-pixel-home');
+  await page.goto('/m/icon-test');
+  await page.getByRole('button', { name: 'Ver o Cardápio', exact: true }).click();
+  const svg = page.getByRole('button', { name: 'Início', exact: true }).locator('app-menu-home-icon svg');
+  await expect(svg).toHaveAttribute('shape-rendering', 'crispEdges');
+  await expect(svg).toHaveAttribute('fill', 'currentColor');
+});
 async function choose(page: Page, editor: ReturnType<Page['locator']>, section: string, option: 'none' | 'default' | 'star') {
   await editor.getByRole('button', { name: 'Escolher ícone de ' + section, exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Ícone de ' + section, exact: true });

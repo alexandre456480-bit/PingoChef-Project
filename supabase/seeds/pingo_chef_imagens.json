@@ -1,0 +1,600 @@
+[
+  {
+    "category": "burgers",
+    "subcategory": "Artesanais Clássicos",
+    "name": "Pingo Cheese",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Cheeseburger.jpg/960px-Cheeseburger.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheeseburger.jpg",
+    "license": "Public domain",
+    "title": "File:Cheeseburger.jpg",
+    "author": "Renee Comet (photographer)"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Artesanais Clássicos",
+    "name": "Pingo Salada",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Cheeseburger_with_lettuce.jpg/960px-Cheeseburger_with_lettuce.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheeseburger_with_lettuce.jpg",
+    "license": "CC0",
+    "title": "File:Cheeseburger with lettuce.jpg",
+    "author": "Kurtkaiser"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Artesanais Clássicos",
+    "name": "Pingo Bacon",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/Burger-King-Bacon-Cheeseburger.jpg/960px-Burger-King-Bacon-Cheeseburger.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Burger-King-Bacon-Cheeseburger.jpg",
+    "license": "CC0",
+    "title": "File:Burger-King-Bacon-Cheeseburger.jpg",
+    "author": "Evan-Amos"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Artesanais Clássicos",
+    "name": "Pingo Cheddar & Cebola",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Hamburger_%288%29.jpg/960px-Hamburger_%288%29.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hamburger_(8).jpg",
+    "license": "Public domain",
+    "title": "File:Hamburger (8).jpg",
+    "author": "Thiago Fior de Castro"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Artesanais Clássicos",
+    "name": "Pingo Duplo Clássico",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Cheeseburger_and_mac_and_cheese.jpg/960px-Cheeseburger_and_mac_and_cheese.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheeseburger_and_mac_and_cheese.jpg",
+    "license": "CC0",
+    "title": "File:Cheeseburger and mac and cheese.jpg",
+    "author": "Kurtkaiser"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Smash Burgers",
+    "name": "Smash Pingo Simples",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Cheeseburger_2.jpg/960px-Cheeseburger_2.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheeseburger_2.jpg",
+    "license": "CC0",
+    "title": "File:Cheeseburger 2.jpg",
+    "author": "Kurtkaiser"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Smash Burgers",
+    "name": "Smash Pingo Duplo",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Burger_King_double_cheeseburger.jpg/960px-Burger_King_double_cheeseburger.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Burger_King_double_cheeseburger.jpg",
+    "license": "Public domain",
+    "title": "File:Burger King double cheeseburger.jpg",
+    "author": "Luke"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Smash Burgers",
+    "name": "Smash Pingo Triplo",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Humongous_Austrian_Burger_With_Bacon_and_French_Fries.jpg/960px-Humongous_Austrian_Burger_With_Bacon_and_French_Fries.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Humongous_Austrian_Burger_With_Bacon_and_French_Fries.jpg",
+    "license": "CC0",
+    "title": "File:Humongous Austrian Burger With Bacon and French Fries.jpg",
+    "author": "Theipu"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Smash Burgers",
+    "name": "Smash Bacon Crunch",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Klompus_Burger_With_Bacon%2C_Cheese_and_French_Fries.jpg/960px-Klompus_Burger_With_Bacon%2C_Cheese_and_French_Fries.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Klompus_Burger_With_Bacon,_Cheese_and_French_Fries.jpg",
+    "license": "CC0",
+    "title": "File:Klompus Burger With Bacon, Cheese and French Fries.jpg",
+    "author": "Yotam Nachum"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Especiais da Casa",
+    "name": "Pingo Chef Signature",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Hamburger_%28black_bg%29.jpg/960px-Hamburger_%28black_bg%29.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hamburger_(black_bg).jpg",
+    "license": "Public domain",
+    "title": "File:Hamburger (black bg).jpg",
+    "author": "Len Rizzi (photographer, original image), reprocessed by Off-shell"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Especiais da Casa",
+    "name": "Pingo Picante",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Hamburger_tasty.jpg/960px-Hamburger_tasty.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hamburger_tasty.jpg",
+    "license": "CC0",
+    "title": "File:Hamburger tasty.jpg",
+    "author": "Skitterphoto"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Especiais da Casa",
+    "name": "Pingo BBQ Onion",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Moshbutz_Burger_With_Bacon_and_Potatoes.jpg/960px-Moshbutz_Burger_With_Bacon_and_Potatoes.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Moshbutz_Burger_With_Bacon_and_Potatoes.jpg",
+    "license": "CC0",
+    "title": "File:Moshbutz Burger With Bacon and Potatoes.jpg",
+    "author": "Yotam Nachum"
+  },
+  {
+    "category": "burgers",
+    "subcategory": "Especiais da Casa",
+    "name": "Pingo Quatro Queijos",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Cheeseburger_maison.jpg/960px-Cheeseburger_maison.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheeseburger_maison.jpg",
+    "license": "Public domain",
+    "title": "File:Cheeseburger maison.jpg",
+    "author": "Morgane vallée dit aerith"
+  },
+  {
+    "category": "alternativas",
+    "subcategory": "Burgers de Frango",
+    "name": "Pingo Chicken Crispy",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/Chicken_Sandwich_-_Popeyes%2C_Brighton.jpg/960px-Chicken_Sandwich_-_Popeyes%2C_Brighton.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Chicken_Sandwich_-_Popeyes,_Brighton.jpg",
+    "license": "CC0",
+    "title": "File:Chicken Sandwich - Popeyes, Brighton.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "alternativas",
+    "subcategory": "Burgers de Frango",
+    "name": "Pingo Chicken BBQ",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Hot_Honey_Sandwich_-_Popeyes_2025-08-17.jpg/960px-Hot_Honey_Sandwich_-_Popeyes_2025-08-17.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hot_Honey_Sandwich_-_Popeyes_2025-08-17.jpg",
+    "license": "CC0",
+    "title": "File:Hot Honey Sandwich - Popeyes 2025-08-17.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "alternativas",
+    "subcategory": "Burgers de Frango",
+    "name": "Pingo Chicken Grelhado",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Broiled_chicken_breast_and_tomato_sandwich%2C_on_mixed_rye-white_toast%2C_with_mustard_and_black_pepper_-_Massachusetts.jpg/960px-Broiled_chicken_breast_and_tomato_sandwich%2C_on_mixed_rye-white_toast%2C_with_mustard_and_black_pepper_-_Massachusetts.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Broiled_chicken_breast_and_tomato_sandwich,_on_mixed_rye-white_toast,_with_mustard_and_black_pepper_-_Massachusetts.jpg",
+    "license": "CC0",
+    "title": "File:Broiled chicken breast and tomato sandwich, on mixed rye-white toast, with mustard and black pepper - Massachusetts.jpg",
+    "author": "Daderot"
+  },
+  {
+    "category": "alternativas",
+    "subcategory": "Vegetarianos",
+    "name": "Pingo Veggie Grão-de-bico",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/81/Veggie_burger_on_plate_%28Unsplash%29.jpg/960px-Veggie_burger_on_plate_%28Unsplash%29.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Veggie_burger_on_plate_(Unsplash).jpg",
+    "license": "CC0",
+    "title": "File:Veggie burger on plate (Unsplash).jpg",
+    "author": "Markus Spiske markusspiske"
+  },
+  {
+    "category": "alternativas",
+    "subcategory": "Vegetarianos",
+    "name": "Pingo Portobello",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Mushroom_vegetarian_burger_-_Grubbs.jpg/960px-Mushroom_vegetarian_burger_-_Grubbs.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Mushroom_vegetarian_burger_-_Grubbs.jpg",
+    "license": "CC0",
+    "title": "File:Mushroom vegetarian burger - Grubbs.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "combos",
+    "subcategory": "Combos Individuais",
+    "name": "Combo Pingo Cheese",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Burger_and_fries_2.jpg/960px-Burger_and_fries_2.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Burger_and_fries_2.jpg",
+    "license": "Public domain",
+    "title": "File:Burger and fries 2.jpg",
+    "author": "Linux rules, Windows drools"
+  },
+  {
+    "category": "combos",
+    "subcategory": "Combos Individuais",
+    "name": "Combo Smash Duplo",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Cheeseburger_and_fries_4.jpg/960px-Cheeseburger_and_fries_4.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheeseburger_and_fries_4.jpg",
+    "license": "CC0",
+    "title": "File:Cheeseburger and fries 4.jpg",
+    "author": "Kurtkaiser"
+  },
+  {
+    "category": "combos",
+    "subcategory": "Combos Individuais",
+    "name": "Combo Chicken Crispy",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/KFC_Chicken_sandwich_-_October_2024_-_Sarah_Stierch.jpg/960px-KFC_Chicken_sandwich_-_October_2024_-_Sarah_Stierch.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:KFC_Chicken_sandwich_-_October_2024_-_Sarah_Stierch.jpg",
+    "license": "CC0",
+    "title": "File:KFC Chicken sandwich - October 2024 - Sarah Stierch.jpg",
+    "author": "Missvain"
+  },
+  {
+    "category": "combos",
+    "subcategory": "Combos Individuais",
+    "name": "Combo Veggie",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Fancy_Veggie_Burger_and_Fries_-_Joe%27s_Burger_House_2024-07-07.jpg/960px-Fancy_Veggie_Burger_and_Fries_-_Joe%27s_Burger_House_2024-07-07.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Fancy_Veggie_Burger_and_Fries_-_Joe%27s_Burger_House_2024-07-07.jpg",
+    "license": "CC0",
+    "title": "File:Fancy Veggie Burger and Fries - Joe's Burger House 2024-07-07.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "combos",
+    "subcategory": "Para Compartilhar",
+    "name": "Combo Dupla Pingo",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Burger_and_fries_%281%29.jpg/960px-Burger_and_fries_%281%29.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Burger_and_fries_(1).jpg",
+    "license": "Public domain",
+    "title": "File:Burger and fries (1).jpg",
+    "author": "The original uploader was Y6y6y6 at English Wikipedia."
+  },
+  {
+    "category": "combos",
+    "subcategory": "Para Compartilhar",
+    "name": "Combo Família Pingo",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Klompus_Burger_and_French_Fries.jpg/960px-Klompus_Burger_and_French_Fries.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Klompus_Burger_and_French_Fries.jpg",
+    "license": "CC0",
+    "title": "File:Klompus Burger and French Fries.jpg",
+    "author": "Yotam Nachum"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Batatas",
+    "name": "Batata Frita Individual 120 g",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/8/83/French_Fries.JPG",
+    "source": "https://commons.wikimedia.org/wiki/File:French_Fries.JPG",
+    "license": "CC0",
+    "title": "File:French Fries.JPG",
+    "author": "StockSnap"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Batatas",
+    "name": "Batata Frita para Compartilhar 300 g",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/French_fries_and_spices.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:French_fries_and_spices.jpg",
+    "license": "CC0",
+    "title": "File:French fries and spices.jpg",
+    "author": "Rajalakshmi duraikathiresan"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Batatas",
+    "name": "Batata Cheddar & Bacon 350 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Loaded_fries_food.jpg/960px-Loaded_fries_food.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Loaded_fries_food.jpg",
+    "license": "Public domain",
+    "title": "File:Loaded fries food.jpg",
+    "author": "Luke"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Batatas",
+    "name": "Batata Rústica da Casa 300 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Bat_Yaar_French_Fries.jpg/960px-Bat_Yaar_French_Fries.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bat_Yaar_French_Fries.jpg",
+    "license": "CC0",
+    "title": "File:Bat Yaar French Fries.jpg",
+    "author": "Yotam Nachum"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Petiscos",
+    "name": "Onion Rings 12 Unidades",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Onion_rings_fried.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Onion_rings_fried.jpg",
+    "license": "Public domain",
+    "title": "File:Onion rings fried.jpg",
+    "author": "Jon Sullivan"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Petiscos",
+    "name": "Nuggets de Frango 10 Unidades",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/65/Chicken_nuggets_on_a_plate.jpg/960px-Chicken_nuggets_on_a_plate.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Chicken_nuggets_on_a_plate.jpg",
+    "license": "CC0",
+    "title": "File:Chicken nuggets on a plate.jpg",
+    "author": "Jiafei Slay Queen"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Petiscos",
+    "name": "Iscas de Frango Crocantes 300 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Fried_chicken_strips_sitting_on_baking_rack.jpg/960px-Fried_chicken_strips_sitting_on_baking_rack.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Fried_chicken_strips_sitting_on_baking_rack.jpg",
+    "license": "CC0",
+    "title": "File:Fried chicken strips sitting on baking rack.jpg",
+    "author": "Nashucks"
+  },
+  {
+    "category": "porcoes",
+    "subcategory": "Petiscos",
+    "name": "Dadinho de Tapioca 12 Unidades",
+    "url": null,
+    "source": null,
+    "license": null,
+    "note": "Sem foto compatível selecionada; não substituir por foto de outro produto."
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Refrigerante Cola 350 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Coca-Cola_can_with_Khmer_equivalent.jpg/960px-Coca-Cola_can_with_Khmer_equivalent.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Coca-Cola_can_with_Khmer_equivalent.jpg",
+    "license": "Public domain",
+    "title": "File:Coca-Cola can with Khmer equivalent.jpg",
+    "author": "Treehill"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Refrigerante Cola Zero 350 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Coca_Cola_zero_%28lattina%29.JPG/960px-Coca_Cola_zero_%28lattina%29.JPG",
+    "source": "https://commons.wikimedia.org/wiki/File:Coca_Cola_zero_(lattina).JPG",
+    "license": "Public domain",
+    "title": "File:Coca Cola zero (lattina).JPG",
+    "author": "Nicolaesse"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Refrigerante Guaraná 350 ml",
+    "url": null,
+    "source": null,
+    "license": null,
+    "note": "Sem foto compatível selecionada; não substituir por foto de outro produto."
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Refrigerante Cola 2 Litros",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Coca-Cola_bottle_Shenzhen_China.jpeg/960px-Coca-Cola_bottle_Shenzhen_China.jpeg",
+    "source": "https://commons.wikimedia.org/wiki/File:Coca-Cola_bottle_Shenzhen_China.jpeg",
+    "license": "CC0",
+    "title": "File:Coca-Cola bottle Shenzhen China.jpeg",
+    "author": "User:Msdalr1"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Água Mineral sem Gás 500 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/InterContinental_Yokohama_Grand_bottled_water_20111101.jpg/960px-InterContinental_Yokohama_Grand_bottled_water_20111101.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:InterContinental_Yokohama_Grand_bottled_water_20111101.jpg",
+    "license": "Public domain",
+    "title": "File:InterContinental Yokohama Grand bottled water 20111101.jpg",
+    "author": "Yusuke Kawasaki"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Água Mineral com Gás 500 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Zabarvan_water_bottle.jpg/960px-Zabarvan_water_bottle.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Zabarvan_water_bottle.jpg",
+    "license": "CC0",
+    "title": "File:Zabarvan water bottle.jpg",
+    "author": "آیات محراج"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Suco de Laranja 300 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Orange_juice_3.jpg/960px-Orange_juice_3.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Orange_juice_3.jpg",
+    "license": "Public domain",
+    "title": "File:Orange juice 3.jpg",
+    "author": "Agricultural Research Service"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Sucos & Refrigerantes",
+    "name": "Suco de Limão 300 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Lemonade_mason_jar.jpg/960px-Lemonade_mason_jar.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Lemonade_mason_jar.jpg",
+    "license": "CC0",
+    "title": "File:Lemonade mason jar.jpg",
+    "author": "Corn cheese"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Chopps & Cervejas",
+    "name": "Chopp Pilsen 300 ml",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/5/50/Beer_glass_%281%29.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Beer_glass_(1).jpg",
+    "license": "Public domain",
+    "title": "File:Beer glass (1).jpg",
+    "author": "Jon Sullivan"
+  },
+  {
+    "category": "bebidas",
+    "subcategory": "Chopps & Cervejas",
+    "name": "Cerveja Lager Long Neck 330 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Angkor_beer_bottle_%26_glass.jpg/960px-Angkor_beer_bottle_%26_glass.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Angkor_beer_bottle_%26_glass.jpg",
+    "license": "CC0",
+    "title": "File:Angkor beer bottle & glass.jpg",
+    "author": "Dan arndt"
+  },
+  {
+    "category": "shakes",
+    "subcategory": "Clássicos",
+    "name": "Milk-shake de Chocolate 400 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Chocolate_milk_shake_-_The_Bystander_Cafe.jpg/960px-Chocolate_milk_shake_-_The_Bystander_Cafe.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Chocolate_milk_shake_-_The_Bystander_Cafe.jpg",
+    "license": "CC0",
+    "title": "File:Chocolate milk shake - The Bystander Cafe.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "shakes",
+    "subcategory": "Clássicos",
+    "name": "Milk-shake de Morango 400 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Milkshake_beverage_strawberry_drink-1021027.jpg/960px-Milkshake_beverage_strawberry_drink-1021027.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Milkshake_beverage_strawberry_drink-1021027.jpg",
+    "license": "CC0",
+    "title": "File:Milkshake beverage strawberry drink-1021027.jpg",
+    "author": "Jakub Kapušňák"
+  },
+  {
+    "category": "shakes",
+    "subcategory": "Clássicos",
+    "name": "Milk-shake de Baunilha 400 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Five_Guys_Milkshake.jpg/960px-Five_Guys_Milkshake.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Five_Guys_Milkshake.jpg",
+    "license": "CC0",
+    "title": "File:Five Guys Milkshake.jpg",
+    "author": "Industrialerror"
+  },
+  {
+    "category": "shakes",
+    "subcategory": "Especiais",
+    "name": "Milk-shake Cookies 400 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Oreo_milkshake_-_Creperie_Doux_Sourire_2025-05-03.jpg/960px-Oreo_milkshake_-_Creperie_Doux_Sourire_2025-05-03.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Oreo_milkshake_-_Creperie_Doux_Sourire_2025-05-03.jpg",
+    "license": "CC0",
+    "title": "File:Oreo milkshake - Creperie Doux Sourire 2025-05-03.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "shakes",
+    "subcategory": "Especiais",
+    "name": "Milk-shake Doce de Leite 400 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Salted_Caramel_Milkshake.jpg/960px-Salted_Caramel_Milkshake.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Salted_Caramel_Milkshake.jpg",
+    "license": "CC0",
+    "title": "File:Salted Caramel Milkshake.jpg",
+    "author": "Xadai"
+  },
+  {
+    "category": "shakes",
+    "subcategory": "Especiais",
+    "name": "Milk-shake Paçoca 400 ml",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Fat_Annie%27s_Crunchie_Shake.jpg/960px-Fat_Annie%27s_Crunchie_Shake.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Fat_Annie%27s_Crunchie_Shake.jpg",
+    "license": "CC0",
+    "title": "File:Fat Annie's Crunchie Shake.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "sobremesas",
+    "subcategory": "Doces da Casa",
+    "name": "Brownie Pingo Chocolate",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Oreo_brownie_-_Cafe_Coho_2024-05-30.jpg/960px-Oreo_brownie_-_Cafe_Coho_2024-05-30.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Oreo_brownie_-_Cafe_Coho_2024-05-30.jpg",
+    "license": "CC0",
+    "title": "File:Oreo brownie - Cafe Coho 2024-05-30.jpg",
+    "author": "Andy Li"
+  },
+  {
+    "category": "sobremesas",
+    "subcategory": "Doces da Casa",
+    "name": "Cookie Recheado de Chocolate",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Choc-Chip-Cookie.jpg/960px-Choc-Chip-Cookie.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Choc-Chip-Cookie.jpg",
+    "license": "Public domain",
+    "title": "File:Choc-Chip-Cookie.jpg",
+    "author": "Evan-Amos"
+  },
+  {
+    "category": "sobremesas",
+    "subcategory": "Doces da Casa",
+    "name": "Churros com Doce de Leite 6 Unidades",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/Churros_001.jpg/960px-Churros_001.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Churros_001.jpg",
+    "license": "CC0",
+    "title": "File:Churros 001.jpg",
+    "author": "Ocdp"
+  },
+  {
+    "category": "sobremesas",
+    "subcategory": "Gelados",
+    "name": "Brownie com Sorvete Pingo",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Deflour_rhum_chocolate_cake_and_vanilla_ice_cream.JPG/960px-Deflour_rhum_chocolate_cake_and_vanilla_ice_cream.JPG",
+    "source": "https://commons.wikimedia.org/wiki/File:Deflour_rhum_chocolate_cake_and_vanilla_ice_cream.JPG",
+    "license": "Public domain",
+    "title": "File:Deflour rhum chocolate cake and vanilla ice cream.JPG",
+    "author": "משתמש:צחי לרנר"
+  },
+  {
+    "category": "sobremesas",
+    "subcategory": "Gelados",
+    "name": "Sorvete Duas Bolas",
+    "url": "https://pixnio.com/free-images/2017/08/16/2017-08-16-07-55-38-576x384.jpg",
+    "source": "https://pixnio.com/food-and-drink/desserts-cakes/ice-cream-dessert-sweet-cold-chocolate-food-cream-vanilla-delicious",
+    "license": "CC0",
+    "title": "Pixnio: Ice cream dessert sweet cold chocolate food cream vanilla delicious",
+    "author": "Pixnio contributor (see source page)"
+  },
+  {
+    "category": "extras",
+    "subcategory": "Molhos da Casa",
+    "name": "Maionese da Casa 30 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Mayonnaise.JPG/960px-Mayonnaise.JPG",
+    "source": "https://commons.wikimedia.org/wiki/File:Mayonnaise.JPG",
+    "license": "CC0",
+    "title": "File:Mayonnaise.JPG",
+    "author": "Miansari66"
+  },
+  {
+    "category": "extras",
+    "subcategory": "Molhos da Casa",
+    "name": "Barbecue 30 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Hunts-Barbecue-Sauce.jpg/960px-Hunts-Barbecue-Sauce.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hunts-Barbecue-Sauce.jpg",
+    "license": "Public domain",
+    "title": "File:Hunts-Barbecue-Sauce.jpg",
+    "author": "Jorge Barrios"
+  },
+  {
+    "category": "extras",
+    "subcategory": "Molhos da Casa",
+    "name": "Maionese de Alho Assado 30 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Toum_%28Lebanese_Garlic_Sauce%29.JPG/960px-Toum_%28Lebanese_Garlic_Sauce%29.JPG",
+    "source": "https://commons.wikimedia.org/wiki/File:Toum_(Lebanese_Garlic_Sauce).JPG",
+    "license": "CC0",
+    "title": "File:Toum (Lebanese Garlic Sauce).JPG",
+    "author": "Miansari66"
+  },
+  {
+    "category": "extras",
+    "subcategory": "Molhos da Casa",
+    "name": "Molho de Pimenta 30 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Haut_Ones_sauces_piquantes.jpg/120px-Haut_Ones_sauces_piquantes.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Haut_Ones_sauces_piquantes.jpg",
+    "license": "CC0",
+    "title": "File:Haut Ones sauces piquantes.jpg",
+    "author": "Dataguru123"
+  },
+  {
+    "category": "extras",
+    "subcategory": "Ingredientes Extras",
+    "name": "Bacon Extra 30 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Bacon_%281%29.jpg/960px-Bacon_%281%29.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bacon_(1).jpg",
+    "license": "Public domain",
+    "title": "File:Bacon (1).jpg",
+    "author": "Renee Comet (Photographer)"
+  },
+  {
+    "category": "extras",
+    "subcategory": "Ingredientes Extras",
+    "name": "Cheddar Extra 40 g",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Sauchef_Cheddar_Cheese_Sauce.jpg/960px-Sauchef_Cheddar_Cheese_Sauce.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Sauchef_Cheddar_Cheese_Sauce.jpg",
+    "license": "CC0",
+    "title": "File:Sauchef Cheddar Cheese Sauce.jpg",
+    "author": "StoppedTime"
+  },
+  {
+    "category": "extras",
+    "subcategory": "Ingredientes Extras",
+    "name": "Burger Bovino Extra 80 g",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/5/52/Hamburger_patty.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hamburger_patty.jpg",
+    "license": "Public domain",
+    "title": "File:Hamburger patty.jpg",
+    "author": "Lucas, cropped from PDphoto.org"
+  }
+]

@@ -81,6 +81,7 @@ try {
       else if (file === '20261025010000_add_arched_cover_template.sql') await verifyAdditionalTemplate(pool, sql, 'arched-cover');
       else if (file === '20261026000000_add_brand_hero_template.sql') await verifyAdditionalTemplate(pool, sql, 'brand-hero');
       else if (file === '20261026010000_add_signature_cover_template.sql') await verifyAdditionalTemplate(pool, sql, 'signature-cover');
+      else if (file === '20261028000000_add_pixel_menu_template.sql') await verifyAdditionalTemplate(pool, sql, 'pixel');
       else await pool.query(sql);
     }
     catch (error) { throw new Error(`Migration ${file}: ${error.message}`, { cause: error }); }

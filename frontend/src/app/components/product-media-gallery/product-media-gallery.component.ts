@@ -158,7 +158,16 @@ type GallerySlide =
       position: relative;
       aspect-ratio: 16 / 10;
       overflow: hidden;
+      clip-path: var(--product-media-corners, none);
       background: color-mix(in srgb, var(--surface-color) 82%, #000);
+    }
+    /* Decoration stays on the poster stage; the expanded player is its sibling. */
+    .media-stage::after {
+      content: var(--product-media-corner-decoration, none);
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: var(--accent-color);
+      clip-path: var(--product-media-corner-outline);
+      mask: linear-gradient(#000 0 0) top left / 26px 26px no-repeat, linear-gradient(#000 0 0) top right / 26px 26px no-repeat, linear-gradient(#000 0 0) bottom left / 38px 38px no-repeat, linear-gradient(#000 0 0) bottom right / 38px 38px no-repeat;
     }
     .media-stage.video-stage { max-width: 100%; margin-inline: auto; background: #161114; }
     .media-image, .mux-player { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -220,7 +229,7 @@ type GallerySlide =
     .nav-button svg { width: 20px; height: 20px; }
     .nav-button.previous { left: 12px; }
     .nav-button.next { right: 12px; }
-    .gallery-dots { display: flex; justify-content: center; gap: 0; padding: 0 12px; }
+    .gallery-dots { display: flex; justify-content: center; gap: 0; padding: 0 12px; background: var(--product-media-dots-background, transparent); }
     .gallery-dot { width:44px; height:44px; padding:0; border:0; background:transparent; display:grid; place-items:center; cursor:pointer; }
     .gallery-dot::before { content:''; width:8px; height:8px; border-radius:99px; background:color-mix(in srgb,var(--text-secondary) 35%,transparent); transition:width 180ms ease,background-color 180ms ease; }
     .gallery-dot.active::before { width:24px; background:var(--accent-color); }

@@ -2,14 +2,16 @@ import { expect, test } from '@playwright/test';
 
 test.setTimeout(120_000);
 
-for (const template of ['default', 'centered-cover', 'arched-cover', 'brand-hero', 'signature-cover']) {
+for (const template of ['default', 'centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel']) {
 test(`${template} preserves customer branding, optional blocks and catalog interactions`, async ({ page }, info) => {
   let introEnabled = true, heroEnabled = true;
   const description = '  Primeiro  parágrafo.\n\n    Segundo parágrafo.\nTexto <b>literal</b>.  ';
   const brandHero = template === 'brand-hero';
   const signatureCover = template === 'signature-cover';
-  const photoCards = brandHero || signatureCover;
-  const cartEnabled = template === 'arched-cover' || photoCards;
+  const pixel = template === 'pixel';
+  const photoCards = brandHero || signatureCover || pixel;
+  let cartEnabled = template === 'arched-cover' || photoCards;
+  let likesEnabled = photoCards;
   let colors = { primary: '#173E34', secondary: '#849D90', accent: '#BA591B', background: '#F4F8F3', surface: '#FFFFFF', textPrimary: '#183027', textSecondary: '#586A61' };
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.route(/\/api\/v1\/public\/menu\/template-default\/(events|vitals)$/, route => route.fulfill({ status: 202, json: { success: true } }));
@@ -22,10 +24,10 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
       palette: { key: 'custom', isCustom: true, colors },
       homeBlocks: [{ id: 'hero', type: 'hero', enabled: heroEnabled, position: 0 }, { id: 'categories', type: 'categories', enabled: true, position: 1 }],
       categoryHeroConfigs: { drinks: { enabled: false, banners: [] } },
-      customConfig: { enable_likes: photoCards, enable_cart: cartEnabled, home_icons: { home: null },
+      customConfig: { enable_likes: likesEnabled, enable_cart: cartEnabled, home_icons: { home: null },
         intro_card: { enabled: introEnabled, title: 'Feito na casa', description } }
     },
-    categories: [{ id: 'food', name: 'Pratos', iconType: 'none' }, { id: 'drinks', name: 'Bebidas', iconType: 'none' }],
+    categories: [{ id: 'food', name: 'Pratos', iconType: pixel ? 'image' : 'none', imageUrl: pixel ? '/logo_img.webp' : null }, { id: 'drinks', name: 'Bebidas', iconType: 'none' }],
     subcategories: [{ id: 'classics', categoryId: 'food', name: 'Clássicos', displayOrder: 0 }],
     items: [
       { id: 'plate', categoryId: 'food', subcategoryId: 'classics', name: 'Prato artesanal com ingredientes da estação e preparo especial', price: 32.90, promotionalPrice: 29.90, likesCount: 99 },
@@ -40,6 +42,7 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
     if (heroEnabled) await expect(page.locator('.hero-carousel-slide.active img')).toHaveClass(/menu-image-ready/);
   };
   await open();
+  await expect(page.locator('.category-nav-pill').first()).toHaveCSS('font-family', /Lora/);
   await expect(page.locator('.showcase-hero-banner')).toHaveCount(1);
   await expect(page.locator('.template-logo')).toHaveAttribute('alt', 'Cozinha da Casa');
   expect(await page.locator('.intro-card-desc').textContent()).toBe(description);
@@ -75,7 +78,7 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
     expect(geometry.introAbove).toBeGreaterThanOrEqual(0);
     expect(geometry.edge).toBeGreaterThan(0);
     await expect(page.locator('.showcase-hero-banner .floating-controls-capsule')).toHaveCount(1);
-  } else if (!signatureCover) expect(geometry.below).toBeGreaterThan(0);
+  } else if (!signatureCover && !pixel) expect(geometry.below).toBeGreaterThan(0);
   if (template !== 'centered-cover' && !brandHero) expect(geometry.intro).toBeGreaterThanOrEqual(0);
   if (template !== 'default') {
     if (template === 'centered-cover') expect(geometry.introAbove).toBeGreaterThanOrEqual(0);
@@ -84,7 +87,7 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
       viewportWidth: element.closest('.menu-viewport')!.getBoundingClientRect().width
     }));
     expect(controls.width).toBeLessThan(controls.viewportWidth / 2);
-    if (!brandHero && !signatureCover) {
+    if (!brandHero && !signatureCover && !pixel) {
       expect(geometry.edge).toBeLessThan(1); expect(geometry.center).toBeLessThan(1);
       expect(geometry.ratio).toBeCloseTo(template === 'arched-cover' ? 1.95 : 2.55, 1);
     }
@@ -105,6 +108,15 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
       expect(await page.locator('.template-brand-copy h2').evaluate((element, pseudo) => getComputedStyle(element, pseudo).content, side)).toBe('""');
     }
   }
+  if (pixel) {
+    expect(geometry.edge).toBeLessThan(1); expect(geometry.center).toBeLessThan(1);
+    expect(await page.locator('.hero-banner-overlay').evaluate(element =>
+      ['::before', '::after'].every(pseudo => ['none', 'normal'].includes(getComputedStyle(element, pseudo).content)))).toBe(true);
+    await expect(page.locator('.showcase-hero-banner')).toHaveCSS('clip-path', /polygon/);
+    await expect(page.locator('.floating-controls-capsule .capsule-btn')).toHaveCount(2);
+    await expect(page.locator('.category-nav-pill .cat-pill-img')).toHaveCount(1);
+    await expect(page.locator('.capsule-btn').first()).toHaveCSS('border-radius', '0px');
+  }
   await page.getByRole('button', { name: 'Buscar prato ou bebida', exact: true }).click();
   await page.getByRole('textbox', { name: 'Buscar produtos', exact: true }).fill('mineral');
   await expect(page.locator('.product-item-card')).toHaveCount(1);
@@ -116,6 +128,7 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
   }));
   expect(branding.primary).toBe(colors.primary);
   expect(branding.heading).toContain('Oswald'); expect(branding.body).toContain('Lora');
+  const pixelLightFrame = pixel ? await page.locator('.capsule-btn').first().evaluate(element => getComputedStyle(element).boxShadow) : '';
   await page.screenshot({ path: info.outputPath(`${template}-home-light.png`) });
   await page.getByRole('button', { name: 'Pratos', exact: true }).click();
   const section = page.locator('.subcategory-header-collapsible').first();
@@ -133,10 +146,11 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
       return { photoShare: photo.width / rect.width, height: rect.height, photoRatio: photo.width / photo.height, overflow: element.scrollWidth - element.clientWidth, inside: button.right <= rect.right + 1 && button.bottom <= rect.bottom + 1 };
     });
     expect(bounds.overflow).toBeLessThanOrEqual(1); expect(bounds.inside).toBe(true);
-    if (signatureCover) {
+    if (signatureCover || pixel) {
       expect(bounds.photoRatio).toBeCloseTo(1, 2);
       expect(bounds.photoShare).toBeGreaterThan(.25); expect(bounds.photoShare).toBeLessThan(.45);
-      expect(bounds.height).toBe(148);
+      expect(bounds.height).toBe(pixel ? 140 : 148);
+      if (pixel) await expect(card.locator('.product-card-photo')).toHaveCSS('clip-path', /polygon/);
       await expect(card.locator('.card-item-desc')).toHaveCSS('-webkit-line-clamp', '3');
       const likeOnInfo = await card.locator('.item-like-btn').evaluate(element => {
         const button = element.getBoundingClientRect(), photo = element.closest('.product-item-card')!.querySelector('.product-card-photo')!.getBoundingClientRect();
@@ -144,8 +158,8 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
       });
       expect(likeOnInfo).toBe(true);
     } else if (brandHero) {
-      expect(bounds.photoShare).toBeGreaterThan(.4); expect(bounds.photoShare).toBeLessThan(.5);
-      expect(bounds.height).toBe(156);
+      expect(bounds.photoShare).toBeGreaterThan(.38); expect(bounds.photoShare).toBeLessThan(.5);
+      expect(bounds.height).toBe(144);
       const like = card.locator('.item-like-btn');
       await expect(like).toBeVisible();
       const onPhoto = await like.evaluate(element => {
@@ -160,6 +174,7 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
   }
   if (photoCards) {
     const like = card.locator('.item-like-btn');
+    if (pixel) await expect(like.locator('path')).toHaveAttribute('d', /^M4 4H10V6H14V4H20/);
     await like.click(); await expect(like).toHaveAttribute('aria-pressed', 'true');
     await expect(card.locator('.like-counter-val')).toHaveText('100');
     await expect(page.locator('.product-modal-sheet')).toHaveCount(0);
@@ -167,8 +182,10 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
   }
   await card.getByRole('button', { name: /^Ver detalhes de / }).click();
   await expect(page.locator('.product-modal-sheet')).toBeVisible();
+  if (pixel) await expect(page.locator('.sheet-like-action path')).toHaveAttribute('d', /^M4 4H10V6H14V4H20/);
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Bebidas', exact: true }).click();
+  await expect(page.locator('.category-nav-pill').first()).toHaveCSS('font-family', /Lora/);
   await expect(page.locator('.showcase-hero-banner')).toHaveCount(0);
   await expect(page.locator('.no-hero-header')).toBeVisible();
   introEnabled = false;
@@ -177,12 +194,18 @@ test(`${template} preserves customer branding, optional blocks and catalog inter
   await open();
   await expect(page.locator('.intro-description-wrapper')).toHaveCount(0);
   expect(await page.locator('.menu-viewport').evaluate(element => (element as HTMLElement).style.getPropertyValue('--primary-color'))).toBe(colors.primary);
+  if (pixel) expect(await page.locator('.capsule-btn').first().evaluate(element => getComputedStyle(element).boxShadow)).not.toBe(pixelLightFrame);
   await page.screenshot({ path: info.outputPath(`${template}-home-dark.png`) });
   heroEnabled = false; introEnabled = true;
+  if (pixel) { cartEnabled = false; likesEnabled = false; }
   await open();
   await expect(page.locator('.showcase-hero-banner, .template-brand-header')).toHaveCount(0);
   await expect(page.locator('.no-hero-header')).toBeVisible();
   await expect(page.locator('.intro-card-title')).toHaveText('Feito na casa');
+  if (pixel) {
+    await expect(page.locator('.cart-capsule-btn, .item-like-btn')).toHaveCount(0);
+    await expect(page.locator('.floating-controls-capsule .capsule-btn')).toHaveCount(1);
+  }
 });
 
 }

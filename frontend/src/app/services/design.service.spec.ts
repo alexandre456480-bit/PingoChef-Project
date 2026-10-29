@@ -13,6 +13,28 @@ describe('Design settings persistence', () => {
   });
   afterEach(() => http.verify());
 
+  it('round-trips the optional pixel font pair without changing palette, icons or template', () => {
+    service.loadDesign().subscribe();
+    http.expectOne('/api/v1/design').flush({ success: true, data: {
+      custom_config: { home_icons: { home: null, most_liked: '2d-star' }, enable_cart: false }
+    } });
+    const original = service.draft();
+    service.setFontPair('pixel_arcade');
+    expect(service.draft()).toEqual({ ...original, fontHeading: 'Silkscreen', fontBody: 'Pixelify Sans', fontPair: 'pixel_arcade' });
+    service.saveDesign().subscribe();
+    const write = http.expectOne('/api/v1/design');
+    expect(write.request.body).toMatchObject({ font_heading: 'Silkscreen', font_body: 'Pixelify Sans', font_pair: 'pixel_arcade' });
+    write.flush({ success: true });
+    service.loadDesign().subscribe();
+    http.expectOne('/api/v1/design').flush({ success: true, data: write.request.body });
+    service.setTemplate('pixel');
+    expect(service.draft().fontHeading).toBe('Silkscreen');
+    expect(service.draft().fontBody).toBe('Pixelify Sans');
+    expect(service.draft().palette).toEqual(original.palette);
+    expect(service.draft().customConfig).toEqual(write.request.body.custom_config);
+    expect(service.draft().customConfig).toMatchObject(original.customConfig!);
+  });
+
   it('saves independent home icons, round-trips no icon and restores defaults without changing unrelated design', () => {
     const config = { home_icons: { home: '3d-bistro', most_liked: null }, enable_cart: false };
     service.loadDesign().subscribe();
@@ -69,7 +91,7 @@ describe('Design settings persistence', () => {
     expect(service.draft().palette).toEqual(palette);
   });
 
-  it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover'])('round-trips %s without changing customer personalization or features', template => {
+  it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel'])('round-trips %s without changing customer personalization or features', template => {
     const original = service.draft();
     service.setTemplate(template);
     expect(service.draft()).toEqual({ ...original, templateKey: template });

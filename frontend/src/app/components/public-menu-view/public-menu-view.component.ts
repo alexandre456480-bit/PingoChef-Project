@@ -19,7 +19,7 @@ import { findCatalogIcon } from '../../constants/icon-catalog';
 import { ProductMediaGalleryComponent } from '../product-media-gallery/product-media-gallery.component';
 import { MenuRevealDirective } from './menu-reveal.directive';
 import { MenuImageDirective, safeMenuImage } from './menu-image.directive';
-import { MenuFontsService, menuFont } from '../../services/menu-fonts.service';
+import { MenuFontsService, menuFont, menuFontFamily } from '../../services/menu-fonts.service';
 import { DialogFocusDirective } from '../dialog-focus.directive';
 import { MenuHomeIconComponent } from '../menu-home-icon/menu-home-icon.component';
 import { HomeIconSection, homeIconChoice } from '../../constants/home-icons';
@@ -56,8 +56,8 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       [style.--text-primary]="textPrimary"
       [style.--text-secondary]="textSecondary"
       [style.--heading-font]="headingFont + ', sans-serif'"
-      [style.--body-font]="bodyFont + ', sans-serif'"
-      [style.font-family]="bodyFont + ', sans-serif'">
+      [style.--body-font]="bodyFontFamily"
+      [style.font-family]="bodyFontFamily">
 
       <!-- ══════════════════════════════════════════════════ -->
       <!-- ── 1. WELCOME SCREEN (TELA DE ENTRADA) ── -->
@@ -133,9 +133,9 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
           [class.menu-opening]="menuOpening"
           [style.background]="screenBg">
 
-          <!-- Floating Control Capsule (Search, Cart & Reset) -->
+          <!-- Shared search and optional cart controls -->
           <ng-template #controlsTemplate>
-          <div class="floating-controls-capsule" [style.background]="surfaceColor + 'D9'">
+          <div class="floating-controls-capsule" [style.background]="templateKey === 'pixel' ? null : surfaceColor + 'D9'">
             <button
               type="button"
               class="capsule-btn"
@@ -294,7 +294,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       @if (introCard.description) {
                         <p
                           class="intro-card-desc"
-                          [style.font-family]="bodyFont + ', sans-serif'"
+                          [style.font-family]="bodyFontFamily"
                           [style.color]="textSecondary"
                           [textContent]="introCard.description"></p>
                       }
@@ -428,7 +428,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                               [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                               (click)="onLikeClick($event, item.id)">
                               <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
-                                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                <path [attr.d]="likeHeartPath"/>
                               </svg>
                             </button>
                           }
@@ -446,7 +446,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('most_liked') === undefined) { <span class="block-title-icon" aria-hidden="true">❤️</span> } @else if (homeIcon('most_liked') !== null) { <app-menu-home-icon class="block-title-icon" section="most_liked" [choice]="homeIcon('most_liked')" /> }Os Mais Curtidos</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('most_liked') === undefined) { <span class="block-title-icon" aria-hidden="true">@if (templateKey === 'pixel') { <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path [attr.d]="likeHeartPath"/></svg> } @else { ❤️ }</span> } @else if (homeIcon('most_liked') !== null) { <app-menu-home-icon class="block-title-icon" section="most_liked" [choice]="homeIcon('most_liked')" /> }Os Mais Curtidos</h3>
                       </div>
                     </div>
 
@@ -578,7 +578,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                 [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                                 (click)="onLikeClick($event, item.id)">
                                 <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
-                                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                  <path [attr.d]="likeHeartPath"/>
                                 </svg>
                               </button>
                             }
@@ -645,7 +645,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                 [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'"
                                 (click)="onLikeClick($event, item.id)">
                                 <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
-                                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                  <path [attr.d]="likeHeartPath"/>
                                 </svg>
                               </button>
                             }
@@ -733,7 +733,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               <div class="catalog-section" #catalogSection [class.category-enter]="categoryTransitioning">
                 <div class="catalog-header-row">
                   <div>
-                    <h3 class="section-heading" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">
+                    <h3 class="section-heading" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'pixel' ? primaryContrast : textPrimary">
                       {{ currentCategoryName }}
                     </h3>
                     <span class="catalog-count" [style.color]="textSecondary">{{ displayItems.length }} itens encontrados</span>
@@ -810,7 +810,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                       (click)="onLikeClick($event, item.id)"
                                       title="Curtir">
                                       <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
-                                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                        <path [attr.d]="likeHeartPath"/>
                                       </svg>
                                       @if ((item.likesCount || 0) > 0) {
                                         <span class="like-counter-val">{{ item.likesCount }}</span>
@@ -836,7 +836,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                       <button
                                         type="button"
                                         class="btn-view-item"
-                                        [style.color]="accentColor"
+                                        [style.color]="templateKey === 'pixel' ? accentContrast : accentColor"
                                         [attr.aria-label]="'Ver detalhes de ' + item.name"
                                         (click)="openProductDetail(item); $event.stopPropagation()">
                                         <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -914,7 +914,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                     (click)="onLikeClick($event, item.id)"
                                     title="Curtir">
                                     <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
-                                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                      <path [attr.d]="likeHeartPath"/>
                                     </svg>
                                     @if ((item.likesCount || 0) > 0) {
                                       <span class="like-counter-val">{{ item.likesCount }}</span>
@@ -940,7 +940,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                     <button
                                       type="button"
                                       class="btn-view-item"
-                                      [style.color]="accentColor"
+                                      [style.color]="templateKey === 'pixel' ? accentContrast : accentColor"
                                       [attr.aria-label]="'Ver detalhes de ' + item.name"
                                       (click)="openProductDetail(item); $event.stopPropagation()">
                                       <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -995,7 +995,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                               (click)="onLikeClick($event, item.id)"
                               title="Curtir">
                               <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? '#E11D48' : 'none'" stroke="currentColor" stroke-width="2">
-                                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                                <path [attr.d]="likeHeartPath"/>
                               </svg>
                               @if ((item.likesCount || 0) > 0) {
                                 <span class="like-counter-val">{{ item.likesCount }}</span>
@@ -1021,7 +1021,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                               <button
                                 type="button"
                                 class="btn-view-item"
-                                [style.color]="accentColor"
+                                [style.color]="templateKey === 'pixel' ? accentContrast : accentColor"
                                 [attr.aria-label]="'Ver detalhes de ' + item.name"
                                 (click)="openProductDetail(item); $event.stopPropagation()">
                                 <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1094,7 +1094,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     [attr.aria-label]="isLiked(selectedProduct.id) ? 'Item já curtido' : 'Curtir item'"
                     (click)="onLikeClick($event, selectedProduct.id)">
                     <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="isLiked(selectedProduct.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                      <path [attr.d]="likeHeartPath"/>
                     </svg>
                     <span>{{ selectedProductLikesCount }} curtidas</span>
                   </button>
@@ -1264,7 +1264,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     </div>
   `,
-  styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css'],
+  styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css', './public-menu-pixel-template.css'],
   styles: [`
     :host {
       display: block;
@@ -1773,6 +1773,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     .category-nav-pill {
       display: flex;
+      font-family: var(--body-font);
       align-items: center;
       gap: 7px;
       padding: 8px 16px;
@@ -3434,6 +3435,11 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   get templateKey(): string { return this.currentTemplate.key; }
+  get likeHeartPath(): string {
+    return this.templateKey === 'pixel'
+      ? 'M4 4H10V6H14V4H20V6H22V12H20V14H18V16H16V18H14V20H10V18H8V16H6V14H4V12H2V6H4Z'
+      : 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z';
+  }
 
   get heroControlsInside(): boolean {
     return this.currentTemplate.brandPosition === 'inside-hero' && !this.searchActive && !this.searchFilter && this.isCategoryHeroEnabled;
@@ -3508,6 +3514,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     const pair = AVAILABLE_FONT_PAIRS.find(f => f.key === this.design?.fontPair);
     return pair ? pair.body : 'Inter';
   }
+  get bodyFontFamily(): string { return menuFontFamily(this.bodyFont); }
 
   // ── HOME BLOCKS & RECURSOS ──
 

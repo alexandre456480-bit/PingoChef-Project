@@ -17,8 +17,9 @@ import {
 } from '../../../../services/design.service';
 import { MenuService } from '../../../../services/menu.service';
 import { HomeIconsEditorComponent } from './home-icons-editor.component';
+import { menuFontFamily } from '../../../../services/menu-fonts.service';
 
-type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
+type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
 
 @Component({
   selector: 'app-design-editor',
@@ -337,10 +338,10 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
               [attr.aria-pressed]="designService.draft().fontBody === f.family"
                 (click)="selectBodyFont(f.family)">
                 <div class="font-preview-body">
-                  <span class="font-body-title" [style.font-family]="f.family + ', sans-serif'">
+                  <span class="font-body-title" [style.font-family]="fontFamily(f.family)">
                     {{ f.name }}
                   </span>
-                  <p class="font-body-sample" [style.font-family]="f.family + ', sans-serif'">
+                  <p class="font-body-sample" [style.font-family]="fontFamily(f.family)">
                     {{ f.sample }}
                   </p>
                 </div>
@@ -725,7 +726,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
                   </h4>
                   <p
                     class="preview-card-desc"
-                    [style.font-family]="designService.draft().fontBody + ', sans-serif'"
+                    [style.font-family]="fontFamily(designService.draft().fontBody)">
                     [style.color]="designService.draft().palette.colors.textSecondary"
                     [textContent]="designService.introCard().description || 'Sua descrição de apresentação aparecerá aqui com efeito translúcido e elegante.'"></p>
                 </div>
@@ -1144,6 +1145,11 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
     .tmpl-preview[data-tmpl="signature-cover"] .tmpl-mini-line { width: 70%; background: linear-gradient(90deg, var(--sample-primary) 25%, transparent 25% 32%, var(--sample-text) 32% 68%, transparent 68% 75%, var(--sample-primary) 75%); }
     .tmpl-preview[data-tmpl="signature-cover"] .mini-card-sample { height: 36px; padding: 3px; background: var(--sample-surface); }
     .tmpl-preview[data-tmpl="signature-cover"] .mini-card-sample::before { content: ''; display: block; width: 30px; height: 30px; border-radius: 4px; background: color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)); }
+
+    .tmpl-preview[data-tmpl="pixel"] .tmpl-mini-hero { border-radius: 0; clip-path: polygon(0 0,100% 0,100% 95%,75% 95%,75% 85%,60% 85%,60% 65%,40% 65%,40% 85%,25% 85%,25% 95%,0 95%); }
+    .tmpl-preview[data-tmpl="pixel"] .tmpl-mini-identity { flex-direction: column; align-items: center; gap: 6px; margin-top: -36px; }
+    .tmpl-preview[data-tmpl="pixel"] :is(.tmpl-mini-logo, .tmpl-mini-cats span, .mini-card-sample, .tmpl-mini-description) { border-radius: 0; box-shadow: 2px 0 var(--sample-primary), -2px 0 var(--sample-primary), 0 2px var(--sample-primary), 0 -2px var(--sample-primary); }
+    .tmpl-preview[data-tmpl="pixel"] .mini-card-sample { height: 34px; }
 
     .tmpl-info {
       display: flex;
@@ -2653,6 +2659,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded';
   `]
 })
 export class DesignEditorComponent {
+  readonly fontFamily = menuFontFamily;
   @Output() onToast = new EventEmitter<string>();
 
   templates = AVAILABLE_TEMPLATES;
@@ -2674,7 +2681,8 @@ export class DesignEditorComponent {
     { key: 'modern', label: 'Modernas' },
     { key: 'classic', label: 'Clássicas / Serifadas' },
     { key: 'impact', label: 'Impacto / Condensadas' },
-    { key: 'rounded', label: 'Arredondadas' }
+    { key: 'rounded', label: 'Arredondadas' },
+    { key: 'pixel', label: 'Pixel' }
   ];
 
   get filteredPalettes(): PaletteConfig[] {
@@ -2683,6 +2691,7 @@ export class DesignEditorComponent {
 
   private matchesFont(font: FontOption, filter: FontFilter): boolean {
     if (filter === 'all') return true;
+    if (filter === 'pixel') return font.category === 'Pixel';
     if (filter === 'classic') return font.category === 'Serifada';
     if (filter === 'impact') return font.category === 'Condensada';
     if (filter === 'rounded') return font.category === 'Arredondada';

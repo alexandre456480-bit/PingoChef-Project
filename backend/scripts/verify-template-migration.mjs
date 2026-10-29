@@ -62,7 +62,7 @@ export async function verifyAdditionalTemplate(pool, sql, templateKey) {
     await client.query('INSERT INTO auth.users(id) VALUES($1)', [owner]);
     await client.query("INSERT INTO profiles(id,full_name) VALUES($1,'Centered template')", [owner]);
     await client.query("INSERT INTO businesses(id,owner_user_id,name,slug) VALUES($1,$2,'Centered template',$3)", [business, owner, business]);
-    const previousKey = templateKey === 'signature-cover' ? 'brand-hero' : templateKey === 'brand-hero' ? 'arched-cover' : templateKey === 'arched-cover' ? 'centered-cover' : 'default';
+    const previousKey = templateKey === 'pixel' ? 'signature-cover' : templateKey === 'signature-cover' ? 'brand-hero' : templateKey === 'brand-hero' ? 'arched-cover' : templateKey === 'arched-cover' ? 'centered-cover' : 'default';
     await client.query('INSERT INTO design_settings(business_id,custom_config,template_key) VALUES($1,$2,$3)', [business, { enable_cart: false, home_icons: { home: null } }, previousKey]);
     const before = (await client.query('SELECT template_key,custom_config FROM design_settings WHERE business_id=$1', [business])).rows[0];
     assert.equal(before.template_key, previousKey);

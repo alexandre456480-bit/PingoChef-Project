@@ -2,7 +2,7 @@
 
 O catálogo atual contém `default` (Padrão), `centered-cover` (Capa Central),
 `arched-cover` (Capa em Arco), `brand-hero` (Marca na Capa) e
-`signature-cover` (Capa Assinatura). O registro em
+`signature-cover` (Capa Assinatura) e `pixel` (Pixel). O registro em
 `frontend/src/app/constants/menu-templates.ts` define geometria e apresentação.
 O componente público compartilha as interações e usa o mesmo template na prévia.
 Não cadastrar cores, fontes, ícones, conteúdo ou flags de recursos no template.
@@ -71,7 +71,42 @@ lado. A apresentação fica abaixo da hero. O recorte é transparente e respeita
 o fundo escolhido pelo cliente. A apresentação é exibida sem caixa de vidro,
 e as categorias usam cartões arredondados. Os cards de 148 px têm foto quadrada
 com margem interna e curtidas na área de informações. Marca na Capa mantém
-seus próprios cards de 156 px. Cores, fontes e conteúdo continuam do cliente.
+seus próprios cards de 144 px. Cores, fontes e conteúdo continuam do cliente.
 Aplicar `20261026010000_add_signature_cover_template.sql` antes de disponibilizar
 a seleção. Essa migração apenas amplia as chaves permitidas, sem substituir
 templates ou personalizações existentes.
+
+## Pixel
+
+A chave `pixel` utiliza recorte da hero em degraus, logo centralizada,
+molduras pixeladas, sombras sem desfoque e categorias com marcador de seleção.
+Contornos e decorações usam os tokens ativos da paleta; fundos de ação usam
+as cores de contraste calculadas para essa mesma paleta. Nenhuma cor ou fonte
+é gravada pelo template. Fontes, ícones personalizados, fotografias, banners,
+descrições, ordem e habilitação dos blocos permanecem do cliente.
+
+Os controles continuam sendo somente busca e carrinho, respeitando a habilitação
+do carrinho. Não há botão de menu lateral, indicadores fictícios ou contadores
+decorativos. Curtidas, grupos recolhíveis, detalhes e carrinho reutilizam as
+ações existentes. As fotografias e os ícones não recebem filtro de pixelização.
+
+Aplicar `20261028000000_add_pixel_menu_template.sql` antes de disponibilizar
+o salvamento no ambiente conectado. A migração apenas permite a nova chave,
+sem redefinir as escolhas ou alterar acesso e publicação.
+
+A seção Tipografia oferece o filtro Pixel e a combinação opcional Pixel & Arcade:
+Silkscreen para títulos e Pixelify Sans para descrições. As famílias entram no
+mesmo catálogo permitido de fontes e carregam apenas quando selecionadas no
+cardápio público. Escolher o template Pixel não aplica essa combinação automaticamente.
+Não há alteração de banco para adicionar essas opções de fonte.
+
+Quando Pixelify Sans é escolhida, somente os dígitos 0–9 usam os algarismos
+Silkscreen locais (pesos 400/700, licença SIL OFL junto aos arquivos). Letras e
+pontuação permanecem Pixelify Sans. A composição também vale para a prévia e
+não muda o nome da fonte salvo, outras fontes ou a seleção do template.
+
+O catálogo compartilhado oferece 12 ícones SVG locais no grupo Pixel & Arcade,
+também encontrados pela busca `pixel`. São opções 2D para categorias e ícones
+da página inicial, com geometria em grade e cor herdada (`currentColor`).
+A seleção é individual, funciona em qualquer template e não altera escolhas
+existentes. Os IDs `2d-pixel-*` usam o contrato de persistência atual.

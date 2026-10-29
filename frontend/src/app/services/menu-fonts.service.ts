@@ -28,9 +28,13 @@ export const MENU_FONTS = [
   'Source Sans 3',
   'Open Sans',
   'Libre Baskerville',
+  'Silkscreen',
+  'Pixelify Sans',
 ] as const;
 const SINGLE_WEIGHT = new Set(['Bebas Neue', 'Righteous', 'DM Serif Display']);
 const WEIGHTS: Record<string, string> = {
+  Silkscreen: '400;700',
+  'Pixelify Sans': '400;500;600;700',
   Cinzel: '500;700;900',
   Merriweather: '400;700;900',
   Lora: '400;600',
@@ -49,6 +53,10 @@ const WEIGHTS: Record<string, string> = {
 };
 export function menuFont(value: string | undefined, fallback: string): string {
   return MENU_FONTS.some((font) => font === value) ? value! : fallback;
+}
+export function menuFontFamily(family: string): string {
+  const font = menuFont(family, 'Inter');
+  return font === 'Pixelify Sans' ? "'Pixel Numerals', 'Pixelify Sans', sans-serif" : font + ', sans-serif';
 }
 export function fontStylesheet(families: string[]): string {
   return (

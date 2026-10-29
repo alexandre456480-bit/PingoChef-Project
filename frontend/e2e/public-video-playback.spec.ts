@@ -63,10 +63,14 @@ const menuResponse = {
   }
 };
 
+for (const template of ['default', 'pixel']) {
 for (const aspectRatio of ['16:9', '9:16'] as const) {
-  test(`fits the ${aspectRatio} cover to the photo frame and authorizes Mux only on Play`, async ({ page }, testInfo) => {
+  test(`${template} fits the ${aspectRatio} cover to the photo frame and authorizes Mux only on Play`, async ({ page }, testInfo) => {
     await page.addInitScript(() => localStorage.clear());
     const response = structuredClone(menuResponse);
+    response.data.design.templateKey = template;
+    if (template === 'pixel') response.data.design.fontBody = 'Pixelify Sans';
+    response.data.design.customConfig.enable_cart = template === 'pixel';
     response.data.items[0].media[0].aspectRatio = aspectRatio;
     response.data.design.customConfig.enable_likes = true;
     let playbackRequests = 0;
@@ -115,6 +119,13 @@ for (const aspectRatio of ['16:9', '9:16'] as const) {
     await enterButton.click();
     await page.locator('.best-seller-card').click();
     await expect(page.locator('.product-modal-sheet')).toBeVisible();
+    if (template === 'pixel') {
+      await expect(page.locator('.sheet-current')).toHaveCSS('font-family', /"?Pixel Numerals"?, "?Pixelify Sans"?/);
+      expect(await page.evaluate(async () => {
+        const digits = await document.fonts.load('700 20px "Pixel Numerals"', '0123456789');
+        return digits.length === 1 && digits[0].status === 'loaded';
+      })).toBe(true);
+    }
 
     expect(playbackRequests).toBe(0);
     expect(muxNetworkRequests).toBe(0);
@@ -130,7 +141,7 @@ for (const aspectRatio of ['16:9', '9:16'] as const) {
     expect(coverFrame!.width).toBeCloseTo(photoFrame!.width, 0);
     expect(coverFrame!.height).toBeCloseTo(photoFrame!.height, 0);
     await page.getByRole('tab', { name: /vídeo 1/i }).click();
-    await expect(page.locator('.sheet-like-action')).toHaveCSS('color', 'rgb(159, 18, 57)');
+    await expect(page.locator('.sheet-like-action')).toHaveCSS('color', template === 'pixel' ? 'rgb(139, 26, 58)' : 'rgb(159, 18, 57)');
     await page.route('**/api/v1/public/menu/pingo-teste/like/*', route => route.fulfill({
       json: { success: true, data: { itemId: response.data.items[0].id, likesCount: 7, created: true } }
     }));
@@ -144,5 +155,19 @@ for (const aspectRatio of ['16:9', '9:16'] as const) {
     await expect.poll(() => playbackRequests).toBe(1);
     await expect(page.locator('mux-player')).toHaveAttribute('preload', 'none');
     await expect(page.locator('.expanded-player-shell')).toHaveCSS('aspect-ratio', aspectRatio.replace(':', ' / '));
+    if (template === 'pixel') {
+      await expect(page.getByRole('button', { name: 'Fechar vídeo', exact: true })).toBeInViewport();
+      await page.getByRole('button', { name: 'Fechar vídeo', exact: true }).click();
+      await expect(page.locator('.video-lightbox')).toHaveCount(0);
+      await page.getByRole('tab', { name: /foto 2/i }).click();
+      await expect(stage.locator('.media-image')).toBeVisible();
+      await page.locator('.m-qty-btn').last().click();
+      await expect(page.locator('.m-qty-val')).toHaveText('2');
+      await page.screenshot({ path: testInfo.outputPath('pixel-details-photo-and-cart.png') });
+      await page.locator('.btn-sheet-add-cart').click();
+      await expect(page.locator('.product-modal-sheet')).toHaveCount(0);
+      await expect(page.locator('.cart-badge-count')).toHaveText('2');
+    }
   });
+}
 }

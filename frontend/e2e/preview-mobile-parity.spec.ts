@@ -16,7 +16,7 @@ async function geometry(root: Locator) {
   });
 }
 
-for (const template of ['default', 'centered-cover', 'arched-cover', 'brand-hero', 'signature-cover']) {
+for (const template of ['default', 'centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel']) {
   test(`${template}: preview matches a 390x740 public mobile viewport`, async ({ page, context }, info) => {
     const business = { id: 'business', name: 'Cozinha da Casa', slug: 'parity', description: 'Receitas artesanais.', logo_url: '/logo_img.webp', welcome_bg_type: 'color' };
     const palette = { key: 'custom', name: 'Casa', isCustom: true, colors: { primary: '#173E34', secondary: '#849D90', accent: '#BA591B', background: '#F4F8F3', surface: '#FFFFFF', textPrimary: '#183027', textSecondary: '#586A61' } };

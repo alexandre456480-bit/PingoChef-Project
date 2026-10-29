@@ -99,6 +99,22 @@ export const AVAILABLE_TEMPLATES: readonly TemplateConfig[] = [{
   buttonRadius: 12,
   itemRadius: 16,
   itemImageSize: 84
+}, {
+  key: 'pixel',
+  name: 'Pixel',
+  description: 'Capa recortada em degraus, logo centralizada e molduras pixeladas. Os efeitos acompanham sua paleta, fontes e ícones.',
+  idealFor: 'Uma vitrine divertida com a identidade da sua marca.',
+  heroRatio: '1.85 / 1',
+  heroRadius: 0,
+  brandPosition: 'below-hero',
+  logoSize: 64,
+  logoRadius: 0,
+  descriptionAlign: 'center',
+  descriptionPosition: 'after-hero',
+  categoryRadius: 0,
+  buttonRadius: 0,
+  itemRadius: 0,
+  itemImageSize: 104
 }];
 
 /** Removed/unknown keys resolve safely while existing menus transition to the new catalog. */

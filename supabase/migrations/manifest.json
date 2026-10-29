@@ -154,5 +154,9 @@
   {
     "file": "20261026010000_add_signature_cover_template.sql",
     "sha256": "81f5f13136b068e97c0afbf66c797db3daa4cd9b950ce3d8bf772a750fca1cb6"
+  },
+  {
+    "file": "20261028000000_add_pixel_menu_template.sql",
+    "sha256": "1b3b146f8bddb13e9d2a1690498f9df132a73d78fde5716d0a32335eabc1985d"
   }
 ]

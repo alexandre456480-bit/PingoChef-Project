@@ -1,4 +1,5 @@
 import extraIcons from './icon-catalog-extra.json';
+import { PIXEL_ICONS } from './pixel-icons';
 import { emojiIcon } from './emoji-catalog';
 
 export interface CatalogIcon {
@@ -1845,7 +1846,7 @@ const LEGACY_ICONS: CatalogIcon[] = [
 
 // Keep the first legacy entry: existing saved IDs retain their original artwork.
 const uniqueIcons = new Map<string, CatalogIcon>();
-for (const icon of [...LEGACY_ICONS, ...extraIcons as CatalogIcon[]]) {
+for (const icon of [...LEGACY_ICONS, ...extraIcons as CatalogIcon[], ...PIXEL_ICONS]) {
   if (!uniqueIcons.has(icon.id)) uniqueIcons.set(icon.id, icon);
 }
 export const ICON_CATALOG = [...uniqueIcons.values()];

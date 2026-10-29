@@ -76,9 +76,17 @@ test('sections collapse with keyboard without losing draft colors or typography,
   await typography.locator('summary').click();
   await typography.locator('summary').click();
   await expect(typography.locator('.current-font-pill').first()).toHaveText('Oswald');
+  await heading.getByRole('button', { name: 'Pixel', exact: true }).click();
+  await expect(typography.locator('.typography-category-block').first().locator('.font-select-card')).toHaveCount(1);
+  await bodyFilters.getByRole('button', { name: 'Pixel', exact: true }).click();
+  await expect(typography.locator('.typography-category-block').last().locator('.font-select-card')).toHaveCount(1);
+  await pairs.getByRole('button', { name: 'Pixel', exact: true }).click();
+  await typography.getByRole('button', { name: 'Pixel & Arcade (Silkscreen + Pixelify Sans)', exact: true }).click();
+  await expect(typography.locator('.current-font-pill').first()).toHaveText('Silkscreen');
+  await expect(typography.locator('.current-font-pill').last()).toHaveText('Pixelify Sans');
 
-  const showcase = editor.locator('.template-card').filter({ hasText: 'Capa Assinatura' });
-  await expect(editor.locator('.template-card')).toHaveCount(5);
+  const showcase = editor.locator('.template-card').filter({ hasText: 'Pixel' });
+  await expect(editor.locator('.template-card')).toHaveCount(6);
   await expect(showcase).toHaveCount(1);
   await showcase.click();
   await expect(showcase).toHaveAttribute('aria-pressed', 'true');
@@ -93,7 +101,7 @@ test('sections collapse with keyboard without losing draft colors or typography,
   const save = page.waitForRequest(r => r.url().endsWith('/api/v1/design') && r.method() === 'PUT');
   await editor.getByRole('button', { name: /Salvar Alterações|Salvar e Sincronizar/ }).click();
   const payload = (await save).postDataJSON();
-  expect(payload).toMatchObject({ template_key: 'signature-cover', palette: { key: 'graphite_copper' }, font_heading: 'Oswald', font_body: 'Source Sans 3' });
+  expect(payload).toMatchObject({ template_key: 'pixel', palette: { key: 'graphite_copper' }, font_heading: 'Silkscreen', font_body: 'Pixelify Sans', font_pair: 'pixel_arcade' });
   expect(payload.custom_config.intro_card.description).toBe(description);
   expect(payload.custom_config).not.toHaveProperty('template_variant');
   expect(payload.home_blocks.some((block: any) => block.type === 'template_variant')).toBe(false);

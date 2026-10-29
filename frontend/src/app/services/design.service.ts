@@ -47,7 +47,7 @@ export interface FontOption {
   key: string;
   name: string;
   family: string;
-  category: 'Serifada' | 'Sans-serif' | 'Display / Moderna' | 'Condensada' | 'Arredondada';
+  category: 'Serifada' | 'Sans-serif' | 'Display / Moderna' | 'Condensada' | 'Arredondada' | 'Pixel';
   sample: string;
 }
 
@@ -263,6 +263,7 @@ export const AVAILABLE_PALETTES: PaletteConfig[] = [
 // ── 3. Tipografias Disponíveis para Escolha (Até 2 Fontes) ──
 
 export const AVAILABLE_HEADING_FONTS: FontOption[] = [
+  { key: 'silkscreen', name: 'Silkscreen', family: 'Silkscreen', category: 'Pixel', sample: 'SABOR EM PIXELS' },
   { key: 'outfit', name: 'Outfit', family: 'Outfit', category: 'Display / Moderna', sample: 'Sabor Contemporâneo' },
   { key: 'playfair', name: 'Playfair Display', family: 'Playfair Display', category: 'Serifada', sample: 'Elegância & Alta Gastronomia' },
   { key: 'cinzel', name: 'Cinzel', family: 'Cinzel', category: 'Serifada', sample: 'Imperial & Luxo Absoluto' },
@@ -280,6 +281,7 @@ export const AVAILABLE_HEADING_FONTS: FontOption[] = [
 ];
 
 export const AVAILABLE_BODY_FONTS: FontOption[] = [
+  { key: 'pixelify_sans', name: 'Pixelify Sans', family: 'Pixelify Sans', category: 'Pixel', sample: 'Sabor artesanal, porções e ingredientes em cada pixel.' },
   { key: 'inter', name: 'Inter', family: 'Inter', category: 'Sans-serif', sample: 'Legibilidade máxima e clareza perfeita para preços e descrições.' },
   { key: 'dm_sans', name: 'DM Sans', family: 'DM Sans', category: 'Sans-serif', sample: 'Linhas contemporâneas, geométricas e suaves aos olhos.' },
   { key: 'lora', name: 'Lora', family: 'Lora', category: 'Serifada', sample: 'Estilo literário refinado para descrições detalhadas dos pratos.' },
@@ -294,6 +296,7 @@ export const AVAILABLE_BODY_FONTS: FontOption[] = [
 ];
 
 export const AVAILABLE_FONT_PAIRS: FontPairPreset[] = [
+  { key: 'pixel_arcade', name: 'Pixel & Arcade', heading: 'Silkscreen', body: 'Pixelify Sans', idealFor: 'Combina com o template Pixel e cardápios com visual retrô' },
   { key: 'modern_clean', name: 'Moderna & Clean', heading: 'Outfit', body: 'Inter', idealFor: 'Cafés, açaí, poké e contemporâneo' },
   { key: 'fine_dining', name: 'Fine Dining & Luxo', heading: 'Playfair Display', body: 'Lora', idealFor: 'Restaurantes requintados e cartas de vinho' },
   { key: 'imperial_luxury', name: 'Imperial Steakhouse', heading: 'Cinzel', body: 'DM Sans', idealFor: 'Carnes nobres, churrascarias e adegas' },

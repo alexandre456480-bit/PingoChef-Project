@@ -26,7 +26,16 @@ const palette = {
   }
 };
 const upsert = jest.fn();
-it.each(['emoji-2764-fe0f', 'emoji-1f44b-1f3fd', 'emoji-1f1e7-1f1f7', '3d-fluent-trophy', '2d-phosphor-trophy'])(
+it('persists the pixel font pair without replacing customer palette or icons', async () => {
+  const response = await request(app()).put('/design').send({ palette, template_key: 'pixel',
+    font_heading: 'Silkscreen', font_body: 'Pixelify Sans', font_pair: 'pixel_arcade',
+    custom_config: { home_icons: { home: null }, enable_cart: false } });
+  expect(response.status).toBe(200);
+  expect(upsert.mock.calls[0][0]).toMatchObject({ palette, template_key: 'pixel',
+    font_heading: 'Silkscreen', font_body: 'Pixelify Sans', font_pair: 'pixel_arcade',
+    custom_config: { home_icons: { home: null }, enable_cart: false } });
+});
+it.each(['emoji-2764-fe0f', 'emoji-1f44b-1f3fd', 'emoji-1f1e7-1f1f7', '3d-fluent-trophy', '2d-phosphor-trophy', '2d-pixel-home', '2d-pixel-burger'])(
   'persists safe expanded catalog choice %s without changing tenant ownership', async home => {
     const response = await request(app()).put('/design').send({ palette, custom_config: { home_icons: { home } } });
     expect(response.status).toBe(200);
@@ -130,7 +139,7 @@ it('preserves description whitespace exactly when saving and returning the desig
   expect(response.body.data.custom_config.intro_card.description).toBe(description);
 });
 
-it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover'])('persists %s independently of customer branding, optional sections and features', async template => {
+it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel'])('persists %s independently of customer branding, optional sections and features', async template => {
   const block = { id: 'hero', type: 'hero', label: 'Capa', enabled: false, position: 3 };
   const response = await request(app()).put('/design').send({ template_key: template, palette,
     font_heading: 'Oswald', font_body: 'Lora', home_blocks: [block],
