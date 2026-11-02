@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
-let app: any;
+import express from 'express';
+let app: any = express();
 try {
   app = require('./app-runtime').default;
 } catch (error: any) {
