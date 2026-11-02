@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/v1/internal/videos/reconcile", "schedule": "*/5 * * * *" },
-    { "path": "/api/v1/internal/operations/accounts/purge", "schedule": "*/10 * * * *" },
-    { "path": "/api/v1/internal/operations/security/maintain", "schedule": "15 * * * *" }
+    { "path": "/api/v1/internal/videos/reconcile", "schedule": "0 7 * * *" },
+    { "path": "/api/v1/internal/operations/accounts/purge", "schedule": "0 8 * * *" },
+    { "path": "/api/v1/internal/operations/security/maintain", "schedule": "0 9 * * *" }
   ],
   "functions": {
     "src/server.ts": {

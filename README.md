@@ -169,5 +169,12 @@ chave de sessões. Segredos permanecem apenas no backend.
 
 Agende os endpoints de manutenção autenticados descritos nas fases 3 e 4.
 Deploys sem configuração de scheduler não executam esses jobs automaticamente.
+Para o piloto no plano Hobby, `backend/vercel.json` agenda vídeos, exclusões de
+contas e limpeza de segurança uma vez por dia, respectivamente às 07h, 08h e 09h
+UTC (04h, 05h e 06h em São Paulo). O Hobby pode executar dentro da hora agendada,
+sem precisão de minuto. Configure `CRON_SECRET` apenas no backend hospedado para
+autenticar as chamadas automáticas da Vercel; não versione seu valor.
+Essa frequência é temporária para testes: recuperação de vídeos e exclusões em
+lotes podem demorar mais de um dia. Reavalie os intervalos antes do lançamento.
 O bucket `menu-images` está reservado para mídias em Storage; antes de usá-lo,
 crie as políticas por estabelecimento. As imagens atuais não dependem desse bucket.
