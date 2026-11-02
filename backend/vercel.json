@@ -8,7 +8,7 @@
   "functions": {
     "src/server.ts": {
       "maxDuration": 240,
-      "includeFiles": "assets/fonts/Outfit.ttf"
+      "includeFiles": "{assets/fonts/Outfit.ttf,src/constants/*.json,dist/constants/*.json}"
     }
   }
 }
