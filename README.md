@@ -174,6 +174,9 @@ contas e limpeza de segurança uma vez por dia, respectivamente às 07h, 08h e 0
 UTC (04h, 05h e 06h em São Paulo). O Hobby pode executar dentro da hora agendada,
 sem precisão de minuto. Configure `CRON_SECRET` apenas no backend hospedado para
 autenticar as chamadas automáticas da Vercel; não versione seu valor.
+Se vídeos estiverem configurados, cadastre também `MUX_PLAYBACK_RESTRICTION_ID`
+com uma restrição do Mux para o domínio oficial do cardápio; a API valida essa
+proteção ao iniciar em produção.
 Essa frequência é temporária para testes: recuperação de vídeos e exclusões em
 lotes podem demorar mais de um dia. Reavalie os intervalos antes do lançamento.
 O bucket `menu-images` está reservado para mídias em Storage; antes de usá-lo,
