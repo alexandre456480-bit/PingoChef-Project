@@ -1,0 +1,144 @@
+/* Fabric, brushwork, blossoms and waves are decoration; customer tokens own branding. */
+.menu-viewport[data-template="japanese-izakaya"] {
+  --izakaya-edge: color-mix(in srgb, var(--secondary-color) 40%, var(--surface-color));
+  --izakaya-ink: color-mix(in srgb, var(--primary-color) 72%, var(--text-primary));
+  --izakaya-shadow: 0 5px 14px color-mix(in srgb, var(--primary-color) 13%, transparent);
+  --izakaya-frame: repeating-linear-gradient(1deg, transparent 0 3px, color-mix(in srgb, var(--text-primary) 15%, transparent) 3px 4px, transparent 4px 7px), linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+  --izakaya-paper: radial-gradient(ellipse at 0 100%, color-mix(in srgb, var(--secondary-color) 8%, transparent), transparent 75%);
+  --izakaya-waves: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 40'%3E%3Cg fill='none' stroke='white' stroke-width='1'%3E%3Cpath d='M-40 40a40 40 0 0 1 80 0M-32 40a32 32 0 0 1 64 0M-24 40a24 24 0 0 1 48 0M-16 40a16 16 0 0 1 32 0M0 40a40 40 0 0 1 80 0M8 40a32 32 0 0 1 64 0M16 40a24 24 0 0 1 48 0M24 40a16 16 0 0 1 32 0M40 40a40 40 0 0 1 80 0M48 40a32 32 0 0 1 64 0M56 40a24 24 0 0 1 48 0M64 40a16 16 0 0 1 32 0'/%3E%3C/g%3E%3C/svg%3E");
+  --izakaya-blossom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 90'%3E%3Cdefs%3E%3Cg id='f' fill='white'%3E%3Cellipse cy='-6' rx='3.5' ry='6'/%3E%3Cellipse cy='-6' rx='3.5' ry='6' transform='rotate(72)'/%3E%3Cellipse cy='-6' rx='3.5' ry='6' transform='rotate(144)'/%3E%3Cellipse cy='-6' rx='3.5' ry='6' transform='rotate(216)'/%3E%3Cellipse cy='-6' rx='3.5' ry='6' transform='rotate(288)'/%3E%3C/g%3E%3C/defs%3E%3Cpath d='M0 82Q27 45 103 8M19 59L20 22M45 40L77 50' fill='none' stroke='white' stroke-width='2'/%3E%3Cuse href='%23f' x='20' y='28'/%3E%3Cuse href='%23f' x='35' y='50'/%3E%3Cuse href='%23f' x='60' y='30'/%3E%3Cuse href='%23f' x='80' y='48'/%3E%3Cuse href='%23f' x='92' y='14'/%3E%3C/svg%3E");
+  --izakaya-brush: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'%3E%3Cpath d='M7 9Q140 3 240 6L382 8L375 11L397 13L386 16L397 20L389 22L399 24L389 28L396 31L386 35L398 39L381 41L393 46Q275 55 155 52L15 54L23 51L2 49L13 46L0 43L8 40L3 37L13 34L2 30L8 27L0 23L16 20L4 17L20 14Z' fill='white'/%3E%3C/svg%3E");
+  --izakaya-lanterns: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 146' preserveAspectRatio='none'%3E%3Cpath d='M18 0V46M11 55V52a7 7 0 0 1 14 0v3' fill='none' stroke='white' stroke-width='2'/%3E%3Cg fill='white'%3E%3Crect x='8' y='55' width='20' height='7' rx='2'/%3E%3Cpath d='M12 62C5 64 2 73 2 86V105C2 122 9 130 18 130S34 122 34 105V86C34 73 30 64 24 62Z'/%3E%3Crect x='8' y='129' width='20' height='6' rx='2'/%3E%3Cpath d='M14 135h8v3h-8ZM17 138h2v8h-2Z'/%3E%3C/g%3E%3C/svg%3E");
+  --product-media-radius: 16px;
+  --product-media-ratio: 4 / 3;
+}
+.menu-viewport[data-template="japanese-izakaya"] .showcase-scrollable { gap: 16px; background-image: var(--izakaya-paper); }
+.menu-viewport[data-template="japanese-izakaya"] .showcase-scrollable:has(> .template-brand-header:first-child) { padding-top: 8px; }
+.menu-viewport[data-template="japanese-izakaya"] .template-brand-header {
+  position: relative; display: block; min-height: 140px; box-sizing: border-box; margin: 0 -6px; padding: 10px 106px 24px 108px;
+  background: var(--izakaya-frame); border-radius: 6px; border: 2px solid var(--izakaya-ink); box-shadow: var(--izakaya-shadow); isolation: isolate;
+}
+.menu-viewport[data-template="japanese-izakaya"] .template-brand-header::before {
+  content: ''; position: absolute; inset: 8px 18px 0; z-index: -1; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 28px, color-mix(in srgb, var(--text-primary) 22%, transparent) 29px 32px),
+    repeating-linear-gradient(87deg, transparent 0 7px, color-mix(in srgb, var(--surface-color) 5%, transparent) 8px 9px), var(--primary-color);
+  clip-path: polygon(0 0, 100% 0, 100% 96%, 83% 100%, 83% 91%, 82% 91%, 82% 100%, 65% 97%, 65% 90%, 64% 90%, 64% 98%, 46% 100%, 46% 90%, 45% 90%, 45% 99%, 24% 98%, 24% 91%, 23% 91%, 23% 100%, 0 96%);
+}
+.menu-viewport[data-template="japanese-izakaya"] .template-brand-header::after {
+  content: ''; position: absolute; inset: -2px 0 auto; height: 146px; z-index: -1; pointer-events: none;
+  background: linear-gradient(var(--izakaya-ink), var(--izakaya-ink)) left top / 32px 62px no-repeat,
+    linear-gradient(var(--izakaya-ink), var(--izakaya-ink)) right top / 32px 62px no-repeat,
+    linear-gradient(var(--izakaya-ink), var(--izakaya-ink)) left 130px / 32px 16px no-repeat,
+    linear-gradient(var(--izakaya-ink), var(--izakaya-ink)) right 130px / 32px 16px no-repeat,
+    repeating-linear-gradient(0deg, transparent 0 5px, color-mix(in srgb, var(--primary-color) 65%, transparent) 5px 6px),
+    radial-gradient(ellipse at 50% 65%, color-mix(in srgb, var(--accent-color) 55%, var(--surface-color)), var(--accent-color) 45%, var(--primary-color) 90%) left top / 32px 146px no-repeat,
+    radial-gradient(ellipse at 50% 65%, color-mix(in srgb, var(--accent-color) 55%, var(--surface-color)), var(--accent-color) 45%, var(--primary-color) 90%) right top / 32px 146px no-repeat;
+  mask: var(--izakaya-lanterns) left top / 32px 146px no-repeat, var(--izakaya-lanterns) right top / 32px 146px no-repeat;
+}
+.menu-viewport[data-template="japanese-izakaya"] .template-logo-wrap { position: absolute; top: 10px; left: 38px; padding: 3px; border-radius: 0; background: transparent; box-shadow: none; }
+.menu-viewport[data-template="japanese-izakaya"] .template-logo-wrap::before {
+  content: ''; position: absolute; inset: -4px -4px -24px; pointer-events: none; border-inline: 2px solid var(--izakaya-edge);
+  background: linear-gradient(90deg, var(--izakaya-ink), var(--primary-color) 35%, var(--izakaya-ink));
+  clip-path: polygon(0 0, 100% 0, 100% 95%, 52% 100%, 0 95%);
+}
+.menu-viewport[data-template="japanese-izakaya"] .template-logo { position: relative; border-radius: 0; }
+.menu-viewport[data-template="japanese-izakaya"] .template-brand-copy { display: flex; flex-direction: column; justify-content: center; min-height: var(--template-logo-size); padding: 10px 8px; width: 100%; box-sizing: border-box; text-align: center; }
+.menu-viewport[data-template="japanese-izakaya"] .template-brand-copy h2 { font-size: clamp(.95rem, 4cqi, 1.4rem); color: var(--on-primary); line-height: 1.2; }
+.menu-viewport[data-template="japanese-izakaya"] .template-brand-copy p { color: var(--on-primary); font-size: .72rem; line-height: 1.4; margin-top: 5px; }
+.menu-viewport[data-template="japanese-izakaya"] .menu-main-shell:has(> app-social-menu) .template-brand-header { min-height: 140px; padding-top: 54px; }
+.menu-viewport[data-template="japanese-izakaya"] .menu-main-shell:has(> app-social-menu) .template-logo-wrap { top: 54px; }
+.menu-viewport[data-template="japanese-izakaya"] .floating-controls-capsule { top: 18px; right: 14px; gap: 4px; padding: 0; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.menu-viewport[data-template="japanese-izakaya"] .capsule-btn { background: var(--surface-color); color: var(--text-primary); border: 1px solid var(--izakaya-edge); border-radius: 50%; box-shadow: var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] .capsule-btn:is(:hover, .active) { background: var(--surface-color); color: var(--text-primary); }
+.menu-viewport[data-template="japanese-izakaya"] .capsule-divider { display: none; }
+.menu-viewport[data-template="japanese-izakaya"] .showcase-hero-banner { aspect-ratio: auto; padding: 9px; border: 2px solid var(--izakaya-ink); background: var(--izakaya-frame); box-shadow: inset 0 0 0 2px var(--izakaya-edge), var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] .hero-carousel-track { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; }
+.menu-viewport[data-template="japanese-izakaya"] .showcase-hero-banner::before,
+.menu-viewport[data-template="japanese-izakaya"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::before {
+  content: ''; position: absolute; inset: auto 12px 12px; height: 40px; z-index: 2; pointer-events: none;
+  background: var(--secondary-color); mask: var(--izakaya-waves) center / 64px 40px repeat-x; opacity: .6;
+  clip-path: polygon(0 0, 22% 0, 22% 100%, 78% 100%, 78% 0, 100% 0, 100% 100%, 0 100%);
+}
+.menu-viewport[data-template="japanese-izakaya"] .showcase-hero-banner::after,
+.menu-viewport[data-template="japanese-izakaya"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::after {
+  content: ''; position: absolute; top: 4px; left: 4px; width: 80px; height: 68px; z-index: 2; pointer-events: none;
+  background: linear-gradient(45deg, var(--secondary-color), var(--primary-color)); mask: var(--izakaya-blossom) center / contain no-repeat; opacity: .8;
+}
+.menu-viewport[data-template="japanese-izakaya"] .hero-banner-overlay { inset: 9px; height: auto; align-items: center; padding-bottom: 0; background: none; }
+.menu-viewport[data-template="japanese-izakaya"] .intro-description-wrapper { padding-block: 8px; }
+.menu-viewport[data-template="japanese-izakaya"] .intro-description-card {
+  position: relative; padding: 18px 24px 14px; border: 1px solid var(--izakaya-edge); border-radius: 4px;
+  background: var(--izakaya-paper), var(--surface-color); box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--secondary-color) 5%, transparent), var(--izakaya-shadow);
+}
+.menu-viewport[data-template="japanese-izakaya"] .intro-description-card::before,
+.menu-viewport[data-template="japanese-izakaya"] .intro-description-card::after {
+  content: ''; position: absolute; left: -5px; right: -5px; height: 8px; border: 1px solid var(--izakaya-ink);
+  border-radius: 999px; background: var(--izakaya-frame); box-shadow: var(--izakaya-shadow); pointer-events: none;
+}
+.menu-viewport[data-template="japanese-izakaya"] .intro-description-card::before { top: -5px; }
+.menu-viewport[data-template="japanese-izakaya"] .intro-description-card::after { bottom: -5px; }
+.menu-viewport[data-template="japanese-izakaya"] .intro-card-body { position: relative; padding-bottom: 28px; }
+.menu-viewport[data-template="japanese-izakaya"] .intro-card-body::before {
+  content: ''; position: absolute; right: -12px; bottom: 0; width: 32px; height: 26px;
+  background: var(--primary-color); mask: var(--izakaya-blossom) center / contain no-repeat; opacity: .35; pointer-events: none;
+}
+.menu-viewport[data-template="japanese-izakaya"] .intro-card-body::after {
+  content: ''; position: absolute; bottom: 0; left: calc(50% - 48px); width: 96px; height: 14px;
+  background: var(--secondary-color); mask: var(--izakaya-waves) center / 44px 22px repeat-x; opacity: .4; pointer-events: none;
+}
+.menu-viewport[data-template="japanese-izakaya"] .category-nav-pill { position: relative; min-height: 60px; padding: 12px 18px; border: 1px solid var(--izakaya-edge); box-shadow: var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] .category-nav-pill.active { border-color: var(--primary-color); }
+.menu-viewport[data-template="japanese-izakaya"] .category-nav-pill::after {
+  content: ''; position: absolute; bottom: 4px; right: 8px; width: 70px; height: 26px; pointer-events: none;
+  background: currentColor; mask: var(--izakaya-waves) center / 54px 28px repeat; opacity: .08;
+}
+.menu-viewport[data-template="japanese-izakaya"] .catalog-header-row { flex-wrap: wrap; gap: 10px; }
+.menu-viewport[data-template="japanese-izakaya"] .catalog-header-row > div { min-width: 0; flex: 1 1 180px; }
+.menu-viewport[data-template="japanese-izakaya"] :is(.section-heading, .showcase-block .block-title) {
+  position: relative; isolation: isolate; width: fit-content; max-width: 100%; box-sizing: border-box; margin: 0; padding: 10px 18px;
+  font-size: clamp(1rem, 4.3cqi, 1.35rem); line-height: 1.3; overflow-wrap: anywhere;
+}
+.menu-viewport[data-template="japanese-izakaya"] :is(.section-heading, .showcase-block .block-title)::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--primary-color); mask: var(--izakaya-brush) center / 100% 100% no-repeat;
+}
+.menu-viewport[data-template="japanese-izakaya"] .catalog-count { display: block; margin: 6px 0 0 10px; }
+.menu-viewport[data-template="japanese-izakaya"] .subcategory-header-collapsible { position: relative; padding: 10px 14px; border: 1px solid var(--izakaya-edge); border-radius: 16px; background: var(--surface-color); box-shadow: var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] .subcategory-header-collapsible::after {
+  content: ''; position: absolute; inset: auto 18px 0 auto; width: 110px; height: 30px; pointer-events: none;
+  background: var(--secondary-color); mask: var(--izakaya-waves) center / 58px 30px repeat; opacity: .12;
+}
+.menu-viewport[data-template="japanese-izakaya"] .product-item-card {
+  --item-photo-size: clamp(96px, 27cqi, 116px);
+  --item-content-size: max(var(--item-photo-size), 116px);
+  position: relative; height: calc(var(--item-content-size) + 16px); padding: 7px; gap: 10px;
+  border: 1px solid var(--izakaya-edge); box-shadow: var(--izakaya-shadow);
+}
+.menu-viewport[data-template="japanese-izakaya"] .product-item-card::after { content: ''; position: absolute; bottom: 0; right: 16px; width: 120px; height: 34px; background: var(--secondary-color); mask: var(--izakaya-waves) center / 64px 34px repeat; opacity: .1; pointer-events: none; }
+.menu-viewport[data-template="japanese-izakaya"] .product-card-photo { border-radius: 10px; border: 1px solid var(--izakaya-edge); box-sizing: border-box; }
+.menu-viewport[data-template="japanese-izakaya"] .product-card-body { position: static; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 40px; gap: 3px; }
+.menu-viewport[data-template="japanese-izakaya"] .card-item-title { padding-right: 38px; }
+.menu-viewport[data-template="japanese-izakaya"] .card-item-desc { -webkit-line-clamp: 3; font-size: .75rem; }
+.menu-viewport[data-template="japanese-izakaya"] .item-like-btn { position: absolute; right: 5px; top: 2px; grid-area: auto; min-width: 44px; min-height: 44px; padding: 8px 3px 0; justify-content: center; align-items: flex-start; box-sizing: border-box; }
+.menu-viewport[data-template="japanese-izakaya"] .card-bottom-row { grid-row: 3; }
+.menu-viewport[data-template="japanese-izakaya"] .btn-view-item { width: 44px; height: 40px; min-height: 40px; border: 1px solid color-mix(in srgb, var(--accent-color) 40%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--accent-color) 6%, var(--surface-color)); }
+.menu-viewport[data-template="japanese-izakaya"] .product-modal-sheet { border: 4px solid var(--izakaya-ink); border-radius: 24px; box-shadow: var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty) { position: relative; margin: 0; padding: 10px; border-radius: 18px; background: var(--izakaya-frame); box-shadow: inset 0 0 0 2px var(--izakaya-edge); }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-close-btn { width: 44px; height: 44px; top: 22px; right: 22px; background: var(--surface-color); color: var(--text-primary); border: 1px solid var(--izakaya-edge); box-shadow: var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] .modal-sheet-content { position: relative; padding: 20px 18px 26px; gap: 18px; background: var(--izakaya-paper), var(--surface-color); }
+.menu-viewport[data-template="japanese-izakaya"] .modal-sheet-content::after { content: ''; position: absolute; bottom: 4px; left: 8px; right: 8px; height: 20px; pointer-events: none; background: var(--secondary-color); mask: var(--izakaya-waves) center / 60px 30px repeat-x; opacity: .12; }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-header { flex-wrap: wrap; gap: 12px; align-items: center; }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-product-title { position: relative; flex: 1 1 145px; min-width: 0; padding-bottom: 10px; overflow-wrap: anywhere; line-height: 1.2; }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-product-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: var(--primary-color); mask: var(--izakaya-brush) center / 100% 100% no-repeat; pointer-events: none; }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-like-action { color: var(--text-primary); background: color-mix(in srgb, var(--primary-color) 6%, var(--surface-color)); border: 1px solid var(--izakaya-edge); border-radius: 18px; padding: 10px 14px; }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-like-action:is(.liked, :hover) { color: var(--text-primary); background: var(--surface-color); border-color: var(--izakaya-edge); }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-desc { line-height: 1.55; }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-price-row { flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--izakaya-edge); padding-top: 18px; }
+.menu-viewport[data-template="japanese-izakaya"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
+.menu-viewport[data-template="japanese-izakaya"] .modal-qty-selector { border: 1px solid var(--izakaya-edge); border-radius: 18px; }
+.menu-viewport[data-template="japanese-izakaya"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 1px solid var(--izakaya-edge); border-radius: 18px; box-shadow: var(--izakaya-shadow); }
+/* Home respects customer section order and uses the same brushwork and wave trim. */
+.menu-viewport[data-template="japanese-izakaya"] .showcase-block .block-header { padding-bottom: 8px; }
+.menu-viewport[data-template="japanese-izakaya"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { border: 1px solid var(--izakaya-edge); border-radius: 16px; box-shadow: var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] :is(.promo-img-wrap, .chef-card-photo-wrap, .combo-img-wrap) { border-bottom: 2px solid var(--izakaya-edge); }
+.menu-viewport[data-template="japanese-izakaya"] :is(.btn-chef-view, .btn-combo-view, .btn-best-seller-view) { border: 1px solid var(--izakaya-edge); border-radius: 12px; }

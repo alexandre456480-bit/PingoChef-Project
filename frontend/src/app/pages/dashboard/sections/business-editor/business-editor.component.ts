@@ -1,3 +1,7 @@
+import { OrderSettingsEditorComponent } from '../../../../components/order-settings-editor/order-settings-editor.component';
+import { defaultOrderSettings, safeOrderSettings, orderSettingsError, OrderSettings } from '../../../../models/order-settings';
+import { SocialLinksEditorComponent } from '../../../../components/social-links-editor/social-links-editor.component';
+import { SocialLink, safeSocialLinks } from '../../../../models/social-links';
 import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +11,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
 @Component({
   selector: 'app-business-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SocialLinksEditorComponent, OrderSettingsEditorComponent],
   template: `
     <div class="business-container">
       <!-- Card Principal de Informações do Estabelecimento -->
@@ -125,6 +129,9 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
               </span>
             </div>
           </div>
+
+          <app-social-links-editor [links]="form.social_links" (linksChange)="onSocialLinksChange($event)" />
+          <app-order-settings-editor [settings]="form.order_settings" (settingsChange)="onOrderSettingsChange($event)" />
 
           <!-- ── 3. Configuração de Background da Página Welcome ── -->
           <div class="welcome-bg-section" style="--i:5">
@@ -862,6 +869,8 @@ export class BusinessEditorComponent implements OnInit {
     name: '',
     slug: '',
     description: '',
+    social_links: [] as SocialLink[],
+    order_settings: defaultOrderSettings(),
     welcome_bg_type: 'image' as 'image' | 'color',
     welcome_bg_image: '',
     welcome_bg_color: '#0F0F12'
@@ -906,10 +915,22 @@ export class BusinessEditorComponent implements OnInit {
     this.form.name = biz.name || '';
     this.form.slug = biz.slug || '';
     this.form.description = biz.description || '';
+    this.form.social_links = safeSocialLinks(biz.social_links);
+    this.form.order_settings = safeOrderSettings(biz.order_settings);
     this.logoPreview = biz.logo_url || null;
     this.form.welcome_bg_type = biz.welcome_bg_type || 'image';
     this.form.welcome_bg_image = biz.welcome_bg_image || biz.cover_image_url || this.defaultCoverImage;
     this.form.welcome_bg_color = biz.welcome_bg_color || '#0F0F12';
+  }
+
+  onOrderSettingsChange(settings: OrderSettings): void {
+    this.form.order_settings = !settings.enabled && orderSettingsError(settings) ? defaultOrderSettings() : settings;
+    this.syncLiveDraft();
+  }
+
+  onSocialLinksChange(links: SocialLink[]): void {
+    this.form.social_links = links;
+    this.syncLiveDraft();
   }
 
   onLogoSelect(event: Event): void {
@@ -988,6 +1009,8 @@ export class BusinessEditorComponent implements OnInit {
     const current = this.authService.currentBusiness() || {};
     this.authService.currentBusiness.set({
       ...current,
+      social_links: this.form.social_links,
+      order_settings: this.form.order_settings,
       name: this.form.name,
       slug: this.form.slug,
       description: this.form.description,
@@ -1010,9 +1033,15 @@ export class BusinessEditorComponent implements OnInit {
       return;
     }
 
+    const settings = { ...this.form.order_settings, url: this.form.order_settings.url.trim(), button_text: this.form.order_settings.button_text.trim() };
+    const orderError = orderSettingsError(settings);
+    if (orderError) { this.onToast.emit(orderError); return; }
+    this.form.order_settings = settings;
     this.isSaving = true;
 
     const payload: any = {
+      social_links: this.form.social_links,
+      order_settings: this.form.order_settings,
       name: this.form.name.trim(),
       slug: this.form.slug.trim().toLowerCase(),
       description: this.form.description?.trim() || '',

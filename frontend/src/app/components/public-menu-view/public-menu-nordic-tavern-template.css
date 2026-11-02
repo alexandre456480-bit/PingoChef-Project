@@ -1,0 +1,166 @@
+/* Wood, cloth, metal and paper are palette-derived effects, never customer assets. */
+.menu-viewport[data-template="nordic-tavern"] {
+  --tavern-iron: color-mix(in srgb, var(--primary-color) 55%, var(--text-primary));
+  --tavern-metal: color-mix(in srgb, var(--text-secondary) 60%, var(--surface-color));
+  --tavern-edge: color-mix(in srgb, var(--secondary-color) 55%, var(--surface-color));
+  --tavern-shadow: 0 4px 10px color-mix(in srgb, var(--text-primary) 22%, transparent);
+  --tavern-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='80'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018 .3' numOctaves='3' stitchTiles='stitch' seed='12'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0 0 0 -.06'/%3E%3C/filter%3E%3Cpath d='M0 0H240V80H0Z' filter='url(%23g)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(2deg, color-mix(in srgb, var(--text-primary) 13%, transparent) 0 1px, transparent 1px 3px, color-mix(in srgb, var(--secondary-color) 18%, transparent) 4px 5px, transparent 5px 9px),
+    repeating-linear-gradient(178deg, transparent 0 15px, color-mix(in srgb, var(--text-primary) 22%, transparent) 16px 17px, transparent 18px 32px),
+    linear-gradient(90deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 70%, var(--secondary-color)), var(--primary-color));
+  --tavern-rivets: radial-gradient(circle, var(--surface-color) 0 1px, var(--tavern-metal) 1px 2px, var(--tavern-iron) 2px 4px, transparent 4px) 2px 2px / 12px 12px no-repeat,
+    radial-gradient(circle, var(--surface-color) 0 1px, var(--tavern-metal) 1px 2px, var(--tavern-iron) 2px 4px, transparent 4px) calc(100% - 2px) 2px / 12px 12px no-repeat,
+    radial-gradient(circle, var(--surface-color) 0 1px, var(--tavern-metal) 1px 2px, var(--tavern-iron) 2px 4px, transparent 4px) 2px calc(100% - 2px) / 12px 12px no-repeat,
+    radial-gradient(circle, var(--surface-color) 0 1px, var(--tavern-metal) 1px 2px, var(--tavern-iron) 2px 4px, transparent 4px) calc(100% - 2px) calc(100% - 2px) / 12px 12px no-repeat;
+  --tavern-paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .07 0 0 0 0'/%3E%3C/filter%3E%3Cpath d='M0 0H120V120H0Z' filter='url(%23p)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 0 50%, color-mix(in srgb, var(--secondary-color) 16%, transparent), transparent 75%);
+  --tavern-brackets: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 240' preserveAspectRatio='none'%3E%3Cpath d='M0 0H32L0 36ZM368 0H400V36ZM0 204L32 240H0ZM400 204V240H368Z' fill='white'/%3E%3C/svg%3E");
+  --tavern-knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 14'%3E%3Cpath d='M0 7Q7 -5 14 7T28 7T42 7T56 7M0 7Q7 19 14 7T28 7T42 7T56 7' fill='none' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E");
+  --product-media-radius: 2px;
+  --product-media-ratio: 4 / 3;
+}
+.menu-viewport[data-template="nordic-tavern"] .showcase-scrollable {
+  gap: 14px;
+  background-image: repeating-linear-gradient(1deg, transparent 0 5px, color-mix(in srgb, var(--text-primary) 4%, transparent) 5px 6px);
+}
+.menu-viewport[data-template="nordic-tavern"] .showcase-scrollable:has(> .template-brand-header:first-child) { padding-top: 8px; }
+.menu-viewport[data-template="nordic-tavern"] .template-brand-header {
+  position: relative; display: block; min-height: 96px; box-sizing: border-box; margin: 0 -6px; padding: 6px 106px 20px 78px;
+  background: var(--tavern-rivets), var(--tavern-wood); border: 2px solid var(--tavern-iron); border-radius: 4px;
+  box-shadow: inset 0 0 0 2px var(--tavern-edge), var(--tavern-shadow); z-index: 4;
+}
+.menu-viewport[data-template="nordic-tavern"] .template-brand-header::after {
+  content: ''; position: absolute; inset: auto 12px 4px; height: 10px; pointer-events: none;
+  background: var(--tavern-edge); mask: var(--tavern-knot) center / 48px 12px repeat-x;
+}
+.menu-viewport[data-template="nordic-tavern"] .template-logo-wrap {
+  position: absolute; top: 6px; left: 8px; padding: 3px; border-radius: 0; background: transparent; box-shadow: none;
+}
+.menu-viewport[data-template="nordic-tavern"] .template-logo-wrap::before {
+  content: ''; position: absolute; inset: -8px -4px -42px; pointer-events: none;
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 73% 87%, 50% 100%, 28% 88%, 4% 100%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary-color) 80%, var(--text-primary)), var(--primary-color) 35%, color-mix(in srgb, var(--primary-color) 70%, var(--text-primary)) 75%, var(--primary-color));
+  border-inline: 3px solid var(--tavern-edge); box-shadow: inset 0 2px var(--tavern-metal);
+}
+.menu-viewport[data-template="nordic-tavern"] .template-logo { position: relative; border-radius: 0; }
+.menu-viewport[data-template="nordic-tavern"] .menu-main-shell:has(> app-social-menu) .template-brand-header { min-height: 142px; padding-top: 54px; }
+.menu-viewport[data-template="nordic-tavern"] .menu-main-shell:has(> app-social-menu) .template-logo-wrap { top: 54px; }
+.menu-viewport[data-template="nordic-tavern"] .template-brand-copy {
+  display: flex; flex-direction: column; justify-content: center; min-height: var(--template-logo-size);
+  padding: 8px 6px; width: 100%; box-sizing: border-box; text-align: center; border: 2px solid var(--tavern-iron); border-radius: 6px;
+  background: var(--tavern-wood); box-shadow: inset 0 0 0 1px var(--tavern-metal);
+}
+.menu-viewport[data-template="nordic-tavern"] .template-brand-copy h2 { font-size: clamp(.9rem, 3.8cqi, 1.3rem); line-height: 1.2; color: var(--on-primary); }
+.menu-viewport[data-template="nordic-tavern"] .template-brand-copy p { color: var(--on-primary); font-size: .7rem; line-height: 1.35; margin-top: 4px; }
+.menu-viewport[data-template="nordic-tavern"] .floating-controls-capsule { top: 24px; right: 14px; padding: 0; gap: 4px; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.menu-viewport[data-template="nordic-tavern"] .capsule-btn {
+  border-radius: 50%; border: 3px double var(--tavern-metal); background: var(--tavern-wood); color: var(--on-primary); box-shadow: var(--tavern-shadow);
+}
+.menu-viewport[data-template="nordic-tavern"] .capsule-btn:is(:hover, .active) { color: var(--on-primary); background: var(--primary-color); }
+.menu-viewport[data-template="nordic-tavern"] .capsule-divider { display: none; }
+.menu-viewport[data-template="nordic-tavern"] .showcase-hero-banner {
+  aspect-ratio: auto; padding: 10px; border: 2px solid var(--tavern-iron); border-radius: 6px;
+  background: var(--tavern-wood); box-shadow: inset 0 0 0 2px var(--tavern-edge), var(--tavern-shadow);
+}
+.menu-viewport[data-template="nordic-tavern"] .hero-carousel-track { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.menu-viewport[data-template="nordic-tavern"] .showcase-hero-banner::before,
+.menu-viewport[data-template="nordic-tavern"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::before {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(135deg, var(--tavern-metal), var(--tavern-iron)); mask: var(--tavern-brackets) center / 100% 100% no-repeat;
+}
+.menu-viewport[data-template="nordic-tavern"] .showcase-hero-banner::after,
+.menu-viewport[data-template="nordic-tavern"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::after {
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: var(--tavern-rivets);
+}
+.menu-viewport[data-template="nordic-tavern"] .hero-banner-overlay { inset: 10px; height: auto; padding: 0 4px 0; background: none; }
+.menu-viewport[data-template="nordic-tavern"] .intro-description-wrapper { padding-top: 24px; }
+.menu-viewport[data-template="nordic-tavern"] .intro-description-card {
+  position: relative; padding: 18px 16px; border: 3px double var(--tavern-edge); border-radius: 4px; box-shadow: var(--tavern-shadow);
+  background: var(--tavern-paper-grain), var(--surface-color);
+}
+.menu-viewport[data-template="nordic-tavern"] .intro-description-card::before,
+.menu-viewport[data-template="nordic-tavern"] .intro-description-card::after,
+.menu-viewport[data-template="nordic-tavern"] .category-nav-pill::before {
+  content: ''; position: absolute; top: -24px; width: 14px; height: 32px; pointer-events: none;
+  background: radial-gradient(circle, var(--surface-color) 0 1px, var(--tavern-metal) 1px 3px, var(--tavern-iron) 3px 5px, transparent 5px) center top / 14px 14px no-repeat,
+    linear-gradient(90deg, var(--tavern-iron), var(--tavern-metal), var(--tavern-iron)) center 8px / 3px 24px no-repeat;
+  filter: drop-shadow(1px 2px 1px color-mix(in srgb, var(--text-primary) 22%, transparent));
+}
+.menu-viewport[data-template="nordic-tavern"] .intro-description-card::before { left: 14%; }
+.menu-viewport[data-template="nordic-tavern"] .intro-description-card::after { right: 14%; }
+.menu-viewport[data-template="nordic-tavern"] .categories-nav-section { padding: 6px; border-block: 3px double var(--tavern-edge); background: var(--tavern-wood); }
+.menu-viewport[data-template="nordic-tavern"] .cat-nav-scroll { padding: 24px 4px 10px; }
+.menu-viewport[data-template="nordic-tavern"] .category-nav-pill { position: relative; min-height: 58px; padding: 8px 14px; border: 3px double var(--tavern-metal); box-shadow: var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] .category-nav-pill::before { left: calc(50% - 7px); }
+.menu-viewport[data-template="nordic-tavern"] .category-nav-pill.active { border-color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color), var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] .cat-pill-icon { border-radius: 50%; padding: 5px; border: 2px solid var(--tavern-metal); }
+.menu-viewport[data-template="nordic-tavern"] .catalog-header-row { flex-wrap: wrap; gap: 8px; padding: 12px; border: 1px solid var(--tavern-edge); background: var(--tavern-paper-grain), var(--surface-color); }
+.menu-viewport[data-template="nordic-tavern"] .catalog-header-row > div { min-width: 0; flex: 1 1 180px; }
+.menu-viewport[data-template="nordic-tavern"] .section-heading { font-size: clamp(1rem, 4.5cqi, 1.4rem); line-height: 1.2; }
+.menu-viewport[data-template="nordic-tavern"] :is(.section-heading, .showcase-block .block-title) {
+  position: relative; width: fit-content; max-width: 100%; box-sizing: border-box; padding: 10px 18px; margin: 0 0 10px;
+  border: 3px double var(--tavern-iron); border-radius: 4px; background: var(--tavern-paper-grain), var(--surface-color);
+  box-shadow: inset 0 0 0 2px var(--tavern-edge), var(--tavern-shadow); overflow-wrap: anywhere;
+}
+.menu-viewport[data-template="nordic-tavern"] :is(.section-heading, .showcase-block .block-title)::before {
+  content: ''; position: absolute; inset: 0; background: var(--tavern-rivets); pointer-events: none;
+}
+.menu-viewport[data-template="nordic-tavern"] :is(.section-heading, .showcase-block .block-title)::after {
+  content: ''; position: absolute; inset: auto 18px -10px; height: 8px; pointer-events: none;
+  background: var(--secondary-color); mask: var(--tavern-knot) center / 36px 8px repeat-x;
+}
+.menu-viewport[data-template="nordic-tavern"] .catalog-count { display: block; margin-top: 5px; }
+.menu-viewport[data-template="nordic-tavern"] .subcategory-header-collapsible {
+  padding: 10px 14px; border: 2px solid var(--tavern-iron); border-radius: 8px; background: var(--tavern-rivets), var(--tavern-wood);
+  box-shadow: inset 0 0 0 1px var(--tavern-metal), var(--tavern-shadow);
+}
+.menu-viewport[data-template="nordic-tavern"] .product-item-card {
+  --item-photo-size: clamp(96px, 27cqi, 116px);
+  --item-content-size: max(var(--item-photo-size), 116px);
+  position: relative; height: calc(var(--item-content-size) + 18px); padding: 8px; gap: 10px;
+  border: 1px solid var(--tavern-edge); box-shadow: var(--tavern-shadow);
+}
+.menu-viewport[data-template="nordic-tavern"] .product-item-card::before { content: ''; position: absolute; inset: 0; background: var(--tavern-paper-grain); pointer-events: none; }
+.menu-viewport[data-template="nordic-tavern"] .product-card-photo { border-radius: 2px; border: 3px solid var(--tavern-iron); box-sizing: border-box; outline: 1px solid var(--tavern-metal); outline-offset: 1px; }
+.menu-viewport[data-template="nordic-tavern"] .product-card-photo::before {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(135deg, var(--tavern-metal), var(--tavern-iron)); mask: var(--tavern-brackets) center / 100% 100% no-repeat;
+}
+.menu-viewport[data-template="nordic-tavern"] .product-card-photo::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: var(--tavern-rivets); }
+.menu-viewport[data-template="nordic-tavern"] .product-card-body { position: static; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 40px; gap: 3px; }
+.menu-viewport[data-template="nordic-tavern"] .card-item-title { padding-right: 38px; }
+.menu-viewport[data-template="nordic-tavern"] .card-item-desc { -webkit-line-clamp: 3; font-size: .75rem; }
+.menu-viewport[data-template="nordic-tavern"] .item-like-btn { position: absolute; right: 5px; top: 2px; grid-area: auto; min-width: 44px; min-height: 44px; padding: 8px 3px 0; justify-content: center; align-items: flex-start; box-sizing: border-box; }
+.menu-viewport[data-template="nordic-tavern"] .card-bottom-row { grid-row: 3; }
+.menu-viewport[data-template="nordic-tavern"] .btn-view-item { width: 52px; height: 40px; min-height: 40px; border-radius: 4px; background: var(--accent-color); border: 3px double var(--tavern-iron); box-shadow: var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] .btn-view-item:hover { background: var(--accent-color); border-color: var(--tavern-iron); }
+.menu-viewport[data-template="nordic-tavern"] .btn-view-item svg { transform: rotate(45deg); }
+.menu-viewport[data-template="nordic-tavern"] .product-modal-sheet { border: 8px solid var(--tavern-iron); border-radius: 10px; box-shadow: var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty) {
+  position: relative; margin: 0; padding: 10px; background: var(--tavern-wood); box-shadow: inset 0 0 0 2px var(--tavern-edge);
+}
+.menu-viewport[data-template="nordic-tavern"] .sheet-close-btn { width: 44px; height: 44px; top: 22px; right: 22px; border-radius: 50%; border: 3px double var(--tavern-metal); background: var(--tavern-wood); color: var(--on-primary); box-shadow: var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] .modal-sheet-content { padding: 18px 16px 22px; gap: 18px; border: 1px solid var(--tavern-edge); background: var(--tavern-paper-grain), var(--surface-color); }
+.menu-viewport[data-template="nordic-tavern"] .modal-sheet-content {
+  clip-path: polygon(0 1%, 3% 0, 12% 1%, 24% 0, 34% 1%, 48% 0, 60% 1%, 73% 0, 87% 1%, 98% 0, 100% 2%, 99% 25%, 100% 48%, 99% 76%, 100% 98%, 96% 100%, 83% 99%, 68% 100%, 54% 99%, 40% 100%, 27% 99%, 11% 100%, 1% 99%, 0 72%, 1% 50%, 0 26%);
+}
+.menu-viewport[data-template="nordic-tavern"] .sheet-header { flex-wrap: wrap; gap: 12px; align-items: center; }
+.menu-viewport[data-template="nordic-tavern"] .sheet-product-title { flex: 1 1 145px; min-width: 0; overflow-wrap: anywhere; line-height: 1.2; }
+.menu-viewport[data-template="nordic-tavern"] .sheet-like-action { color: var(--on-primary); background: var(--tavern-rivets), var(--tavern-wood); border: 3px double var(--tavern-metal); border-radius: 6px; padding: 10px 14px; box-shadow: var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] .sheet-like-action:is(.liked, :hover) { color: var(--on-primary); background: var(--tavern-wood); border-color: var(--tavern-metal); }
+.menu-viewport[data-template="nordic-tavern"] .sheet-desc { line-height: 1.55; }
+.menu-viewport[data-template="nordic-tavern"] .sheet-price-row { position: relative; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--tavern-edge); padding-top: 20px; }
+.menu-viewport[data-template="nordic-tavern"] .sheet-price-row::before { content: ''; position: absolute; top: -6px; left: 25%; width: 50%; height: 10px; background: var(--secondary-color); mask: var(--tavern-knot) center / 48px 12px repeat-x; pointer-events: none; }
+.menu-viewport[data-template="nordic-tavern"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; padding-top: 10px; border-top: 3px double var(--tavern-edge); }
+.menu-viewport[data-template="nordic-tavern"] .modal-qty-selector { border: 3px double var(--tavern-metal); border-radius: 6px; }
+.menu-viewport[data-template="nordic-tavern"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border-radius: 6px; border: 3px double var(--tavern-metal); box-shadow: inset 0 0 0 1px var(--tavern-iron), var(--tavern-shadow); }
+/* Home uses the same paper panels, wood plaques and riveted photo frames. */
+.menu-viewport[data-template="nordic-tavern"] .showcase-block { padding: 12px; background: var(--tavern-paper-grain), var(--surface-color); border: 1px solid var(--tavern-edge); border-radius: 4px; box-shadow: var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] .showcase-block .block-header { padding-bottom: 10px; border-bottom: 3px double var(--tavern-edge); }
+.menu-viewport[data-template="nordic-tavern"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { border: 2px solid var(--tavern-edge); border-radius: 6px; box-shadow: var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] :is(.promo-img-wrap, .chef-card-photo-wrap, .combo-img-wrap) { border-bottom: 3px solid var(--tavern-iron); }
+.menu-viewport[data-template="nordic-tavern"] :is(.btn-chef-view, .btn-combo-view, .btn-best-seller-view) { border-radius: 4px; border: 2px double var(--tavern-edge); }
+@container (max-width: 340px) {
+  .menu-viewport[data-template="nordic-tavern"] .template-brand-header { padding-left: 70px; padding-right: 106px; }
+  .menu-viewport[data-template="nordic-tavern"] .template-brand-copy { padding-inline: 4px; }
+}

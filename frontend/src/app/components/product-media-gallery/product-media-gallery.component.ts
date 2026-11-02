@@ -71,6 +71,7 @@ type GallerySlide =
             </div>
           }
 
+          <span class="media-wave-decoration" aria-hidden="true"></span>
           @if (slides.length > 1) {
             <button type="button" class="nav-button previous" aria-label="Mídia anterior" (click)="previous()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg>
@@ -156,12 +157,24 @@ type GallerySlide =
     .media-gallery:focus-visible { box-shadow: inset 0 0 0 3px var(--accent-color); }
     .media-stage {
       position: relative;
-      aspect-ratio: 16 / 10;
+      aspect-ratio: var(--product-media-ratio, 16 / 10);
+      border-radius: var(--product-media-radius, 0);
       overflow: hidden;
       clip-path: var(--product-media-corners, none);
+      mask: var(--product-media-mask, none);
       background: color-mix(in srgb, var(--surface-color) 82%, #000);
     }
     /* Decoration stays on the poster stage; the expanded player is its sibling. */
+    .media-wave-decoration {
+      display: var(--product-media-wave-display, none); position: absolute; inset: auto 0 -1px;
+      height: 64px; z-index: 1; pointer-events: none; background: var(--primary-color);
+      mask: var(--product-media-wave-mask) center / 100% 100% no-repeat;
+    }
+    .media-wave-decoration::before, .media-wave-decoration::after {
+      content: ''; position: absolute; inset: 6px 0 -6px; background: var(--accent-color);
+      mask: var(--product-media-wave-mask) center / 100% 100% no-repeat;
+    }
+    .media-wave-decoration::after { inset: 12px 0 -12px; background: var(--surface-color); }
     .media-stage::after {
       content: var(--product-media-corner-decoration, none);
       position: absolute; inset: 0; z-index: 1; pointer-events: none;

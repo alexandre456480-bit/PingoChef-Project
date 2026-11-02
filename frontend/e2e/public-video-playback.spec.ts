@@ -63,14 +63,14 @@ const menuResponse = {
   }
 };
 
-for (const template of ['default', 'pixel']) {
+for (const template of ['default', 'pixel', 'retro-diner', 'circuit-tech', 'soft-wave', 'immersive-cover', 'nordic-tavern', 'japanese-izakaya', 'neon-arcade', 'tropical-bamboo', 'mexican-fiesta', 'sweet-boutique']) {
 for (const aspectRatio of ['16:9', '9:16'] as const) {
   test(`${template} fits the ${aspectRatio} cover to the photo frame and authorizes Mux only on Play`, async ({ page }, testInfo) => {
     await page.addInitScript(() => localStorage.clear());
     const response = structuredClone(menuResponse);
     response.data.design.templateKey = template;
     if (template === 'pixel') response.data.design.fontBody = 'Pixelify Sans';
-    response.data.design.customConfig.enable_cart = template === 'pixel';
+    response.data.design.customConfig.enable_cart = template !== 'default';
     response.data.items[0].media[0].aspectRatio = aspectRatio;
     response.data.design.customConfig.enable_likes = true;
     let playbackRequests = 0;
@@ -132,16 +132,16 @@ for (const aspectRatio of ['16:9', '9:16'] as const) {
     await expect(page.locator('mux-player')).toHaveCount(0);
 
     const stage = page.locator('.media-stage');
-    await expect(stage).toHaveCSS('aspect-ratio', '16 / 10');
+    await expect(stage).toHaveCSS('aspect-ratio', (template === 'retro-diner' || template === 'circuit-tech' || template === 'soft-wave' || template === 'nordic-tavern' || template === 'japanese-izakaya' || template === 'neon-arcade' || template === 'tropical-bamboo' || template === 'mexican-fiesta' || template === 'sweet-boutique') ? '4 / 3' : template === 'immersive-cover' ? '1 / 1' : '16 / 10');
     const coverFrame = await stage.boundingBox();
     const sheetWidth = await page.locator('.product-modal-sheet').evaluate(element => element.clientWidth);
-    expect(coverFrame!.width).toBeCloseTo(sheetWidth, 0);
+    expect(coverFrame!.width).toBeCloseTo(sheetWidth - (template === 'retro-diner' ? 48 : (template === 'circuit-tech' || template === 'neon-arcade') ? 40 : template === 'soft-wave' ? 28 : (template === 'nordic-tavern' || template === 'japanese-izakaya' || template === 'tropical-bamboo' || template === 'mexican-fiesta') ? 20 : 0), 0);
     await page.getByRole('tab', { name: /foto 2/i }).click();
     const photoFrame = await stage.boundingBox();
     expect(coverFrame!.width).toBeCloseTo(photoFrame!.width, 0);
     expect(coverFrame!.height).toBeCloseTo(photoFrame!.height, 0);
     await page.getByRole('tab', { name: /vídeo 1/i }).click();
-    await expect(page.locator('.sheet-like-action')).toHaveCSS('color', template === 'pixel' ? 'rgb(139, 26, 58)' : 'rgb(159, 18, 57)');
+    await expect(page.locator('.sheet-like-action')).toHaveCSS('color', template === 'pixel' ? 'rgb(139, 26, 58)' : (template === 'retro-diner' || template === 'circuit-tech' || template === 'soft-wave' || template === 'immersive-cover' || template === 'japanese-izakaya' || template === 'neon-arcade' || template === 'tropical-bamboo' || template === 'mexican-fiesta' || template === 'sweet-boutique') ? 'rgb(45, 24, 34)' : template === 'nordic-tavern' ? 'rgb(255, 255, 255)' : 'rgb(159, 18, 57)');
     await page.route('**/api/v1/public/menu/pingo-teste/like/*', route => route.fulfill({
       json: { success: true, data: { itemId: response.data.items[0].id, likesCount: 7, created: true } }
     }));
@@ -153,9 +153,10 @@ for (const aspectRatio of ['16:9', '9:16'] as const) {
     await expect(page.getByRole('tab', { name: /vídeo 1/i })).toHaveAttribute('aria-selected', 'true');
     await page.getByRole('button', { name: /reproduzir vídeo/i }).click();
     await expect.poll(() => playbackRequests).toBe(1);
-    await expect(page.locator('mux-player')).toHaveAttribute('preload', 'none');
+    // The first development import also compiles the player bundle on demand.
+    await expect(page.locator('mux-player')).toHaveAttribute('preload', 'none', { timeout: 15_000 });
     await expect(page.locator('.expanded-player-shell')).toHaveCSS('aspect-ratio', aspectRatio.replace(':', ' / '));
-    if (template === 'pixel') {
+    if (template !== 'default') {
       await expect(page.getByRole('button', { name: 'Fechar vídeo', exact: true })).toBeInViewport();
       await page.getByRole('button', { name: 'Fechar vídeo', exact: true }).click();
       await expect(page.locator('.video-lightbox')).toHaveCount(0);

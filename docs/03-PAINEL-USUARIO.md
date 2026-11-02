@@ -2,7 +2,7 @@
 
 > **Domínio**: Dashboard, shell do painel, sidebar, módulos, estados e layout responsivo.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [02-AUTENTICACAO-CADASTRO.md](./02-AUTENTICACAO-CADASTRO.md)  
-> **Referenciado por**: [04-CARDAPIO-CONTEUDO.md](./04-CARDAPIO-CONTEUDO.md), [05-DESIGN-SYSTEM-TEMPLATES.md](./05-DESIGN-SYSTEM-TEMPLATES.md), [10-ROADMAP-FASES.md](./10-ROADMAP-FASES.md)
+> **Referenciado por**: [04-CARDAPIO-CONTEUDO.md](./04-CARDAPIO-CONTEUDO.md), [05-Design-System-Templates-ATUALIZADO.md](./05-Design-System-Templates-ATUALIZADO.md), [10-ROADMAP-FASES.md](./10-ROADMAP-FASES.md)
 
 ---
 
@@ -143,7 +143,7 @@ O painel é a **experiência privada** do usuário/dono do estabelecimento. É o
 
 ### 4.3 Design (`/painel/design`)
 
-> **Detalhamento completo**: [05-DESIGN-SYSTEM-TEMPLATES.md](./05-DESIGN-SYSTEM-TEMPLATES.md)
+> **Detalhamento completo**: [05-Design-System-Templates-ATUALIZADO.md](./05-Design-System-Templates-ATUALIZADO.md)
 
 **Responsabilidade do MVP**:
 - Escolher template
@@ -281,6 +281,6 @@ JWT/sessão → auth.uid() → businesses.owner_user_id → tenant atual
 ## Documentos Relacionados
 
 → [04-CARDAPIO-CONTEUDO.md](./04-CARDAPIO-CONTEUDO.md) — CRUD de categorias e produtos  
-→ [05-DESIGN-SYSTEM-TEMPLATES.md](./05-DESIGN-SYSTEM-TEMPLATES.md) — Personalização visual  
+→ [05-Design-System-Templates-ATUALIZADO.md](./05-Design-System-Templates-ATUALIZADO.md) — Personalização visual  
 → [06-EXPERIENCIA-PUBLICA.md](./06-EXPERIENCIA-PUBLICA.md) — O que o cliente final vê  
 → [02-AUTENTICACAO-CADASTRO.md](./02-AUTENTICACAO-CADASTRO.md) — Como o usuário chega ao painel

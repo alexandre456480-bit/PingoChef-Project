@@ -1,3 +1,5 @@
+import { publicOrderSettings } from '../utils/order-settings';
+import { publicSocialLinks } from '../utils/social-links';
 import { DEFAULT_TEMPLATE_KEY, normalizeTemplateKey, withoutTemplateBlocks } from '../constants/menu-template';
 import { Request, Response, NextFunction } from 'express';
 import { createHmac, randomUUID } from 'node:crypto';
@@ -81,7 +83,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         let bData: any;
         try {
           bData = await businessEligibility.findPublicBusinessBySlug(slug,
-            'id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color, phone, whatsapp');
+            'id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color, phone, whatsapp, social_links, order_settings');
         } catch {
           console.error('[Data Audit]', { event: 'public_menu_business_query_failed' });
           return res.status(503).json({
@@ -364,7 +366,9 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           welcomeBgImage: publicImage(business.welcome_bg_image) || publicImage(business.cover_image_url) || '',
           welcomeBgColor: business.welcome_bg_color || '#0F0F12',
           phone: business.phone || null,
-          whatsapp: business.whatsapp || null
+          whatsapp: business.whatsapp || null,
+          socialLinks: publicSocialLinks(business.social_links),
+          orderSettings: publicOrderSettings(business.order_settings)
         },
         design: {
           templateKey: normalizeTemplateKey(design.template_key),

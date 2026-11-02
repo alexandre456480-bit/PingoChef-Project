@@ -1,3 +1,5 @@
+import { SocialLink } from '../models/social-links';
+import { OrderSettings } from '../models/order-settings';
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, finalize, of } from 'rxjs';
@@ -6,6 +8,8 @@ import { DesignSettings } from './design.service';
 import { API_BASE_URL } from '../constants/api';
 
 export interface PublicBusiness {
+  socialLinks?: SocialLink[];
+  orderSettings?: OrderSettings;
   name: string;
   slug: string;
   description: string;

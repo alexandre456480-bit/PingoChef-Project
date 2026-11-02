@@ -1,7 +1,7 @@
 # 📱 06 — Experiência Pública
 
 > **Domínio**: Welcome, Home modular, jornada do cliente, categorias, detalhes, likes, carrinho local e interações públicas.  
-> **Depende de**: [04-CARDAPIO-CONTEUDO.md](./04-CARDAPIO-CONTEUDO.md), [05-DESIGN-SYSTEM-TEMPLATES.md](./05-DESIGN-SYSTEM-TEMPLATES.md), [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md)  
+> **Depende de**: [04-CARDAPIO-CONTEUDO.md](./04-CARDAPIO-CONTEUDO.md), [05-Design-System-Templates-ATUALIZADO.md](./05-Design-System-Templates-ATUALIZADO.md), [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md)  
 > **Referenciado por**: [07-CYBERSECURITY.md](./07-CYBERSECURITY.md), [09-API-CONTRATOS.md](./09-API-CONTRATOS.md)
 
 ---
@@ -391,7 +391,7 @@ O snapshot contém **tudo** necessário para renderizar sem queries adicionais:
 
 ## Documentos Relacionados
 
-→ [05-DESIGN-SYSTEM-TEMPLATES.md](./05-DESIGN-SYSTEM-TEMPLATES.md) — Templates que renderizam a experiência  
+→ [05-Design-System-Templates-ATUALIZADO.md](./05-Design-System-Templates-ATUALIZADO.md) — Templates que renderizam a experiência  
 → [04-CARDAPIO-CONTEUDO.md](./04-CARDAPIO-CONTEUDO.md) — Dados de categorias e produtos  
 → [07-CYBERSECURITY.md](./07-CYBERSECURITY.md) — Proteção de likes contra bots, XSS  
 → [09-API-CONTRATOS.md](./09-API-CONTRATOS.md) — Endpoint público `/api/public/menus/:slug`

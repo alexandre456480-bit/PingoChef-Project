@@ -38,7 +38,7 @@
 | 02 | [Autenticação e Cadastro](./02-AUTENTICACAO-CADASTRO.md)                  | Login, registro, token, sessão BFF |
 | 03 | [Painel do Usuário](./03-PAINEL-USUARIO.md)                               | Dashboard, shell, sidebar, módulos |
 | 04 | [Cardápio e Conteúdo](./04-CARDAPIO-CONTEUDO.md)                          | Categorias, produtos, promoções, ordenação |
-| 05 | [Design System e Templates](./05-DESIGN-SYSTEM-TEMPLATES.md)              | Templates, paletas, fontes, animações, UX |
+| 05 | [Design System e Templates](./05-Design-System-Templates-ATUALIZADO.md)              | Templates, paletas, fontes, animações, UX |
 | 06 | [Experiência Pública](./06-EXPERIENCIA-PUBLICA.md)                        | Welcome, Home, jornada do cliente, carrinho |
 | 07 | [Cybersecurity](./07-CYBERSECURITY.md)                                    | Threat model, controles, testes de ataque |
 | 08 | [Banco de Dados e RLS](./08-BANCO-DADOS-RLS.md)                          | Modelo de dados, migrations, multi-tenant |

@@ -542,7 +542,7 @@
   background: var(--panel-success) !important;
 }
 
-.dashboard-shell :is(a, .link-action, .price-current, .price-main, .section-label) {
+.dashboard-shell :is(a:not(.btn-order-checkout), .link-action, .price-current, .price-main, .section-label) {
   color: var(--panel-wine) !important;
 }
 

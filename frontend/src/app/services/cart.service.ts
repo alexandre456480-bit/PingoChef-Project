@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import type { MenuItem } from './menu.service';
 
 export interface CartItem {
   itemId: string;
@@ -7,6 +8,7 @@ export interface CartItem {
   promotionalPrice?: number | null;
   imageUrl?: string | null;
   quantity: number;
+  showPrice?: boolean;
 }
 
 @Injectable({
@@ -24,8 +26,7 @@ export class CartService {
 
   totalPrice = computed(() => {
     return this.cartItems().reduce((acc, item) => {
-      const activePrice = item.promotionalPrice && item.promotionalPrice < item.price ? item.promotionalPrice : item.price;
-      return acc + (activePrice * item.quantity);
+      return acc + (item.showPrice === false ? 0 : this.unitPrice(item) * item.quantity);
     }, 0);
   });
 
@@ -52,7 +53,23 @@ export class CartService {
     this.isCartOpen.set(false);
   }
 
-  addItem(item: { id: string; name: string; price: number; promotionalPrice?: number | null; imageUrl?: string | null }, quantity: number = 1): void {
+  unitPrice(item: CartItem): number {
+    return item.promotionalPrice != null && item.promotionalPrice >= 0 && item.promotionalPrice < item.price ? item.promotionalPrice : item.price;
+  }
+
+  refreshFromCatalog(catalog: MenuItem[]): void {
+    let changed = false;
+    const rows = this.cartItems().map(row => {
+      const item = catalog.find(item => item.id === row.itemId);
+      if (!item) return row; // Missing items remain visible for removal; checkout rejects them.
+      if (row.name === item.name && row.price === item.price && row.promotionalPrice === item.promotionalPrice && row.showPrice === item.showPrice) return row;
+      changed = true;
+      return { ...row, name: item.name, price: item.price, promotionalPrice: item.promotionalPrice, showPrice: item.showPrice };
+    });
+    if (changed) { this.cartItems.set(rows); this.saveToStorage(); }
+  }
+
+  addItem(item: { id: string; name: string; price: number; promotionalPrice?: number | null; imageUrl?: string | null; showPrice?: boolean }, quantity: number = 1): void {
     const current = [...this.cartItems()];
     const index = current.findIndex(i => i.itemId === item.id);
 
@@ -64,6 +81,7 @@ export class CartService {
         name: item.name,
         price: item.price,
         promotionalPrice: item.promotionalPrice,
+        showPrice: item.showPrice,
         imageUrl: item.imageUrl,
         quantity: Math.max(1, quantity)
       });
@@ -112,6 +130,7 @@ export class CartService {
   }
 
   private loadFromStorage(): void {
+    this.cartItems.set([]);
     try {
       const saved = localStorage.getItem(`cart_${this.currentSlug()}`);
       if (saved) {

@@ -1,0 +1,234 @@
+/* Arcade lighting uses customer colors; shared media and ordering remain intact. */
+.menu-viewport[data-template="neon-arcade"] {
+  --arcade-cut: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+  --arcade-frame: polygon(5% 0, 18% 0, 21% 5%, 76% 5%, 80% 0, 94% 0, 100% 10%, 100% 88%, 95% 100%, 72% 100%, 69% 96%, 24% 96%, 20% 100%, 5% 100%, 0 90%, 0 10%);
+  --arcade-edge: color-mix(in srgb, var(--secondary-color) 70%, var(--text-primary));
+  --arcade-grid: color-mix(in srgb, var(--primary-color) 10%, transparent);
+  --arcade-panel: linear-gradient(120deg, color-mix(in srgb, var(--primary-color) 8%, var(--surface-color)), var(--surface-color) 65%);
+  --arcade-glow: color-mix(in srgb, var(--accent-color) 45%, transparent);
+  --arcade-highlight: color-mix(in srgb, var(--accent-color) 65%, var(--surface-color));
+  --arcade-trace: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cpath d='M20 2H72L84 12H304L320 2H376L398 20V176L380 198H288L276 190H96L80 198H20L2 180V20Z' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E");
+  --arcade-rim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cpath d='M14 2H386L398 14V186L386 198H14L2 186V14Z' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  --product-media-radius: 0;
+  --product-media-ratio: 4 / 3;
+  --product-media-corners: var(--arcade-cut);
+}
+.menu-viewport[data-template="neon-arcade"] .showcase-scrollable {
+  gap: 16px; background-image: linear-gradient(var(--arcade-grid) 1px, transparent 1px), linear-gradient(90deg, var(--arcade-grid) 1px, transparent 1px); background-size: 24px 24px;
+}
+.menu-viewport[data-template="neon-arcade"] .showcase-scrollable:has(> .template-brand-header:first-child) { padding-top: 8px; }
+.menu-viewport[data-template="neon-arcade"] .template-brand-header {
+  align-items: center; gap: 8px; margin: 0; padding: 8px 120px 10px 0; min-height: 82px; box-sizing: border-box; border-bottom: 2px solid transparent;
+  isolation: isolate; background: linear-gradient(115deg, color-mix(in srgb, var(--primary-color) 8%, transparent), transparent 65%);
+}
+.menu-viewport[data-template="neon-arcade"] .template-brand-header::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .45;
+  background: var(--arcade-edge);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='white' stroke-width='1'%3E%3Cpath d='M4 35V12L14 2H132L143 12H205M24 5H105L114 14H139M215 3H256L266 13H315M286 3H368L383 18V38M398 61V78L386 90H341M6 69V83L17 94H77'/%3E%3Ccircle cx='208' cy='12' r='2'/%3E%3Ccircle cx='317' cy='13' r='2'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.menu-viewport[data-template="neon-arcade"] .template-brand-header::after {
+  content: ''; position: absolute; inset: auto 0 -2px; height: 12px; pointer-events: none;
+  background: linear-gradient(90deg, var(--accent-color), var(--primary-color) 45%, var(--arcade-edge) 70%, var(--accent-color));
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 12' preserveAspectRatio='none'%3E%3Cpath d='M1 2H62L70 10H246L254 3H311L318 10H399M5 6H47M137 6H206M336 4H368' fill='none' stroke='white' stroke-width='1.5'/%3E%3Cpath d='M375 1H379V5H375ZM383 1H387V5H383ZM391 1H395V5H391Z' fill='white'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 0 3px var(--arcade-glow));
+}
+.menu-viewport[data-template="neon-arcade"] .template-logo-wrap {
+  padding: 2px; background: transparent; box-shadow: none; filter: drop-shadow(0 0 3px var(--arcade-glow));
+}
+.menu-viewport[data-template="neon-arcade"] .template-brand-copy {
+  position: relative; padding: 0; flex: 1; min-width: 0;
+}
+.menu-viewport[data-template="neon-arcade"] .template-brand-copy::after {
+  content: ''; position: absolute; left: 0; bottom: -8px; width: min(56px, 60%); height: 2px; pointer-events: none;
+  background: repeating-linear-gradient(90deg, var(--accent-color) 0 20px, transparent 20px 24px, var(--primary-color) 24px 30px, transparent 30px 34px);
+  box-shadow: 0 0 6px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .template-brand-copy h2 {
+  font-size: clamp(1rem, 4.5cqi, 1.6rem); text-shadow: 0 0 12px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .menu-main-shell:has(> app-social-menu) .template-brand-header { padding-top: 64px; }
+.menu-viewport[data-template="neon-arcade"] .template-brand-copy p { font-size: .72rem; margin-top: 3px; }
+.menu-viewport[data-template="neon-arcade"] .showcase-hero-banner {
+  clip-path: var(--arcade-frame); background: var(--arcade-panel); isolation: isolate;
+  box-sizing: content-box; aspect-ratio: 16 / 9; padding: 15px 12px;
+}
+.menu-viewport[data-template="neon-arcade"] .showcase-hero-banner::before {
+  content: ''; position: absolute; inset: 4px; background: linear-gradient(110deg, var(--accent-color), var(--primary-color) 40%, var(--accent-color) 70%, var(--secondary-color)); mask: var(--arcade-trace) center / 100% 100% no-repeat; pointer-events: none; z-index: 3; filter: drop-shadow(0 0 3px var(--accent-color));
+}
+.menu-viewport[data-template="neon-arcade"] .hero-carousel-track {
+  position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; clip-path: none; border: 0;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cpath d='M22 8H70L82 18H306L322 8H374L392 24V174L378 192H290L278 184H94L78 192H22L8 180V22Z' fill='white'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.menu-viewport[data-template="neon-arcade"] .hero-banner-overlay { inset: 15px 12px; height: auto; padding: 0 8px 8px; background: none; }
+.menu-viewport[data-template="neon-arcade"] .search-drawer { padding-top: 82px; }
+.menu-viewport[data-template="neon-arcade"] .search-input { border-radius: 0; clip-path: var(--arcade-cut); }
+.menu-viewport[data-template="neon-arcade"] .menu-main-shell:has(> .search-drawer) .showcase-scrollable { padding-top: 16px; }
+.menu-viewport[data-template="neon-arcade"] .no-hero-header { border: 1px solid var(--arcade-edge); clip-path: var(--arcade-cut); }
+.menu-viewport[data-template="neon-arcade"] .floating-controls-capsule {
+  top: 22px; right: 14px; padding: 4px; gap: 2px; border-radius: 0; border: 1px solid var(--accent-color); background: var(--arcade-panel); box-shadow: inset 0 0 10px var(--arcade-glow); clip-path: var(--arcade-cut); backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.menu-viewport[data-template="neon-arcade"] .category-nav-pill {
+  position: relative; isolation: isolate; border: 0; border-radius: 0; clip-path: var(--arcade-cut);
+  min-height: 56px; padding: 14px 18px; gap: 9px;
+  background-image: linear-gradient(115deg, var(--arcade-grid), transparent 65%);
+  box-shadow: inset 0 0 0 1px var(--arcade-edge), inset 0 0 16px var(--arcade-grid);
+}
+.menu-viewport[data-template="neon-arcade"] .category-nav-pill::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, var(--accent-color), var(--primary-color));
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 64' preserveAspectRatio='none'%3E%3Cpath d='M2 25V12L12 2H30M170 62H188L198 52V40' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M16 5H24V7H16ZM160 57H164V60H160ZM167 57H171V60H167ZM174 57H178V60H174Z' fill='white'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 0 3px var(--arcade-glow));
+}
+.menu-viewport[data-template="neon-arcade"] .category-nav-pill::after {
+  content: ''; position: absolute; inset: 4px; pointer-events: none;
+  background: var(--arcade-edge); mask: var(--arcade-rim) center / 100% 100% no-repeat;
+}
+.menu-viewport[data-template="neon-arcade"] .category-nav-pill.active {
+  background-image: linear-gradient(115deg, var(--arcade-glow), transparent 55%, color-mix(in srgb, var(--primary-color) 85%, var(--surface-color)));
+  box-shadow: inset 0 0 0 1px var(--accent-color), inset 0 0 22px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .category-nav-pill.active::after {
+  background: var(--accent-color); filter: drop-shadow(0 0 3px var(--accent-color));
+}
+.menu-viewport[data-template="neon-arcade"] .category-nav-pill.active .cat-pill-icon {
+  filter: drop-shadow(0 0 4px var(--arcade-glow));
+}
+.menu-viewport[data-template="neon-arcade"] .intro-description-card {
+  position: relative; padding: 24px 20px; border: 0; border-radius: 0; clip-path: var(--arcade-cut); background: var(--arcade-panel); box-shadow: inset 0 0 20px var(--arcade-grid);
+}
+.menu-viewport[data-template="neon-arcade"] .catalog-header-row { flex-wrap: wrap; gap: 8px; }
+.menu-viewport[data-template="neon-arcade"] .catalog-header-row > div { min-width: 0; flex: 1 1 180px; }
+.menu-viewport[data-template="neon-arcade"] .section-heading {
+  background: var(--primary-color); padding: 8px 14px; clip-path: var(--arcade-cut); border-block: 2px solid var(--accent-color);
+}
+.menu-viewport[data-template="neon-arcade"] .catalog-count { display: block; margin-top: 6px; }
+.menu-viewport[data-template="neon-arcade"] .subcategory-header-collapsible {
+  border-radius: 0; border: 1px solid var(--arcade-edge); padding: 12px 14px; clip-path: var(--arcade-cut); background: var(--arcade-panel); box-shadow: inset 0 0 12px var(--arcade-grid);
+}
+.menu-viewport[data-template="neon-arcade"] .subcat-indicator {
+  background: var(--accent-color); box-shadow: 0 0 6px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .subcategory-group {
+  padding: 0; border: 0; background: transparent;
+}
+.menu-viewport[data-template="neon-arcade"] .product-item-card {
+  --item-photo-size: clamp(88px, 29cqi, 116px); --item-content-size: max(var(--item-photo-size), 112px);
+  position: relative; height: calc(var(--item-content-size) + 18px); padding: 8px; gap: 10px; border: 1px solid var(--arcade-edge); clip-path: var(--arcade-cut); background-image: var(--arcade-panel);
+}
+.menu-viewport[data-template="neon-arcade"] .product-card-photo {
+  position: relative; clip-path: var(--arcade-cut); border: 2px solid var(--accent-color); box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--arcade-edge);
+}
+.menu-viewport[data-template="neon-arcade"] .product-card-photo::after {
+  content: ''; position: absolute; inset: 2px; background: var(--arcade-highlight); mask: var(--arcade-rim) center / 100% 100% no-repeat; pointer-events: none;
+}
+.menu-viewport[data-template="neon-arcade"] .product-item-card::after {
+  content: ''; position: absolute; inset: 2px; background: linear-gradient(110deg, var(--accent-color), var(--primary-color) 35%, var(--arcade-edge) 55%, var(--primary-color)); mask: var(--arcade-rim) center / 100% 100% no-repeat; filter: drop-shadow(0 0 2px var(--arcade-glow)); pointer-events: none;
+}
+.menu-viewport[data-template="neon-arcade"] .product-card-body {
+  position: static; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 36px; gap: 3px;
+}
+.menu-viewport[data-template="neon-arcade"] .card-item-title { padding-right: 38px; }
+.menu-viewport[data-template="neon-arcade"] .card-item-desc { -webkit-line-clamp: 3; font-size: .75rem; }
+.menu-viewport[data-template="neon-arcade"] .item-like-btn {
+  position: absolute; right: 5px; top: 2px; grid-area: auto; min-width: 44px; min-height: 44px;
+  padding: 8px 3px 0; justify-content: center; align-items: flex-start; box-sizing: border-box;
+}
+.menu-viewport[data-template="neon-arcade"] .card-bottom-row { grid-row: 3; }
+.menu-viewport[data-template="neon-arcade"] .btn-view-item {
+  width: 58px; height: 36px; min-height: 36px; border-radius: 0; clip-path: var(--arcade-cut); background: transparent; border: 1px solid var(--accent-color); box-shadow: inset 0 0 10px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .btn-view-item:hover {
+  background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+}
+.menu-viewport[data-template="neon-arcade"] .btn-view-item svg { transform: rotate(45deg); }
+/* Frame the gallery host only; expanded video and every carousel event are untouched. */
+.menu-viewport[data-template="neon-arcade"] .product-modal-sheet {
+  --detail-shape: polygon(6% 0, 18% 0, 21% 4%, 71% 4%, 74% 2%, 77% 2%, 80% 0, 94% 0, 100% 8%, 100% 27%, 99% 29%, 99% 66%, 100% 69%, 100% 92%, 94% 100%, 74% 100%, 72% 98%, 22% 98%, 20% 100%, 6% 100%, 0 92%, 0 69%, 1% 66%, 1% 29%, 0 27%, 0 8%);
+  --detail-trace: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cpath d='M24 3H72L84 15H284L296 9H308L320 3H376L397 24V81L393 87V198L397 207V276L376 297H296L288 291H88L80 297H24L3 276V207L7 198V87L3 81V24Z' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  --detail-lights: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cpath d='M14 70V28L28 13H58L71 23H178M212 23H278M345 13H371L388 30V77M388 143V182M388 214V272L370 288H346M70 288H29L12 270V225M13 147V187' fill='none' stroke='white' stroke-width='3'/%3E%3Cpath d='M22 42H26V50H22ZM22 55H26V63H22ZM22 68H26V76H22ZM376 198H380V202H376ZM376 209H380V213H376Z' fill='white'/%3E%3C/svg%3E");
+  --detail-panel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cpath d='M20 3H380L397 20V91L390 99V159L397 167V280L380 297H20L3 280V167L10 159V99L3 91V20Z' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  border-radius: 0; border: 5px solid var(--surface-color); box-shadow: inset 0 0 0 1px var(--arcade-edge); background-image: linear-gradient(var(--arcade-grid) 1px, transparent 1px), linear-gradient(90deg, var(--arcade-grid) 1px, transparent 1px); background-size: 24px 24px;
+}
+.menu-viewport[data-template="neon-arcade"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty) {
+  position: relative; margin: 8px; padding: 12px; clip-path: var(--detail-shape);
+  background: var(--arcade-panel);
+  filter: drop-shadow(0 3px 3px var(--arcade-glow));
+}
+.menu-viewport[data-template="neon-arcade"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::before {
+  content: ''; position: absolute; inset: 2px; background: var(--arcade-edge);
+  mask: var(--detail-trace) center / 100% 100% no-repeat; pointer-events: none;
+}
+.menu-viewport[data-template="neon-arcade"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::after {
+  content: ''; position: absolute; inset: 2px;
+  background: linear-gradient(110deg, var(--accent-color), var(--arcade-highlight) 35%, var(--accent-color) 65%, var(--arcade-highlight));
+  mask: var(--detail-lights) center / 100% 100% no-repeat; pointer-events: none;
+  filter: drop-shadow(0 0 3px var(--accent-color));
+}
+.menu-viewport[data-template="neon-arcade"] .sheet-close-btn {
+  width: 44px; height: 44px; top: 28px; right: 28px; border-radius: 0; clip-path: var(--arcade-cut); background: var(--surface-color); color: var(--text-primary); border: 2px solid var(--accent-color); box-shadow: inset 0 0 12px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .modal-sheet-content {
+  position: relative; margin: 0 8px 12px; padding: 24px 18px 22px; border: 0; border-radius: 0; gap: 18px;
+  background: var(--arcade-panel);
+}
+.menu-viewport[data-template="neon-arcade"] .modal-sheet-content::before,
+.menu-viewport[data-template="neon-arcade"] .modal-sheet-content::after {
+  content: ''; position: absolute; pointer-events: none;
+  mask: var(--detail-panel) center / 100% 100% no-repeat;
+}
+.menu-viewport[data-template="neon-arcade"] .modal-sheet-content::before { inset: 0; background: linear-gradient(110deg, var(--accent-color), var(--primary-color), var(--arcade-edge)); filter: drop-shadow(0 0 3px var(--arcade-glow)); }
+.menu-viewport[data-template="neon-arcade"] .modal-sheet-content::after { inset: 6px; background: color-mix(in srgb, var(--primary-color) 16%, var(--surface-color)); }
+.menu-viewport[data-template="neon-arcade"] .sheet-header { position: relative; flex-wrap: wrap; gap: 12px; align-items: center; padding-top: 6px; }
+.menu-viewport[data-template="neon-arcade"] .sheet-header::before {
+  content: ''; position: absolute; top: -14px; left: 0; width: 58%; height: 5px;
+  background: var(--accent-color); clip-path: polygon(0 0, 97% 0, 100% 100%, 5% 100%); pointer-events: none;
+}
+.menu-viewport[data-template="neon-arcade"] .sheet-product-title {
+  position: relative; flex: 1 1 150px; min-width: 0; overflow-wrap: anywhere; padding-left: 14px; line-height: 1.2; text-shadow: 0 0 8px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .sheet-product-title::before {
+  content: ''; position: absolute; left: 1px; top: 3px; width: 5px; height: 17px;
+  transform: skewX(-24deg); background: var(--accent-color); pointer-events: none;
+}
+.menu-viewport[data-template="neon-arcade"] :is(.sheet-like-action, .modal-qty-selector) {
+  border: 1px solid var(--accent-color); border-radius: 0; clip-path: var(--arcade-cut); background: var(--surface-color);
+  box-shadow: inset 0 0 12px var(--arcade-grid);
+}
+.menu-viewport[data-template="neon-arcade"] .sheet-like-action { color: var(--text-primary); }
+.menu-viewport[data-template="neon-arcade"] .sheet-like-action:is(.liked, :hover) { color: var(--text-primary); background: var(--surface-color); border-color: var(--accent-color); }
+.menu-viewport[data-template="neon-arcade"] .sheet-desc { line-height: 1.55; }
+.menu-viewport[data-template="neon-arcade"] .sheet-price-row {
+  flex-wrap: wrap; gap: 10px; border-block: 1px solid color-mix(in srgb, var(--primary-color) 20%, var(--surface-color)); padding-block: 16px;
+}
+.menu-viewport[data-template="neon-arcade"] .sheet-modal-actions { flex-wrap: wrap; gap: 10px; align-items: stretch; }
+.menu-viewport[data-template="neon-arcade"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) {
+  position: relative; flex: 1 1 170px; min-width: 0; min-height: 52px; border-radius: 0; clip-path: var(--arcade-cut);
+  border: 3px double var(--accent-color); box-shadow: inset 0 0 0 2px var(--on-action), inset 0 0 16px var(--arcade-glow);
+}
+.menu-viewport[data-template="neon-arcade"] .btn-sheet-add-cart { padding-inline: 12px 24px; }
+.menu-viewport[data-template="neon-arcade"] .btn-sheet-add-cart::after {
+  content: ''; position: absolute; right: 12px; top: calc(50% - 4px); width: 7px; height: 7px;
+  border-right: 2px solid currentColor; border-top: 2px solid currentColor; transform: rotate(45deg); pointer-events: none;
+}
+.menu-viewport[data-template="neon-arcade"] .showcase-block .block-header {
+  border-bottom: 3px double var(--accent-color); padding-block: 4px 10px;
+}
+.menu-viewport[data-template="neon-arcade"] :is(.promo-item-card, .featured-chef-card, .combo-card, .ranking-item-row, .best-seller-card) {
+  border: 2px solid var(--arcade-edge); border-radius: 0; clip-path: var(--arcade-cut);
+  box-shadow: inset 0 -3px color-mix(in srgb, var(--accent-color) 35%, transparent);
+}
+.menu-viewport[data-template="neon-arcade"] :is(.promo-img-wrap, .chef-card-photo-wrap, .combo-img-wrap) { border-bottom: 2px solid var(--accent-color); }
+.menu-viewport[data-template="neon-arcade"] :is(.btn-chef-view, .btn-combo-view, .btn-best-seller-view) { border-radius: 0; border: 1px solid currentColor; }
+.menu-viewport[data-template="neon-arcade"] :is(.category-nav-pill, .btn-view-item, .sheet-close-btn, .btn-sheet-add-cart, .btn-sheet-close-action):focus-visible {
+  outline: 2px solid currentColor; outline-offset: -5px;
+}
+
+.menu-viewport[data-template="neon-arcade"] .intro-description-card::after {
+  content: ''; position: absolute; inset: 1px; background: var(--arcade-edge); mask: var(--arcade-rim) center / 100% 100% no-repeat; pointer-events: none;
+}
+.menu-viewport[data-template="neon-arcade"] .intro-description-card::after { background: linear-gradient(110deg, var(--accent-color), var(--primary-color), var(--arcade-edge)); }
+.menu-viewport[data-template="neon-arcade"] .intro-card-body::after {
+  content: ''; display: block; margin-top: 14px; width: 52px; height: 3px; background: repeating-linear-gradient(90deg, var(--accent-color) 0 10px, transparent 10px 14px);
+}
+.menu-viewport[data-template="neon-arcade"] :is(.showcase-block .block-title, .sheet-current) { text-shadow: 0 0 8px var(--arcade-glow); }
+.menu-viewport[data-template="neon-arcade"] .capsule-btn { border-radius: 0; }

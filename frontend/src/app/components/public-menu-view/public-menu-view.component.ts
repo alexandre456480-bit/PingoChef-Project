@@ -1,3 +1,6 @@
+import { safeOrderSettings, orderDestination, formatOrderMoney } from '../../models/order-settings';
+import { SocialMenuComponent } from '../social-menu/social-menu.component';
+import { safeSocialLinks } from '../../models/social-links';
 import { TemplateConfig, resolveMenuTemplate } from '../../constants/menu-templates';
 import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild, ChangeDetectionStrategy, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -30,7 +33,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
   selector: 'app-public-menu-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ProductMediaGalleryComponent, MenuRevealDirective, MenuImageDirective, DialogFocusDirective, MenuHomeIconComponent],
+  imports: [CommonModule, SocialMenuComponent, ProductMediaGalleryComponent, MenuRevealDirective, MenuImageDirective, DialogFocusDirective, MenuHomeIconComponent],
   template: `
     <div
       class="menu-viewport"
@@ -133,9 +136,13 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
           [class.menu-opening]="menuOpening"
           [style.background]="screenBg">
 
+          @if (business.socialLinks?.length) {
+            <app-social-menu [links]="business.socialLinks || []" [pixel]="templateKey === 'pixel'" />
+          }
+
           <!-- Shared search and optional cart controls -->
           <ng-template #controlsTemplate>
-          <div class="floating-controls-capsule" [style.background]="templateKey === 'pixel' ? null : surfaceColor + 'D9'">
+          <div class="floating-controls-capsule" [style.background]="templateKey === 'pixel' || templateKey === 'soft-wave' || templateKey === 'nordic-tavern' || templateKey === 'japanese-izakaya' || templateKey === 'neon-arcade' || templateKey === 'tropical-bamboo' || templateKey === 'mexican-fiesta' || templateKey === 'sweet-boutique' ? null : surfaceColor + 'D9'">
             <button
               type="button"
               class="capsule-btn"
@@ -176,7 +183,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
           <!-- Search Expandable Bar -->
           @if (searchActive) {
-            <div id="public-menu-search" class="search-drawer" [style.padding-right.px]="82 + (enableCart ? 48 : 0)" [style.background]="surfaceColor + 'F2'">
+            <div id="public-menu-search" class="search-drawer" [style.padding-right.px]="templateKey === 'neon-arcade' || templateKey === 'tropical-bamboo' || templateKey === 'mexican-fiesta' ? 12 : 82 + (enableCart ? 48 : 0)" [style.background]="surfaceColor + 'F2'">
               <div class="search-field-wrap">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input
@@ -227,6 +234,9 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
             </ng-template>
 
             <ng-template #heroBannerTemplate>
+              @if (currentTemplate.brandPosition === 'above-hero') {
+                <ng-container *ngTemplateOutlet="brandIdentityTemplate"></ng-container>
+              }
               <div
                 class="showcase-hero-banner"
                 appMenuReveal
@@ -318,7 +328,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
                     }
                     <ng-container *ngTemplateOutlet="heroBannerTemplate"></ng-container>
-                    @if (currentTemplate.descriptionPosition === 'after-hero') {
+                    @if (currentTemplate.descriptionPosition === 'after-hero' && !introAfterCategoryNav) {
                       <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
                     }
                   }
@@ -377,6 +387,9 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       }
                     </div>
                   </div>
+                  @if (introAfterCategoryNav) {
+                    <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
+                  }
                 }
 
                 <!-- BLOCO DE PROMOÇÕES -->
@@ -385,7 +398,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('promotion') === undefined) { <span class="block-title-icon" aria-hidden="true">🔥</span> } @else if (homeIcon('promotion') !== null) { <app-menu-home-icon class="block-title-icon" section="promotion" [choice]="homeIcon('promotion')" /> }Promoções & Ofertas</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'japanese-izakaya' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">@if (homeIcon('promotion') === undefined) { <span class="block-title-icon" aria-hidden="true">🔥</span> } @else if (homeIcon('promotion') !== null) { <app-menu-home-icon class="block-title-icon" section="promotion" [choice]="homeIcon('promotion')" /> }Promoções & Ofertas</h3>
                       </div>
                     </div>
 
@@ -446,7 +459,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('most_liked') === undefined) { <span class="block-title-icon" aria-hidden="true">@if (templateKey === 'pixel') { <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path [attr.d]="likeHeartPath"/></svg> } @else { ❤️ }</span> } @else if (homeIcon('most_liked') !== null) { <app-menu-home-icon class="block-title-icon" section="most_liked" [choice]="homeIcon('most_liked')" /> }Os Mais Curtidos</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'japanese-izakaya' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">@if (homeIcon('most_liked') === undefined) { <span class="block-title-icon" aria-hidden="true">@if (templateKey === 'pixel') { <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path [attr.d]="likeHeartPath"/></svg> } @else { ❤️ }</span> } @else if (homeIcon('most_liked') !== null) { <app-menu-home-icon class="block-title-icon" section="most_liked" [choice]="homeIcon('most_liked')" /> }Os Mais Curtidos</h3>
                       </div>
                     </div>
 
@@ -481,7 +494,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('featured_product') === undefined) { <img class="block-title-icon" src="/icons_chef_hat.webp" alt="" /> } @else if (homeIcon('featured_product') !== null) { <app-menu-home-icon class="block-title-icon" section="featured_product" [choice]="homeIcon('featured_product')" /> }Pratos do Chef & Especialidades</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'japanese-izakaya' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">@if (homeIcon('featured_product') === undefined) { <img class="block-title-icon" src="/icons_chef_hat.webp" alt="" /> } @else if (homeIcon('featured_product') !== null) { <app-menu-home-icon class="block-title-icon" section="featured_product" [choice]="homeIcon('featured_product')" /> }Pratos do Chef & Especialidades</h3>
                       </div>
                     </div>
 
@@ -530,7 +543,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('combo') === undefined) { <span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-combo')"></span> } @else if (homeIcon('combo') !== null) { <app-menu-home-icon class="block-title-icon" section="combo" [choice]="homeIcon('combo')" /> }Combos Especiais</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'japanese-izakaya' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">@if (homeIcon('combo') === undefined) { <span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-combo')"></span> } @else if (homeIcon('combo') !== null) { <app-menu-home-icon class="block-title-icon" section="combo" [choice]="homeIcon('combo')" /> }Combos Especiais</h3>
                       </div>
                     </div>
 
@@ -606,7 +619,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <div class="block-header">
                       <div class="block-title-row">
 
-                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">@if (homeIcon('best_seller') === undefined) { <span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-bestseller')"></span> } @else if (homeIcon('best_seller') !== null) { <app-menu-home-icon class="block-title-icon" section="best_seller" [choice]="homeIcon('best_seller')" /> }Mais Vendidos</h3>
+                        <h3 class="block-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'japanese-izakaya' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">@if (homeIcon('best_seller') === undefined) { <span class="block-title-icon" aria-hidden="true" [innerHTML]="highlightTitleIcon('3d-bestseller')"></span> } @else if (homeIcon('best_seller') !== null) { <app-menu-home-icon class="block-title-icon" section="best_seller" [choice]="homeIcon('best_seller')" /> }Mais Vendidos</h3>
                       </div>
 
                     </div>
@@ -733,16 +746,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               <div class="catalog-section" #catalogSection [class.category-enter]="categoryTransitioning">
                 <div class="catalog-header-row">
                   <div>
-                    <h3 class="section-heading" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'pixel' ? primaryContrast : textPrimary">
+                    <h3 class="section-heading" [style.font-family]="headingFont + ', sans-serif'" [style.color]="templateKey === 'pixel' || templateKey === 'retro-diner' || templateKey === 'circuit-tech' || templateKey === 'japanese-izakaya' || templateKey === 'neon-arcade' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">
                       {{ currentCategoryName }}
                     </h3>
                     <span class="catalog-count" [style.color]="textSecondary">{{ displayItems.length }} itens encontrados</span>
                   </div>
-                  @if (activeCatId) {
-                    <button type="button" class="btn-back-home" (click)="filterCategory(null)" [style.color]="accentColor">
-                      ← Voltar ao Início
-                    </button>
-                  }
                 </div>
 
                 <!-- Items rendering: Subcategories grouping or flat list -->
@@ -761,10 +769,10 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                           [attr.aria-expanded]="!isSubcategoryCollapsed(sub.id)">
                           <div class="subcat-title-wrap">
                             <span class="subcat-indicator" [style.background]="accentColor"></span>
-                            <h4 class="subcategory-title" [style.color]="textPrimary">{{ sub.name }}</h4>
-                            <span class="subcat-badge-count" [style.color]="textSecondary">({{ getItemsBySubcategory(sub.id).length }})</span>
+                            <h4 class="subcategory-title" [style.color]="templateKey === 'nordic-tavern' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">{{ sub.name }}</h4>
+                            <span class="subcat-badge-count" [style.color]="templateKey === 'nordic-tavern' || templateKey === 'mexican-fiesta' ? primaryContrast : textSecondary">({{ getItemsBySubcategory(sub.id).length }})</span>
                           </div>
-                          <div class="subcat-chevron-wrap" [class.collapsed]="isSubcategoryCollapsed(sub.id)" [style.color]="textSecondary">
+                          <div class="subcat-chevron-wrap" [class.collapsed]="isSubcategoryCollapsed(sub.id)" [style.color]="templateKey === 'nordic-tavern' || templateKey === 'mexican-fiesta' ? primaryContrast : textSecondary">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                               <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -836,7 +844,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                       <button
                                         type="button"
                                         class="btn-view-item"
-                                        [style.color]="templateKey === 'pixel' ? accentContrast : accentColor"
+                                        [style.color]="templateKey === 'pixel' || templateKey === 'retro-diner' || templateKey === 'circuit-tech' || templateKey === 'nordic-tavern' ? accentContrast : accentColor"
                                         [attr.aria-label]="'Ver detalhes de ' + item.name"
                                         (click)="openProductDetail(item); $event.stopPropagation()">
                                         <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -866,10 +874,10 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         [attr.aria-expanded]="!isSubcategoryCollapsed('__other__')">
                         <div class="subcat-title-wrap">
                           <span class="subcat-indicator" [style.background]="accentColor"></span>
-                          <h4 class="subcategory-title" [style.color]="textPrimary">Outros</h4>
-                          <span class="subcat-badge-count" [style.color]="textSecondary">({{ getItemsWithoutSubcategory().length }})</span>
+                          <h4 class="subcategory-title" [style.color]="templateKey === 'nordic-tavern' || templateKey === 'mexican-fiesta' ? primaryContrast : textPrimary">Outros</h4>
+                          <span class="subcat-badge-count" [style.color]="templateKey === 'nordic-tavern' || templateKey === 'mexican-fiesta' ? primaryContrast : textSecondary">({{ getItemsWithoutSubcategory().length }})</span>
                         </div>
-                        <div class="subcat-chevron-wrap" [class.collapsed]="isSubcategoryCollapsed('__other__')" [style.color]="textSecondary">
+                        <div class="subcat-chevron-wrap" [class.collapsed]="isSubcategoryCollapsed('__other__')" [style.color]="templateKey === 'mexican-fiesta' ? primaryContrast : textSecondary">
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                             <polyline points="6 9 12 15 18 9"></polyline>
                           </svg>
@@ -940,7 +948,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                     <button
                                       type="button"
                                       class="btn-view-item"
-                                      [style.color]="templateKey === 'pixel' ? accentContrast : accentColor"
+                                      [style.color]="templateKey === 'pixel' || templateKey === 'retro-diner' || templateKey === 'circuit-tech' || templateKey === 'nordic-tavern' ? accentContrast : accentColor"
                                       [attr.aria-label]="'Ver detalhes de ' + item.name"
                                       (click)="openProductDetail(item); $event.stopPropagation()">
                                       <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1021,7 +1029,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                               <button
                                 type="button"
                                 class="btn-view-item"
-                                [style.color]="templateKey === 'pixel' ? accentContrast : accentColor"
+                                [style.color]="templateKey === 'pixel' || templateKey === 'retro-diner' || templateKey === 'circuit-tech' || templateKey === 'nordic-tavern' ? accentContrast : accentColor"
                                 [attr.aria-label]="'Ver detalhes de ' + item.name"
                                 (click)="openProductDetail(item); $event.stopPropagation()">
                                 <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1182,7 +1190,15 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
               </svg>
               <p class="notice-text" [style.color]="textPrimary">
-                Esta lista ajuda você a acompanhar os itens desejados e <strong>não envia o pedido</strong> ao estabelecimento.
+                @if (orderSettings.enabled) {
+                  @if (orderSettings.channel === 'whatsapp') {
+                    Revise os itens e continue no WhatsApp para enviar seu pedido. A confirmação será feita pelo estabelecimento.
+                  } @else {
+                    Finalize seu pedido no canal do estabelecimento. Os itens desta lista não são transferidos automaticamente.
+                  }
+                } @else {
+                  Esta lista ajuda você a acompanhar os itens desejados e <strong>não envia o pedido</strong> ao estabelecimento.
+                }
               </p>
             </div>
 
@@ -1213,7 +1229,8 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       <div class="cart-item-info">
                         <h4 class="c-item-name" [style.color]="textPrimary">{{ cItem.name }}</h4>
                         <span class="c-item-unit-price" [style.color]="textSecondary">
-                          R$ {{ (cItem.promotionalPrice || cItem.price).toFixed(2) }} un.
+                          @if (cItem.showPrice === false) { Preço a consultar }
+                          @else { {{ formatOrderMoney(cartService.unitPrice(cItem)) }} un. }
                         </span>
                       </div>
 
@@ -1239,10 +1256,24 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
             @if (cartService.cartItems().length > 0) {
               <div class="cart-drawer-footer" [style.border-top-color]="screenBg">
                 <div class="cart-totals-row">
-                  <span class="total-label" [style.color]="textSecondary">Total Estimado</span>
-                  <span class="total-val" [style.color]="accentColor">R$ {{ cartService.totalPrice().toFixed(2) }}</span>
+                  <span class="total-label" [style.color]="textSecondary">{{ cartHasUnpricedItems ? 'Subtotal' : 'Total Estimado' }}</span>
+                  <span class="total-val" [style.color]="accentColor">{{ formatOrderMoney(cartService.totalPrice()) }}</span>
                 </div>
+                @if (cartHasUnpricedItems) {
+                  <p class="checkout-unavailable" [style.color]="textSecondary">Itens com preço a consultar serão confirmados pelo estabelecimento.</p>
+                }
 
+                @if (orderSettings.enabled) {
+                  @if (checkoutUrl; as destination) {
+                    <a class="btn-order-checkout" [href]="destination" target="_blank" rel="noopener noreferrer"
+                      [style.background]="primaryColor" [style.color]="primaryContrast">
+                      {{ orderSettings.button_text }}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+                    </a>
+                  } @else {
+                    <p class="checkout-unavailable" [style.color]="textSecondary" role="status">Atualize os itens do carrinho para continuar. Algum item não está mais disponível ou tem quantidade inválida.</p>
+                  }
+                }
                 <div class="cart-footer-btns">
                   <button type="button" class="btn-clear-cart" (click)="cartService.clearCart()" [style.color]="textSecondary">
                     Limpar tudo
@@ -1264,7 +1295,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     </div>
   `,
-  styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css', './public-menu-pixel-template.css'],
+  styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css', './public-menu-pixel-template.css', './public-menu-retro-diner-template.css', './public-menu-circuit-template.css', './public-menu-soft-wave-template.css', './public-menu-immersive-cover-template.css', './public-menu-nordic-tavern-template.css', './public-menu-izakaya-template.css', './public-menu-neon-arcade-template.css', './public-menu-tropical-template.css', './public-menu-fiesta-template.css', './public-menu-simple-templates.css', './public-menu-sweet-template.css'],
   styles: [`
     :host {
       display: block;
@@ -1296,7 +1327,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     button:focus-visible, [role=button]:focus-visible { outline:3px solid var(--accent-color); outline-offset:3px; }
     .capsule-btn,.clear-btn,.sheet-close-btn,.item-like-btn,.card-like-btn,.row-like-btn,.sheet-like-action,.btn-view-item { min-width:44px; min-height:44px; }
     .category-nav-pill { min-height:44px; }
-    .btn-back-home,.subcategory-header-collapsible { min-height:44px; box-sizing:border-box; }
+    .subcategory-header-collapsible { min-height:44px; box-sizing:border-box; }
     .module-skeleton-card { pointer-events:none; }
     /* Preserve progressive DOM placeholders while letting the browser skip
        layout/paint for distant sections until they approach the scrollport. */
@@ -2304,20 +2335,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       border-bottom: 1px solid rgba(0, 0, 0, 0.08);
       padding-bottom: 6px;
     }
-    .btn-back-home {
-      background: none;
-      border: none;
-      font-size: 0.74rem;
-      font-weight: 700;
-      cursor: pointer;
-      padding: 3px 6px;
-      border-radius: 6px;
-      transition: opacity 0.15s ease;
-    }
-    .btn-back-home:hover {
-      opacity: 0.8;
-      text-decoration: underline;
-    }
     .section-heading {
       font-size: 0.98rem;
       font-weight: 800;
@@ -3007,6 +3024,10 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     .c-qty-val { font-size: 0.82rem; font-weight: 800; min-width: 14px; text-align: center; }
     .c-remove-btn { background: none; border: none; cursor: pointer; padding: 4px; opacity: 0.7; }
 
+    .btn-order-checkout { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 16px; box-sizing: border-box; border-radius: 12px; font: inherit; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+    .btn-order-checkout svg { flex-shrink: 0; }
+    .btn-order-checkout:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+    .checkout-unavailable { margin: 0; font-size: 12px; line-height: 1.5; }
     /* Cart Footer */
     .cart-drawer-footer {
       padding: 16px 20px 24px;
@@ -3162,6 +3183,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
       const design = this.isPhonePreview ? this.designService.draft() : this.publicMenuService.menuData()?.design;
       if (design) this.fonts.selected(this.headingFont, this.bodyFont);
     });
+    effect(() => {
+      if (this.orderSettings.enabled) this.cartService.refreshFromCatalog(this.items);
+    });
   }
 
   ngOnInit(): void {
@@ -3244,7 +3268,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
         description: b?.description || '',
         welcomeBgType: b?.welcome_bg_type || 'image',
         welcomeBgImage: b?.welcome_bg_image || b?.cover_image_url || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
-        welcomeBgColor: b?.welcome_bg_color || '#0F0F12'
+        welcomeBgColor: b?.welcome_bg_color || '#0F0F12',
+        socialLinks: safeSocialLinks(b?.social_links),
+        orderSettings: safeOrderSettings(b?.order_settings)
       };
     }
     const pb = this.publicMenuService.menuData()?.business;
@@ -3436,7 +3462,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   get templateKey(): string { return this.currentTemplate.key; }
   get likeHeartPath(): string {
-    return this.templateKey === 'pixel'
+    return this.templateKey === 'pixel' || this.templateKey === 'neon-arcade'
       ? 'M4 4H10V6H14V4H20V6H22V12H20V14H18V16H16V18H14V20H10V18H8V16H6V14H4V12H2V6H4Z'
       : 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z';
   }
@@ -3524,6 +3550,13 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   }
 
+  get introAfterCategoryNav(): boolean {
+    if (this.templateKey !== 'mexican-fiesta' || !this.showHeroBlock) return false;
+    const blocks = this.orderedHomeBlocks;
+    const heroIndex = blocks.findIndex(block => block.type === 'hero');
+    return heroIndex >= 0 && blocks[heroIndex + 1]?.type === 'categories';
+  }
+
   get showHeroBlock(): boolean {
     return (this.design?.homeBlocks || []).some(b => b.type === 'hero' && b.enabled) && this.heroBanners.length > 0;
   }
@@ -3563,7 +3596,20 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return this.designService.enableLikes();
   }
 
+  private readonly orderConfiguration = computed(() => safeOrderSettings(this.isPhonePreview
+    ? this.authService.currentBusiness()?.order_settings : this.publicMenuService.menuData()?.business.orderSettings));
+  private readonly orderLink = computed(() => orderDestination(this.orderSettings, this.cartService.cartItems(), this.items, this.businessName));
+  get orderSettings() { return this.orderConfiguration(); }
+  readonly formatOrderMoney = formatOrderMoney;
+
+  get cartHasUnpricedItems(): boolean { return this.cartService.cartItems().some(item => item.showPrice === false); }
+
+  get checkoutUrl(): string | null {
+    return this.orderLink();
+  }
+
   get enableCart(): boolean {
+    if (this.orderSettings.enabled) return true;
     if (this.isPhonePreview) {
       return this.designService.enableCart();
     }
@@ -3677,6 +3723,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
       name: item.name,
       price: item.price,
       promotionalPrice: item.promotionalPrice,
+      showPrice: item.showPrice,
       imageUrl: item.imageUrl
     }, this.modalItemQuantity);
   }
@@ -3715,6 +3762,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
       name: item.name,
       price: item.price,
       promotionalPrice: item.promotionalPrice,
+      showPrice: item.showPrice,
       imageUrl: item.imageUrl
     });
   }

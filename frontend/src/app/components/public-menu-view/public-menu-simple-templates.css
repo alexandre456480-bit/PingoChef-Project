@@ -1,0 +1,79 @@
+/* Layout only: customer branding, content and all shared interactions are retained. */
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) {
+  --simple-edge: color-mix(in srgb, var(--text-primary) 14%, var(--surface-color));
+  --simple-shadow: 0 6px 20px color-mix(in srgb, var(--text-primary) 7%, transparent);
+  --product-media-radius: 20px;
+}
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .floating-controls-capsule { border: 1px solid var(--simple-edge); border-radius: 999px; box-shadow: var(--simple-shadow); }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .intro-description-card { background: var(--surface-color); border-color: var(--simple-edge); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .cat-pill-label { max-width: 150px; white-space: normal; }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .subcategory-header-collapsible { border-bottom: 1px solid var(--simple-edge); padding: 10px 0; }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .card-item-title { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.25; }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .btn-view-item { width: 40px; height: 40px; min-height: 40px; border-radius: var(--template-button-radius); border: 1px solid var(--simple-edge); }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .product-modal-sheet { border: 1px solid var(--simple-edge); border-radius: 24px; }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .sheet-price-row { border-top: 1px solid var(--simple-edge); padding-top: 18px; }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) :is(.btn-sheet-add-cart, .btn-sheet-close-action, .modal-qty-selector) { border-radius: var(--template-button-radius); }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { border: 1px solid var(--simple-edge); border-radius: var(--template-item-radius); box-shadow: none; }
+
+/* Editorial: a horizontal masthead, quiet tabs and a photo on the right. */
+.menu-viewport[data-template="editorial-menu"] .template-brand-header { margin: 0; padding: 0 2px 18px; gap: 14px; align-items: center; border-bottom: 1px solid var(--simple-edge); }
+.menu-viewport[data-template="editorial-menu"] .template-brand-copy { padding: 0; }
+.menu-viewport[data-template="editorial-menu"] .template-logo-wrap { box-shadow: none; padding: 0; background: transparent; }
+.menu-viewport[data-template="editorial-menu"] .intro-description-card { padding: 4px 0 16px; border: 0; border-bottom: 1px solid var(--simple-edge); border-radius: 0; background: transparent; }
+.menu-viewport[data-template="editorial-menu"] .cat-nav-scroll { gap: 6px; padding-bottom: 0; border-bottom: 1px solid var(--simple-edge); }
+.menu-viewport[data-template="editorial-menu"] .category-nav-pill { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; color: var(--text-primary); box-shadow: none; padding: 10px 14px; }
+.menu-viewport[data-template="editorial-menu"] .category-nav-pill.active { background: transparent; color: var(--text-primary); border-bottom-color: var(--primary-color); }
+.menu-viewport[data-template="editorial-menu"] .items-grid { gap: 0; }
+.menu-viewport[data-template="editorial-menu"] .product-item-card { --item-photo-size: 96px; --item-content-size: 120px; grid-template-columns: minmax(0, 1fr) var(--item-photo-size); padding: 14px 0; height: 149px; border: 0; border-bottom: 1px solid var(--simple-edge); gap: 14px; border-radius: 0; }
+.menu-viewport[data-template="editorial-menu"] .product-card-photo { grid-column: 2; grid-row: 1; border-radius: 8px; }
+.menu-viewport[data-template="editorial-menu"] .product-card-body { grid-column: 1; grid-row: 1; grid-template-rows: 36px minmax(0, 1fr) 40px; }
+.menu-viewport[data-template="editorial-menu"] .card-item-title { font-size: .9rem; }
+.menu-viewport[data-template="editorial-menu"] .section-heading { border-left: 3px solid var(--primary-color); padding-left: 12px; }
+.menu-viewport[data-template="editorial-menu"] .block-header { padding-bottom: 12px; border-bottom: 1px solid var(--simple-edge); }
+.menu-viewport[data-template="editorial-menu"] .promo-item-card { width: 158px; }
+.menu-viewport[data-template="editorial-menu"] .sheet-product-title { padding-left: 12px; border-left: 3px solid var(--primary-color); }
+
+/* Vitrine: generous images and two columns, including the phone preview. */
+.menu-viewport[data-template="product-gallery"] { --product-media-ratio: 4 / 3; }
+.menu-viewport[data-template="product-gallery"] .template-brand-header { align-items: center; gap: 12px; margin: -44px 12px 0; padding: 12px; border: 1px solid var(--simple-edge); border-radius: 20px; background: var(--surface-color); box-shadow: var(--simple-shadow); }
+.menu-viewport[data-template="product-gallery"] .template-brand-copy { padding: 0; }
+.menu-viewport[data-template="product-gallery"] .template-logo-wrap { box-shadow: none; }
+.menu-viewport[data-template="product-gallery"] .intro-description-card { border-radius: 20px; padding: 20px; }
+.menu-viewport[data-template="product-gallery"] .category-nav-pill { padding: 12px 16px; border-color: var(--simple-edge); }
+.menu-viewport[data-template="product-gallery"] .category-nav-pill.active { box-shadow: var(--simple-shadow); }
+.menu-viewport[data-template="product-gallery"] .items-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.menu-viewport[data-template="product-gallery"] .product-item-card { position: relative; display: flex; flex-direction: column; align-items: stretch; height: auto; padding: 0; gap: 0; border-color: var(--simple-edge); box-shadow: var(--simple-shadow); }
+.menu-viewport[data-template="product-gallery"] .product-card-photo { width: 100%; height: auto; aspect-ratio: 4 / 3; align-self: stretch; border-radius: 0; }
+.menu-viewport[data-template="product-gallery"] :is(.product-photo-img, .photo-placeholder-box) { aspect-ratio: auto; }
+.menu-viewport[data-template="product-gallery"] .product-card-body { display: flex; flex-direction: column; flex: 1; height: auto; padding: 12px 10px; gap: 8px; }
+.menu-viewport[data-template="product-gallery"] .card-item-title { min-height: 2.5em; font-size: .875rem; }
+.menu-viewport[data-template="product-gallery"] .card-item-desc { min-height: 2.5em; font-size: .75rem; }
+.menu-viewport[data-template="product-gallery"] .item-like-btn { position: absolute; right: 6px; top: 6px; min-width: 44px; height: 36px; padding: 4px 8px; border-radius: 999px; background: var(--surface-color); color: var(--text-primary); box-shadow: var(--simple-shadow); }
+.menu-viewport[data-template="product-gallery"] .card-bottom-row { min-height: 40px; overflow: visible; }
+.menu-viewport[data-template="product-gallery"] .btn-view-item { width: 32px; min-width: 32px; }
+.menu-viewport[data-template="product-gallery"] .pricing-box { overflow: visible; white-space: normal; overflow-wrap: anywhere; }
+.menu-viewport[data-template="product-gallery"] .block-header { padding: 4px 0 10px; }
+.menu-viewport[data-template="product-gallery"] .promo-item-card { width: 168px; }
+.menu-viewport[data-template="product-gallery"] .promo-img-wrap { height: 120px; }
+.menu-viewport[data-template="product-gallery"] .ranking-item-row { padding: 12px; }
+
+/* Essencial: a small identity, panoramic cover and a compact round-thumbnail list. */
+.menu-viewport[data-template="compact-menu"] .showcase-scrollable { gap: 14px; }
+.menu-viewport[data-template="compact-menu"] .template-brand-header { margin: 0; padding: 0; align-items: center; gap: 12px; }
+.menu-viewport[data-template="compact-menu"] .template-brand-copy { padding: 0; }
+.menu-viewport[data-template="compact-menu"] .template-brand-copy h2 { font-size: 1.1rem; }
+.menu-viewport[data-template="compact-menu"] .template-brand-copy p { font-size: .75rem; }
+.menu-viewport[data-template="compact-menu"] .template-logo-wrap { padding: 0; box-shadow: none; background: transparent; }
+.menu-viewport[data-template="compact-menu"] .showcase-hero-banner { min-height: 112px; }
+.menu-viewport[data-template="compact-menu"] .intro-description-card { padding: 14px 16px; border: 0; border-left: 3px solid var(--primary-color); border-radius: 0 12px 12px 0; }
+.menu-viewport[data-template="compact-menu"] .category-nav-pill { padding: 8px 14px; border-color: var(--simple-edge); }
+.menu-viewport[data-template="compact-menu"] .category-nav-pill.active { box-shadow: none; }
+.menu-viewport[data-template="compact-menu"] .product-item-card { --item-photo-size: 64px; --item-content-size: 96px; height: 114px; gap: 12px; border-color: var(--simple-edge); }
+.menu-viewport[data-template="compact-menu"] .product-card-photo { border-radius: 50%; }
+.menu-viewport[data-template="compact-menu"] .product-card-body { grid-template-rows: 32px minmax(0, 1fr) 40px; }
+.menu-viewport[data-template="compact-menu"] .card-item-title { font-size: .82rem; }
+.menu-viewport[data-template="compact-menu"] .card-item-desc { -webkit-line-clamp: 1; font-size: .75rem; }
+.menu-viewport[data-template="compact-menu"] .section-heading { font-size: 1.05rem; }
+.menu-viewport[data-template="compact-menu"] .block-title { font-size: .875rem; }
+.menu-viewport[data-template="compact-menu"] .promo-item-card { width: 136px; }
+.menu-viewport[data-template="compact-menu"] .promo-img-wrap { height: 80px; }

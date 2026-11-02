@@ -1,0 +1,8 @@
+[
+  { "key": "instagram", "label": "Instagram", "domains": ["instagram.com"], "color": "#FF0069" },
+  { "key": "tiktok", "label": "TikTok", "domains": ["tiktok.com"], "color": "#000000" },
+  { "key": "ifood", "label": "iFood", "domains": ["ifood.com.br"], "color": "#EA1D2C" },
+  { "key": "99", "label": "99", "domains": ["99app.com", "99food.com.br"], "color": "#111111" },
+  { "key": "whatsapp", "label": "WhatsApp", "domains": ["wa.me", "whatsapp.com"], "color": "#25D366" },
+  { "key": "other", "label": "Outras", "domains": [], "color": "#690A1A" }
+]

@@ -59,10 +59,6 @@
   font-size: clamp(1rem, 3.8cqi, 1.2rem); line-height: 1.2;
   background: var(--primary-color); box-shadow: var(--pixel-frame), 4px 4px var(--accent-color);
 }
-.menu-viewport[data-template="pixel"] .btn-back-home {
-  padding: 5px 10px; border: 0; border-radius: 0; background: var(--surface-color);
-  box-shadow: var(--pixel-frame); font-size: .7rem;
-}
 .menu-viewport[data-template="pixel"] .subcategory-header-collapsible {
   padding: 8px 10px; margin: 4px 3px 12px; border-radius: 0;
   background: linear-gradient(135deg, color-mix(in srgb, var(--surface-color) 90%, transparent), color-mix(in srgb, var(--surface-color) 55%, transparent)), color-mix(in srgb, var(--accent-color) 8%, transparent);

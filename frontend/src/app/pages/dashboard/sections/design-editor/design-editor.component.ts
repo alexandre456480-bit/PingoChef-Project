@@ -51,8 +51,13 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
         </summary>
         <div class="section-content">
 
+        <div class="template-filters" role="group" aria-label="Categorias de templates">
+          @for (filter of templateFilters; track filter) {
+            <button type="button" [attr.aria-pressed]="templateFilter === filter" (click)="templateFilter = filter">{{ filter }}</button>
+          }
+        </div>
         <div class="templates-grid">
-          @for (tmpl of templates; track tmpl.key; let i = $index) {
+          @for (tmpl of filteredTemplates; track tmpl.key; let i = $index) {
             <button type="button"
               class="template-card"
               [class.selected]="designService.currentTemplate().key === tmpl.key"
@@ -64,6 +69,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
                 [style.background]="designService.draft().palette.colors.background"
                 [style.--sample-surface]="designService.draft().palette.colors.surface"
                 [style.--sample-primary]="designService.draft().palette.colors.primary"
+                [style.--sample-accent]="designService.draft().palette.colors.accent"
                 [style.--sample-text]="designService.draft().palette.colors.textSecondary">
                 <div class="tmpl-mini-hero"></div>
                 <div class="tmpl-mini-identity"><span class="tmpl-mini-logo"></span><span class="tmpl-mini-line"></span></div>
@@ -78,7 +84,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
                   <h3 class="tmpl-name">{{ tmpl.name }}</h3>
                   <span class="tmpl-surface-pill">{{ designService.currentTemplate().key === tmpl.key ? 'Ativo' : 'Disponível' }}</span>
                 </div>
-                <p class="tmpl-desc">{{ tmpl.description }}</p>
+                <p class="tmpl-desc" [title]="tmpl.description">{{ tmpl.description }}</p>
                 <span class="tmpl-ideal">{{ tmpl.idealFor }}</span>
               </div>
 
@@ -1007,6 +1013,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
 
     </div>
   `,
+  styleUrls: ['./design-editor-simple-previews.css', './design-editor-sweet-preview.css'],
   styles: [`
     :host { display: block; }
 
@@ -1108,14 +1115,18 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
     /* ══════════════════════════════════════════════════ */
     /* ── 1. TEMPLATES GRID ── */
     /* ══════════════════════════════════════════════════ */
-    .templates-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .template-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .template-filters button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--panel-border-strong); border-radius: 12px; background: var(--panel-surface-inset); color: var(--panel-text); font: 600 12px Inter, sans-serif; cursor: pointer; }
+    .template-filters button[aria-pressed='true'] { background: var(--panel-action); color: #fff; border-color: var(--panel-action); }
+    .template-filters button:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 3px; }
+    .templates-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .template-card {
       background: var(--panel-surface); border: 1px solid var(--panel-border);
-      border-radius: 16px; padding: 18px; cursor: pointer; position: relative;
-      display: flex; flex-direction: column; gap: 16px;
+      border-radius: 14px; padding: 12px; cursor: pointer; position: relative; min-width: 0; text-align: left;
+      display: flex; flex-direction: column; gap: 10px;
     }
     .template-card.selected { border-color: var(--panel-accent); }
-    .tmpl-preview { border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .tmpl-preview { border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; overflow: hidden; }
     .tmpl-mini-hero { height: 72px; border-radius: 10px; background: color-mix(in srgb, var(--sample-primary) 20%, var(--sample-surface)); }
     .tmpl-mini-identity { display: flex; align-items: flex-end; gap: 10px; padding: 0 10px; margin-top: -28px; }
     .tmpl-mini-logo { width: 34px; height: 34px; border-radius: 9px; background: var(--sample-primary); border: 3px solid var(--sample-surface); }
@@ -1150,6 +1161,53 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
     .tmpl-preview[data-tmpl="pixel"] .tmpl-mini-identity { flex-direction: column; align-items: center; gap: 6px; margin-top: -36px; }
     .tmpl-preview[data-tmpl="pixel"] :is(.tmpl-mini-logo, .tmpl-mini-cats span, .mini-card-sample, .tmpl-mini-description) { border-radius: 0; box-shadow: 2px 0 var(--sample-primary), -2px 0 var(--sample-primary), 0 2px var(--sample-primary), 0 -2px var(--sample-primary); }
     .tmpl-preview[data-tmpl="pixel"] .mini-card-sample { height: 34px; }
+    .tmpl-preview[data-tmpl="mexican-fiesta"] .tmpl-mini-identity { position: relative; z-index: 2; order: -1; margin: 18px 40px -48px 4px; align-items: center; padding: 4px; border-radius: 40% 40% 6px 6px / 8px 8px 6px 6px; background: var(--sample-primary); border: 2px double var(--sample-accent); }
+    .tmpl-preview[data-tmpl="mexican-fiesta"] .tmpl-mini-logo { width: 28px; height: 28px; border-radius: 0; background: transparent; }
+    .tmpl-preview[data-tmpl="mexican-fiesta"] .tmpl-mini-identity .tmpl-mini-line { background: var(--sample-surface); }
+    .tmpl-preview[data-tmpl="mexican-fiesta"] .tmpl-mini-hero { height: 74px; border: 0; border-radius: 0; border-top: 9px dashed var(--sample-accent); }
+    .tmpl-preview[data-tmpl="mexican-fiesta"] :is(.tmpl-mini-cats span, .mini-card-sample) { border: 3px double color-mix(in srgb, var(--sample-accent) 45%, var(--sample-surface)); border-radius: 8px; }
+    .tmpl-preview[data-tmpl="tropical-bamboo"] .tmpl-mini-identity { position: relative; z-index: 2; order: -1; margin: 12px 40px -42px 4px; align-items: center; padding: 4px; border-radius: 7px; background: repeating-linear-gradient(2deg, transparent 0 4px, color-mix(in srgb, var(--sample-text) 8%, transparent) 4px 5px), color-mix(in srgb, var(--sample-accent) 20%, var(--sample-surface)); }
+    .tmpl-preview[data-tmpl="tropical-bamboo"] .tmpl-mini-identity::before { content: ''; position: absolute; top: -8px; left: 15%; right: 15%; height: 12px; border-inline: 3px solid var(--sample-primary); }
+    .tmpl-preview[data-tmpl="tropical-bamboo"] .tmpl-mini-logo { width: 28px; height: 28px; border-radius: 0; background: transparent; }
+    .tmpl-preview[data-tmpl="tropical-bamboo"] .tmpl-mini-hero { height: 70px; border: 0; border-bottom: 7px solid color-mix(in srgb, var(--sample-accent) 50%, var(--sample-text)); border-radius: 0; }
+    .tmpl-preview[data-tmpl="tropical-bamboo"] :is(.tmpl-mini-cats span, .mini-card-sample) { border-radius: 10px; border: 1px solid color-mix(in srgb, var(--sample-accent) 30%, var(--sample-surface)); }
+    .tmpl-preview[data-tmpl="tropical-bamboo"] .tmpl-mini-cats span:not(:first-child) { background: color-mix(in srgb, var(--sample-accent) 20%, var(--sample-surface)); }
+    .tmpl-preview[data-tmpl="neon-arcade"] { background-image: linear-gradient(color-mix(in srgb, var(--sample-primary) 12%, transparent) 1px, transparent 1px); background-size: 12px 12px; }
+    .tmpl-preview[data-tmpl="neon-arcade"] .tmpl-mini-identity { order: -1; margin: 0; align-items: center; padding: 2px; }
+    .tmpl-preview[data-tmpl="neon-arcade"] .tmpl-mini-logo { width: 30px; height: 30px; border-radius: 0; background: transparent; }
+    .tmpl-preview[data-tmpl="neon-arcade"] :is(.tmpl-mini-hero, .tmpl-mini-cats span, .mini-card-sample) { border: 2px solid var(--sample-accent); border-radius: 0; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); box-shadow: inset 0 0 8px color-mix(in srgb, var(--sample-primary) 35%, transparent); }
+    .tmpl-preview[data-tmpl="japanese-izakaya"] .tmpl-mini-identity { order: -1; margin: 0; padding: 6px; align-items: center; background: repeating-linear-gradient(90deg, var(--sample-primary) 0 24px, color-mix(in srgb, var(--sample-primary) 65%, var(--sample-text)) 24px 26px); border-radius: 4px; }
+    .tmpl-preview[data-tmpl="japanese-izakaya"] .tmpl-mini-logo { width: 26px; height: 32px; border: 1px solid var(--sample-surface); border-radius: 0 0 6px 6px; }
+    .tmpl-preview[data-tmpl="japanese-izakaya"] .tmpl-mini-line { background: var(--sample-surface); }
+    .tmpl-preview[data-tmpl="japanese-izakaya"] .tmpl-mini-hero { border: 5px double var(--sample-primary); border-radius: 14px; }
+    .tmpl-preview[data-tmpl="japanese-izakaya"] .tmpl-mini-cats span { border-radius: 999px; }
+    .tmpl-preview[data-tmpl="japanese-izakaya"] .mini-card-sample { border: 1px solid color-mix(in srgb, var(--sample-primary) 20%, var(--sample-surface)); border-radius: 8px; }
+    .tmpl-preview[data-tmpl="nordic-tavern"] .tmpl-mini-identity { order: -1; margin: 0; padding: 4px; border: 2px solid var(--sample-primary); align-items: center; }
+    .tmpl-preview[data-tmpl="nordic-tavern"] .tmpl-mini-logo { width: 24px; height: 34px; border-radius: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%); }
+    .tmpl-preview[data-tmpl="nordic-tavern"] .tmpl-mini-hero { border: 7px double var(--sample-primary); border-radius: 4px; }
+    .tmpl-preview[data-tmpl="nordic-tavern"] .tmpl-mini-cats span { border-radius: 4px; outline: 1px solid var(--sample-text); }
+    .tmpl-preview[data-tmpl="nordic-tavern"] .mini-card-sample { border: 2px solid color-mix(in srgb, var(--sample-primary) 30%, var(--sample-surface)); border-radius: 4px; }
+    .tmpl-preview[data-tmpl="immersive-cover"] .tmpl-mini-hero { height: 115px; border-radius: 8px 8px 0 0; }
+    .tmpl-preview[data-tmpl="immersive-cover"] .tmpl-mini-identity { margin: -106px 0 35px; flex-direction: column; align-items: center; gap: 4px; }
+    .tmpl-preview[data-tmpl="immersive-cover"] .tmpl-mini-logo { border-radius: 50%; width: 28px; height: 28px; }
+    .tmpl-preview[data-tmpl="immersive-cover"] .tmpl-mini-cats { padding: 5px; background: var(--sample-surface); border-radius: 8px; }
+    .tmpl-preview[data-tmpl="immersive-cover"] .mini-card-sample { height: 52px; background: linear-gradient(180deg, color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)) 60%, var(--sample-surface) 60%); }
+    .tmpl-preview[data-tmpl="soft-wave"] .tmpl-mini-identity { order: -1; margin: 0; align-items: center; justify-content: center; padding: 0; }
+    .tmpl-preview[data-tmpl="soft-wave"] .tmpl-mini-logo { border-radius: 50%; width: 30px; height: 30px; }
+    .tmpl-preview[data-tmpl="soft-wave"] .tmpl-mini-hero { border-radius: 22% 28% 22% 24% / 30% 20% 30% 25%; border: 3px solid color-mix(in srgb, var(--sample-primary) 22%, var(--sample-surface)); }
+    .tmpl-preview[data-tmpl="soft-wave"] .tmpl-mini-cats span { border-radius: 12px; outline: 1px dashed var(--sample-surface); outline-offset: -3px; }
+    .tmpl-preview[data-tmpl="soft-wave"] .mini-card-sample { border-radius: 12px; border: 1px solid color-mix(in srgb, var(--sample-primary) 22%, var(--sample-surface)); }
+    .tmpl-preview[data-tmpl="circuit-tech"] .tmpl-mini-identity { order: -1; margin: 0; align-items: center; justify-content: center; padding: 0; }
+    .tmpl-preview[data-tmpl="circuit-tech"] .tmpl-mini-logo { border-radius: 50%; width: 28px; height: 28px; }
+    .tmpl-preview[data-tmpl="circuit-tech"] .tmpl-mini-hero { border: 5px solid var(--sample-primary); border-radius: 0; outline: 1px solid var(--sample-accent); outline-offset: -3px; clip-path: polygon(8% 0, 92% 0, 100% 15%, 100% 85%, 92% 100%, 8% 100%, 0 85%, 0 15%); }
+    .tmpl-preview[data-tmpl="circuit-tech"] .tmpl-mini-cats span { border-radius: 0; border: 1px solid var(--sample-primary); }
+    .tmpl-preview[data-tmpl="circuit-tech"] .mini-card-sample { border: 2px solid var(--sample-primary); border-radius: 0; }
+    .tmpl-preview[data-tmpl="retro-diner"] .tmpl-mini-identity { order: -1; margin: 0; align-items: center; justify-content: center; padding: 0; }
+    .tmpl-preview[data-tmpl="retro-diner"] .tmpl-mini-logo { border-radius: 50%; width: 28px; height: 28px; }
+    .tmpl-preview[data-tmpl="retro-diner"] .tmpl-mini-line { height: 14px; background: repeating-conic-gradient(var(--sample-primary) 0 25%, transparent 0 50%) 0 0 / 8px 8px; }
+    .tmpl-preview[data-tmpl="retro-diner"] .tmpl-mini-hero { border: 6px dotted var(--sample-primary); border-radius: 16px; }
+    .tmpl-preview[data-tmpl="retro-diner"] .tmpl-mini-cats span { border-radius: 8px; }
+    .tmpl-preview[data-tmpl="retro-diner"] .mini-card-sample { border: 1px solid var(--sample-primary); border-left: 6px double var(--sample-primary); border-radius: 8px; }
 
     .tmpl-info {
       display: flex;
@@ -1158,12 +1216,14 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
     }
     .tmpl-header-row {
       display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
       align-items: center;
       justify-content: space-between;
     }
     .tmpl-name {
       font-family: 'Outfit', sans-serif;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: #FFF;
       margin: 0;
@@ -1178,6 +1238,10 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
       border-radius: 6px;
     }
     .tmpl-desc {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
       font-size: 0.78rem;
       color: #8E8E93;
       margin: 0;
@@ -2650,7 +2714,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
       .fonts-selection-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 680px) {
-      .templates-grid { grid-template-columns: 1fr; }
+      .templates-grid { gap: 10px; }
+      .template-card { padding: 10px; }
       .palettes-grid { grid-template-columns: 1fr; }
       .color-tokens-grid { grid-template-columns: 1fr; }
       .fonts-selection-grid { grid-template-columns: 1fr; }
@@ -2662,7 +2727,12 @@ export class DesignEditorComponent {
   readonly fontFamily = menuFontFamily;
   @Output() onToast = new EventEmitter<string>();
 
-  templates = AVAILABLE_TEMPLATES;
+  readonly templateFilters = ['Todos', 'Simples', 'Temáticos'] as const;
+  templateFilter: 'Todos' | 'Simples' | 'Temáticos' = 'Todos';
+  get filteredTemplates() {
+    return AVAILABLE_TEMPLATES.filter(template => this.templateFilter === 'Todos' ||
+      (this.templateFilter === 'Temáticos' ? template.category === 'thematic' : template.category !== 'thematic'));
+  }
   palettes = AVAILABLE_PALETTES;
   headingFonts = AVAILABLE_HEADING_FONTS;
   bodyFonts = AVAILABLE_BODY_FONTS;

@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
+import { orderSettingsSchema } from '../utils/order-settings';
+import { socialLinksSchema } from '../utils/social-links';
 
 export const publishBusinessMenuController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -53,7 +55,9 @@ const updateBusinessSchema = z.object({
   welcome_bg_image: z.string().trim().optional().nullable(),
   welcome_bg_color: hexColorSchema.optional().nullable(),
   phone: z.string().trim().max(30).optional().nullable(),
-  whatsapp: z.string().trim().max(30).optional().nullable()
+  whatsapp: z.string().trim().max(30).optional().nullable(),
+  social_links: socialLinksSchema.optional(),
+  order_settings: orderSettingsSchema.optional()
 }).strict();
 
 /**
@@ -77,7 +81,7 @@ export const getBusinessController = async (req: AuthenticatedRequest, res: Resp
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       const { data, error } = await client
         .from('businesses')
-        .select('id, owner_user_id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color, status, phone, whatsapp, created_at, updated_at')
+        .select('id, owner_user_id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color, status, phone, whatsapp, social_links, order_settings, created_at, updated_at')
         .eq('id', businessId)
         .maybeSingle();
 
@@ -207,6 +211,8 @@ export const updateBusinessController = async (req: AuthenticatedRequest, res: R
         welcome_bg_color: validated.welcome_bg_color || '#0F0F12',
         phone: validated.phone || null,
         whatsapp: validated.whatsapp || null,
+        ...(validated.order_settings !== undefined ? { order_settings: validated.order_settings } : {}),
+        ...(validated.social_links !== undefined ? { social_links: validated.social_links } : {}),
         updated_at: new Date().toISOString()
       };
 
@@ -290,7 +296,9 @@ export const updateBusinessController = async (req: AuthenticatedRequest, res: R
       welcome_bg_image: validated.welcome_bg_image ?? current.welcome_bg_image,
       welcome_bg_color: validated.welcome_bg_color ?? current.welcome_bg_color ?? '#0F0F12',
       phone: validated.phone ?? current.phone,
-      whatsapp: validated.whatsapp ?? current.whatsapp
+      whatsapp: validated.whatsapp ?? current.whatsapp,
+      ...(validated.order_settings !== undefined ? { order_settings: validated.order_settings } : {}),
+      ...(validated.social_links !== undefined ? { social_links: validated.social_links } : {})
     };
 
     localDb.businesses[bizIndex] = updatedBiz;

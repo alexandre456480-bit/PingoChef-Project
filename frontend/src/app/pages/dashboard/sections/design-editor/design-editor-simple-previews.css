@@ -1,0 +1,16 @@
+/* Miniatures mirror the three simple compositions; live preview uses the actual menu. */
+.tmpl-preview:is([data-tmpl="editorial-menu"], [data-tmpl="compact-menu"]) .tmpl-mini-identity { order: -1; margin: 0; padding: 0; align-items: center; }
+.tmpl-preview[data-tmpl="editorial-menu"] .tmpl-mini-hero { height: 54px; border-radius: 4px; }
+.tmpl-preview[data-tmpl="editorial-menu"] .tmpl-mini-description { height: 18px; border-radius: 0; border-bottom: 1px solid var(--sample-primary); }
+.tmpl-preview[data-tmpl="editorial-menu"] .tmpl-mini-cats span { height: 10px; border-radius: 0; background: transparent; border-bottom: 2px solid var(--sample-primary); }
+.tmpl-preview[data-tmpl="editorial-menu"] .mini-card-sample { height: 36px; border-radius: 0; background: linear-gradient(90deg, var(--sample-surface) 76%, color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)) 76%); border-bottom: 1px solid var(--sample-primary); }
+.tmpl-preview[data-tmpl="product-gallery"] .tmpl-mini-hero { height: 84px; border-radius: 12px; }
+.tmpl-preview[data-tmpl="product-gallery"] .tmpl-mini-identity { position: relative; margin: -22px 5px 0; padding: 5px; background: var(--sample-surface); border-radius: 8px; align-items: center; }
+.tmpl-preview[data-tmpl="product-gallery"] .tmpl-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tmpl-preview[data-tmpl="product-gallery"] .mini-card-sample { height: 64px; border-radius: 8px; background: linear-gradient(180deg, color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)) 58%, var(--sample-surface) 58%); }
+.tmpl-preview[data-tmpl="compact-menu"] .tmpl-mini-logo { width: 24px; height: 24px; border-radius: 50%; }
+.tmpl-preview[data-tmpl="compact-menu"] .tmpl-mini-hero { height: 40px; }
+.tmpl-preview[data-tmpl="compact-menu"] .tmpl-mini-description { height: 18px; border-left: 2px solid var(--sample-primary); }
+.tmpl-preview[data-tmpl="compact-menu"] .tmpl-mini-cats span { border-radius: 999px; }
+.tmpl-preview[data-tmpl="compact-menu"] .mini-card-sample { height: 26px; background: var(--sample-surface); }
+.tmpl-preview[data-tmpl="compact-menu"] .mini-card-sample::before { content: ''; display: block; margin: 3px; width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, var(--sample-text) 18%, var(--sample-surface)); }

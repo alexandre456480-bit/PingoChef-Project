@@ -20,6 +20,8 @@ export interface LocalUser {
 }
 
 export interface LocalBusiness {
+  order_settings?: import('../utils/order-settings').OrderSettings;
+  social_links?: import('../utils/social-links').SocialLink[];
   id: string;
   owner_user_id: string;
   name: string;

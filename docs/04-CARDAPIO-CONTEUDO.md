@@ -2,7 +2,7 @@
 
 > **Domínio**: Categorias, produtos, promoções, atributos, ordenação, estados e regras de conteúdo.  
 > **Depende de**: [01-ARQUITETURA-GERAL.md](./01-ARQUITETURA-GERAL.md), [03-PAINEL-USUARIO.md](./03-PAINEL-USUARIO.md), [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md)  
-> **Referenciado por**: [05-DESIGN-SYSTEM-TEMPLATES.md](./05-DESIGN-SYSTEM-TEMPLATES.md), [06-EXPERIENCIA-PUBLICA.md](./06-EXPERIENCIA-PUBLICA.md), [09-API-CONTRATOS.md](./09-API-CONTRATOS.md)
+> **Referenciado por**: [05-Design-System-Templates-ATUALIZADO.md](./05-Design-System-Templates-ATUALIZADO.md), [06-EXPERIENCIA-PUBLICA.md](./06-EXPERIENCIA-PUBLICA.md), [09-API-CONTRATOS.md](./09-API-CONTRATOS.md)
 
 ---
 
@@ -305,7 +305,7 @@ O catálogo inclui dezenas de ícones organizados por grupos culinários:
 
 ## Documentos Relacionados
 
-→ [05-DESIGN-SYSTEM-TEMPLATES.md](./05-DESIGN-SYSTEM-TEMPLATES.md) — Como o conteúdo é renderizado visualmente  
+→ [05-Design-System-Templates-ATUALIZADO.md](./05-Design-System-Templates-ATUALIZADO.md) — Como o conteúdo é renderizado visualmente  
 → [06-EXPERIENCIA-PUBLICA.md](./06-EXPERIENCIA-PUBLICA.md) — Jornada do cliente final  
 → [07-CYBERSECURITY.md](./07-CYBERSECURITY.md) — Segurança de uploads e XSS  
 → [08-BANCO-DADOS-RLS.md](./08-BANCO-DADOS-RLS.md) — Tabelas de categorias, itens e atributos  

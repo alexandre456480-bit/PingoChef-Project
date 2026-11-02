@@ -63,7 +63,7 @@ async function meData(user: OwnerSession['user']) {
   if (isDemoMode()) business = localDb.businesses.find(row => row.owner_user_id === user.id) || null;
   else {
     const { data, error } = await supabaseAdmin.from('businesses')
-      .select('id,name,slug,status,logo_url,description,cover_image_url,welcome_bg_type,welcome_bg_image,welcome_bg_color,phone,whatsapp').eq('owner_user_id', user.id).maybeSingle();
+      .select('id,name,slug,status,logo_url,description,cover_image_url,welcome_bg_type,welcome_bg_image,welcome_bg_color,phone,whatsapp,social_links,order_settings').eq('owner_user_id', user.id).maybeSingle();
     if (error) throw ownerError(503, 'AUTH_SERVICE_UNAVAILABLE');
     business = data;
   }

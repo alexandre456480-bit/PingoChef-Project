@@ -1,0 +1,7 @@
+.tmpl-preview[data-tmpl="sweet-boutique"] .tmpl-mini-identity { position: relative; z-index: 1; margin: -48px 6px 0; padding: 6px; align-items: center; justify-content: center; background: var(--sample-surface); border-radius: 14px; }
+.tmpl-preview[data-tmpl="sweet-boutique"] .tmpl-mini-logo { border-radius: 50%; outline: 2px dotted var(--sample-primary); outline-offset: 2px; }
+.tmpl-preview[data-tmpl="sweet-boutique"] .tmpl-mini-hero { order: -1; height: 136px; margin: -12px -12px 0; border-radius: 0 0 45% 30% / 0 0 14% 8%; }
+.tmpl-preview[data-tmpl="sweet-boutique"] .tmpl-mini-description { border: 1px solid color-mix(in srgb, var(--sample-primary) 23%, var(--sample-surface)); border-radius: 12px; }
+.tmpl-preview[data-tmpl="sweet-boutique"] .tmpl-mini-cats span { height: 14px; border-radius: 999px; border: 1px solid var(--sample-surface); }
+.tmpl-preview[data-tmpl="sweet-boutique"] .tmpl-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tmpl-preview[data-tmpl="sweet-boutique"] .mini-card-sample { height: 68px; border-radius: 12px; border: 3px solid var(--sample-surface); box-shadow: 0 2px 6px color-mix(in srgb, var(--sample-primary) 12%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--sample-primary) 18%, var(--sample-surface)) 58%, var(--sample-surface) 58%); }

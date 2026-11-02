@@ -1,0 +1,116 @@
+/* Papel picado, carved signs and floral borders use the customer's palette. */
+.menu-viewport[data-template="mexican-fiesta"] {
+  --fiesta-edge: color-mix(in srgb, var(--secondary-color) 45%, var(--surface-color));
+  --fiesta-shadow: 0 5px 14px color-mix(in srgb, var(--primary-color) 14%, transparent);
+  --fiesta-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100'%3E%3Cg fill='none' stroke='black' stroke-opacity='.12'%3E%3Cpath d='M-10 15Q90 2 200 14T410 12M-10 35Q100 22 220 34T410 28M-10 58Q90 44 200 55T410 50M-10 83Q140 69 260 81T410 73'/%3E%3Cellipse cx='282' cy='47' rx='24' ry='3'/%3E%3C/g%3E%3C/svg%3E");
+  --fiesta-wood: var(--fiesta-grain), linear-gradient(var(--primary-color), var(--primary-color));
+  --fiesta-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cpath d='M0 0h140v140H0z' opacity='.045' filter='url(%23n)'/%3E%3C/svg%3E");
+  --fiesta-papel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 64'%3E%3Cpath fill='white' fill-rule='evenodd' d='M8 4H112V50Q108 62 104 52Q100 62 96 52Q92 62 88 52Q84 62 80 52Q76 62 72 52Q68 62 64 52Q60 62 56 52Q52 62 48 52Q44 62 40 52Q36 62 32 52Q28 62 24 52Q20 62 16 52Q12 62 8 50ZM60 10L66 20L60 30L54 20ZM60 32L68 42L60 52L52 42ZM32 16L42 24L32 32L22 24ZM88 16L98 24L88 32L78 24ZM17 10H21V16H17ZM99 10H103V16H99ZM16 34H21V45H16ZM99 34H104V45H99ZM43 12H47V44H43ZM73 12H77V44H73ZM27 40L32 35L37 40L32 45ZM83 40L88 35L93 40L88 45Z'/%3E%3Cpath d='M0 2Q60 7 120 2' fill='none' stroke='white'/%3E%3C/svg%3E");
+  --fiesta-sprig: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cpath d='M20 38C9 27 3 12 11 9S23 25 20 38ZM23 38C20 20 27 2 34 7S31 29 23 38ZM24 40C32 27 43 25 43 32S34 41 24 40ZM17 41C4 41 0 33 5 30S15 34 17 41Z' fill='white'/%3E%3C/svg%3E");
+  --fiesta-flower: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='white'%3E%3Cellipse cx='24' cy='12' rx='4' ry='9'/%3E%3Cellipse cx='24' cy='36' rx='4' ry='9'/%3E%3Cellipse cx='12' cy='24' rx='9' ry='4'/%3E%3Cellipse cx='36' cy='24' rx='9' ry='4'/%3E%3Cpath d='M9 8L21 20L15 18ZM39 8L27 20L33 18ZM9 40L21 28L15 30ZM39 40L27 28L33 30Z'/%3E%3Ccircle cx='24' cy='24' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  --fiesta-cactus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 100'%3E%3Cpath d='M17 100V62H12C4 62 1 55 1 49V29a5 5 0 0 1 10 0v21h6V9a7 7 0 0 1 14 0v32h3V25a5 5 0 0 1 10 0v20c0 6-4 10-10 10h-3v45Z' fill='white'/%3E%3C/svg%3E");
+  --fiesta-outline: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 160' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='white' stroke-width='1'%3E%3Cpath d='M19 2H381Q395 2 395 16V29L398 34V126L395 131V144Q395 158 381 158H19Q5 158 5 144V131L2 126V34L5 29V16Q5 2 19 2Z'/%3E%3Cpath d='M21 7H379Q390 7 390 18V31L393 36V124L390 129V142Q390 153 379 153H21Q10 153 10 142V129L7 124V36L10 31V18Q10 7 21 7Z'/%3E%3C/g%3E%3C/svg%3E");
+  --product-media-radius: 45% 45% 18px 18px / 12% 12% 18px 18px;
+  --product-media-ratio: 4 / 3;
+  --product-media-dots-background: var(--surface-color);
+}
+.menu-viewport[data-template="mexican-fiesta"] .showcase-scrollable { gap: 18px; background-image: var(--fiesta-paper), radial-gradient(ellipse at 0 60%, color-mix(in srgb, var(--secondary-color) 10%, transparent), transparent 65%); }
+.menu-viewport[data-template="mexican-fiesta"] .showcase-scrollable:has(> .showcase-hero-banner:first-child) { padding-top: 0; }
+/* The photo is the banner background; the sign grows with customer content. */
+.menu-viewport[data-template="mexican-fiesta"] .showcase-hero-banner { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 320px; aspect-ratio: auto; margin-inline: -12px; padding: 0; border: 0; border-radius: 0; box-shadow: none; isolation: isolate; }
+.menu-viewport[data-template="mexican-fiesta"] .hero-carousel-track { position: relative; grid-area: 1 / 1; inset: auto; width: 100%; height: 100%; min-height: 320px; aspect-ratio: 16 / 9; border-radius: 0; overflow: hidden; }
+.menu-viewport[data-template="mexican-fiesta"] .showcase-hero-banner::before,
+.menu-viewport[data-template="mexican-fiesta"] .product-modal-sheet:not(.video-expanded)::before {
+  content: ''; background: repeating-linear-gradient(90deg, var(--primary-color) 0 92px, var(--accent-color) 92px 184px, var(--secondary-color) 184px 276px);
+  mask: var(--fiesta-papel) left top / 92px 54px repeat-x; pointer-events: none;
+}
+.menu-viewport[data-template="mexican-fiesta"] .showcase-hero-banner::before { position: absolute; inset: 0 0 auto; height: 54px; z-index: 4; }
+.menu-viewport[data-template="mexican-fiesta"] .showcase-hero-banner::after {
+  content: ''; position: absolute; inset: auto 0 0; height: 90px; z-index: 2; pointer-events: none; opacity: .45;
+  background: linear-gradient(90deg, var(--secondary-color), var(--accent-color), var(--primary-color));
+  mask: var(--fiesta-cactus) left bottom / 26px 76px no-repeat, var(--fiesta-cactus) right bottom / 26px 76px no-repeat, var(--fiesta-flower) center bottom / 40px 12px repeat-x;
+}
+.menu-viewport[data-template="mexican-fiesta"] .template-brand-header { grid-area: 1 / 1; align-self: start; align-items: center; isolation: isolate; gap: 8px; margin: 0 12px 72px; padding: 68px 120px 18px 14px; min-height: 150px; box-sizing: border-box; }
+.menu-viewport[data-template="mexican-fiesta"] .template-brand-header::before {
+  content: ''; position: absolute; inset: 54px 106px 4px 0; z-index: -1; pointer-events: none; background: var(--fiesta-wood);
+  border: 3px double var(--fiesta-edge); border-radius: 30% 30% 12px 12px / 16px 16px 12px 12px;
+  box-shadow: inset 0 2px color-mix(in srgb, var(--surface-color) 28%, transparent), inset 0 -3px color-mix(in srgb, var(--text-primary) 18%, transparent), var(--fiesta-shadow);
+}
+.menu-viewport[data-template="mexican-fiesta"] .template-brand-header::after { content: ''; position: absolute; inset: 0 0 auto; height: 66px; pointer-events: none; background: repeating-linear-gradient(0deg, var(--secondary-color) 0 3px, var(--text-secondary) 3px 4px, transparent 4px 6px); mask: linear-gradient(white, white) left 36px top / 6px 100% no-repeat, linear-gradient(white, white) right 132px top / 6px 100% no-repeat; }
+.menu-viewport[data-template="mexican-fiesta"] .template-logo-wrap { padding: 0; background: transparent; box-shadow: none; }
+.menu-viewport[data-template="mexican-fiesta"] .template-brand-copy { position: relative; flex: 1; min-width: 0; padding: 0; }
+.menu-viewport[data-template="mexican-fiesta"] .template-brand-copy h2 { color: var(--on-primary); font-size: clamp(1rem, 4.5cqi, 1.6rem); line-height: 1.2; }
+.menu-viewport[data-template="mexican-fiesta"] .template-brand-copy p { color: var(--on-primary); font-size: .72rem; line-height: 1.4; margin-top: 4px; }
+.menu-viewport[data-template="mexican-fiesta"] .floating-controls-capsule { top: 64px; right: 14px; padding: 4px; gap: 4px; border: 1px solid var(--fiesta-edge); border-radius: 999px; background: var(--surface-color); box-shadow: var(--fiesta-shadow); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.menu-viewport[data-template="mexican-fiesta"] .capsule-divider { display: none; }
+.menu-viewport[data-template="mexican-fiesta"] .capsule-btn { color: var(--text-primary); }
+.menu-viewport[data-template="mexican-fiesta"] .search-drawer { padding-top: 124px; }
+.menu-viewport[data-template="mexican-fiesta"] .menu-main-shell:has(> .search-drawer) .showcase-scrollable { padding-top: 16px; }
+.menu-viewport[data-template="mexican-fiesta"] .no-hero-header { border: 2px double var(--fiesta-edge); background-image: var(--fiesta-paper); }
+.menu-viewport[data-template="mexican-fiesta"] .categories-nav-section { position: relative; z-index: 5; padding: 4px; border: 1px solid var(--fiesta-edge); border-radius: 18px; background: var(--surface-color); box-shadow: var(--fiesta-shadow); }
+/* Overlap only adjacent blocks, preserving the customer's home block order. */
+.menu-viewport[data-template="mexican-fiesta"] .showcase-hero-banner + .categories-nav-section { margin-top: -54px; }
+.menu-viewport[data-template="mexican-fiesta"] .showcase-hero-banner:has(+ .categories-nav-section) .hero-banner-overlay { bottom: 44px; height: auto; }
+.menu-viewport[data-template="mexican-fiesta"] .cat-nav-scroll { justify-content: safe center; gap: 8px; padding: 2px 2px 6px; }
+.menu-viewport[data-template="mexican-fiesta"] .category-nav-pill {
+  position: relative; min-height: 54px; padding: 8px 16px 16px; border: 1px solid var(--fiesta-edge); background-image: var(--fiesta-paper); box-shadow: inset 0 2px color-mix(in srgb, currentColor 8%, transparent), var(--fiesta-shadow);
+  mask: linear-gradient(white, white) top / 100% calc(100% - 5px) no-repeat, radial-gradient(ellipse at top, white 70%, transparent 72%) left bottom / 14px 8px repeat-x;
+}
+.menu-viewport[data-template="mexican-fiesta"] .category-nav-pill::before { content: ''; position: absolute; inset: 4px 4px 8px; border: 1px solid currentColor; border-radius: 8px; opacity: .2; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .category-nav-pill:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; }
+.menu-viewport[data-template="mexican-fiesta"] .cat-pill-label { max-width: 136px; white-space: normal; line-height: 1.2; }
+.menu-viewport[data-template="mexican-fiesta"] .category-nav-pill.active { border-color: var(--primary-color); background-image: var(--fiesta-grain); }
+.menu-viewport[data-template="mexican-fiesta"] .category-nav-pill::after { content: ''; position: absolute; inset: auto 8px 2px; height: 10px; background: currentColor; mask: var(--fiesta-flower) center / 18px 10px repeat-x; opacity: .45; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .intro-description-card { position: relative; padding: 22px 24px 32px; border: 2px double var(--fiesta-edge); border-radius: 14px; background-image: var(--fiesta-paper); box-shadow: var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] .intro-description-card::before { content: ''; position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; background: linear-gradient(110deg, var(--primary-color), var(--accent-color), var(--secondary-color)); mask: var(--fiesta-sprig) center / contain no-repeat; opacity: .4; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .intro-description-card::after { content: ''; position: absolute; inset: auto 16px 7px; height: 14px; background: var(--secondary-color); mask: var(--fiesta-flower) center / 28px 14px repeat-x; opacity: .5; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .catalog-header-row { flex-wrap: wrap; gap: 8px; }
+.menu-viewport[data-template="mexican-fiesta"] .catalog-header-row > div { min-width: 0; flex: 1 1 180px; }
+.menu-viewport[data-template="mexican-fiesta"] :is(.section-heading, .showcase-block .block-title) { position: relative; isolation: isolate; width: fit-content; max-width: 100%; padding: 10px 20px; box-sizing: border-box; margin: 0; line-height: 1.3; overflow-wrap: anywhere; border: 2px double var(--fiesta-edge); border-radius: 10px 6px 12px 8px; background: var(--fiesta-wood); box-shadow: var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] :is(.section-heading, .showcase-block .block-title)::after { content: ''; position: absolute; right: 4px; bottom: 3px; width: 14px; height: 18px; background: var(--secondary-color); mask: var(--fiesta-sprig) center / contain no-repeat; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .catalog-count { display: block; margin: 8px 0 0 8px; }
+.menu-viewport[data-template="mexican-fiesta"] .subcategory-header-collapsible { position: relative; padding: 12px 16px; border: 2px double var(--fiesta-edge); border-radius: 8px 12px 8px 10px; background: var(--fiesta-wood); box-shadow: var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] .subcategory-header-collapsible::after { content: ''; position: absolute; right: 40px; bottom: 4px; width: 22px; height: 25px; background: var(--secondary-color); mask: var(--fiesta-sprig) center / contain no-repeat; opacity: .5; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .subcat-title-wrap { min-width: 0; }
+.menu-viewport[data-template="mexican-fiesta"] .subcategory-title { overflow-wrap: anywhere; }
+.menu-viewport[data-template="mexican-fiesta"] .product-item-card {
+  --item-photo-size: clamp(96px, 29cqi, 120px); --item-content-size: max(var(--item-photo-size), 112px);
+  position: relative; height: calc(var(--item-content-size) + 16px); padding: 7px; gap: 10px; border: 1px solid var(--fiesta-edge); background-image: var(--fiesta-paper); box-shadow: var(--fiesta-shadow);
+}
+.menu-viewport[data-template="mexican-fiesta"] .product-item-card::after { content: ''; position: absolute; inset: 2px; background: var(--accent-color); mask: var(--fiesta-outline) center / 100% 100% no-repeat; opacity: .65; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .product-item-card::before { content: ''; position: absolute; bottom: 6px; left: 48%; width: 22px; height: 22px; background: linear-gradient(110deg, var(--primary-color), var(--accent-color), var(--secondary-color)); mask: var(--fiesta-sprig) center / contain no-repeat; opacity: .4; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .product-card-photo { position: relative; border: 1px solid var(--fiesta-edge); border-radius: 14px; box-sizing: border-box; }
+.menu-viewport[data-template="mexican-fiesta"] .product-card-photo::after { content: ''; position: absolute; top: 4px; left: 4px; width: 18px; height: 20px; background: var(--secondary-color); mask: var(--fiesta-sprig) center / contain no-repeat; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .product-card-body { position: static; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 36px; gap: 3px; }
+.menu-viewport[data-template="mexican-fiesta"] .card-item-title { padding-right: 38px; }
+.menu-viewport[data-template="mexican-fiesta"] .card-item-desc { -webkit-line-clamp: 3; font-size: .75rem; }
+.menu-viewport[data-template="mexican-fiesta"] .item-like-btn { position: absolute; right: 5px; top: 2px; grid-area: auto; min-width: 44px; min-height: 44px; padding: 8px 3px 0; justify-content: center; align-items: flex-start; box-sizing: border-box; }
+.menu-viewport[data-template="mexican-fiesta"] .card-bottom-row { grid-row: 3; }
+.menu-viewport[data-template="mexican-fiesta"] .btn-view-item { width: 52px; height: 36px; min-height: 36px; border: 3px double var(--fiesta-edge); border-radius: 14px; background: var(--primary-color); box-shadow: var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] .btn-view-item:hover { background: var(--primary-color); border-color: var(--fiesta-edge); }
+.menu-viewport[data-template="mexican-fiesta"] .btn-view-item svg { color: var(--on-primary); transform: rotate(45deg); }
+/* Normal gallery frame only; expanded video and every carousel control remain shared. */
+.menu-viewport[data-template="mexican-fiesta"] .product-modal-sheet { border: 3px solid var(--fiesta-edge); border-radius: 22px; background-image: var(--fiesta-paper); box-shadow: var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] .product-modal-sheet:not(.video-expanded)::before { display: block; flex-shrink: 0; height: 38px; mask-size: 80px 38px; }
+.menu-viewport[data-template="mexican-fiesta"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty) { margin: 4px; padding: 6px; border-radius: 45% 45% 22px 22px / 12% 12% 22px 22px; background: linear-gradient(110deg, var(--secondary-color), var(--accent-color)); box-shadow: inset 0 0 0 2px var(--surface-color); }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-close-btn { top: 58px; right: 24px; width: 44px; height: 44px; border: 3px double var(--fiesta-edge); border-radius: 50%; background: var(--surface-color); color: var(--text-primary); box-shadow: var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] .modal-sheet-content { position: relative; padding: 22px 18px 32px; gap: 18px; }
+.menu-viewport[data-template="mexican-fiesta"] .modal-sheet-content::after { content: ''; position: absolute; inset: auto 0 0; height: 20px; background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--secondary-color)); mask: var(--fiesta-flower) center / 32px 20px repeat-x; opacity: .4; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-header { flex-wrap: wrap; gap: 12px; align-items: center; }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-product-title { position: relative; flex: 1 1 145px; min-width: 0; padding-bottom: 8px; line-height: 1.2; overflow-wrap: anywhere; }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-product-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 50px; height: 3px; border-block: 1px solid var(--accent-color); pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-like-action { color: var(--text-primary); padding: 10px 14px; border: 1px solid var(--fiesta-edge); border-radius: 999px; background: color-mix(in srgb, var(--primary-color) 5%, var(--surface-color)); }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-like-action:is(.liked, :hover) { color: var(--text-primary); background: var(--surface-color); border-color: var(--fiesta-edge); }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-desc { line-height: 1.55; }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-price-row { position: relative; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--fiesta-edge); padding-top: 22px; }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-price-row::before { content: ''; position: absolute; top: -9px; left: calc(50% - 9px); width: 18px; height: 18px; background: var(--secondary-color); mask: var(--fiesta-flower) center / contain no-repeat; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
+.menu-viewport[data-template="mexican-fiesta"] .modal-qty-selector { border: 3px double var(--fiesta-edge); border-radius: 18px; }
+.menu-viewport[data-template="mexican-fiesta"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 3px double var(--secondary-color); border-radius: 18px; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--surface-color) 30%, transparent), var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] .showcase-block .block-header { padding-bottom: 8px; }
+.menu-viewport[data-template="mexican-fiesta"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { position: relative; border: 3px double var(--fiesta-edge); border-radius: 18px; background-image: var(--fiesta-paper); box-shadow: var(--fiesta-shadow); }
+.menu-viewport[data-template="mexican-fiesta"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card)::after { content: ''; position: absolute; bottom: 4px; right: 5px; width: 18px; height: 20px; background: var(--secondary-color); mask: var(--fiesta-sprig) center / contain no-repeat; opacity: .5; pointer-events: none; }
+.menu-viewport[data-template="mexican-fiesta"] :is(.promo-img-wrap, .chef-card-photo-wrap, .combo-img-wrap) { border-bottom: 2px solid var(--fiesta-edge); }
+.menu-viewport[data-template="mexican-fiesta"] :is(.btn-chef-view, .btn-combo-view, .btn-best-seller-view) { border: 2px double var(--fiesta-edge); border-radius: 14px; }
+.menu-viewport[data-template="mexican-fiesta"] .public-menu-footer { position: relative; padding-top: 52px; }
+.menu-viewport[data-template="mexican-fiesta"] .public-menu-footer::before { content: ''; position: absolute; inset: 0 0 auto; height: 30px; background: repeating-linear-gradient(90deg, var(--primary-color) 0 40px, var(--accent-color) 40px 80px, var(--secondary-color) 80px 120px); mask: var(--fiesta-flower) center / 40px 30px repeat-x; opacity: .65; pointer-events: none; }

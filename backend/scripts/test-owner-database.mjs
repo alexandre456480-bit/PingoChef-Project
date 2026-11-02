@@ -1,3 +1,5 @@
+import { verifyBusinessSocialLinks } from './verify-business-social-links.mjs';
+import { verifyBusinessOrders } from './verify-business-orders.mjs';
 // Real local PostgreSQL, no .env or remote database URL. Complete migration chain.
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -82,6 +84,19 @@ try {
       else if (file === '20261026000000_add_brand_hero_template.sql') await verifyAdditionalTemplate(pool, sql, 'brand-hero');
       else if (file === '20261026010000_add_signature_cover_template.sql') await verifyAdditionalTemplate(pool, sql, 'signature-cover');
       else if (file === '20261028000000_add_pixel_menu_template.sql') await verifyAdditionalTemplate(pool, sql, 'pixel');
+      else if (file === '20261029010000_add_retro_diner_template.sql') await verifyAdditionalTemplate(pool, sql, 'retro-diner');
+      else if (file === '20261029020000_add_circuit_tech_template.sql') await verifyAdditionalTemplate(pool, sql, 'circuit-tech');
+      else if (file === '20261029030000_add_soft_wave_template.sql') await verifyAdditionalTemplate(pool, sql, 'soft-wave');
+      else if (file === '20261029040000_add_immersive_cover_template.sql') await verifyAdditionalTemplate(pool, sql, 'immersive-cover');
+      else if (file === '20261029050000_add_nordic_tavern_template.sql') await verifyAdditionalTemplate(pool, sql, 'nordic-tavern');
+      else if (file === '20261029060000_add_japanese_izakaya_template.sql') await verifyAdditionalTemplate(pool, sql, 'japanese-izakaya');
+      else if (file === '20261030000000_add_neon_arcade_template.sql') await verifyAdditionalTemplate(pool, sql, 'neon-arcade');
+      else if (file === '20261030010000_add_tropical_bamboo_template.sql') await verifyAdditionalTemplate(pool, sql, 'tropical-bamboo');
+      else if (file === '20261030020000_add_mexican_fiesta_template.sql') await verifyAdditionalTemplate(pool, sql, 'mexican-fiesta');
+      else if (file === '20261031000000_add_simple_menu_templates.sql') {
+        for (const key of ['editorial-menu', 'product-gallery', 'compact-menu']) await verifyAdditionalTemplate(pool, sql, key);
+      }
+      else if (file === '20261031010000_add_sweet_boutique_template.sql') await verifyAdditionalTemplate(pool, sql, 'sweet-boutique');
       else await pool.query(sql);
     }
     catch (error) { throw new Error(`Migration ${file}: ${error.message}`, { cause: error }); }
@@ -99,6 +114,8 @@ try {
   await pool.query(registrationRepair);
   await pool.query(registrationRepair);
   console.log('OK partial registration schema repair and repeated application');
+  await verifyBusinessSocialLinks(pool);
+  await verifyBusinessOrders(pool);
   await verifyOwnerDatabase(pool);
   await verifyOwnerTutorial(pool);
   await verifyMenuAnalytics(pool);

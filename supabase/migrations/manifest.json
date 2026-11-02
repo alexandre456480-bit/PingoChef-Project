@@ -158,5 +158,57 @@
   {
     "file": "20261028000000_add_pixel_menu_template.sql",
     "sha256": "1b3b146f8bddb13e9d2a1690498f9df132a73d78fde5716d0a32335eabc1985d"
+  },
+  {
+    "file": "20261029000000_add_business_social_links.sql",
+    "sha256": "3e077941fc9ec4c2dc0aeca24573c64471d2198e66b416cbf8c6e3471dfa4893"
+  },
+  {
+    "file": "20261029010000_add_retro_diner_template.sql",
+    "sha256": "0c7bda49faf28e848bd0f208aea2e4b210ae6e0bae360b02c7af128be93c9d51"
+  },
+  {
+    "file": "20261029020000_add_circuit_tech_template.sql",
+    "sha256": "945ca8bb11016713433abe2834dde5b7a30b626d19ae1a3c062da370a163c0fd"
+  },
+  {
+    "file": "20261029030000_add_soft_wave_template.sql",
+    "sha256": "5bc23ed710098f1f02f76566aa50a0cf21239638be815a96a5ca677c466e4581"
+  },
+  {
+    "file": "20261029040000_add_immersive_cover_template.sql",
+    "sha256": "8df0c53c74e98450cf5f1dc3d10750982b2b79d9e3dd4daa179c03230c6d3038"
+  },
+  {
+    "file": "20261029050000_add_nordic_tavern_template.sql",
+    "sha256": "60d0354d81ce9b7a26077d806c272671111ceec6916d8974992bc52e5b9ac659"
+  },
+  {
+    "file": "20261029060000_add_japanese_izakaya_template.sql",
+    "sha256": "95d47bb351262bd47b55e830941a291f85ae623d8b1941375118a0a44ad0b8fe"
+  },
+  {
+    "file": "20261030000000_add_neon_arcade_template.sql",
+    "sha256": "b76c25cfb4f9a255c0deb824189ee82e49d79a2f502eb2bf34e6c95daa9134a7"
+  },
+  {
+    "file": "20261030010000_add_tropical_bamboo_template.sql",
+    "sha256": "4c3cefe03cb01048c8b56c9ca0634334a7aa916ffc80538a74dbadaae512e3d0"
+  },
+  {
+    "file": "20261030020000_add_mexican_fiesta_template.sql",
+    "sha256": "f0b6fc77b616ff9c70113457d81dfada02efe7c44ec20598da384d6072f6a7bd"
+  },
+  {
+    "file": "20261031000000_add_simple_menu_templates.sql",
+    "sha256": "5f0c491bfaa28734721503a34f1fcb52da4de3498a4b29a382bd54f46f1b64e7"
+  },
+  {
+    "file": "20261031010000_add_sweet_boutique_template.sql",
+    "sha256": "d8cfe62d5cff1f404b3342244cea2523e16f90d57a255fe0035a44d126783aa1"
+  },
+  {
+    "file": "20261102000000_add_business_order_settings.sql",
+    "sha256": "cf9c48974f26bda82861f57c00667a09c6654e4cc2cff19cfaddfc712e60c5af"
   }
 ]

@@ -104,7 +104,6 @@
 .menu-viewport[data-template] .item-like-btn { grid-column: 2; grid-row: 1 / span 2; align-self: start; min-height: 36px; }
 .menu-viewport[data-template] .card-item-desc { grid-column: 1; grid-row: 2; align-self: start; -webkit-line-clamp: 2; }
 .menu-viewport[data-template] .card-bottom-row { grid-column: 1 / -1; grid-row: 3; }
-.menu-viewport[data-template] .btn-back-home { min-height: 44px; border-radius: var(--template-button-radius); }
 .menu-viewport[data-template] .btn-view-item {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   width: 32px; min-width: 32px; height: 32px; min-height: 32px;

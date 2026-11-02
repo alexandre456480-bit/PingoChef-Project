@@ -1,0 +1,155 @@
+/* Tropical geometry is decorative. Customer tokens retain all branding and content. */
+.menu-viewport[data-template="tropical-bamboo"] {
+  --tropical-rim: color-mix(in srgb, var(--secondary-color) 60%, var(--text-primary));
+  --tropical-edge: color-mix(in srgb, var(--secondary-color) 35%, var(--surface-color));
+  --tropical-shadow: 0 5px 14px color-mix(in srgb, var(--secondary-color) 20%, transparent);
+  --tropical-rope: color-mix(in srgb, var(--secondary-color) 70%, var(--text-primary));
+  --tropical-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100'%3E%3Cg fill='none' stroke='black' stroke-opacity='.08' stroke-width='1'%3E%3Cpath d='M-10 12Q120 2 260 14T410 10M-10 28Q100 18 220 30T410 24M-10 52Q100 39 190 52T410 46M-10 76Q140 64 270 78T410 70M-10 92Q90 95 210 88T410 94'/%3E%3Cellipse cx='290' cy='44' rx='25' ry='3'/%3E%3Cellipse cx='290' cy='44' rx='12' ry='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  --tropical-wood: var(--tropical-grain), linear-gradient(105deg, color-mix(in srgb, var(--secondary-color) 30%, var(--surface-color)), color-mix(in srgb, var(--secondary-color) 16%, var(--surface-color)) 55%, color-mix(in srgb, var(--secondary-color) 35%, var(--surface-color)));
+  --tropical-bamboo: repeating-linear-gradient(90deg, transparent 0 44px, color-mix(in srgb, var(--text-primary) 16%, transparent) 44px 46px, transparent 46px 50px), var(--tropical-wood);
+  --tropical-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 50' preserveAspectRatio='none'%3E%3Cpath d='M0 22C50 2 50 2 100 22S150 42 200 22S250 2 300 22S350 42 400 22M0 32C50 12 50 12 100 32S150 52 200 32S250 12 300 32S350 52 400 32' fill='none' stroke='white' stroke-width='5'/%3E%3C/svg%3E");
+  --tropical-leaf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='white'%3E%3Cpath d='M113 117Q80 46 5 8Q68 25 113 117ZM100 94Q39 88 0 50Q59 67 100 94ZM86 73Q36 68 4 30Q54 51 86 73ZM69 52Q30 45 13 12Q46 32 69 52ZM104 101Q81 41 97 1Q108 53 104 101ZM88 77Q66 27 70 0Q91 43 88 77ZM69 53Q51 18 43 0Q68 19 69 53Z'/%3E%3C/g%3E%3C/svg%3E");
+  --tropical-brush: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'%3E%3Cpath d='M10 8Q160 2 380 8L373 13L397 17L385 22L399 28L386 33L395 40L378 44L387 51Q200 57 12 51L20 46L2 42L13 37L0 31L11 25L3 19L21 14Z' fill='white'/%3E%3C/svg%3E");
+  --product-media-radius: 22px;
+  --product-media-ratio: 4 / 3;
+}
+.menu-viewport[data-template="tropical-bamboo"] .showcase-scrollable {
+  position: relative; gap: 16px;
+  background-image: radial-gradient(ellipse at 0 80%, color-mix(in srgb, var(--secondary-color) 9%, transparent), transparent 65%);
+}
+.menu-viewport[data-template="tropical-bamboo"] .showcase-scrollable:has(> .showcase-hero-banner:first-child) { padding-top: 0; }
+.menu-viewport[data-template="tropical-bamboo"] .showcase-hero-banner::before {
+  content: ''; position: absolute; inset: 0 0 auto; height: 22px; pointer-events: none;
+  background: repeating-linear-gradient(110deg, var(--tropical-edge) 0 3px, var(--tropical-rim) 3px 5px, var(--secondary-color) 5px 8px);
+  clip-path: polygon(0 0, 100% 0, 100% 65%, 97% 100%, 96% 48%, 93% 88%, 91% 60%, 88% 100%, 86% 57%, 83% 90%, 80% 55%, 77% 94%, 75% 52%, 72% 100%, 69% 62%, 66% 90%, 63% 52%, 60% 100%, 57% 65%, 54% 94%, 51% 50%, 48% 90%, 45% 62%, 42% 100%, 39% 57%, 36% 90%, 33% 54%, 30% 100%, 27% 65%, 24% 94%, 21% 60%, 18% 100%, 15% 55%, 12% 90%, 9% 58%, 6% 100%, 3% 62%, 0 90%);
+}
+/* The sign grows with the customer's name and optional description. */
+.menu-viewport[data-template="tropical-bamboo"] .template-brand-header {
+  --tropical-hang: 32px;
+  isolation: isolate; align-items: center; gap: 8px; grid-area: 1 / 1; align-self: start; margin: 0 12px 52px;
+  padding: calc(var(--tropical-hang) + 12px) 120px 16px 14px;
+  min-height: calc(var(--tropical-hang) + var(--template-logo-size) + 28px); box-sizing: border-box;
+}
+.menu-viewport[data-template="tropical-bamboo"] .menu-main-shell:has(> app-social-menu) .template-brand-header { --tropical-hang: 60px; }
+.menu-viewport[data-template="tropical-bamboo"] .template-brand-header::before {
+  content: ''; position: absolute; inset: var(--tropical-hang) 106px 4px 0; z-index: -1; pointer-events: none;
+  border: 2px solid var(--tropical-edge); border-radius: 12px 16px 18px 10px;
+  background: var(--tropical-wood); transform: rotate(-1deg);
+  box-shadow: inset 0 2px color-mix(in srgb, var(--surface-color) 80%, transparent), inset 0 -3px color-mix(in srgb, var(--tropical-rim) 28%, transparent), var(--tropical-shadow);
+}
+.menu-viewport[data-template="tropical-bamboo"] .template-brand-header::after {
+  content: ''; position: absolute; inset: 0 0 auto; height: calc(var(--tropical-hang) + 12px); pointer-events: none;
+  background: repeating-linear-gradient(55deg, var(--tropical-rope) 0 2px, var(--tropical-edge) 2px 4px);
+  mask: linear-gradient(white, white) left 32px top / 6px 100% no-repeat, linear-gradient(white, white) calc(50% - 53px) top / 6px 100% no-repeat, linear-gradient(white, white) right 130px top / 6px 100% no-repeat;
+}
+.menu-viewport[data-template="tropical-bamboo"] .template-logo-wrap { position: relative; padding: 0; background: transparent; box-shadow: none; }
+.menu-viewport[data-template="tropical-bamboo"] .template-logo-wrap::before {
+  content: ''; position: absolute; inset: 10px auto auto -18px; width: 46px; height: 66px; z-index: -1; pointer-events: none;
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); mask: var(--tropical-leaf) center / contain no-repeat; opacity: .4;
+}
+.menu-viewport[data-template="tropical-bamboo"] .template-brand-copy { flex: 1; min-width: 0; padding: 0; }
+.menu-viewport[data-template="tropical-bamboo"] .template-brand-copy h2 { font-size: clamp(1rem, 4.5cqi, 1.6rem); line-height: 1.2; }
+.menu-viewport[data-template="tropical-bamboo"] .template-brand-copy p { font-size: .72rem; line-height: 1.4; margin-top: 4px; }
+.menu-viewport[data-template="tropical-bamboo"] .floating-controls-capsule { top: 24px; right: 14px; gap: 4px; padding: 0; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.menu-viewport[data-template="tropical-bamboo"] .capsule-btn { border: 1px solid var(--tropical-edge); border-radius: 18px; background: var(--surface-color); color: var(--text-primary); box-shadow: var(--tropical-shadow); }
+.menu-viewport[data-template="tropical-bamboo"] .capsule-divider { display: none; }
+.menu-viewport[data-template="tropical-bamboo"] .search-drawer { padding-top: 78px; }
+.menu-viewport[data-template="tropical-bamboo"] .menu-main-shell:has(> .search-drawer) .showcase-scrollable { padding-top: 16px; }
+.menu-viewport[data-template="tropical-bamboo"] .no-hero-header { border: 1px solid var(--tropical-edge); background-image: var(--tropical-wood); }
+.menu-viewport[data-template="tropical-bamboo"] .showcase-hero-banner {
+  display: grid; grid-template-columns: minmax(0, 1fr); aspect-ratio: auto; min-height: 340px; box-sizing: border-box; margin-inline: -12px;
+  padding: 0; border: 0; border-radius: 0; background: var(--surface-color); box-shadow: none; isolation: isolate;
+}
+.menu-viewport[data-template="tropical-bamboo"] .hero-carousel-track { position: relative; grid-area: 1 / 1; inset: auto; width: 100%; height: 100%; min-height: 300px; aspect-ratio: 16 / 9; border-radius: 0; overflow: hidden; }
+.menu-viewport[data-template="tropical-bamboo"] .hero-banner-overlay { inset: 0 12px 20px; height: auto; padding: 0 8px 4px; background: none; }
+.menu-viewport[data-template="tropical-bamboo"] .showcase-hero-banner::before { z-index: 4; }
+.menu-viewport[data-template="tropical-bamboo"] .showcase-hero-banner::after {
+  content: ''; position: absolute; inset: auto 0 0; height: 18px; z-index: 4; pointer-events: none; box-sizing: border-box;
+  border-top: 2px solid var(--tropical-rim); border-bottom: 3px solid var(--tropical-rim);
+  background: repeating-linear-gradient(55deg, var(--tropical-rope) 0 2px, var(--tropical-edge) 2px 4px) 12% center / 7px 100% no-repeat,
+    repeating-linear-gradient(55deg, var(--tropical-rope) 0 2px, var(--tropical-edge) 2px 4px) 50% center / 7px 100% no-repeat,
+    repeating-linear-gradient(55deg, var(--tropical-rope) 0 2px, var(--tropical-edge) 2px 4px) 88% center / 7px 100% no-repeat, var(--tropical-wood);
+  box-shadow: inset 0 2px var(--tropical-edge), 0 -3px 8px color-mix(in srgb, var(--text-primary) 15%, transparent);
+}
+.menu-viewport[data-template="tropical-bamboo"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::before {
+  content: ''; position: absolute; top: -2px; left: -2px; width: 48px; height: 66px; z-index: 2; pointer-events: none;
+  background: linear-gradient(35deg, var(--primary-color), var(--secondary-color)); mask: var(--tropical-leaf) center / contain no-repeat; opacity: .65;
+}
+.menu-viewport[data-template="tropical-bamboo"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty)::after {
+  content: ''; position: absolute; bottom: -2px; right: -2px; width: 48px; height: 66px; z-index: 2; pointer-events: none;
+  background: linear-gradient(35deg, var(--primary-color), var(--secondary-color)); mask: var(--tropical-leaf) center / contain no-repeat; transform: rotate(180deg); opacity: .65;
+}
+.menu-viewport[data-template="tropical-bamboo"] .category-nav-pill {
+  position: relative; min-height: 56px; padding: 12px 18px; border: 2px solid var(--tropical-edge); border-radius: 10px 14px 10px 12px;
+  background-image: var(--tropical-wood); box-shadow: var(--tropical-shadow), inset 0 2px color-mix(in srgb, var(--surface-color) 65%, transparent), inset 0 -3px color-mix(in srgb, var(--tropical-rim) 18%, transparent);
+}
+.menu-viewport[data-template="tropical-bamboo"] .category-nav-pill.active { background-image: var(--tropical-grain); border-color: var(--primary-color); box-shadow: var(--tropical-shadow), inset 0 0 0 1px color-mix(in srgb, var(--surface-color) 35%, transparent), inset 0 -3px color-mix(in srgb, var(--text-primary) 20%, transparent); }
+.menu-viewport[data-template="tropical-bamboo"] .category-nav-pill::before {
+  content: ''; position: absolute; inset: 7px 5px; pointer-events: none;
+  background: repeating-linear-gradient(55deg, var(--tropical-rope) 0 2px, var(--tropical-edge) 2px 4px);
+  mask: linear-gradient(white, white) left center / 3px 100% no-repeat, linear-gradient(white, white) right center / 3px 100% no-repeat; opacity: .65;
+}
+.menu-viewport[data-template="tropical-bamboo"] .category-nav-pill::after {
+  content: ''; position: absolute; inset: 3px 9px; border-block: 1px solid color-mix(in srgb, currentColor 13%, transparent); border-radius: 5px; pointer-events: none;
+}
+.menu-viewport[data-template="tropical-bamboo"] .intro-description-wrapper { padding-top: 14px; }
+.menu-viewport[data-template="tropical-bamboo"] .intro-description-card { position: relative; padding: 20px; border: 1px solid var(--tropical-edge); border-radius: 22px; box-shadow: var(--tropical-shadow); background: linear-gradient(130deg, color-mix(in srgb, var(--secondary-color) 9%, var(--surface-color)), var(--surface-color)); }
+.menu-viewport[data-template="tropical-bamboo"] .intro-description-card::before,
+.menu-viewport[data-template="tropical-bamboo"] .intro-description-card::after {
+  content: ''; position: absolute; top: -14px; width: 8px; height: 24px; border-radius: 8px; border: 1px solid var(--tropical-rim); pointer-events: none;
+  background: repeating-linear-gradient(55deg, var(--tropical-rope) 0 2px, var(--tropical-edge) 2px 4px);
+}
+.menu-viewport[data-template="tropical-bamboo"] .intro-description-card::before { left: 20%; }
+.menu-viewport[data-template="tropical-bamboo"] .intro-description-card::after { right: 20%; }
+.menu-viewport[data-template="tropical-bamboo"] .intro-card-body { position: relative; padding-bottom: 18px; }
+.menu-viewport[data-template="tropical-bamboo"] .intro-card-body::after { content: ''; position: absolute; inset: auto 0 -4px; height: 18px; background: var(--secondary-color); mask: var(--tropical-wave) center / 160px 24px repeat-x; opacity: .25; pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] .catalog-header-row { flex-wrap: wrap; gap: 8px; }
+.menu-viewport[data-template="tropical-bamboo"] .catalog-header-row > div { min-width: 0; flex: 1 1 180px; }
+.menu-viewport[data-template="tropical-bamboo"] :is(.section-heading, .showcase-block .block-title) {
+  position: relative; width: fit-content; max-width: 100%; box-sizing: border-box; padding: 10px 16px; margin: 0;
+  border-radius: 8px 12px 10px 6px; background: var(--tropical-wood); border: 1px solid var(--tropical-edge); box-shadow: var(--tropical-shadow); overflow-wrap: anywhere; line-height: 1.3;
+}
+.menu-viewport[data-template="tropical-bamboo"] .catalog-count { display: block; margin: 8px 0 0 8px; }
+.menu-viewport[data-template="tropical-bamboo"] .subcategory-header-collapsible { position: relative; isolation: isolate; padding: 12px 14px; border: 0; border-radius: 12px; background: transparent; }
+.menu-viewport[data-template="tropical-bamboo"] .subcategory-header-collapsible::before { content: ''; position: absolute; inset: 2px 16% 2px 0; z-index: -1; background: var(--tropical-edge); mask: var(--tropical-brush) center / 100% 100% no-repeat; pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] .subcat-indicator { background: var(--tropical-rope); border-radius: 3px; }
+.menu-viewport[data-template="tropical-bamboo"] .product-item-card {
+  --item-photo-size: clamp(92px, 29cqi, 116px); --item-content-size: max(var(--item-photo-size), 108px);
+  position: relative; height: calc(var(--item-content-size) + 16px); padding: 7px; gap: 10px; border: 1px solid var(--tropical-edge); box-shadow: var(--tropical-shadow);
+}
+.menu-viewport[data-template="tropical-bamboo"] .product-item-card::before { content: ''; position: absolute; bottom: 2px; right: 0; width: 32px; height: 62px; background: var(--primary-color); mask: var(--tropical-leaf) center / contain no-repeat; opacity: .12; pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] .product-item-card::after { content: ''; position: absolute; inset: auto 18px 0; height: 22px; background: var(--secondary-color); mask: var(--tropical-wave) center / 170px 28px repeat-x; opacity: .13; pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] .product-card-photo { border: 2px solid var(--tropical-edge); border-radius: 14px; box-sizing: border-box; }
+.menu-viewport[data-template="tropical-bamboo"] .product-card-body { position: static; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 36px; gap: 3px; }
+.menu-viewport[data-template="tropical-bamboo"] .card-item-title { padding-right: 38px; }
+.menu-viewport[data-template="tropical-bamboo"] .card-item-desc { -webkit-line-clamp: 3; font-size: .75rem; }
+.menu-viewport[data-template="tropical-bamboo"] .item-like-btn { position: absolute; right: 5px; top: 2px; grid-area: auto; min-width: 44px; min-height: 44px; padding: 8px 3px 0; justify-content: center; align-items: flex-start; box-sizing: border-box; }
+.menu-viewport[data-template="tropical-bamboo"] .card-bottom-row { grid-row: 3; }
+.menu-viewport[data-template="tropical-bamboo"] .btn-view-item {
+  position: relative; width: 50px; height: 36px; min-height: 36px; border: 2px solid var(--tropical-rim); border-radius: 8px 10px 8px 12px;
+  background: var(--tropical-wood); box-shadow: inset 0 2px var(--tropical-edge), inset 0 -2px color-mix(in srgb, var(--tropical-rim) 25%, transparent), 0 2px 4px color-mix(in srgb, var(--secondary-color) 18%, transparent);
+}
+.menu-viewport[data-template="tropical-bamboo"] .btn-view-item:hover { background: var(--tropical-wood); border-color: var(--tropical-rim); }
+.menu-viewport[data-template="tropical-bamboo"] .btn-view-item svg { color: var(--text-primary); transform: rotate(45deg); }
+/* Frame the shared gallery host, leaving expanded video geometry and playback untouched. */
+.menu-viewport[data-template="tropical-bamboo"] .product-modal-sheet { border: 3px solid var(--tropical-rim); border-radius: 28px; box-shadow: var(--tropical-shadow); }
+.menu-viewport[data-template="tropical-bamboo"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty) { position: relative; margin: 4px; padding: 6px; border-radius: 26px; background: var(--tropical-bamboo); }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-close-btn { top: 24px; right: 24px; width: 44px; height: 44px; border: 3px double var(--tropical-rim); border-radius: 16px; background: var(--surface-color); color: var(--text-primary); box-shadow: var(--tropical-shadow); }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-close-btn::before { content: ''; position: absolute; top: -17px; left: calc(50% - 3px); width: 6px; height: 14px; border-radius: 6px; background: repeating-linear-gradient(55deg, var(--tropical-rope) 0 2px, var(--tropical-edge) 2px 4px); pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] .modal-sheet-content { position: relative; padding: 22px 18px 30px; gap: 18px; border-radius: 20px; }
+.menu-viewport[data-template="tropical-bamboo"] .modal-sheet-content::before { content: ''; position: absolute; right: 0; bottom: 100px; width: 64px; height: 110px; background: var(--primary-color); mask: var(--tropical-leaf) center / contain no-repeat; opacity: .07; pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] .modal-sheet-content::after { content: ''; position: absolute; inset: auto 0 0; height: 26px; background: var(--secondary-color); mask: var(--tropical-wave) center / 200px 38px repeat-x; opacity: .2; pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-header { flex-wrap: wrap; gap: 12px; align-items: center; }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-product-title { flex: 1 1 145px; min-width: 0; overflow-wrap: anywhere; line-height: 1.2; }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-like-action { color: var(--text-primary); background: color-mix(in srgb, var(--primary-color) 5%, var(--surface-color)); border: 1px solid var(--tropical-edge); border-radius: 999px; padding: 10px 14px; }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-like-action:is(.liked, :hover) { color: var(--text-primary); background: var(--surface-color); border-color: var(--tropical-edge); }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-desc { line-height: 1.55; }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-price-row { flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--tropical-edge); padding-top: 18px; }
+.menu-viewport[data-template="tropical-bamboo"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
+.menu-viewport[data-template="tropical-bamboo"] .modal-qty-selector { border: 1px solid var(--tropical-edge); border-radius: 18px; }
+.menu-viewport[data-template="tropical-bamboo"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 2px solid var(--tropical-edge); border-radius: 18px; box-shadow: var(--tropical-shadow); }
+.menu-viewport[data-template="tropical-bamboo"] .showcase-block .block-header { padding-bottom: 8px; }
+.menu-viewport[data-template="tropical-bamboo"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { position: relative; border: 1px solid var(--tropical-edge); border-radius: 22px; box-shadow: var(--tropical-shadow); }
+.menu-viewport[data-template="tropical-bamboo"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card)::after { content: ''; position: absolute; inset: auto 12px 2px; height: 18px; background: var(--secondary-color); mask: var(--tropical-wave) center / 120px 24px repeat-x; opacity: .12; pointer-events: none; }
+.menu-viewport[data-template="tropical-bamboo"] :is(.promo-img-wrap, .chef-card-photo-wrap, .combo-img-wrap) { border-bottom: 2px solid var(--tropical-edge); }
+.menu-viewport[data-template="tropical-bamboo"] :is(.btn-chef-view, .btn-combo-view, .btn-best-seller-view) { border: 1px solid var(--tropical-edge); border-radius: 14px; }

@@ -1,0 +1,210 @@
+:host {
+  display: block;
+  min-width: 0;
+  margin-bottom: 24px;
+  container-type: inline-size;
+  color: var(--panel-text);
+}
+section {
+  padding: 22px;
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 20px;
+  background: var(--panel-surface-muted);
+}
+h3 {
+  margin: 0;
+  font:
+    600 16px Outfit,
+    sans-serif;
+  color: inherit;
+}
+h3 span {
+  margin-left: 8px;
+  font:
+    400 11px Inter,
+    sans-serif;
+  color: var(--panel-text-muted);
+}
+p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--panel-text-soft);
+  margin: 8px 0 16px;
+}
+.entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+.chooser {
+  position: relative;
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+.choose,
+.add,
+.remove,
+.choices button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.choose {
+  padding: 6px 12px;
+  background: var(--panel-surface-inset);
+  color: var(--panel-text);
+  width: 100%;
+  justify-content: space-between;
+  box-shadow: var(--panel-shadow-soft);
+}
+.choose:hover,
+.choose[aria-expanded='true'] {
+  border-color: var(--panel-accent);
+}
+.choose svg {
+  flex-shrink: 0;
+  color: var(--panel-text-soft);
+}
+.add {
+  padding: 10px 18px;
+  background: var(--panel-action);
+  color: #fff;
+  box-shadow: var(--panel-action-shadow);
+}
+.add:hover:not(:disabled) {
+  background: var(--panel-action-hover);
+}
+input {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 12px;
+  background: var(--panel-surface-inset);
+  color: var(--panel-text);
+  font: inherit;
+  font-size: 13px;
+}
+.custom-label {
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.choices {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  width: 230px;
+  box-sizing: border-box;
+  max-width: calc(100cqi - 32px);
+  max-height: min(360px, 50dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  background: var(--panel-surface-strong);
+  color: var(--panel-text);
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 16px;
+  box-shadow: var(--panel-shadow-raised);
+}
+.choices button {
+  justify-content: flex-start;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 5px 9px;
+}
+.choices button:hover {
+  background: var(--panel-fill-hover);
+}
+.choices small {
+  margin-left: auto;
+  font-size: 10px;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--panel-accent);
+  outline-offset: 3px;
+}
+ul {
+  padding: 0;
+  list-style: none;
+  margin: 16px 0 0;
+}
+li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--panel-border-strong);
+}
+li div {
+  min-width: 0;
+  flex: 1;
+}
+strong {
+  font-size: 13px;
+}
+.address {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--panel-text-muted);
+  font-size: 11px;
+  margin-top: 3px;
+}
+.remove {
+  width: 44px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+}
+.remove:hover {
+  background: var(--panel-fill-hover);
+}
+.error {
+  color: var(--social-error, #b51d3f);
+  margin-bottom: 0;
+}
+.hint {
+  font-size: 11px;
+  color: var(--panel-text-muted);
+  margin: 12px 0 0;
+}
+@container (max-width: 480px) {
+  section {
+    padding: 16px;
+  }
+  .add {
+    padding: 10px 12px;
+  }
+}
+@container (min-width: 560px) {
+  .entry {
+    grid-template-columns: minmax(150px, max-content) minmax(0, 1fr) auto;
+  }
+  .chooser {
+    grid-column: auto;
+  }
+}
+:host-context([data-panel-theme='dark']) {
+  --social-error: #ff9bb1;
+}

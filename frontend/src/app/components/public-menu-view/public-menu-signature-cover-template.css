@@ -47,7 +47,6 @@
 .menu-viewport[data-template="signature-cover"] .catalog-count {
   display: block; margin-top: 6px; font-size: .55rem; letter-spacing: .2em; text-transform: uppercase;
 }
-.menu-viewport[data-template="signature-cover"] .btn-back-home { font-size: .65rem; padding-inline: 0; }
 .menu-viewport[data-template="signature-cover"] .product-item-card {
   --signature-photo-size: clamp(108px, 34cqi, 132px);
   position: relative; height: 148px; padding: 6px; gap: 12px; align-items: stretch;
