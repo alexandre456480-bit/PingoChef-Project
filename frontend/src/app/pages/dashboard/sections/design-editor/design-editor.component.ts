@@ -1013,7 +1013,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
 
     </div>
   `,
-  styleUrls: ['./design-editor-simple-previews.css', './design-editor-sweet-preview.css'],
+  styleUrls: ['./design-editor-simple-previews.css', './design-editor-sweet-preview.css', './design-editor-royal-preview.css', './design-editor-liquid-glass-preview.css', './design-editor-rounded-showcase-preview.css', './design-editor-soft-showcase-preview.css', './design-editor-double-showcase-preview.css'],
   styles: [`
     :host { display: block; }
 

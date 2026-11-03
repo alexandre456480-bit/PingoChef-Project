@@ -139,7 +139,7 @@ it('preserves description whitespace exactly when saving and returning the desig
   expect(response.body.data.custom_config.intro_card.description).toBe(description);
 });
 
-it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel', 'retro-diner', 'circuit-tech', 'soft-wave', 'immersive-cover', 'nordic-tavern', 'japanese-izakaya', 'neon-arcade', 'tropical-bamboo', 'mexican-fiesta', 'editorial-menu', 'product-gallery', 'compact-menu', 'sweet-boutique'])('persists %s independently of customer branding, optional sections and features', async template => {
+it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel', 'retro-diner', 'circuit-tech', 'soft-wave', 'immersive-cover', 'nordic-tavern', 'japanese-izakaya', 'neon-arcade', 'tropical-bamboo', 'mexican-fiesta', 'editorial-menu', 'product-gallery', 'compact-menu', 'sweet-boutique', 'royal-palace', 'liquid-glass', 'rounded-showcase', 'soft-showcase', 'double-showcase'])('persists %s independently of customer branding, optional sections and features', async template => {
   const block = { id: 'hero', type: 'hero', label: 'Capa', enabled: false, position: 3 };
   const response = await request(app()).put('/design').send({ template_key: template, palette,
     font_heading: 'Oswald', font_body: 'Lora', home_blocks: [block],

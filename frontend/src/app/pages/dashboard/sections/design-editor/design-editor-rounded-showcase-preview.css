@@ -1,0 +1,9 @@
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-hero { order: -1; height: 100px; margin-top: 20px; border: 2px solid var(--sample-surface); border-radius: 14px; box-shadow: 0 -25px 0 12px var(--sample-primary); }
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-identity { position: relative; margin: -120px 6px 66px; justify-content: center; }
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-logo { border-radius: 50%; outline: 2px solid var(--sample-surface); background: var(--sample-surface); }
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-line { display: none; }
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-cats span { height: 20px; border: 1px solid var(--sample-surface); border-radius: 9px; }
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-cats span:first-child { outline: 1px solid var(--sample-accent); }
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-description { border-radius: 10px; border-left: 3px solid var(--sample-primary); }
+.tmpl-preview[data-tmpl="rounded-showcase"] .tmpl-mini-grid { grid-template-columns: minmax(0, 1fr); }
+.tmpl-preview[data-tmpl="rounded-showcase"] .mini-card-sample { height: 46px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--sample-primary) 12%, var(--sample-surface)); background: linear-gradient(90deg, color-mix(in srgb, var(--sample-primary) 20%, var(--sample-surface)) 30%, var(--sample-surface) 30%); }

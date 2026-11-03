@@ -210,5 +210,25 @@
   {
     "file": "20261102000000_add_business_order_settings.sql",
     "sha256": "cf9c48974f26bda82861f57c00667a09c6654e4cc2cff19cfaddfc712e60c5af"
+  },
+  {
+    "file": "20261103000000_add_royal_palace_template.sql",
+    "sha256": "e624ea8abcf425d847e48886bf60f12636980bd710a347bc272eedbb9fec0aa1"
+  },
+  {
+    "file": "20261103010000_add_liquid_glass_template.sql",
+    "sha256": "499fb01634d80417fd50f586a5c4615dafb484a92693ce076266a406b02cc2a6"
+  },
+  {
+    "file": "20261103020000_add_rounded_showcase_template.sql",
+    "sha256": "79d5aec88170d2f625caa12c55a5859b0984eedd8eebfaee67f3c3f4388f8a2d"
+  },
+  {
+    "file": "20261103030000_add_soft_showcase_template.sql",
+    "sha256": "a052acbcae3cf15ce52efea6ea0cbc7e2c677be59f82d73708e77e7f6f6f74fa"
+  },
+  {
+    "file": "20261103040000_add_double_showcase_template.sql",
+    "sha256": "ec355610788310a471199c2df8017ab5cf96b9da2a71b5a1d12f2a9596e2f246"
   }
 ]

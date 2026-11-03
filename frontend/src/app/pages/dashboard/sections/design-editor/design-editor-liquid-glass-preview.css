@@ -1,0 +1,8 @@
+.tmpl-preview[data-tmpl="liquid-glass"] { background: radial-gradient(at 0 40%, color-mix(in srgb, var(--sample-secondary) 30%, transparent), transparent 60%), var(--sample-surface); }
+.tmpl-preview[data-tmpl="liquid-glass"] .tmpl-mini-hero { order: -1; height: 126px; margin: -12px -12px 0; border-radius: 0 0 20px 20px; }
+.tmpl-preview[data-tmpl="liquid-glass"] .tmpl-mini-identity { position: relative; flex-direction: column; align-items: center; margin: -100px 18px 12px; padding: 12px; border: 1px solid var(--sample-surface); border-radius: 18px; background: color-mix(in srgb, var(--sample-surface) 80%, transparent); box-shadow: inset 0 1px 2px white, 0 5px 15px color-mix(in srgb, var(--sample-primary) 10%, transparent); }
+.tmpl-preview[data-tmpl="liquid-glass"] .tmpl-mini-logo { border-radius: 50%; border: 1px solid var(--sample-surface); }
+.tmpl-preview[data-tmpl="liquid-glass"] .tmpl-mini-cats span { border-radius: 999px; height: 18px; border: 1px solid var(--sample-surface); box-shadow: inset 0 1px 2px white; }
+.tmpl-preview[data-tmpl="liquid-glass"] :is(.tmpl-mini-description, .mini-card-sample) { border: 1px solid var(--sample-surface); border-radius: 12px; box-shadow: inset 0 1px 2px white, 0 4px 10px color-mix(in srgb, var(--sample-primary) 10%, transparent); }
+.tmpl-preview[data-tmpl="liquid-glass"] .tmpl-mini-grid { grid-template-columns: minmax(0, 1fr); }
+.tmpl-preview[data-tmpl="liquid-glass"] .mini-card-sample { height: 40px; background: linear-gradient(90deg, color-mix(in srgb, var(--sample-primary) 18%, var(--sample-surface)) 28%, color-mix(in srgb, var(--sample-surface) 80%, transparent) 28%); }

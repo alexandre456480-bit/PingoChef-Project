@@ -78,11 +78,11 @@ let menuId = 0;
         height: 44px;
         padding: 0;
         box-sizing: border-box;
-        border: 1px solid color-mix(in srgb, var(--text-primary) 24%, transparent);
-        border-radius: 50%;
-        background: var(--surface-color);
+        border: 1px solid var(--social-edge, color-mix(in srgb, var(--text-primary) 24%, transparent));
+        border-radius: var(--social-trigger-radius, 50%);
+        background: var(--social-surface, var(--surface-color));
         color: inherit;
-        box-shadow: 0 4px 18px #0002;
+        box-shadow: var(--social-trigger-shadow, 0 4px 18px #0002);
         backdrop-filter: blur(16px);
         cursor: pointer;
       }
@@ -98,8 +98,8 @@ let menuId = 0;
         max-width: min(calc(100vw - 28px), calc(100cqi - 28px));
         padding: 10px;
         border-radius: 18px;
-        border: 1px solid color-mix(in srgb, var(--text-primary) 24%, transparent);
-        background: var(--surface-color);
+        border: 1px solid var(--social-edge, color-mix(in srgb, var(--text-primary) 24%, transparent));
+        background: var(--social-surface, var(--surface-color));
         box-shadow: 0 12px 36px #0003;
         backdrop-filter: blur(20px);
       }

@@ -91,7 +91,7 @@ describe('Design settings persistence', () => {
     expect(service.draft().palette).toEqual(palette);
   });
 
-  it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel', 'retro-diner', 'circuit-tech', 'soft-wave', 'immersive-cover', 'nordic-tavern', 'japanese-izakaya', 'neon-arcade', 'tropical-bamboo', 'mexican-fiesta', 'editorial-menu', 'product-gallery', 'compact-menu', 'sweet-boutique'])('round-trips %s without changing customer personalization or features', template => {
+  it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel', 'retro-diner', 'circuit-tech', 'soft-wave', 'immersive-cover', 'nordic-tavern', 'japanese-izakaya', 'neon-arcade', 'tropical-bamboo', 'mexican-fiesta', 'editorial-menu', 'product-gallery', 'compact-menu', 'sweet-boutique', 'royal-palace', 'liquid-glass', 'rounded-showcase', 'soft-showcase', 'double-showcase'])('round-trips %s without changing customer personalization or features', template => {
     const original = service.draft();
     service.setTemplate(template);
     expect(service.draft()).toEqual({ ...original, templateKey: template });

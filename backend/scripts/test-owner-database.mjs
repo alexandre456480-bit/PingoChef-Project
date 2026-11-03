@@ -97,6 +97,11 @@ try {
         for (const key of ['editorial-menu', 'product-gallery', 'compact-menu']) await verifyAdditionalTemplate(pool, sql, key);
       }
       else if (file === '20261031010000_add_sweet_boutique_template.sql') await verifyAdditionalTemplate(pool, sql, 'sweet-boutique');
+      else if (file === '20261103000000_add_royal_palace_template.sql') await verifyAdditionalTemplate(pool, sql, 'royal-palace');
+      else if (file === '20261103010000_add_liquid_glass_template.sql') await verifyAdditionalTemplate(pool, sql, 'liquid-glass');
+      else if (file === '20261103020000_add_rounded_showcase_template.sql') await verifyAdditionalTemplate(pool, sql, 'rounded-showcase');
+      else if (file === '20261103030000_add_soft_showcase_template.sql') await verifyAdditionalTemplate(pool, sql, 'soft-showcase');
+      else if (file === '20261103040000_add_double_showcase_template.sql') await verifyAdditionalTemplate(pool, sql, 'double-showcase');
       else await pool.query(sql);
     }
     catch (error) { throw new Error(`Migration ${file}: ${error.message}`, { cause: error }); }

@@ -1,0 +1,93 @@
+/* Optical surfaces only: content, colors, fonts and icons remain customer-owned. */
+.menu-viewport[data-template="liquid-glass"] {
+  --glass-edge: color-mix(in srgb, var(--surface-color) 80%, transparent);
+  --glass-fill: linear-gradient(125deg, color-mix(in srgb, var(--surface-color) 72%, transparent), color-mix(in srgb, var(--surface-color) 54%, transparent) 48%, color-mix(in srgb, var(--surface-color) 66%, transparent));
+  --glass-shadow: 0 6px 20px color-mix(in srgb, var(--text-primary) 9%, transparent), inset 0 1px 1px rgb(255 255 255 / 72%), inset 0 -1px 1px color-mix(in srgb, var(--surface-color) 45%, transparent);
+  --glass-reflection: radial-gradient(ellipse at 0 0, rgb(255 255 255 / 60%), transparent 42%), radial-gradient(ellipse at 100% 100%, color-mix(in srgb, var(--accent-color) 15%, transparent), transparent 55%);
+  --social-surface: var(--glass-reflection), var(--glass-fill);
+  --social-edge: var(--glass-edge);
+  --social-trigger-radius: 18px;
+  --social-trigger-shadow: var(--glass-shadow);
+  --product-media-radius: 24px;
+  --product-media-ratio: 4 / 3;
+  --product-media-dots-background: var(--surface-color);
+}
+.menu-viewport[data-template="liquid-glass"] .showcase-scrollable {
+  gap: 18px;
+  background: radial-gradient(ellipse at 0 12%, color-mix(in srgb, var(--secondary-color) 20%, transparent), transparent 50%), radial-gradient(ellipse at 100% 70%, color-mix(in srgb, var(--primary-color) 16%, transparent), transparent 55%), var(--bg-color);
+}
+.menu-viewport[data-template="liquid-glass"] .showcase-scrollable:has(> .showcase-hero-banner:first-child) { padding-top: 0; }
+/* The photograph fills the masthead; identity and dots occupy separate rows. */
+.menu-viewport[data-template="liquid-glass"] .showcase-hero-banner { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 16px auto minmax(64px, 1fr); min-height: 340px; aspect-ratio: auto; margin-inline: -12px; border-radius: 0 0 40px 40px; overflow: hidden; isolation: isolate; }
+.menu-viewport[data-template="liquid-glass"] .hero-carousel-track { position: relative; grid-area: 1 / 1 / -1 / -1; inset: auto; height: 100%; width: 100%; min-height: 340px; aspect-ratio: 4 / 3; }
+.menu-viewport[data-template="liquid-glass"] .showcase-hero-banner::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, color-mix(in srgb, var(--bg-color) 10%, transparent), color-mix(in srgb, var(--bg-color) 20%, transparent) 55%, var(--bg-color)); pointer-events: none; }
+.menu-viewport[data-template="liquid-glass"] .template-brand-header { grid-area: 2 / 1; justify-self: center; align-self: start; display: flex; flex-direction: column; align-items: center; gap: 10px; width: calc(100% - 64px); max-width: 320px; margin: 0 32px; padding: 0; text-align: center; z-index: 3; }
+.menu-viewport[data-template="liquid-glass"] .template-logo-wrap { position: relative; width: 64px; height: 64px; padding: 6px; background: var(--glass-reflection), color-mix(in srgb, var(--surface-color) 65%, transparent); border: 1px solid var(--glass-edge); border-radius: 50%; box-shadow: var(--glass-shadow), 0 0 20px color-mix(in srgb, var(--accent-color) 22%, transparent); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); }
+.menu-viewport[data-template="liquid-glass"] .template-brand-copy { width: 100%; box-sizing: border-box; padding: 10px 16px; border-radius: 24px; background: var(--glass-reflection), var(--glass-fill); border: 1px solid var(--glass-edge); box-shadow: var(--glass-shadow); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); }
+.menu-viewport[data-template="liquid-glass"] .template-brand-copy h2 { font-size: clamp(1.15rem, 5cqi, 1.75rem); line-height: 1.15; }
+.menu-viewport[data-template="liquid-glass"] .template-brand-copy p { font-size: .78rem; line-height: 1.5; margin-top: 8px; }
+.menu-viewport[data-template="liquid-glass"] .hero-banner-overlay { position: relative; grid-area: 3 / 1; z-index: 3; inset: auto; align-items: center; padding: 0 8px; height: auto; background: none; pointer-events: none; }
+.menu-viewport[data-template="liquid-glass"] .carousel-dots-wrap { pointer-events: auto; }
+/* Individual rounded glass controls, with no continuous animation or filters on images. */
+.menu-viewport[data-template="liquid-glass"] .floating-controls-capsule { top: 16px; right: 12px; padding: 0; gap: 8px; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.menu-viewport[data-template="liquid-glass"] .capsule-divider { display: none; }
+.menu-viewport[data-template="liquid-glass"] .capsule-btn { min-width: 44px; min-height: 44px; color: var(--text-primary); background: var(--glass-reflection), var(--glass-fill); border: 1px solid var(--glass-edge); border-radius: 18px; box-shadow: var(--glass-shadow); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); }
+.menu-viewport[data-template="liquid-glass"] .capsule-btn:is(:hover, .active) { background: var(--surface-color); color: var(--text-primary); }
+/* All content surfaces share the same lens, including the customer's home modules. */
+.menu-viewport[data-template="liquid-glass"] :is(.intro-description-card, .no-hero-header, .categories-nav-section, .subcategory-header-collapsible, .product-item-card, .promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) {
+  position: relative; border: 1px solid var(--glass-edge); border-radius: 26px;
+  background: var(--glass-reflection), var(--glass-fill); box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%);
+}
+.menu-viewport[data-template="liquid-glass"] .intro-description-card { padding: 22px 24px; }
+.menu-viewport[data-template="liquid-glass"] .intro-description-card::after { content: ''; position: absolute; inset: 8px; border: 1px solid color-mix(in srgb, var(--surface-color) 42%, transparent); border-radius: 19px; pointer-events: none; }
+.menu-viewport[data-template="liquid-glass"] .categories-nav-section { padding: 8px; border-radius: 36px; z-index: 5; }
+.menu-viewport[data-template="liquid-glass"] .showcase-hero-banner + .categories-nav-section { margin-top: -22px; }
+.menu-viewport[data-template="liquid-glass"] .cat-nav-scroll { gap: 10px; padding: 4px 2px; }
+.menu-viewport[data-template="liquid-glass"] .category-nav-pill { position: relative; min-height: 62px; padding: 12px 18px; border: 1px solid var(--glass-edge); border-radius: 26px; background: var(--glass-reflection), var(--glass-fill); box-shadow: inset 0 1px 1px rgb(255 255 255 / 65%), 0 4px 10px color-mix(in srgb, var(--text-primary) 7%, transparent); }
+.menu-viewport[data-template="liquid-glass"] .category-nav-pill.active { color: var(--on-primary); border-color: color-mix(in srgb, var(--surface-color) 75%, var(--primary-color)); background: linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 88%, var(--surface-color)), var(--primary-color) 55%, color-mix(in srgb, var(--primary-color) 92%, var(--accent-color))); box-shadow: inset 0 2px 2px rgb(255 255 255 / 65%), inset 0 -1px 2px rgb(255 255 255 / 35%), 0 4px 18px color-mix(in srgb, var(--primary-color) 28%, transparent); }
+.menu-viewport[data-template="liquid-glass"] .cat-pill-label { max-width: 156px; line-height: 1.2; white-space: normal; }
+.menu-viewport[data-template="liquid-glass"] :is(.section-heading, .block-title) { position: relative; padding: 12px 16px 12px 24px; border: 1px solid var(--glass-edge); border-radius: 22px; background: var(--glass-reflection), var(--glass-fill); box-shadow: var(--glass-shadow); line-height: 1.3; }
+.menu-viewport[data-template="liquid-glass"] :is(.section-heading, .block-title)::before { content: ''; position: absolute; top: 14px; bottom: 14px; left: 10px; width: 3px; border-radius: 999px; background: var(--accent-color); pointer-events: none; }
+.menu-viewport[data-template="liquid-glass"] .subcategory-header-collapsible { min-height: 52px; padding: 14px 16px; border-radius: 22px; margin-bottom: 12px; }
+.menu-viewport[data-template="liquid-glass"] .subcat-indicator { width: 4px; height: 22px; border-radius: 999px; box-shadow: 0 0 10px color-mix(in srgb, var(--accent-color) 30%, transparent); }
+.menu-viewport[data-template="liquid-glass"] .items-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.menu-viewport[data-template="liquid-glass"] .product-item-card { --item-photo-size: clamp(96px, 28cqi, 136px); --item-content-size: max(var(--item-photo-size), 126px); height: auto; min-height: calc(var(--item-content-size) + 22px); padding: 10px; gap: 12px; }
+.menu-viewport[data-template="liquid-glass"] .product-card-photo { border-radius: 20px; border: 1px solid var(--glass-edge); box-sizing: border-box; box-shadow: 0 4px 12px color-mix(in srgb, var(--text-primary) 13%, transparent); }
+.menu-viewport[data-template="liquid-glass"] .product-card-body { position: relative; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 42px; gap: 6px; }
+.menu-viewport[data-template="liquid-glass"] .card-item-title { grid-area: 1 / 1; padding-right: 43px; font-size: clamp(.78rem, 3.2cqi, 1.08rem); line-height: 1.2; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.menu-viewport[data-template="liquid-glass"] .item-like-btn { position: absolute; right: 0; top: -2px; min-height: 28px; padding: 4px 7px; gap: 3px; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass-fill); box-shadow: 0 2px 6px color-mix(in srgb, var(--text-primary) 8%, transparent); }
+.menu-viewport[data-template="liquid-glass"] .card-item-desc { grid-area: 2 / 1; font-size: clamp(.7rem, 2.9cqi, .9rem); line-height: 1.4; -webkit-line-clamp: 3; }
+.menu-viewport[data-template="liquid-glass"] .card-bottom-row { grid-area: 3 / 1; align-items: center; gap: 5px; }
+.menu-viewport[data-template="liquid-glass"] .pricing-box { min-width: 0; }
+.menu-viewport[data-template="liquid-glass"] .btn-view-item { color: var(--on-primary); width: auto; min-width: 54px; min-height: 38px; height: 38px; padding: 6px 10px; gap: 3px; border: 1px solid var(--glass-edge); border-radius: 999px; background: linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 88%, var(--surface-color)), var(--primary-color)); box-shadow: var(--glass-shadow); }
+.menu-viewport[data-template="liquid-glass"] .btn-view-item::before { content: 'Ver'; font: 600 .8rem var(--body-font); }
+.menu-viewport[data-template="liquid-glass"] .btn-view-item svg { transform: rotate(45deg); width: 14px; height: 14px; }
+.menu-viewport[data-template="liquid-glass"] :is(.btn-chef-view, .btn-combo-view, .btn-best-seller-view) { border: 1px solid var(--glass-edge); border-radius: 999px; box-shadow: var(--glass-shadow); }
+.menu-viewport[data-template="liquid-glass"] .product-modal-sheet { background: var(--glass-reflection), color-mix(in srgb, var(--surface-color) 95%, transparent); border: 1px solid var(--glass-edge); border-radius: 30px; box-shadow: var(--glass-shadow), 0 24px 64px color-mix(in srgb, var(--text-primary) 25%, transparent); }
+.menu-viewport[data-template="liquid-glass"] .product-modal-sheet:not(.video-expanded) > app-product-media-gallery:not(:empty) { display: block; padding: 8px; }
+.menu-viewport[data-template="liquid-glass"] .sheet-close-btn { width: 44px; height: 44px; top: 18px; right: 18px; border: 1px solid var(--glass-edge); border-radius: 18px; background: var(--glass-fill); color: var(--text-primary); box-shadow: var(--glass-shadow); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+.menu-viewport[data-template="liquid-glass"] .modal-sheet-content { padding: 24px 20px 28px; gap: 22px; background: var(--glass-reflection), radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--secondary-color) 13%, transparent), transparent 65%); }
+.menu-viewport[data-template="liquid-glass"] .sheet-header { flex-wrap: wrap; align-items: center; gap: 12px; }
+.menu-viewport[data-template="liquid-glass"] .sheet-product-title { flex: 1 1 160px; min-width: 0; line-height: 1.2; overflow-wrap: anywhere; }
+.menu-viewport[data-template="liquid-glass"] .sheet-like-action { padding: 10px 14px; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass-fill); color: var(--text-primary); box-shadow: var(--glass-shadow); }
+.menu-viewport[data-template="liquid-glass"] .sheet-like-action:is(.liked, :hover) { background: var(--glass-fill); color: var(--text-primary); border-color: var(--glass-edge); }
+.menu-viewport[data-template="liquid-glass"] .sheet-desc { line-height: 1.65; }
+.menu-viewport[data-template="liquid-glass"] .sheet-price-row { flex-wrap: wrap; gap: 12px; padding-top: 18px; border-top: 1px solid color-mix(in srgb, var(--text-primary) 9%, transparent); }
+.menu-viewport[data-template="liquid-glass"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
+.menu-viewport[data-template="liquid-glass"] .modal-qty-selector { border: 1px solid var(--glass-edge); border-radius: 24px; box-shadow: var(--glass-shadow); }
+.menu-viewport[data-template="liquid-glass"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { position: relative; flex: 1 1 180px; min-width: 0; min-height: 54px; border: 1px solid var(--glass-edge); border-radius: 24px; box-shadow: var(--glass-shadow); }
+.menu-viewport[data-template="liquid-glass"] .btn-sheet-add-cart::after { content: ''; position: absolute; inset: 2px; border: 1px solid rgb(255 255 255 / 30%); border-radius: 21px; pointer-events: none; }
+.menu-viewport[data-template="liquid-glass"] .cart-drawer-sheet { background: var(--glass-reflection), var(--surface-color); border: 1px solid var(--glass-edge); border-radius: 30px 30px 0 0; box-shadow: var(--glass-shadow); backdrop-filter: blur(28px) saturate(150%); -webkit-backdrop-filter: blur(28px) saturate(150%); }
+.menu-viewport[data-template="liquid-glass"] :is(button, [role="button"]):focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@container (max-width: 359px) {
+  .menu-viewport[data-template="liquid-glass"] .product-item-card { gap: 8px; padding: 8px; --item-content-size: 142px; }
+  .menu-viewport[data-template="liquid-glass"] .btn-view-item { padding-inline: 7px; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .menu-viewport[data-template="liquid-glass"] { --glass-fill: linear-gradient(var(--surface-color), var(--surface-color)); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .menu-viewport[data-template="liquid-glass"] { --glass-fill: linear-gradient(var(--surface-color), var(--surface-color)); }
+  .menu-viewport[data-template="liquid-glass"] .template-logo-wrap { background: var(--surface-color); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
