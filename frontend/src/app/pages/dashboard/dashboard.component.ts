@@ -4,8 +4,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MenuService } from '../../services/menu.service';
 import { DesignService } from '../../services/design.service';
-import { imageSaveError } from '../../services/image-payload.service';
-import { finalize, forkJoin, switchMap } from 'rxjs';
+import { publishMenu, publicationErrorMessage } from '../../services/menu-publication';
+import { finalize } from 'rxjs';
 import { ProductPlaybackService } from '../../services/product-playback.service';
 import { PingoLoaderComponent } from '../../components/pingo-loader/pingo-loader.component';
 
@@ -658,22 +658,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.isPublishing) return;
     this.isPublishing = true;
 
-    forkJoin({
-      design: this.designService.saveDesign(),
-      media: this.productPlaybackService.publishReadyMedia()
+    publishMenu({
+      design: () => this.designService.saveDesign(),
+      media: () => this.productPlaybackService.publishReadyMedia(),
+      publication: () => this.authService.publishBusinessMenu(),
+      refresh: () => this.menuService.loadItems()
     }).pipe(
-      switchMap(() => this.authService.publishBusinessMenu()),
-      switchMap(() => this.menuService.loadItems()),
       finalize(() => {
         this.isPublishing = false;
         this.cdr.markForCheck();
       })
     ).subscribe({
-      next: () => {
-        this.showToast('Cardápio publicado com sucesso na versão online!');
+      next: result => {
+        this.showToast(result.refreshed
+          ? 'Cardápio publicado com sucesso na versão online!'
+          : 'Cardápio publicado. Não foi possível atualizar os produtos no painel; atualize a página.');
       },
       error: error => {
-        this.showToast(imageSaveError(error, 'Não foi possível concluir a publicação. Tente novamente.'));
+        this.showToast(publicationErrorMessage(error));
       }
     });
   }
