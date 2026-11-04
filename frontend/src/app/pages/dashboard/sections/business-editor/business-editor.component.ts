@@ -2,10 +2,11 @@ import { OrderSettingsEditorComponent } from '../../../../components/order-setti
 import { defaultOrderSettings, safeOrderSettings, orderSettingsError, OrderSettings } from '../../../../models/order-settings';
 import { SocialLinksEditorComponent } from '../../../../components/social-links-editor/social-links-editor.component';
 import { SocialLink, safeSocialLinks } from '../../../../models/social-links';
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../services/auth.service';
+import { ImagePayloadService, imageSaveError } from '../../../../services/image-payload.service';
 import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
 
 @Component({
@@ -890,7 +891,7 @@ export class BusinessEditorComponent implements OnInit {
     { name: 'Preto Absoluto', color: '#000000' }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private imagePayload: ImagePayloadService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     const biz = this.authService.currentBusiness();
@@ -940,13 +941,10 @@ export class BusinessEditorComponent implements OnInit {
       this.onToast.emit('Arquivo muito grande. Limite de 8MB.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.logoPreview = reader.result as string;
-      // Atualiza o preview reativo imediato
-      this.syncLiveDraft();
-    };
-    reader.readAsDataURL(file);
+    this.imagePayload.readFile(file).subscribe({
+      next: image => { this.logoPreview = image; this.syncLiveDraft(); this.cdr.markForCheck(); },
+      error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível carregar a logo.'))
+    });
   }
 
   removeLogo(): void {
@@ -970,12 +968,10 @@ export class BusinessEditorComponent implements OnInit {
       this.onToast.emit('Imagem muito grande. Limite de 8MB.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.form.welcome_bg_image = reader.result as string;
-      this.syncLiveDraft();
-    };
-    reader.readAsDataURL(file);
+    this.imagePayload.readFile(file).subscribe({
+      next: image => { this.form.welcome_bg_image = image; this.syncLiveDraft(); this.cdr.markForCheck(); },
+      error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível carregar a imagem de fundo.'))
+    });
   }
 
   resetDefaultBgImage(): void {
@@ -1051,18 +1047,10 @@ export class BusinessEditorComponent implements OnInit {
       welcome_bg_color: this.form.welcome_bg_color
     };
 
-    // Verificar tamanho estimado do payload para evitar erro de body too large
-    const estimatedSize = new Blob([JSON.stringify(payload)]).size;
-    const maxPayloadMB = 14; // limite do express.json é 15mb, deixamos margem
-    if (estimatedSize > maxPayloadMB * 1024 * 1024) {
-      this.isSaving = false;
-      this.onToast.emit('A imagem selecionada é muito grande. Tente uma imagem menor (máx. 8MB).');
-      return;
-    }
-
     this.authService.updateBusiness(payload).subscribe({
       next: (res: any) => {
         this.isSaving = false;
+        this.cdr.markForCheck();
         if (res.success) {
           this.onToast.emit('Dados da empresa sincronizados e salvos com sucesso!');
         } else {
@@ -1071,6 +1059,7 @@ export class BusinessEditorComponent implements OnInit {
       },
       error: (err: any) => {
         this.isSaving = false;
+        this.cdr.markForCheck();
         console.error('[BusinessEditor] Erro ao salvar:', err);
 
         // Erros de validação do Zod vêm com details
@@ -1080,7 +1069,7 @@ export class BusinessEditorComponent implements OnInit {
           return;
         }
 
-        const msg = err.error?.error?.message || 'Erro ao conectar ao servidor. Tente novamente.';
+        const msg = imageSaveError(err, err.error?.error?.message || 'Erro ao conectar ao servidor. Tente novamente.');
         this.onToast.emit(msg);
       }
     });

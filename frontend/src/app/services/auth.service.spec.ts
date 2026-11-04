@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { AuthService } from './auth.service';
 import { OwnerSessionState } from './owner-session-state.service';
 import { ownerSessionInterceptor } from './owner-session.interceptor';
+import { ImagePayloadService, payloadBytes, MAX_SAVE_BYTES } from './image-payload.service';
 
 describe('Owner cookie session', () => {
   let auth: AuthService; let http: HttpTestingController; let state: OwnerSessionState;
@@ -13,6 +14,17 @@ describe('Owner cookie session', () => {
     auth=TestBed.inject(AuthService);http=TestBed.inject(HttpTestingController);state=TestBed.inject(OwnerSessionState);
   });
   afterEach(()=>{http.verify();localStorage.clear();});
+  it('optimizes legacy company images before saving a color change', async () => {
+    const image = 'data:image/png;base64,' + 'A'.repeat(3_000_000);
+    const optimized = 'data:image/webp;base64,AAAA';
+    vi.spyOn(TestBed.inject(ImagePayloadService), 'optimizeImage').mockResolvedValue(optimized);
+    auth.updateBusiness({ name: 'Restaurante', slug: 'restaurante', logo_url: image, welcome_bg_image: image, welcome_bg_color: '#FFFFFF' }).subscribe();
+    const write = await vi.waitFor(() => http.expectOne('/api/v1/business'));
+    expect(payloadBytes(write.request.body)).toBeLessThan(MAX_SAVE_BYTES);
+    expect(write.request.body).toMatchObject({ logo_url: optimized, welcome_bg_image: optimized, welcome_bg_color: '#FFFFFF' });
+    write.flush({ success: true, data: write.request.body });
+    expect(auth.currentBusiness().welcome_bg_color).toBe('#FFFFFF');
+  });
   it('login stores only memory state and uses credentials cookie',()=>{
     auth.login({email:'owner@example.test',password:'test-password'}).subscribe();
     const login=http.expectOne('/api/v1/auth/login');expect(login.request.withCredentials).toBe(true);

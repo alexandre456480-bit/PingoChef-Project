@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, switchMap, tap } from 'rxjs';
+import { ImagePayloadService } from './image-payload.service';
 import { API_BASE_URL } from '../constants/api';
 import { AVAILABLE_TEMPLATES, DEFAULT_TEMPLATE_KEY, resolveMenuTemplate } from '../constants/menu-templates';
 import { HomeIconChoice, HomeIconSection, homeIconChoice } from '../constants/home-icons';
@@ -390,7 +391,7 @@ export class DesignService {
     this.previewCategory.set(catId);
   }
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private imagePayload: ImagePayloadService) { }
 
   private getAuthHeaders(): { headers: HttpHeaders } {
     return { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
@@ -742,19 +743,25 @@ export class DesignService {
       home_blocks: d.homeBlocks,
       custom_config: customConfig
     };
-    return this.http.put(`${this.apiUrl}/design`, body, this.getAuthHeaders()).pipe(
-      tap((res: any) => {
-        if (res.success) {
-          this.savedDesign.set({
-            ...d,
-            homeBlocks: d.homeBlocks.map(b => ({ ...b })),
-            heroBanners: [...d.heroBanners],
-            heroScope: d.heroScope || 'all',
-            categoryHeroConfigs: { ...(d.categoryHeroConfigs || {}) },
-            introCard: d.introCard ? { ...d.introCard } : { ...DEFAULT_INTRO_CARD }
-          });
-        }
-      })
+    return this.imagePayload.prepare(body).pipe(
+      switchMap(prepared => this.http.put(`${this.apiUrl}/design`, prepared, this.getAuthHeaders()).pipe(
+        tap((res: any) => {
+          if (res.success) {
+            this.savedDesign.set({
+              ...d,
+              homeBlocks: d.homeBlocks.map(b => ({ ...b })),
+              heroBanners: [...prepared.custom_config.hero_banners],
+              customConfig: prepared === body ? d.customConfig : prepared.custom_config,
+              heroScope: d.heroScope || 'all',
+              categoryHeroConfigs: { ...prepared.custom_config.category_hero_configs },
+              introCard: d.introCard ? { ...d.introCard } : { ...DEFAULT_INTRO_CARD }
+            });
+            if (prepared !== body && this.draft() === d) {
+              this.draft.set({ ...this.savedDesign()!, homeBlocks: d.homeBlocks });
+            }
+          }
+        })
+      ))
     );
   }
 }

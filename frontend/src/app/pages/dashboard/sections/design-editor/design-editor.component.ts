@@ -18,6 +18,7 @@ import {
 import { MenuService } from '../../../../services/menu.service';
 import { HomeIconsEditorComponent } from './home-icons-editor.component';
 import { menuFontFamily } from '../../../../services/menu-fonts.service';
+import { ImagePayloadService, imageSaveError } from '../../../../services/image-payload.service';
 
 type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
 
@@ -2797,7 +2798,8 @@ export class DesignEditorComponent {
 
   constructor(
     public designService: DesignService,
-    public menuService: MenuService
+    public menuService: MenuService,
+    private imagePayload: ImagePayloadService
   ) { }
 
   selectTemplate(key: string): void {
@@ -2985,7 +2987,7 @@ export class DesignEditorComponent {
   saveDraft(): void {
     this.designService.saveDesign().subscribe({
       next: () => this.onToast.emit('Configurações de design salvas com sucesso!'),
-      error: () => this.onToast.emit('Não foi possível salvar o design. Tente novamente.')
+      error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível salvar o design. Tente novamente.'))
     });
   }
 
@@ -3065,17 +3067,16 @@ export class DesignEditorComponent {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string;
-      if (this.selectedHeroCategory === 'home') {
-        this.designService.addHeroBanner(url);
-      } else {
-        this.designService.addCategoryHeroBanner(this.selectedHeroCategory, url);
-      }
-      this.onToast.emit(`Banner carregado e adicionado a ${this.activeHeroCategoryName}!`);
-    };
-    reader.readAsDataURL(file);
+    const category = this.selectedHeroCategory;
+    const categoryName = this.activeHeroCategoryName;
+    this.imagePayload.readFile(file).subscribe({
+      next: url => {
+        if (category === 'home') this.designService.addHeroBanner(url);
+        else this.designService.addCategoryHeroBanner(category, url);
+        this.onToast.emit(`Banner carregado e adicionado a ${categoryName}!`);
+      },
+      error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível carregar o banner.'))
+    });
   }
 
   removeBanner(index: number): void {

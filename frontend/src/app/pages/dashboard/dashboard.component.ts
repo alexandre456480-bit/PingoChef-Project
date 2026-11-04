@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MenuService } from '../../services/menu.service';
 import { DesignService } from '../../services/design.service';
+import { imageSaveError } from '../../services/image-payload.service';
 import { finalize, forkJoin, switchMap } from 'rxjs';
 import { ProductPlaybackService } from '../../services/product-playback.service';
 import { PingoLoaderComponent } from '../../components/pingo-loader/pingo-loader.component';
@@ -671,8 +672,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: () => {
         this.showToast('Cardápio publicado com sucesso na versão online!');
       },
-      error: () => {
-        this.showToast('Não foi possível concluir a publicação. Tente novamente.');
+      error: error => {
+        this.showToast(imageSaveError(error, 'Não foi possível concluir a publicação. Tente novamente.'));
       }
     });
   }

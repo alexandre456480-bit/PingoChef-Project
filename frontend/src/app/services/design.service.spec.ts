@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AVAILABLE_PALETTES, contrastTextColor, DesignService, resolveMenuTemplate } from './design.service';
+import { ImagePayloadService } from './image-payload.service';
 
 describe('Design settings persistence', () => {
   let service: DesignService;
@@ -12,6 +13,37 @@ describe('Design settings persistence', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+
+  it('keeps a save with several inline banners below the published request limit', async () => {
+    const image = 'data:image/png;base64,' + 'A'.repeat(1_000_000);
+    const optimized = 'data:image/webp;base64,UklGRg==';
+    const optimize = vi.spyOn(TestBed.inject(ImagePayloadService), 'optimizeImage').mockResolvedValue(optimized);
+    service.loadDesign().subscribe();
+    http.expectOne('/api/v1/design').flush({ success: true, data: {
+      custom_config: { hero_banners: Array(5).fill(image) }
+    } });
+    service.saveDesign().subscribe();
+    const write = await vi.waitFor(() => http.expectOne('/api/v1/design'));
+    const bytes = new Blob([JSON.stringify(write.request.body)]).size;
+    write.flush({ success: true });
+    expect(bytes).toBeLessThanOrEqual(3_500_000);
+    expect(write.request.body.custom_config.hero_banners).toEqual(Array(5).fill(optimized));
+    expect(optimize).toHaveBeenCalledTimes(1);
+    expect(service.draft().heroBanners).toEqual(Array(5).fill(optimized));
+    expect(service.hasUnsavedChanges()).toBe(false);
+  });
+
+  it('keeps an unsaved draft intact when a large image cannot be processed', async () => {
+    const image = 'data:image/png;base64,' + 'A'.repeat(900_000);
+    vi.spyOn(TestBed.inject(ImagePayloadService), 'optimizeImage').mockRejectedValue(new Error('invalid image'));
+    service.addHeroBanner(image);
+    const draft = service.draft();
+    const error = await new Promise<unknown>(resolve => service.saveDesign().subscribe({ error: resolve }));
+    expect(error).toBeInstanceOf(Error);
+    http.expectNone('/api/v1/design');
+    expect(service.draft()).toBe(draft);
+    expect(service.hasUnsavedChanges()).toBe(true);
+  });
 
   it('round-trips the optional pixel font pair without changing palette, icons or template', () => {
     service.loadDesign().subscribe();

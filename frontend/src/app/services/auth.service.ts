@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, defer, finalize, shareReplay, tap, throwError } from 'rxjs';
+import { Observable, catchError, defer, finalize, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { API_BASE_URL } from '../constants/api';
+import { ImagePayloadService } from './image-payload.service';
 import { OwnerSessionState } from './owner-session-state.service';
 
 export interface RegisterRequest {
@@ -20,7 +21,7 @@ export class AuthService {
   readonly account;
   private restoreRequest?: Observable<any>;
 
-  constructor(private readonly http: HttpClient, private readonly state: OwnerSessionState) {
+  constructor(private readonly http: HttpClient, private readonly state: OwnerSessionState, private readonly imagePayload: ImagePayloadService) {
     this.currentUser = state.currentUser; this.currentBusiness = state.currentBusiness; this.account = state.account;
   }
   register(data: RegisterRequest): Observable<any> {
@@ -61,7 +62,7 @@ export class AuthService {
   }
   publishBusinessMenu(): Observable<any> { return this.http.post(`${this.businessApiUrl}/publish`, {}); }
   updateBusiness(data: any): Observable<any> {
-    return this.http.put(this.businessApiUrl, data).pipe(tap((res: any) => this.currentBusiness.set(res.data)));
+    return this.imagePayload.prepare(data).pipe(switchMap(prepared => this.http.put(this.businessApiUrl, prepared)), tap((res: any) => this.currentBusiness.set(res.data)));
   }
   logout(all = false): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/${all ? 'logout-all' : 'logout'}`, {}).pipe(tap(() => {
