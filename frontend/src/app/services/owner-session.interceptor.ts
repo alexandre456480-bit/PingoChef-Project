@@ -19,7 +19,7 @@ export const ownerSessionInterceptor: HttpInterceptorFn = (request, next) => {
   let headers = request.headers;
   if (csrf && !['GET', 'HEAD', 'OPTIONS'].includes(request.method)) headers = headers.set('X-CSRF-Token', csrf);
   return next(request.clone({ withCredentials: true, headers })).pipe(tap(event=>{
-    if(event instanceof HttpResponse && !['GET','HEAD','OPTIONS'].includes(request.method) && /^(items|categories|business|design)(\/|$)/.test(path))state.usageVersion.update(v=>v+1);
+    if(event instanceof HttpResponse && !['GET','HEAD','OPTIONS'].includes(request.method) && (/^(items|categories|business|design)(\/|$)/.test(path) || /^menu-transfer\/[\w-]+\/apply$/.test(path)))state.usageVersion.update(v=>v+1);
   }),catchError(error => {
     if (error instanceof HttpErrorResponse && error.status === 401) {
       state.clear();

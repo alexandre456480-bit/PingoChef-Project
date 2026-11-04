@@ -17,7 +17,7 @@ const introCardSchema = z.object({
   description: z.string().max(1200).default('')
 }).optional();
 
-const designSchema = z.object({
+export const designSchema = z.object({
   template_key: z.enum(ACCEPTED_TEMPLATE_KEYS).default(DEFAULT_TEMPLATE_KEY).transform(normalizeTemplateKey),
   palette: z.object({
     key: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/),

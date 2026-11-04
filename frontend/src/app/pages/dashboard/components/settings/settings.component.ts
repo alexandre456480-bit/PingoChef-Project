@@ -14,11 +14,12 @@ import { AuthService } from '../../../../services/auth.service';
 import { CommercialService } from '../../../../services/commercial.service';
 import { PlanUsageComponent } from '../../../../components/plan-usage/plan-usage.component';
 import { DialogFocusDirective } from '../../../../components/dialog-focus.directive';
+import { MenuTransferComponent } from './menu-transfer.component';
 @Component({
   selector: 'app-owner-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.Default,
-  imports: [FormsModule, PlanUsageComponent, DialogFocusDirective],
+  imports: [FormsModule, PlanUsageComponent, DialogFocusDirective, MenuTransferComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })

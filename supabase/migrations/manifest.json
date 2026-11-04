@@ -230,5 +230,9 @@
   {
     "file": "20261103040000_add_double_showcase_template.sql",
     "sha256": "ec355610788310a471199c2df8017ab5cf96b9da2a71b5a1d12f2a9596e2f246"
+  },
+  {
+    "file": "20261104000000_menu_import_export.sql",
+    "sha256": "dd82617644f8b4205f0b62b0d2eaa496354b170aa133a406ce30e7a8b3dd4cae"
   }
 ]

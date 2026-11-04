@@ -6,7 +6,7 @@ import { localDb, isDemoMode } from '../config/localDb';
 import { entitlements, mapEntitlementDatabaseError } from '../services/entitlement.service';
 import { reorderMenu } from '../services/menu-order.service';
 
-const categorySchema = z.object({
+export const categorySchema = z.object({
   name: z.string().trim().min(2, 'Nome da categoria deve ter no mínimo 2 caracteres').max(100, 'Nome muito longo'),
   description: z.string().trim().max(500).optional().nullable(),
   icon: z.string().optional().nullable(),

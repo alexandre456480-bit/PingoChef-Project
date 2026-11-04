@@ -1,5 +1,6 @@
 import { verifyBusinessSocialLinks } from './verify-business-social-links.mjs';
 import { verifyBusinessOrders } from './verify-business-orders.mjs';
+import { verifyMenuTransfer } from './verify-menu-transfer.mjs';
 // Real local PostgreSQL, no .env or remote database URL. Complete migration chain.
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -121,6 +122,7 @@ try {
   console.log('OK partial registration schema repair and repeated application');
   await verifyBusinessSocialLinks(pool);
   await verifyBusinessOrders(pool);
+  await verifyMenuTransfer(pool);
   await verifyOwnerDatabase(pool);
   await verifyOwnerTutorial(pool);
   await verifyMenuAnalytics(pool);

@@ -11,6 +11,7 @@ import subcategoryRoutes from './routes/subcategory.routes';
 import designRoutes from './routes/design.routes';
 import publicRoutes from './routes/public.routes';
 import businessRoutes from './routes/business.routes';
+import menuTransferRoutes from './routes/menu-transfer.routes';
 import productVideoRoutes from './routes/product-video.routes';
 import muxWebhookRoutes from './routes/mux-webhook.routes';
 import videoInternalRoutes from './routes/video-internal.routes';
@@ -130,6 +131,7 @@ app.use('/api/v1/qr', (req, _res, next) => {
   next();
 }, express.json({ limit: '256kb' }));
 app.use('/api/v1/items/:itemId/media/video/upload-intent', express.json({ limit: '2kb' }));
+app.use('/api/v1/menu-transfer', express.json({ limit: '3mb' }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
@@ -157,6 +159,7 @@ app.use('/api/v1/internal/videos', videoInternalRoutes);
 app.use('/api/v1/internal/operations', internalOperationsRoutes);
 app.use('/api/v1/design', designRoutes);
 app.use('/api/v1/business', businessRoutes);
+app.use('/api/v1/menu-transfer', menuTransferRoutes);
 app.use('/api/v1/public', publicRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/qr', qrRoutes);

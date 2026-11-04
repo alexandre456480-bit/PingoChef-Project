@@ -27,7 +27,7 @@ const safeImageString = z.string().trim().refine(val => {
   return false;
 }, { message: 'Formato de imagem inválido ou tipo não suportado (SVGs não são permitidos por segurança).' }).optional().nullable();
 
-const itemSchema = z.object({
+export const itemSchema = z.object({
   categoryId: z.string().min(1, 'Categoria obrigatória'),
   subcategoryId: z.string().optional().nullable(),
   name: z.string().trim().min(2, 'Nome do produto deve ter no mínimo 2 caracteres').max(100),

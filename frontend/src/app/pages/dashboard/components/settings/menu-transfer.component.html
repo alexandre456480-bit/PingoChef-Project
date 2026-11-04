@@ -1,0 +1,37 @@
+<section class="transfer-card" aria-labelledby="menu-transfer-title">
+  <div class="transfer-heading">
+    <span class="transfer-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h10M4 17h7M17 13v8m-3-3 3 3 3-3M5 3h14a2 2 0 0 1 2 2v6M3 19V5a2 2 0 0 1 2-2"/></svg></span>
+    <div><h3 id="menu-transfer-title">Importar e exportar cardápio</h3><p>Salve uma cópia ou reutilize suas personalizações.</p></div>
+  </div>
+  <p class="transfer-description">Inclui template, cores, fontes, ícones, imagens, textos, dados públicos da empresa e catálogo. O arquivo usa os dados já salvos no painel.</p>
+  <div class="transfer-actions">
+    <button type="button" (click)="exportMenu()" [disabled]="busy || imported" data-testid="export-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></svg>Exportar cardápio</button>
+    <button type="button" class="accent" (click)="file.click()" [disabled]="busy || imported" data-testid="import-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 15V3m-4 4 4-4 4 4M4 16v4h16v-4"/></svg>Importar arquivo</button>
+    <input #file type="file" accept=".json,application/json" hidden (change)="selectFile($event)" data-testid="menu-file" />
+  </div>
+  <p class="transfer-footnote">JSON PingoChef · Até 32 MB. Imagens incorporadas são incluídas; imagens externas mantêm seus links. Vídeos exigem novo envio e não são transferidos. Senha, plano, link público, curtidas e estatísticas não são importados.</p>
+  @if (busy) {
+    <div class="transfer-progress" role="status" aria-live="polite"><span>{{ status }}… {{ progress }}%</span><progress max="100" [value]="progress" aria-label="Progresso da transferência"></progress></div>
+  }
+  @if (error) { <p class="transfer-error" role="alert">{{ error }}</p> }
+  @if (notice) { <p class="transfer-notice" role="status">{{ notice }}</p> }
+  @if (imported) { <button type="button" class="accent" (click)="reload()">Recarregar painel</button> }
+  @if (preview) {
+    <div class="import-preview">
+      <h4>Revise antes de importar</h4>
+      <p class="source-name">{{ preview.name }}</p>
+      <dl><div><dt>Produtos</dt><dd>{{ preview.items }}</dd></div><div><dt>Categorias</dt><dd>{{ preview.categories }}</dd></div><div><dt>Subcategorias</dt><dd>{{ preview.subcategories }}</dd></div></dl>
+      <p>Template: <strong>{{ templateName(preview.template) }}</strong></p>
+      @if (preview.excludedVideos) { <p class="transfer-warning">O arquivo de origem tem {{ preview.excludedVideos }} vídeo(s) que precisam ser enviados novamente.</p> }
+      <fieldset [disabled]="busy">
+        <legend>O que deseja importar?</legend>
+        <label><input type="radio" name="import-mode" [value]="false" [(ngModel)]="catalog" />Somente personalização e dados públicos da empresa</label>
+        <label><input type="radio" name="import-mode" [value]="true" [(ngModel)]="catalog" [disabled]="!preview.canReplaceCatalog" />Cardápio completo, substituindo categorias e produtos atuais</label>
+      </fieldset>
+      @if (!preview.canReplaceCatalog) { <p class="transfer-warning">{{ preview.blockedReason }}</p> }
+      <p class="transfer-footnote">Antes de aplicar, uma cópia do cardápio atual será baixada. A personalização mantém os produtos e os banners específicos das categorias atuais. Em um cardápio já publicado, as mudanças aparecem online após importar.</p>
+      <label class="import-confirmation"><input type="checkbox" [(ngModel)]="confirmed" [disabled]="busy" />Revisei o conteúdo e confirmo a substituição dos dados selecionados.</label>
+      <div class="transfer-actions"><button type="button" (click)="cancel()" [disabled]="busy">Cancelar</button><button type="button" class="accent" (click)="importMenu()" [disabled]="busy || !confirmed" data-testid="confirm-import">Confirmar importação</button></div>
+    </div>
+  }
+</section>
