@@ -1,4 +1,7 @@
 export const DEFAULT_TEMPLATE_KEY = 'default';
+export const THEMATIC_TEMPLATE_KEYS = ['pixel', 'retro-diner', 'circuit-tech', 'soft-wave', 'nordic-tavern',
+  'japanese-izakaya', 'neon-arcade', 'tropical-bamboo', 'mexican-fiesta', 'sweet-boutique', 'royal-palace'] as const;
+export const isThematicTemplate = (key: unknown): boolean => (THEMATIC_TEMPLATE_KEYS as readonly unknown[]).includes(key);
 
 // Accept cached clients during rollout, but never persist removed templates again.
 export const ACCEPTED_TEMPLATE_KEYS = [DEFAULT_TEMPLATE_KEY, 'centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pixel', 'retro-diner', 'circuit-tech', 'soft-wave', 'immersive-cover', 'nordic-tavern', 'japanese-izakaya', 'neon-arcade', 'tropical-bamboo', 'mexican-fiesta', 'editorial-menu', 'product-gallery', 'compact-menu', 'sweet-boutique', 'royal-palace', 'liquid-glass', 'rounded-showcase', 'soft-showcase', 'double-showcase', 'minimal', 'modern', 'premium', 'dark',

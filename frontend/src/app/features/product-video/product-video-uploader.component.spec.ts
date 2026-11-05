@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Observable, of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { ProductVideoUploaderComponent } from './product-video-uploader.component';
@@ -37,9 +38,25 @@ describe('ProductVideoUploaderComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProductVideoUploaderComponent],
-      providers: [{ provide: VideoUploadService, useClass: VideoUploadServiceStub }]
+      providers: [provideRouter([]), { provide: VideoUploadService, useClass: VideoUploadServiceStub }]
     }).compileComponents();
     fixture = TestBed.createComponent(ProductVideoUploaderComponent);
+  });
+
+  it('blocks new video selection on Free while keeping existing media visible and removable', async () => {
+    fixture.componentInstance.itemId = 'item-1';
+    fixture.componentInstance.canUpload = false;
+    fixture.componentInstance.videoMedia = [readyMedia('kept')];
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.video-dropzone')).toBeNull();
+    expect((element.querySelector('.replace-button') as HTMLButtonElement).disabled).toBe(true);
+    expect((element.querySelector('.delete-button') as HTMLButtonElement).disabled).toBe(false);
+    expect(element.textContent).toContain('Vídeos a partir do Basic');
+    const service = TestBed.inject(VideoUploadService);
+    const upload = vi.spyOn(service, 'createUploadIntent');
+    await fixture.componentInstance.selectFile(new File(['video'], 'test.mp4', { type: 'video/mp4' }));
+    expect(upload).not.toHaveBeenCalled();
   });
 
   it('uses a keyboard-accessible native button and mounts no video player', () => {

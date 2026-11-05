@@ -2,6 +2,18 @@ import { validateMenuArchive, remapMenuArchive } from '../services/menu-transfer
 
 import { archiveFixture } from './fixtures/menu-archive';
 describe('Portable menu contract', () => {
+  it('remaps complementary products and rejects invalid recommendation links', () => {
+    const doc = archiveFixture();
+    doc.items.push({ ...doc.items[0], id: '44444444-4444-4444-8444-444444444444', name: 'Complemento' });
+    doc.productRecommendations = [{ triggerProductId: doc.items[0].id, recommendedProductIds: [doc.items[1].id] }];
+    const mapped = remapMenuArchive(validateMenuArchive(doc));
+    expect(mapped.productRecommendations).toEqual([{ triggerProductId: mapped.items[0].id, recommendedProductIds: [mapped.items[1].id] }]);
+    for (const ids of [[doc.items[0].id], [doc.items[1].id, doc.items[1].id], ['55555555-5555-4555-8555-555555555555']]) {
+      doc.productRecommendations[0].recommendedProductIds = ids;
+      expect(() => validateMenuArchive(doc)).toThrow();
+    }
+    expect(validateMenuArchive(archiveFixture()).productRecommendations).toEqual([]);
+  });
   it('accepts AVIF and discards unused banners left behind after deleting a category', () => {
     const doc = archiveFixture();
     doc.items[0].imageUrl = 'data:image/avif;base64,aGVsbG8=';

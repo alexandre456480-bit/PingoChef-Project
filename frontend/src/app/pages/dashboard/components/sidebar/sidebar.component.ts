@@ -17,7 +17,7 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       <div class="sidebar-top">
         <!-- Brand -->
         <div class="sidebar-brand">
-          <img src="/logo_principal_tema_light.webp" alt="PingoChef — Cardápio Digital" class="brand-logo" />
+          <img src="/pingo-chef-logo-principal.webp" alt="PingoChef — Cardápio Digital" class="brand-logo" />
         </div>
 
         <!-- Navigation -->

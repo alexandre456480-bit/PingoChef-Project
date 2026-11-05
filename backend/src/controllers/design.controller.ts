@@ -50,6 +50,7 @@ export const designSchema = z.object({
     })
   ).default([]),
   custom_config: z.object({
+    cart_recommendations_enabled: z.boolean().optional(),
     home_icons: z.object({
       home: homeIconSchema,
       promotion: homeIconSchema,

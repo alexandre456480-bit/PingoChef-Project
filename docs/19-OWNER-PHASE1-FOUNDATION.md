@@ -1,5 +1,7 @@
 # Fase 1 do proprietário: autenticação, cadastro e planos
 
+> Registro da fase original. Para os limites, valores e permissões atuais, consulte [Planos e publicação](plan-permissions.md).
+
 > Atualização: os requisitos de confirmação de e-mail deste relatório foram
 > substituídos pelo [cadastro sem confirmação](23-OWNER-REGISTRATION-WITHOUT-EMAIL-VERIFICATION.md).
 > Consulte o novo relatório para o fluxo atual e a configuração de recuperação de senha.

@@ -16,6 +16,7 @@ jest.mock("../repositories/product-media.repository", () => ({
 }));
 
 it("uses the tenant category FK while retaining owner RLS and server business scope", async () => {
+  (supabaseAdmin.rpc as jest.Mock).mockResolvedValue({ data: [], error: null });
   const gallery = jest.fn().mockResolvedValue([]);
   (SupabaseProductMediaRepository as jest.Mock).mockImplementation(() => ({
     listGalleryMedia: gallery,
@@ -61,6 +62,7 @@ it("uses the tenant category FK while retaining owner RLS and server business sc
   expect(res.status).toHaveBeenCalledWith(200);
   expect(res.json).toHaveBeenCalledWith({
     success: true,
+    productRecommendations: [],
     data: [
       expect.objectContaining({
         id: "item",

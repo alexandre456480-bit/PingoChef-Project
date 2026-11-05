@@ -7,7 +7,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
   styleUrl: './commercial.css',
   template: ` <div class="commercial-page">
     <nav class="commercial-nav">
-      <a routerLink="/plans"><img src="/pingo_chef_logo_principal.webp" alt="PingoChef" /></a
+      <a routerLink="/plans"><img src="/pingo-chef-logo-principal.webp" alt="PingoChef" /></a
       ><a routerLink="/plans">Voltar aos planos</a>
     </nav>
     <main class="center-card">

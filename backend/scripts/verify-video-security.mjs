@@ -12,6 +12,7 @@ export async function verifyVideoSecurity(pool, localConfig) {
   await q('INSERT INTO admin_identities(user_id) VALUES($1)', [admin]);
   await q("INSERT INTO businesses(id,owner_user_id,name,slug,status) VALUES($1,$2,'Video A',$3,'ACTIVE'),($4,$5,'Video B',$6,'ACTIVE')",
     [business,user,`video-${business}`,businessB,other,`video-${businessB}`]);
+  await q("SELECT admin_assign_business_plan($1,$2,'BASIC','video security fixture')",[admin,business]);
   await q('UPDATE business_account_state SET is_published=true WHERE business_id=ANY($1::uuid[])',[[business,businessB]]);
   const category = (await q("INSERT INTO categories(business_id,name) VALUES($1,'Video') RETURNING id", [business])).rows[0].id;
   const items = [];
@@ -87,8 +88,8 @@ export async function verifyVideoSecurity(pool, localConfig) {
     declaredFileSizeBytes:1024,declaredMimeType:'video/mp4',aspectRatio:'16:9',replacesMediaId:null,dailyLimit:1000,pendingLimit:100,rateLimit:1000,rateWindowSeconds:900});
   const reserve = input => scalar('SELECT reserve_video_upload_secure($1) value',[input]);
   const reservations = await Promise.allSettled(Array.from({length:100},(_,i)=>reserve(reservation(i))));
-  assert.equal(reservations.filter(r=>r.status==='fulfilled'&&r.value.mediaId).length,1);
-  assert.equal(await scalar("SELECT count(*)::int value FROM product_media WHERE business_id=$1 AND status='waiting'",[business]),1);
+  assert.equal(reservations.filter(r=>r.status==='fulfilled'&&r.value.mediaId).length,5);
+  assert.equal(await scalar("SELECT count(*)::int value FROM product_media WHERE business_id=$1 AND status='waiting'",[business]),5);
   await q('DELETE FROM product_media WHERE business_id=$1',[business]);
   await q('DELETE FROM video_upload_attempts WHERE business_id=$1',[business]);
   const idem = {...reservation(0),idempotencyHash:'e'.repeat(64)};

@@ -7,6 +7,7 @@ import io
 import json
 from pathlib import Path
 import re
+import sys
 import tarfile
 import urllib.parse
 import urllib.request
@@ -82,6 +83,52 @@ Saudável & Veg|Green salad:Salada verde
 Serviço & Entrega|Shopping bags:Sacolas de compras,Motor scooter:Motoneta,Package:Caixa de entrega
 '''
 
+# Additive selection: keep all previous IDs and artwork. The upstream revisions
+# remain pinned in sources.json, including their original license notices.
+CURATED += '''
+Lanches|Lucide|hamburger:Hambúrguer em contorno,sandwich:Sanduíche em contorno,popcorn:Pipoca
+Bebidas|Lucide|coffee:Xícara de café,cup-soda:Refrigerante com canudo,glass-water:Copo de água,milk:Caixa de leite,beer:Caneca de cerveja,bottle-wine:Garrafa de vinho
+Sobremesas|Lucide|cake:Bolo de festa,cupcake:Cupcake em contorno,cookie:Biscoito artesanal,candy:Bala em contorno,candy-cane:Bengala doce,ice-cream-bowl:Sorvete na taça,ice-cream-cone:Sorvete na casquinha
+Padaria & Café|Lucide|croissant:Croissant em contorno
+Pratos & Carnes|Lucide|egg:Ovo,egg-fried:Ovo na frigideira,fish-symbol:Peixe simplificado
+Saudável & Veg|Lucide|salad:Salada em contorno,wheat-off:Sem glúten,milk-off:Sem lactose
+Pizzas & Massas|Lucide|pizza:Fatia de pizza
+Utensílios & Cozinha|Lucide|blender:Liquidificador
+Lanches|Tabler|burger:Hambúrguer em linhas
+Bebidas|Tabler|milkshake:Milk-shake,glass-champagne:Taça de espumante,glass-gin:Taça de gin,glass-full:Copo cheio,glass:Copo em linhas,milk:Leite,cup:Copo para viagem
+Sobremesas|Tabler|cake:Bolo em linhas,cake-roll:Rocambole,chocolate:Barra de chocolate,ice-cream-2:Picolé,cookie-man:Biscoito de gengibre
+Pratos & Carnes|Tabler|sausage:Linguiça,eggs:Ovos,egg-cracked:Ovo quebrado,fish-bone:Espinha de peixe
+Frutas & Legumes|Tabler|avocado:Abacate em linhas,apple:Maçã em linhas,banana:Banana em linhas,carrot:Cenoura em linhas,cherry:Cerejas em linhas,grape:Cacho de uvas,lemon:Limão,lemon-2:Fatia de limão,mushroom:Cogumelo,pepper:Pimenta em linhas
+Saudável & Veg|Tabler|salad:Salada em linhas,wheat:Trigo em linhas,meat-off:Sem carne,milk-off:Sem leite,bread-off:Sem pão
+Utensílios & Cozinha|Tabler|chef-hat:Chapéu de cozinheiro,blender:Liquidificador em linhas,fridge:Geladeira em linhas,whisk:Batedor de claras,grill-fork:Garfo de churrasco,grill-spatula:Espátula de churrasco,salt:Saleiro,bowl:Tigela
+Lanches|Phosphor|hamburger:Hambúrguer clássico em linhas,popcorn:Pipoca em linhas
+Bebidas|Phosphor|beer-bottle:Garrafa de cerveja,beer-stein:Caneca de chopp,pint-glass:Copo de chopp,coffee:Café em linhas
+Sobremesas|Phosphor|cake:Bolo artesanal,cookie:Cookie em linhas,ice-cream:Sorvete em linhas
+Padaria & Café|Phosphor|bread:Pão artesanal,coffee-bean:Grão de café
+Pratos & Carnes|Phosphor|bowl-food:Prato de comida,bowl-steam:Tigela fumegante,fish-simple:Peixe em linhas,shrimp:Camarão em linhas,egg:Ovo em linhas,egg-crack:Ovo rachado
+Pizzas & Massas|Phosphor|pizza:Pizza em linhas
+Frutas & Legumes|Phosphor|avocado:Abacate artesanal,carrot:Cenoura artesanal,orange:Laranja,pepper:Pimenta artesanal
+Utensílios & Cozinha|Phosphor|cheese:Queijo,chef-hat:Chapéu de chef em linhas
+Serviço & Entrega|Lucide|shopping-cart:Carrinho de compras,notebook-pen:Anotar pedido,clipboard-list:Lista de pedidos,calendar-days:Agendamento,scan-line:Leitura de código,hand-coins:Pagamento,credit-card:Cartão,bell-ring:Pedido pronto
+Serviço & Entrega|Tabler|moped:Entrega de moto,paper-bag:Sacola de papel,receipt:Recibo,truck-delivery:Delivery
+Festas & Celebrações|Phosphor|confetti:Confetes em linhas,champagne:Brinde com espumante,balloon:Balão em linhas,gift:Presente em linhas
+'''
+
+FLUENT += '''
+Lanches|Hamburger:Hambúrguer 3D,Burrito:Burrito,Popcorn:Pipoca,Stuffed flatbread:Pão recheado,Falafel:Falafel
+Pratos & Carnes|Cut of meat:Corte de carne,Meat on bone:Carne com osso,Poultry leg:Coxa de frango,Bacon:Bacon,Egg:Ovo frito,Cooking:Frigideira,Shallow pan of food:Paella,Pot of food:Ensopado,Canned food:Comida enlatada
+Frutos do Mar|Crab:Caranguejo,Lobster:Lagosta,Shrimp:Camarão,Fried shrimp:Camarão empanado,Squid:Lula,Oyster:Ostra
+Pizzas & Massas|Pizza:Pizza 3D,Spaghetti:Espaguete
+Japonês & Oriental|Dumpling:Guioza,Cooked rice:Arroz cozido,Curry rice:Arroz com curry,Rice ball:Bolinho de arroz,Rice cracker:Biscoito de arroz,Fish cake with swirl:Kamaboko,Chopsticks:Hashis
+Sobremesas|Birthday cake:Bolo de aniversário,Pie:Torta,Candy:Bala,Lollipop:Pirulito,Ice cream:Sorvete na taça,Shaved ice:Raspadinha,Custard:Pudim,Honey pot:Pote de mel,Moon cake:Bolo da lua,Dango:Dango
+Padaria & Café|Bread:Pão de forma,Flatbread:Pão sírio,Pretzel:Pretzel,Bagel:Bagel,Waffle:Waffle,Butter:Manteiga
+Bebidas|Beer mug:Caneca de cerveja,Cocktail glass:Coquetel,Bottle with popping cork:Espumante,Glass of milk:Copo de leite,Cup with straw:Copo com canudo,Beverage box:Caixa de suco,Mate:Chimarrão,Teacup without handle:Chá verde,Sake:Saquê,Ice:Gelo
+Frutas & Legumes|Banana:Banana,Grapes:Uvas,Red apple:Maçã vermelha,Green apple:Maçã verde,Pear:Pera,Tangerine:Tangerina,Lemon:Limão,Kiwi fruit:Kiwi,Cherries:Cerejas,Coconut:Coco,Melon:Melão,Tomato:Tomate,Carrot:Cenoura,Potato:Batata,Roasted sweet potato:Batata-doce assada,Ear of corn:Milho,Eggplant:Berinjela,Cucumber:Pepino,Leafy green:Folhas verdes,Bell pepper:Pimentão,Garlic:Alho,Onion:Cebola,Mushroom:Cogumelo,Peanuts:Amendoim,Chestnut:Castanha,Olive:Azeitona,Cheese wedge:Queijo
+Utensílios & Cozinha|Fork and knife with plate:Prato e talheres,Fork and knife:Garfo e faca,Spoon:Colher,Kitchen knife:Faca de cozinha,Salt:Saleiro,Bowl with spoon:Tigela com colher
+Serviço & Entrega|Shopping cart:Carrinho de compras,Delivery truck:Caminhão de entrega,Receipt:Comanda,Convenience store:Loja 24 horas,Bell:Sino de atendimento
+Saudável & Veg|Potted plant:Planta em vaso,Seedling:Broto,Herb:Ervas frescas
+'''
+
 def safe_svg(data):
     root = ET.fromstring(data)
     allowed = {'svg', 'g', 'path', 'circle', 'ellipse', 'rect', 'line', 'polyline', 'polygon', 'title'}
@@ -121,8 +168,10 @@ def three_d(spec):
     return dict(id=f'3d-fluent-{slug}', name=label, type='3d', group=group, tags=[key, label, 'fluent', 'colorido'], source='Fluent Emoji', svg=svg)
 
 vectors = [(group, source, *entry.split(':')) for line in CURATED.strip().splitlines()
+           if line.strip()
            for group, source, entries in [line.split('|')] for entry in entries.split(',')]
 sculpted = [(group, *entry.split(':')) for line in FLUENT.strip().splitlines()
+            if line.strip()
             for group, entries in [line.split('|')] for entry in entries.split(',')]
 icons, failures = [], []
 with futures.ThreadPoolExecutor(max_workers=12) as pool:
@@ -132,7 +181,15 @@ with futures.ThreadPoolExecutor(max_workers=12) as pool:
         except Exception as error: failures.append((spec, str(error)))
 if failures:
     print(json.dumps(failures, ensure_ascii=True)); raise SystemExit('Fix unavailable curated assets before regenerating.')
+unique = {}
+for icon in icons:
+    unique.setdefault(icon['id'], icon)
+icons = list(unique.values())
 write_json(CONSTANTS / 'icon-catalog-extra.json', icons)
+if '--catalog-only' in sys.argv:
+    print(json.dumps({'icons': len(icons), '2d': sum(i['type'] == '2d' for i in icons),
+                      '3d': sum(i['type'] == '3d' for i in icons)}, ensure_ascii=True))
+    raise SystemExit(0)
 
 package = json.loads(fetch('https://registry.npmjs.org/emojibase-data/17.0.0'))
 archive = fetch(package['dist']['tarball'])

@@ -3,7 +3,7 @@ import { OrderSettings } from '../models/order-settings';
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, finalize, of } from 'rxjs';
-import { Category, MenuItem, Subcategory } from './menu.service';
+import { Category, MenuItem, Subcategory, ProductRecommendation } from './menu.service';
 import { DesignSettings } from './design.service';
 import { API_BASE_URL } from '../constants/api';
 
@@ -28,6 +28,8 @@ export interface PublicMenuResponse {
   categories: Category[];
   subcategories?: Subcategory[];
   items: MenuItem[];
+  cartRecommendationsEnabled?: boolean;
+  productRecommendations?: ProductRecommendation[];
 }
 
 interface LikeApiResponse {

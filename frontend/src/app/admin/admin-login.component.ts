@@ -11,7 +11,7 @@ import { AdminApiService } from './admin-api.service';
   template:`
     <main class="admin-login-page">
       <section class="admin-login-intro" aria-label="PingoChef Admin">
-        <img src="/logo_principal_tema_light.webp" alt="PingoChef" />
+        <img src="/pingo-chef-logo-principal.webp" alt="PingoChef" />
         <span class="admin-login-kicker">CONTROLE DA PLATAFORMA</span>
         <h1>Uma visão clara do que importa.</h1>
         <p>Acompanhe clientes, publicação, uso e segurança em um só lugar.</p>

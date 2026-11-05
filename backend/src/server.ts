@@ -131,6 +131,7 @@ app.use('/api/v1/qr', (req, _res, next) => {
   next();
 }, express.json({ limit: '256kb' }));
 app.use('/api/v1/items/:itemId/media/video/upload-intent', express.json({ limit: '2kb' }));
+app.use('/api/v1/items/:id/recommendations', express.json({ limit: '2kb' }));
 app.use('/api/v1/menu-transfer', express.json({ limit: '3mb' }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));

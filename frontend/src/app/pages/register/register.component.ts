@@ -26,7 +26,7 @@ import { AuthService } from '../../services/auth.service';
 
         <!-- Cabeçalho (Logo Centralizada + Título) -->
         <header class="auth-header-section">
-          <img src="/pingo_chef_logo_principal.webp" alt="Pingo Chef" class="auth-logo-center" />
+          <img src="/pingo-chef-logo-principal.webp" alt="Pingo Chef" class="auth-logo-center" />
           <h1 class="auth-page-title">Cadastre-se</h1>
           <p class="auth-page-subtitle">Comece no Free e configure seu estabelecimento</p>
         </header>

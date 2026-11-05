@@ -1,8 +1,16 @@
 import { firstValueFrom, of, throwError } from 'rxjs';
-import { publicationErrorMessage, publishMenu } from './menu-publication';
+import { publicationErrorMessage, publicationNeedsTemplateUpgrade, publishMenu } from './menu-publication';
 import { ImagePayloadError } from './image-payload.service';
 
 describe('Menu publication', () => {
+  it('recognizes the server upgrade requirement after wrapping the publication stage', async () => {
+    const error = { status: 403, error: { error: { code: 'THEMATIC_TEMPLATE_REQUIRES_PLAN' } } };
+    const failure = await firstValueFrom(publishMenu({ design: () => of({ success: true }), media: () => of({ success: true }),
+      publication: () => throwError(() => error), refresh: () => of([]) })).catch(reason => reason);
+    expect(publicationNeedsTemplateUpgrade(failure)).toBe(true);
+    expect(publicationNeedsTemplateUpgrade({ status: 500 })).toBe(false);
+    expect(publicationErrorMessage(failure)).toContain('Basic');
+  });
   const setup = () => ({
     design: vi.fn(() => of({ success: true })),
     media: vi.fn(() => of({ success: true })),

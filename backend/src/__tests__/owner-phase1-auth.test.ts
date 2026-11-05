@@ -96,7 +96,7 @@ beforeEach(() => {
     if(name==='provision_owner_account')return deniedProvision?{data:null,error:{message:'INVALID_REGISTRATION_INTENT'}}:{data:business.id,error:null};
     if(name==='business_is_account_active')return {data:true,error:null};
     if(name==='business_entitlement_snapshot')return {data:{plan:{code:'FREE',name:'Free'},subscription:{status:'active',provider:null},
-      entitlements:{MAX_PRODUCTS:10,MAX_CATEGORIES:4,MAX_VIDEOS:1},usage:{products:0,categories:0,videos:0}},error:null};
+      entitlements:{MAX_PRODUCTS:10,MAX_CATEGORIES:4,MAX_VIDEOS:0},usage:{products:0,categories:0,videos:0}},error:null};
     return {data:null,error:null};
   });
 });
@@ -210,7 +210,7 @@ describe('Owner commercial journey and account operations',()=>{
     const r=await request(app()).get('/api/v1/auth/plans');expect(r.status).toBe(200);
     expect(r.body.data.billingAvailable).toBe(false);expect(r.body.data.pricesProvisional).toBe(true);
     expect(r.body.data.plans.map((p:any)=>[p.code,p.products,p.categories,p.videos,p.priceCents,p.available])).toEqual([
-      ['FREE',10,4,1,0,true],['BASIC',30,10,7,2990,false],['MEDIUM',70,25,25,5990,false],['PRO',150,40,40,9990,false]]);
+      ['FREE',10,4,0,0,true],['BASIC',30,10,5,3490,false],['MEDIUM',70,25,15,4990,false],['PRO',150,40,30,8490,false]]);
   });
   it('rejects every paid plan and injected entitlements before creating a selection',async()=>{
     for(const planCode of ['BASIC','MEDIUM','PRO'])expect((await request(app()).post('/api/v1/auth/plan-intents').set('Origin',origin).send({planCode})).status).toBe(409);

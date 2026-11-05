@@ -3,10 +3,10 @@ import { expect, test, Page } from '@playwright/test';
 import { analyticsOptions, analyticsReport } from './analytics-fixture';
 
 const matrix = {
-  FREE: [10, 4, 1, false, false],
-  BASIC: [30, 10, 7, true, false],
-  MEDIUM: [70, 25, 25, true, true],
-  PRO: [150, 40, 40, true, true],
+  FREE: [10, 4, 0, false, false],
+  BASIC: [30, 10, 5, true, false],
+  MEDIUM: [70, 25, 15, true, true],
+  PRO: [150, 40, 30, true, true],
 } as const;
 const names = { FREE: 'Free', BASIC: 'Basic', MEDIUM: 'Medium', PRO: 'Pro' };
 const id = '22222222-2222-4222-8222-222222222222';
@@ -34,7 +34,8 @@ async function mockApi(
       ANALYTICS_EXPORT: code === 'PRO',
       QR_GENERATOR: qr,
       QR_CUSTOMIZATION: qr,
-      VIDEO_UPLOAD: true,
+      VIDEO_UPLOAD: code !== 'FREE',
+      THEMATIC_TEMPLATES: code !== 'FREE',
     },
     usage: { products: products, categories: 1, videos: 0 },
     csrfToken: 'a'.repeat(64),
@@ -69,7 +70,7 @@ async function mockApi(
               products: values[0],
               categories: values[1],
               videos: values[2],
-              priceCents: [0, 2990, 5990, 9990][i],
+              priceCents: [0, 3490, 4990, 8490][i],
               profile: [
                 'Para experimentar',
                 'Para pequenos negócios',
@@ -78,10 +79,11 @@ async function mockApi(
               ][i],
               features:
                 i === 0
-                  ? []
+                  ? ['Templates simples']
                   : i === 1
-                    ? ['Analytics essencial']
-                    : ['Analytics avançado', 'QR Code personalizado'],
+                    ? ['Templates simples e temáticos', 'Analytics essencial']
+                    : i === 2 ? ['Templates simples e temáticos', 'Analytics avançado', 'QR Code personalizado']
+                    : ['Templates simples e temáticos', 'Analytics completo', 'QR Code premium'],
               available: code === 'FREE',
             })),
           },
@@ -158,16 +160,24 @@ test('plans remain readable on wide desktop, notebook, tablet and mobile; paid s
 }) => {
   await mockApi(page);
   await page.goto('/plans');
-  for (const width of [1600, 1280, 900, 390]) {
+  await expect(page.locator('[data-plan=BASIC] .price')).toContainText('34,90');
+  await expect(page.locator('[data-plan=MEDIUM] .price')).toContainText('49,90');
+  await expect(page.locator('[data-plan=PRO] .price')).toContainText('84,90');
+  for (const [plan, count] of [['BASIC', 5], ['MEDIUM', 15], ['PRO', 30]])
+    await expect(page.locator(`[data-plan=${plan}] .plan-features`)).toContainText(`${count} vídeos`);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await page.locator('.plan-particles').first().evaluate(el => getComputedStyle(el).animationName)).toBe('none');
+  for (const width of [1600, 1280, 900, 360, 390, 430]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(page.locator('.plan-card')).toHaveCount(4);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
     expect((await page.locator('.plan-card').first().boundingBox())!.width).toBeGreaterThan(220);
+    if (width === 1600 || width === 390) await page.screenshot({ path: `../.tools/plans-${width}.png`, fullPage: true, animations: 'disabled' });
   }
   await expect(page.locator('.recommended .recommendation')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Em breve' })).toHaveCount(3);
+  await expect(page.locator('.plan-contact')).toHaveCount(3);
   await page.screenshot({
     path: '../.tools/phase2-pricing-mobile.png',
     fullPage: true,
@@ -177,6 +187,36 @@ test('plans remain readable on wide desktop, notebook, tablet and mobile; paid s
   await expect(page).toHaveURL(/register\?intent=/);
   await expect(page.getByText('Plano Free', { exact: true })).toBeVisible();
 });
+test('neon plans reveal their own features with keyboard and touch without starting signup', async ({ page }, info) => {
+  const { posts } = await mockApi(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/plans');
+  await expect(page.locator('.plan-card')).toHaveCount(4);
+  const widths = info.project.name.includes('mobile') ? [360, 390, 430] : [1440];
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const [code, title] of [['FREE', 'Sua identidade começa aqui.'], ['BASIC', 'Mostre o que torna seu menu especial.'], ['MEDIUM', 'Seu cardápio a um QR de distância.'], ['PRO', 'Conheça melhor cada ponto de contato.']]) {
+      const card = page.locator(`.plan-card[data-plan=${code}]`), button = card.locator('.explore-plan');
+      await button.focus(); await page.keyboard.press('Enter');
+      const detail = page.locator('.plan-detail');
+      await expect(detail).toHaveAttribute('data-plan', code);
+      await expect(page.locator('.plan-card.is-selected')).toHaveCount(1);
+      await expect(button).toHaveAttribute('aria-expanded', 'true');
+      await expect(detail.getByRole('heading', { name: title, exact: true })).toBeFocused();
+      await expect(detail.locator('.detail-feature')).toHaveCount(3);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      expect(await detail.locator('.floating-sculpture').evaluate(el => getComputedStyle(el).animationName)).toBe('none');
+      if (code === 'MEDIUM') await detail.screenshot({ path: info.outputPath(`neon-qr-${width}.png`) });
+      await detail.getByRole('button', { name: 'Fechar detalhes' }).click();
+      await expect(detail).toHaveCount(0); await expect(button).toBeFocused();
+    }
+    await page.locator('.plan-card[data-plan=MEDIUM] h2').click();
+    await expect(page.locator('.plan-detail')).toHaveAttribute('data-plan', 'MEDIUM');
+    await page.locator('.plan-detail').getByRole('button', { name: 'Fechar detalhes' }).click();
+  }
+  expect(posts).toEqual([]);
+});
+
 test('signup sends server intent and consent, then logs in without email verification', async ({
   page,
 }) => {

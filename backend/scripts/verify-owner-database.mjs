@@ -31,7 +31,7 @@ export async function verifyOwnerDatabase(pool) {
     assert.equal(await value("SELECT create_owner_session($1,$2,'owner','diagnostic',now()-interval '2 minutes',now()-interval '1 minute',NULL,$3) value",[randomBytes(32).toString('hex'),user,Math.floor(Date.now()/1000)]),false);
   });
   await check('exact plan matrix',async()=>{
-    const expected={FREE:[10,4,1,false,false,false,false,false],BASIC:[30,10,7,true,false,false,false,false],MEDIUM:[70,25,25,true,true,false,true,true],PRO:[150,40,40,true,true,true,true,true]};
+    const expected={FREE:[10,4,0,false,false,false,false,false],BASIC:[30,10,5,true,false,false,false,false],MEDIUM:[70,25,15,true,true,false,true,true],PRO:[150,40,30,true,true,true,true,true]};
     for(const [code,values] of Object.entries(expected)){
       const snapshot=await value('SELECT jsonb_object_agg(e.feature_key,e.value) value FROM plan_entitlements e JOIN plans p ON p.id=e.plan_id WHERE p.code=$1',[code]);
       assert.deepEqual(['MAX_PRODUCTS','MAX_CATEGORIES','MAX_VIDEOS','ANALYTICS_BASIC','ANALYTICS_ADVANCED','ANALYTICS_EXPORT','QR_GENERATOR','QR_CUSTOMIZATION'].map(key=>snapshot[key]),values);
@@ -60,14 +60,13 @@ export async function verifyOwnerDatabase(pool) {
   });
   const products=(await query('SELECT id FROM menu_items WHERE business_id=$1 ORDER BY created_at',[business])).rows;
   const insertVideo=(item,name)=>query("INSERT INTO product_media(business_id,menu_item_id,media_type,source,status,mux_upload_id,aspect_ratio) VALUES($1,$2,'video','mux','waiting',$3,'16:9') RETURNING id",[business,item,name]);
-  await check('Free second video rejected',async()=>{
-    await insertVideo(products[0].id,'local-upload-first');
+  await check('Free first video rejected',async()=>{
     await assert.rejects(insertVideo(products[1].id,'local-upload-second'),error=>error.message==='LIMIT_EXCEEDED'&&JSON.parse(error.detail).resource==='videos');
   });
-  await check('concurrent video reservations cannot occupy two Free slots',async()=>{
+  await check('concurrent Free video reservations are both denied',async()=>{
     await query('DELETE FROM product_media WHERE business_id=$1',[business]);
     const results=await Promise.allSettled([insertVideo(products[0].id,'local-concurrent-1'),insertVideo(products[1].id,'local-concurrent-2')]);
-    assert.equal(results.filter(result=>result.status==='fulfilled').length,1);
+    assert.equal(results.filter(result=>result.status==='fulfilled').length,0);
   });
   await check('audited admin assignment; downgrade preserves content and blocks new records',async()=>{
     await assert.rejects(query('SELECT admin_assign_business_plan($1,$2,$3,$4)',[admin,business,'PRO',null]),/Reason required/);
@@ -195,13 +194,13 @@ export async function verifyOwnerDatabase(pool) {
     await query('INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,$2,now())',[uid2,email2]);
     assert.ok(await value('SELECT resume_owner_registration($1,$2,$3,$4,$5) value',[uid2,'Unbound Owner','Unbound Business','unbound-resumed',null]));
   });
-  await check('actual video upload RPC reserves one Free slot with two concurrent requests',async()=>{
+  await check('actual video upload RPC rejects concurrent Free requests',async()=>{
     await query('DELETE FROM product_media WHERE business_id=$1',[business]);
     const current=(await query('SELECT id FROM menu_items WHERE business_id=$1 LIMIT 2',[business])).rows;
     const ip=randomBytes(32).toString('hex');
     const results=await Promise.allSettled(current.map(row=>query("SELECT * FROM reserve_video_upload($1,$2,$3,$4,1024,'video/mp4',20,3,5,900,'16:9',NULL)",[business,user,row.id,ip])));
-    assert.equal(results.filter(result=>result.status==='fulfilled'&&result.value.rows[0].reserved_media_id).length,1);
-    assert.equal(results.find(result=>result.status==='rejected').reason.message,'LIMIT_EXCEEDED');
+    assert.equal(results.filter(result=>result.status==='fulfilled'&&result.value.rows[0].reserved_media_id).length,0);
+    assert.equal(results.every(result=>result.status==='fulfilled'&&!result.value.rows[0].reserved_media_id),true);
   });
   await check('commercial draft is private, Free only, expires and is consumed once concurrently',async()=>{
     for(const table of ['owner_plan_intents','owner_account_audit'])await assert.rejects(asOwner(user,`SELECT * FROM ${table}`),/permission denied/);
@@ -331,7 +330,7 @@ export async function verifyOwnerDatabase(pool) {
     assert.ok(await value('SELECT consumed_at value FROM owner_plan_intents WHERE id=$1',[selection]));
   });
   await check('every plan rejects the next product, category and video at its exact limit',async()=>{
-    for(const [code,limits] of Object.entries({FREE:[10,4,1],BASIC:[30,10,7],MEDIUM:[70,25,25],PRO:[150,40,40]})){
+    for(const [code,limits] of Object.entries({FREE:[10,4,0],BASIC:[30,10,5],MEDIUM:[70,25,15],PRO:[150,40,30]})){
       const uid=randomUUID(),bid=randomUUID(),cid=randomUUID();
       await query('INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,$2,now())',[uid,code.toLowerCase()+'-capacity@local.test']);
       await query('INSERT INTO profiles(id,full_name) VALUES($1,$2)',[uid,code+' Owner']);

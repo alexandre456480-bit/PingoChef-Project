@@ -19,6 +19,7 @@ export const menuArchiveSchema = z.object({
   exportedAt: z.string().datetime({ offset: true }),
   // Video provider credentials/playback identifiers and analytics are never portable.
   excludedVideos: z.number().int().min(0).max(100_000).default(0),
+  productRecommendations: z.array(z.object({ triggerProductId: id, recommendedProductIds: z.array(id).max(3) }).strict()).max(1000).default([]),
   business: z.object({
     name: z.string().trim().min(1).max(100), description: z.string().max(500).nullable(),
     logo_url: image, banner_url: image, phone: z.string().max(30).nullable(), whatsapp: z.string().max(30).nullable(),
@@ -65,6 +66,13 @@ export function validateMenuArchive(value: unknown): MenuArchive {
   const doc = menuArchiveSchema.parse(value);
   const unique = (rows: { id: string }[]) => { if (new Set(rows.map(row => row.id)).size !== rows.length) throw ownerError(400, 'DUPLICATE_MENU_REFERENCE'); };
   unique(doc.categories); unique(doc.subcategories); unique(doc.items);
+  const itemIds = new Set(doc.items.map(row => row.id)), triggers = new Set<string>();
+  for (const row of doc.productRecommendations) {
+    if (!itemIds.has(row.triggerProductId) || triggers.has(row.triggerProductId)
+      || new Set(row.recommendedProductIds).size !== row.recommendedProductIds.length
+      || row.recommendedProductIds.some(id => id === row.triggerProductId || !itemIds.has(id))) throw ownerError(400, 'INVALID_RESOURCE_RELATIONSHIP');
+    triggers.add(row.triggerProductId);
+  }
   const categories = new Set(doc.categories.map(row => row.id));
   const subs = new Map(doc.subcategories.map(row => [row.id, row.categoryId]));
   for (const sub of doc.subcategories) if (!categories.has(sub.categoryId)) throw ownerError(400, 'INVALID_RESOURCE_RELATIONSHIP');
@@ -96,10 +104,12 @@ export function validateMenuArchive(value: unknown): MenuArchive {
 export function remapMenuArchive(doc: MenuArchive): MenuArchive {
   const categories = new Map(doc.categories.map(row => [row.id, randomUUID()]));
   const subcategories = new Map(doc.subcategories.map(row => [row.id, randomUUID()]));
+  const items = new Map(doc.items.map(row => [row.id, randomUUID()]));
   const clone: MenuArchive = structuredClone(doc);
   clone.categories = doc.categories.map(row => ({ ...row, id: categories.get(row.id)! }));
   clone.subcategories = doc.subcategories.map(row => ({ ...row, id: subcategories.get(row.id)!, categoryId: categories.get(row.categoryId)! }));
-  clone.items = doc.items.map(row => ({ ...row, id: randomUUID(), categoryId: categories.get(row.categoryId)!, subcategoryId: row.subcategoryId ? subcategories.get(row.subcategoryId)! : null }));
+  clone.items = doc.items.map(row => ({ ...row, id: items.get(row.id)!, categoryId: categories.get(row.categoryId)!, subcategoryId: row.subcategoryId ? subcategories.get(row.subcategoryId)! : null }));
+  clone.productRecommendations = doc.productRecommendations.map(row => ({ triggerProductId: items.get(row.triggerProductId)!, recommendedProductIds: row.recommendedProductIds.map(id => items.get(id)!) }));
   const config = clone.design?.custom_config as any;
   if (config?.category_hero_configs) config.category_hero_configs = Object.fromEntries(
     Object.entries(config.category_hero_configs).map(([key, settings]) => [categories.get(key)!, settings]));

@@ -3,8 +3,19 @@ import { emojiEntries, EmojiRecord } from './emoji-catalog';
 import emojiRecords from '../../../public/assets/catalog/emojis-pt.json';
 import frontendCodes from './emoji-codepoints.json';
 import backendCodes from '../../../../backend/src/constants/emoji-codepoints.json';
+import extraIcons from './icon-catalog-extra.json';
 
 describe('Expanded icon catalog', () => {
+  it('includes the new 2D and 3D food collections with stable backend-compatible identifiers', () => {
+    expect(extraIcons.filter(icon => icon.type === '2d').length).toBeGreaterThanOrEqual(226);
+    expect(extraIcons.filter(icon => icon.type === '3d').length).toBeGreaterThanOrEqual(163);
+    for (const id of ['2d-tabler-milkshake', '2d-lucide-cupcake', '2d-phosphor-coffee-bean',
+      '3d-fluent-custard', '3d-fluent-hamburger', '3d-fluent-lobster', '3d-fluent-mate']) {
+      expect(findCatalogIcon(id)?.id).toBe(id);
+      expect(id).toMatch(/^(2d|3d)-[a-z0-9-]{1,60}$/);
+    }
+    expect(ICON_GROUPS).toContain('Frutos do Mar');
+  });
   it('keeps legacy artwork, unique IDs and multiple locally bundled libraries', () => {
     expect(new Set(ICON_CATALOG.map(icon => icon.id)).size).toBe(ICON_CATALOG.length);
     expect(ICON_CATALOG.length).toBeGreaterThan(240);

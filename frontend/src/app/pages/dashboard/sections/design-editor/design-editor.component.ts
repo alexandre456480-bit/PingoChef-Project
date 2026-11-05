@@ -19,13 +19,15 @@ import { MenuService } from '../../../../services/menu.service';
 import { HomeIconsEditorComponent } from './home-icons-editor.component';
 import { menuFontFamily } from '../../../../services/menu-fonts.service';
 import { ImagePayloadService, imageSaveError } from '../../../../services/image-payload.service';
+import { CommercialService } from '../../../../services/commercial.service';
+import { RouterLink } from '@angular/router';
 
 type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
 
 @Component({
   selector: 'app-design-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, HomeIconsEditorComponent],
+  imports: [CommonModule, FormsModule, HomeIconsEditorComponent, RouterLink],
   template: `
     <div class="design-container">
 
@@ -52,6 +54,9 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
         </summary>
         <div class="section-content">
 
+        @if (designService.currentTemplate().category === 'thematic' && !commercial.thematicTemplates()) {
+          <p class="template-plan-hint">Explore este tema no preview. Para publicá-lo, escolha o Basic ou superior. <a routerLink="/plans">Conhecer os planos →</a></p>
+        }
         <div class="template-filters" role="group" aria-label="Categorias de templates">
           @for (filter of templateFilters; track filter) {
             <button type="button" [attr.aria-pressed]="templateFilter === filter" (click)="templateFilter = filter">{{ filter }}</button>
@@ -83,7 +88,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
               <div class="tmpl-info">
                 <div class="tmpl-header-row">
                   <h3 class="tmpl-name">{{ tmpl.name }}</h3>
-                  <span class="tmpl-surface-pill">{{ designService.currentTemplate().key === tmpl.key ? 'Ativo' : 'Disponível' }}</span>
+                  <span class="tmpl-surface-pill">{{ tmpl.category === 'thematic' && !commercial.thematicTemplates() ? 'Preview · Basic+' : designService.currentTemplate().key === tmpl.key ? 'Ativo' : 'Disponível' }}</span>
                 </div>
                 <p class="tmpl-desc" [title]="tmpl.description">{{ tmpl.description }}</p>
                 <span class="tmpl-ideal">{{ tmpl.idealFor }}</span>
@@ -617,6 +622,18 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
               </span>
             </div>
           </div>
+          <div class="feature-config-card" [class.active]="designService.cartRecommendationsEnabled()">
+            <div class="feature-top-row">
+              <div class="feature-icon cart"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h4M17 14v6m-3-3h6"/></svg></div>
+              <button type="button" class="toggle-switch" role="switch" aria-label="Sugestões no carrinho"
+                [attr.aria-checked]="designService.cartRecommendationsEnabled()" [class.active]="designService.cartRecommendationsEnabled()"
+                (click)="designService.setCartRecommendationsEnabled(!designService.cartRecommendationsEnabled())"><div class="toggle-thumb"></div></button>
+            </div>
+            <div class="feature-info"><h3 class="feature-title">Sugestões no carrinho</h3>
+              <p class="feature-description">Recomende produtos complementares para os clientes enquanto eles visualizam o carrinho. Configure até 3 complementos ao editar cada produto salvo no Menu. O recurso acompanha a disponibilidade do carrinho.</p>
+              <span class="feature-badge" [class.on]="designService.cartRecommendationsEnabled()">{{ designService.cartRecommendationsEnabled() ? 'Ativado no Cardápio' : 'Desativado' }}</span>
+            </div>
+          </div>
         </div>
         </div>
       </details>
@@ -1116,6 +1133,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
     /* ══════════════════════════════════════════════════ */
     /* ── 1. TEMPLATES GRID ── */
     /* ══════════════════════════════════════════════════ */
+    .template-plan-hint { padding:14px 16px; margin:0 0 18px; border:1px solid var(--panel-border-strong); border-radius:13px; background:var(--panel-fill); color:var(--panel-text-soft); font-size:12px; line-height:1.7; }
+    .template-plan-hint a { color:var(--panel-accent); font-weight:650; white-space:nowrap; }
     .template-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .template-filters button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--panel-border-strong); border-radius: 12px; background: var(--panel-surface-inset); color: var(--panel-text); font: 600 12px Inter, sans-serif; cursor: pointer; }
     .template-filters button[aria-pressed='true'] { background: var(--panel-action); color: #fff; border-color: var(--panel-action); }
@@ -2799,7 +2818,8 @@ export class DesignEditorComponent {
   constructor(
     public designService: DesignService,
     public menuService: MenuService,
-    private imagePayload: ImagePayloadService
+    private imagePayload: ImagePayloadService,
+    public commercial: CommercialService
   ) { }
 
   selectTemplate(key: string): void {

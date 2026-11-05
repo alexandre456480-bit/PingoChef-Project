@@ -26,6 +26,12 @@ const palette = {
   }
 };
 const upsert = jest.fn();
+it('returns an actionable upgrade requirement when publication rejects a thematic template', async () => {
+  (supabaseAdmin.rpc as jest.Mock).mockResolvedValueOnce({ data: null, error: { message: 'THEMATIC_TEMPLATE_REQUIRES_PLAN' } });
+  const result = await request(app()).post('/business/publish');
+  expect(result.status).toBe(403);
+  expect(result.body.error).toMatchObject({ code: 'THEMATIC_TEMPLATE_REQUIRES_PLAN', requiredPlan: 'BASIC' });
+});
 it('persists the pixel font pair without replacing customer palette or icons', async () => {
   const response = await request(app()).put('/design').send({ palette, template_key: 'pixel',
     font_heading: 'Silkscreen', font_body: 'Pixelify Sans', font_pair: 'pixel_arcade',
@@ -35,7 +41,7 @@ it('persists the pixel font pair without replacing customer palette or icons', a
     font_heading: 'Silkscreen', font_body: 'Pixelify Sans', font_pair: 'pixel_arcade',
     custom_config: { home_icons: { home: null }, enable_cart: false } });
 });
-it.each(['emoji-2764-fe0f', 'emoji-1f44b-1f3fd', 'emoji-1f1e7-1f1f7', '3d-fluent-trophy', '2d-phosphor-trophy', '2d-pixel-home', '2d-pixel-burger'])(
+it.each(['emoji-2764-fe0f', 'emoji-1f44b-1f3fd', 'emoji-1f1e7-1f1f7', '3d-fluent-trophy', '2d-phosphor-trophy', '2d-pixel-home', '2d-pixel-burger', '2d-tabler-milkshake', '2d-lucide-cupcake', '3d-fluent-custard', '3d-fluent-lobster'])(
   'persists safe expanded catalog choice %s without changing tenant ownership', async home => {
     const response = await request(app()).put('/design').send({ palette, custom_config: { home_icons: { home } } });
     expect(response.status).toBe(200);

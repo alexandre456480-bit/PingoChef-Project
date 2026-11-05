@@ -1,5 +1,7 @@
 # PingoChef — Fase 2: jornada comercial e painel do proprietário
 
+> Registro da fase original. Para os limites, valores e permissões atuais, consulte [Planos e publicação](plan-permissions.md).
+
 Implementação local em 02/10/2026, sobre a fundação da [Fase 1](./19-OWNER-PHASE1-FOUNDATION.md). Esta entrega não habilita cobrança nem implementa Analytics ou QR Code reais.
 
 ## 1. Design e integração

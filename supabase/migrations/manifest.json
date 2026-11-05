@@ -234,5 +234,13 @@
   {
     "file": "20261104000000_menu_import_export.sql",
     "sha256": "dd82617644f8b4205f0b62b0d2eaa496354b170aa133a406ce30e7a8b3dd4cae"
+  },
+  {
+    "file": "20261104010000_product_recommendations.sql",
+    "sha256": "e5e7a76531afc2a0b419861594301ac259b763d3033b71848acc0e199c5f6248"
+  },
+  {
+    "file": "20261104020000_update_plan_permissions.sql",
+    "sha256": "d24865fd436bff068c9d7f07f2b9654a94c2e268eeba7572e00bc0859dbd392a"
   }
 ]

@@ -61,7 +61,8 @@ describe('Cardápio público com subconjuntos', () => {
     expect(branded.body.data.design.customConfig).toEqual(centered.body.data.design.customConfig);
     localDb.designSettings[businessId].template_key = 'pixel';
     const pixel = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
-    expect(pixel.body.data.design.templateKey).toBe('pixel');
+    expect(pixel.body.data.design.templateKey).toBe('default');
+    expect(localDb.designSettings[businessId].template_key).toBe('pixel');
     expect(pixel.body.data.design.customConfig).toEqual(centered.body.data.design.customConfig);
   });
 });

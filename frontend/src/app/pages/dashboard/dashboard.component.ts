@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MenuService } from '../../services/menu.service';
 import { DesignService } from '../../services/design.service';
-import { publishMenu, publicationErrorMessage } from '../../services/menu-publication';
+import { publishMenu, publicationErrorMessage, publicationNeedsTemplateUpgrade } from '../../services/menu-publication';
+import { TemplateUpgradeDialogComponent } from './components/template-upgrade-dialog.component';
 import { finalize } from 'rxjs';
 import { ProductPlaybackService } from '../../services/product-playback.service';
 import { PingoLoaderComponent } from '../../components/pingo-loader/pingo-loader.component';
@@ -44,7 +45,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
     DesignEditorComponent,
     PreviewSectionComponent,
     LikesSectionComponent,
-    PingoLoaderComponent, SettingsComponent, FeaturePreviewComponent, AnalyticsComponent, QrComponent, TutorialOverlayComponent
+    PingoLoaderComponent, SettingsComponent, FeaturePreviewComponent, AnalyticsComponent, QrComponent, TutorialOverlayComponent, TemplateUpgradeDialogComponent
   ],
   template: `
     <div class="dashboard-shell" [attr.data-panel-theme]="panelTheme">
@@ -56,7 +57,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
 
       <!-- 1. Sidebar -->
       <app-sidebar
-        [attr.inert]="settingsVisible || tutorial.active() ? '' : null"
+        [attr.inert]="settingsVisible || templateUpgradeVisible || tutorial.active() ? '' : null"
         [analyticsEnabled]="commercial.analytics()"
         [qrEnabled]="commercial.qr()"
         (themeToggle)="togglePanelTheme()"
@@ -71,7 +72,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
       </app-sidebar>
 
       <!-- 2. Main Content Area -->
-      <div class="main-viewport" [attr.inert]="settingsVisible || tutorial.active() ? '' : null">
+      <div class="main-viewport" [attr.inert]="settingsVisible || templateUpgradeVisible || tutorial.active() ? '' : null">
         <!-- Topbar -->
         <app-topbar
           [businessName]="businessName"
@@ -133,7 +134,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
       </div>
 
       <!-- 3. Right Panel: Phone Preview (Desktop Column) -->
-      <aside class="preview-panel" data-tour="preview-desktop" [class.preview-hidden]="!showDesktopPreview" [attr.inert]="settingsVisible || tutorial.active() ? '' : null">
+      <aside class="preview-panel" data-tour="preview-desktop" [class.preview-hidden]="!showDesktopPreview" [attr.inert]="settingsVisible || templateUpgradeVisible || tutorial.active() ? '' : null">
         <div class="preview-panel-header">
           <div class="header-badge">
             <span class="pulse-dot"></span>
@@ -172,6 +173,9 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
         </div>
       }
 
+      @if (templateUpgradeVisible) {
+        <app-template-upgrade-dialog [templateName]="designService.currentTemplate().name" (close)="templateUpgradeVisible=false" />
+      }
       <!-- 5. Floating Toast Notification -->
       @if(settingsVisible){<app-owner-settings [theme]="panelTheme" (close)="settingsVisible=false" (tutorialOpen)="restartTutorial()"></app-owner-settings>}
       @defer (when tutorial.active()) {
@@ -524,6 +528,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isInitialLoading = true;
   homeDataError = '';
   isPublishing = false;
+  templateUpgradeVisible = false;
 
   private pendingInitialRequests = 3;
 
@@ -656,6 +661,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   publishMenu(): void {
     if (this.isPublishing) return;
+    if (this.designService.currentTemplate().category === 'thematic' && !this.commercial.thematicTemplates()) {
+      this.templateUpgradeVisible = true;
+      return;
+    }
     this.isPublishing = true;
 
     publishMenu({
@@ -675,6 +684,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           : 'Cardápio publicado. Não foi possível atualizar os produtos no painel; atualize a página.');
       },
       error: error => {
+        if (publicationNeedsTemplateUpgrade(error)) { this.templateUpgradeVisible = true; return; }
         this.showToast(publicationErrorMessage(error));
       }
     });

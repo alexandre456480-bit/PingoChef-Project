@@ -6,6 +6,7 @@ import { localDb, isDemoMode } from '../config/localDb';
 import { entitlements, mapEntitlementDatabaseError } from '../services/entitlement.service';
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
 import { reorderMenu } from '../services/menu-order.service';
+import { listProductRecommendations } from '../services/product-recommendations.service';
 
 // Validação segura de imagem: bloqueia SVG para evitar Stored XSS e valida mime types e tamanho Base64
 const safeImageString = z.string().trim().refine(val => {
@@ -120,11 +121,11 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
           createdAt: item.created_at
       }));
 
-      const mediaRows = await new SupabaseProductMediaRepository().listGalleryMedia(
+      const [productRecommendations, mediaRows] = await Promise.all([listProductRecommendations(businessId), new SupabaseProductMediaRepository().listGalleryMedia(
         businessId,
         projectedItems.map(item => item.id),
         false
-      );
+      )]);
       const mediaByItem = new Map<string, any[]>();
       for (const media of mediaRows) {
         const list = mediaByItem.get(media.menu_item_id) ?? [];
@@ -145,7 +146,8 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
 
       return res.status(200).json({
         success: true,
-        data: projectedItems
+        data: projectedItems,
+        productRecommendations
       });
     }
 
@@ -191,7 +193,8 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
           displayOrder: item.display_order ?? 0,
           createdAt: item.created_at
         };
-      })
+      }),
+      productRecommendations: await listProductRecommendations(businessId)
     });
   } catch (error) {
     next(error);

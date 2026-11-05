@@ -39,6 +39,60 @@ async function openDesign(page: Page) {
   await page.getByRole('heading', { name: 'Ícones da Página Inicial', exact: true }).click();
   return page.locator('app-home-icons-editor');
 }
+test('new library icons can be searched, saved and rendered as local 2D and 3D artwork', async ({ page }) => {
+  const data = await fixture(page);
+  const editor = await openDesign(page);
+  await editor.getByRole('button', { name: 'Escolher ícone de Início', exact: true }).click();
+  let dialog = page.getByRole('dialog');
+  await dialog.getByRole('searchbox').fill('milkshake');
+  await dialog.getByRole('button', { name: 'Milk-shake · 2D', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Aplicar ícone', exact: true }).click();
+  await editor.getByRole('button', { name: 'Escolher ícone de Pratos do Chef', exact: true }).click();
+  dialog = page.getByRole('dialog');
+  await dialog.getByRole('group', { name: 'Estilo dos ícones' }).getByRole('button', { name: '3D', exact: true }).click();
+  await dialog.getByRole('searchbox').fill('pudim');
+  await dialog.getByRole('button', { name: 'Pudim · 3D', exact: true }).click();
+  await expect(dialog.locator('.selection-preview image')).toHaveAttribute('href', '/assets/catalog/fluent-custard.png');
+  await dialog.getByRole('button', { name: 'Aplicar ícone', exact: true }).click();
+  await page.getByRole('button', { name: /Salvar Alterações|Salvar e Sincronizar/ }).click();
+  await expect.poll(() => data.saved().custom_config.home_icons).toEqual({ home: '2d-tabler-milkshake', featured_product: '3d-fluent-custard' });
+  const asset = await page.request.get('/assets/catalog/fluent-custard.png');
+  expect(asset.ok()).toBe(true); expect((await asset.body()).subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+  await page.goto('/m/icon-test');
+  await page.getByRole('button', { name: 'Ver o Cardápio', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Início', exact: true }).locator('app-menu-home-icon svg')).toHaveAttribute('viewBox', '0 0 24 24');
+  await expect(page.locator('app-menu-home-icon image[href="/assets/catalog/fluent-custard.png"]').first()).toBeVisible();
+});
+
+test('category picker paginates the expanded catalog, searches without accents and saves a new 3D icon', async ({ page }, info) => {
+  await fixture(page);
+  let category: any = { id: 'category', name: 'Pratos', iconType: 'none', isActive: true, displayOrder: 0 };
+  await page.route('**/api/v1/categories**', route => {
+    if (route.request().method() === 'PUT') category = { ...category, ...route.request().postDataJSON() };
+    return route.fulfill({ json: { success: true, data: route.request().method() === 'GET' ? [category] : category } });
+  });
+  await page.goto('/dashboard');
+  await expect(page.locator('app-dashboard-home')).toBeVisible();
+  const nav = page.locator('[data-tour="nav-menu"]');
+  if (!await nav.isVisible()) await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
+  await nav.click();
+  await page.getByRole('button', { name: 'Editar categoria Pratos', exact: true }).click();
+  const modal = page.locator('.category-modal');
+  await modal.getByRole('button', { name: 'Catálogo de Ícones', exact: true }).click();
+  await expect(modal.locator('.icon-select-card')).toHaveCount(96);
+  await modal.getByRole('button', { name: /Mostrar mais ícones/ }).click();
+  await expect(modal.locator('.icon-select-card')).toHaveCount(192);
+  await modal.getByRole('button', { name: 'Ícones 3D', exact: true }).click();
+  await modal.getByRole('textbox', { name: 'Buscar ícones de categoria', exact: true }).fill('chimarRaO');
+  await expect(modal.locator('.icon-select-card')).toHaveCount(1);
+  await modal.getByRole('button', { name: 'Chimarrão · 3D', exact: true }).click();
+  await expect(modal.locator('.sample-icon-svg image')).toHaveAttribute('href', '/assets/catalog/fluent-mate.png');
+  await page.screenshot({ path: info.outputPath('category-expanded-icons.png') });
+  await modal.getByRole('button', { name: /Salvar/ }).click();
+  await expect.poll(() => category.iconKey).toBe('3d-fluent-mate');
+  expect(category.iconType).toBe('3d');
+});
+
 test('pixel collection can be selected, saved and rendered using the customer color', async ({ page }) => {
   const data = await fixture(page);
   const editor = await openDesign(page);

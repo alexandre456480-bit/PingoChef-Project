@@ -132,7 +132,7 @@ class LocalDatabase {
       status: 'ACTIVE',
       phone: '11999999999',
       whatsapp: '11999999999',
-      logo_url: '/logo_img.webp',
+      logo_url: '/pingo-chef-logo-principal.webp',
       cover_image_url: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
       description: 'Hamburgueria artesanal & gastronomia autoral com carnes nobres grelhadas no fogo.',
       welcome_bg_type: 'image',

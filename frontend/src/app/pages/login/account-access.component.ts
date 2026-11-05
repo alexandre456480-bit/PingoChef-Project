@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   selector: 'app-account-access', standalone: true, imports: [FormsModule, RouterLink],
   template: `
     <div class="auth-page"><section class="auth-card-wave">
-      <header class="auth-header-section"><img src="/pingo_chef_logo_principal.webp" alt="PingoChef" class="auth-logo-center" />
+      <header class="auth-header-section"><img src="/pingo-chef-logo-principal.webp" alt="PingoChef" class="auth-logo-center" />
         <h1 class="auth-page-title">{{ title }}</h1></header>
       <main class="auth-form-section">
         @if (message) { <p role="status">{{ message }}</p> }

@@ -45,7 +45,7 @@ import { CommercialService } from '../../../../services/commercial.service';
                 d="M15 15h11v11H15zM74 15h11v11H74zM15 74h11v11H15zM45 8h9v14h-9zM43 30h12v9H43zM70 46h22v9H70zM42 70h10v22H42zM64 68h9v12h-9zM82 73h10v19H82zM8 45h22v9H8zM62 85h12v7H62z"
                 fill="currentColor"
               /></svg
-            ><img src="/logo_img.webp" alt="Logo no mockup" />
+            ><img src="/pingo-chef-logo-principal.webp" alt="Logo no mockup" />
           </div>
           <div>
             <strong>Seu cardápio, em cada mesa.</strong>

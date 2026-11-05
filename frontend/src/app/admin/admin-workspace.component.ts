@@ -20,7 +20,7 @@ import { filterFromParams, presetFilter } from './admin-filter';
   template:`
     <div class="admin-shell">
       <aside class="admin-sidebar" [class.open]="menuOpen()" aria-label="Navegação administrativa">
-        <a class="admin-brand" routerLink="/admin/overview" (click)="menuOpen.set(false)"><img src="/logo_principal_tema_light.webp" alt="PingoChef"/><span>ADMIN</span></a>
+        <a class="admin-brand" routerLink="/admin/overview" (click)="menuOpen.set(false)"><img src="/pingo-chef-logo-principal.webp" alt="PingoChef"/><span>ADMIN</span></a>
         <nav>
           @for(group of groups;track group.title){
             <div class="admin-nav-group"><span class="admin-nav-title">{{group.title}}</span>

@@ -12,7 +12,7 @@ import { CommercialService, PlanIntent } from '../../services/commercial.service
   styleUrl: '../plans/commercial.css',
   template: ` <div class="commercial-page">
     <nav class="commercial-nav">
-      <a routerLink="/plans"><img src="/pingo_chef_logo_principal.webp" alt="PingoChef" /></a
+      <a routerLink="/plans"><img src="/pingo-chef-logo-principal.webp" alt="PingoChef" /></a
       ><a routerLink="/login">Entrar</a>
     </nav>
     <div class="stepper" aria-label="Etapas do cadastro">

@@ -65,6 +65,9 @@ type UploadUiState =
           </div>
         </div>
       } @else {
+        @if (!canUpload) {
+          <div class="video-locked" role="note"><div><strong>Vídeos a partir do Basic</strong><span>Seu plano permite fotos e templates simples. Conheça os planos com vídeos para destacar seus produtos.</span><a routerLink="/plans">Comparar planos →</a></div></div>
+        }
         <input
           #videoInput
           type="file"
@@ -72,7 +75,7 @@ type UploadUiState =
           (change)="onFileInput($event)"
           hidden />
 
-        @if ((state === 'selecting' || state === 'error' || state === 'rejected' || state === 'ready') && !hasReadyVideo) {
+        @if (canUpload && (state === 'selecting' || state === 'error' || state === 'rejected' || state === 'ready') && !hasReadyVideo) {
           <button
             type="button"
             class="video-dropzone"
@@ -229,7 +232,7 @@ type UploadUiState =
                     <button
                       type="button"
                       class="media-action replace-button"
-                      [disabled]="isVideoBusy"
+                      [disabled]="isVideoBusy || !canUpload"
                       (click)="replaceMedia(media, videoInput)">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 7h-9"/><path d="m16 3 4 4-4 4"/><path d="M4 17h9"/><path d="m8 21-4-4 4-4"/></svg>
                       Trocar vídeo
@@ -267,11 +270,11 @@ type UploadUiState =
   styles: [`
     :host { display: block; }
     .video-panel {
-      margin: 4px 0 18px;
-      padding: 16px;
-      border-radius: 16px;
-      border: 1px solid rgba(244, 123, 32, 0.2);
-      background: linear-gradient(145deg, rgba(244, 123, 32, 0.07), rgba(255, 255, 255, 0.025));
+      margin: 0;
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid var(--panel-border,rgba(244,123,32,.2));
+      background: var(--panel-surface,#202023);
       font-family: 'Inter', sans-serif;
     }
     .video-heading { display: flex; align-items: center; gap: 11px; margin-bottom: 13px; }
@@ -402,6 +405,7 @@ type UploadUiState =
 })
 export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   @Input() itemId: string | null = null;
+  @Input() canUpload = true;
   @Output() busyChange = new EventEmitter<boolean>();
   @Output() onToast = new EventEmitter<string>();
   @Output() mediaChanged = new EventEmitter<void>();
@@ -477,6 +481,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   }
 
   chooseVideo(input: HTMLInputElement): void {
+    if (!this.canUpload) return;
     this.replacementMediaId = null;
     this.selectedAspectRatio = '16:9';
     input.value = '';
@@ -484,7 +489,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   }
 
   replaceMedia(media: ProductMediaView, input: HTMLInputElement): void {
-    if (media.status !== 'ready' || this.isVideoBusy) return;
+    if (!this.canUpload || media.status !== 'ready' || this.isVideoBusy) return;
     this.replacementMediaId = media.id;
     this.selectedAspectRatio = media.aspectRatio ?? '16:9';
     this.errorMessage = '';
@@ -518,7 +523,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
   }
 
   async selectFile(file: File): Promise<void> {
-    if (!this.itemId || this.hasPendingMedia) return;
+    if (!this.canUpload || !this.itemId || this.hasPendingMedia) return;
     this.errorMessage = '';
     this.setState('validating');
     try {

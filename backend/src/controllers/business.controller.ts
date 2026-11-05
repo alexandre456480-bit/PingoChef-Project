@@ -5,11 +5,14 @@ import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config
 import { localDb, isDemoMode } from '../config/localDb';
 import { orderSettingsSchema } from '../utils/order-settings';
 import { socialLinksSchema } from '../utils/social-links';
+import { isThematicTemplate } from '../constants/menu-template';
 
 export const publishBusinessMenuController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.businessId || !req.userId) return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED' } });
     if (isDemoMode()) {
+      if (isThematicTemplate(localDb.designSettings[req.businessId]?.template_key))
+        return res.status(403).json({ success: false, error: { code: 'THEMATIC_TEMPLATE_REQUIRES_PLAN', requiredPlan: 'BASIC' } });
       const hasProduct = localDb.items.some(item => item.business_id === req.businessId);
       return hasProduct ? res.json({ success: true, data: { published: true } })
         : res.status(400).json({ success: false, error: { code: 'MENU_NEEDS_PRODUCT' } });
@@ -19,6 +22,9 @@ export const publishBusinessMenuController = async (req: AuthenticatedRequest, r
       p_business_id: req.businessId, p_owner_id: req.userId
     });
     if (error) {
+      if (String(error.message).includes('THEMATIC_TEMPLATE_REQUIRES_PLAN'))
+        return res.status(403).json({ success: false, error: { code: 'THEMATIC_TEMPLATE_REQUIRES_PLAN', requiredPlan: 'BASIC',
+          message: 'Publique este template com o Basic ou superior. Sua personalização continua disponível no preview.' } });
       if (String(error.message).includes('Menu needs a product'))
         return res.status(400).json({ success: false, error: { code: 'MENU_NEEDS_PRODUCT' } });
       throw error;

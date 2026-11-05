@@ -43,6 +43,7 @@ export interface MenuItem {
   likesCount?: number;
   media?: ProductGalleryMedia[];
 }
+export interface ProductRecommendation { triggerProductId: string; recommendedProductIds: string[] }
 
 @Injectable({
   providedIn: 'root'
@@ -53,6 +54,7 @@ export class MenuService {
   categories = signal<Category[]>([]);
   subcategories = signal<Subcategory[]>([]);
   items = signal<MenuItem[]>([]);
+  productRecommendations = signal<ProductRecommendation[]>([]);
 
   constructor(private http: HttpClient) {}
 
@@ -124,6 +126,7 @@ export class MenuService {
       tap((res: any) => {
         if (res.success) {
           this.items.set(res.data);
+          this.productRecommendations.set(res.productRecommendations || []);
         }
       })
     );
@@ -131,6 +134,12 @@ export class MenuService {
 
   createItem(data: Partial<MenuItem>): Observable<any> {
     return this.http.post(`${this.apiUrl}/items`, data, this.getAuthHeaders());
+  }
+  loadRecommendations(id: string): Observable<any> { return this.http.get(`${this.apiUrl}/items/${id}/recommendations`); }
+  saveRecommendations(id: string, recommendedProductIds: string[]): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/items/${id}/recommendations`, { recommendedProductIds }).pipe(tap(res => {
+      if (res.success) this.productRecommendations.update(rows => [...rows.filter(row => row.triggerProductId !== id), res.data]);
+    }));
   }
 
   updateItem(id: string, data: Partial<MenuItem>): Observable<any> {

@@ -26,6 +26,8 @@ import { MenuFontsService, menuFont, menuFontFamily } from '../../services/menu-
 import { DialogFocusDirective } from '../dialog-focus.directive';
 import { MenuHomeIconComponent } from '../menu-home-icon/menu-home-icon.component';
 import { HomeIconSection, homeIconChoice } from '../../constants/home-icons';
+import { CartRecommendationComponent } from '../cart-recommendation/cart-recommendation.component';
+import { recommendationMap, selectCartRecommendation } from '../../models/cart-recommendations';
 
 export const normalizeMenuSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 
@@ -33,7 +35,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
   selector: 'app-public-menu-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, SocialMenuComponent, ProductMediaGalleryComponent, MenuRevealDirective, MenuImageDirective, DialogFocusDirective, MenuHomeIconComponent],
+  imports: [CommonModule, SocialMenuComponent, ProductMediaGalleryComponent, MenuRevealDirective, MenuImageDirective, DialogFocusDirective, MenuHomeIconComponent, CartRecommendationComponent],
   template: `
     <div
       class="menu-viewport"
@@ -1278,6 +1280,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     </div>
                   }
                 </div>
+              }
+            </div>
+
+            <div class="cart-recommendation-slot" aria-live="polite" aria-relevant="additions text">
+              @if (cartRecommendationReady() ? cartRecommendation() : null; as suggestion) {
+                <app-cart-recommendation [item]="suggestion" [price]="cartService.unitPrice(suggestion)"
+                  (add)="addRecommendation($event)" (dismiss)="dismissCartRecommendation()"
+                  (details)="cartService.closeCart(); openProductDetail($event)" />
               }
             </div>
 
@@ -2997,8 +3007,10 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     }
 
     /* Cart Items List Body */
+    .cart-recommendation-slot { display: grid; flex-shrink: 0; }
     .cart-items-body {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       padding: 16px 20px;
     }
@@ -3150,6 +3162,23 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     : this.publicMenuService.menuData()?.categories || []);
   private readonly subcategoryList = computed(() => this.isPhonePreview
     ? this.menuService.subcategories() : this.publicMenuService.menuData()?.subcategories || []);
+  private readonly recommendationProducts = computed(() => new Map(this.catalogItems().map(item => [item.id, item])));
+  private readonly recommendationCategories = computed(() => new Set(this.categoryList().map(category => category.id)));
+  private readonly recommendations = computed(() => recommendationMap(this.isPhonePreview
+    ? this.menuService.productRecommendations() : this.publicMenuService.menuData()?.productRecommendations || []));
+  private readonly dismissedRecommendationVersion = signal(-1);
+  readonly cartRecommendationReady = signal(false);
+  readonly cartRecommendation = computed(() => {
+    const enabled = this.isPhonePreview ? this.designService.cartRecommendationsEnabled() && this.designService.enableCart()
+      : this.publicMenuService.menuData()?.cartRecommendationsEnabled === true;
+    if (!enabled || !this.enableCart || this.dismissedRecommendationVersion() === this.cartService.changeVersion()) return null;
+    return selectCartRecommendation(this.cartService.cartItems(), this.recommendations(), this.recommendationProducts(),
+      this.recommendationCategories(), item => this.cartService.unitPrice(item));
+  });
+  dismissCartRecommendation(): void { this.dismissedRecommendationVersion.set(this.cartService.changeVersion()); }
+  addRecommendation(item: MenuItem): void {
+    if (this.cartRecommendation()?.id === item.id) this.addCatalogItem(item.id);
+  }
   private readonly searchIndex = computed(() => new Map(this.items.map(item =>
     [item.id, normalizeMenuSearch(item.name + ' ' + (item.description || ''))])));
   private readonly visibleItems = computed(() => {
@@ -3214,6 +3243,13 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     });
     effect(() => {
       if (this.orderSettings.enabled) this.cartService.refreshFromCatalog(this.items);
+    });
+    effect(onCleanup => {
+      const open = this.cartService.isCartOpen();
+      this.cartRecommendationReady.set(false);
+      if (!open) return;
+      const timer = setTimeout(() => this.cartRecommendationReady.set(true), 2000);
+      onCleanup(() => clearTimeout(timer));
     });
   }
 
@@ -3292,7 +3328,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
       return {
         name: b?.name || 'Sapatolândia Gourmet',
         slug: b?.slug || 'sapatolandia-gourmet',
-        logoUrl: b?.logo_url || '/logo_img.webp',
+        logoUrl: b?.logo_url || '/pingo-chef-logo-principal.webp',
         coverImageUrl: b?.welcome_bg_image || b?.cover_image_url || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
         description: b?.description || '',
         welcomeBgType: b?.welcome_bg_type || 'image',
@@ -3306,7 +3342,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return pb || {
       name: 'Estabelecimento',
       slug: '',
-      logoUrl: '/logo_img.webp',
+      logoUrl: '/pingo-chef-logo-principal.webp',
       coverImageUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
       description: '',
       welcomeBgType: 'image',
@@ -3324,7 +3360,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   get logoUrl(): string {
-    return this.business.logoUrl || '/logo_img.webp';
+    return this.business.logoUrl || '/pingo-chef-logo-principal.webp';
   }
 
   get coverImageUrl(): string {
@@ -3746,15 +3782,12 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   confirmAddToCart(item: MenuItem): void {
-    if (!this.enableCart) return;
-    this.cartService.addItem({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      promotionalPrice: item.promotionalPrice,
-      showPrice: item.showPrice,
-      imageUrl: item.imageUrl
-    }, this.modalItemQuantity);
+    this.addCatalogItem(item.id, this.modalItemQuantity);
+  }
+  private addCatalogItem(id: string, quantity = 1): void {
+    const item = this.recommendationProducts().get(id);
+    if (!this.enableCart || !item || item.isAvailable === false || !this.recommendationCategories().has(item.categoryId)) return;
+    this.cartService.addItem(item, quantity);
   }
 
   get selectedProductLikesCount(): number {
@@ -3785,15 +3818,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   onAddToCartClick(event: Event, item: MenuItem): void {
     event.stopPropagation();
-    if (!this.enableCart) return;
-    this.cartService.addItem({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      promotionalPrice: item.promotionalPrice,
-      showPrice: item.showPrice,
-      imageUrl: item.imageUrl
-    });
+    this.addCatalogItem(item.id);
   }
 
   isLiked(itemId: string): boolean {
@@ -3819,6 +3844,6 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   onLogoError(event: Event): void {
-    (event.target as HTMLImageElement).src = '/logo_img.webp';
+    (event.target as HTMLImageElement).src = '/pingo-chef-logo-principal.webp';
   }
                         }

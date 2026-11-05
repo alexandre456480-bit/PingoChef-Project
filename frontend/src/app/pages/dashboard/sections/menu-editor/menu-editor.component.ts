@@ -6,11 +6,14 @@ import { MenuService, Category, MenuItem, Subcategory } from '../../../../servic
 import { ICON_CATALOG, ICON_GROUPS, CatalogIcon, findCatalogIcon } from '../../../../constants/icon-catalog';
 import { ProductVideoUploaderComponent } from '../../../../features/product-video/product-video-uploader.component';
 import { AuthService } from '../../../../services/auth.service';
+import { ProductRecommendationsEditorComponent } from './product-recommendations-editor.component';
+import { DialogFocusDirective } from '../../../../components/dialog-focus.directive';
 
 @Component({
   selector: 'app-menu-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductVideoUploaderComponent],
+  imports: [CommonModule, FormsModule, ProductVideoUploaderComponent, ProductRecommendationsEditorComponent, DialogFocusDirective],
+  styleUrls: ['./product-item-editor.css'],
   template: `
     <div class="menu-container">
       <!-- 1. Categories Section -->
@@ -261,20 +264,20 @@ import { AuthService } from '../../../../services/auth.service';
                   <div class="catalog-toolbar">
                     <div class="search-input-wrap">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      <input type="text" [(ngModel)]="iconSearchQuery" name="iconSearch" placeholder="Pesquisar por nome ou tag (ex: burger, chopp, pizza)..." class="catalog-search-input" />
+                      <input type="text" [(ngModel)]="iconSearchQuery" (ngModelChange)="iconPageSize = 96" name="iconSearch" aria-label="Buscar ícones de categoria" placeholder="Pesquisar por nome ou tag (ex: burger, chopp, pizza)..." class="catalog-search-input" />
                       @if (iconSearchQuery) {
-                        <button type="button" class="clear-search-btn" (click)="iconSearchQuery = ''">✕</button>
+                        <button type="button" class="clear-search-btn" aria-label="Limpar busca de ícones" (click)="iconSearchQuery = ''; iconPageSize = 96">✕</button>
                       }
                     </div>
 
                     <div class="type-filter-group">
-                      <button type="button" class="type-btn" [class.active]="iconFilterType === 'all'" (click)="iconFilterType = 'all'">
+                      <button type="button" class="type-btn" [class.active]="iconFilterType === 'all'" (click)="iconFilterType = 'all'; iconPageSize = 96">
                         Todos
                       </button>
-                      <button type="button" class="type-btn" [class.active]="iconFilterType === '2d'" (click)="iconFilterType = '2d'">
+                      <button type="button" class="type-btn" [class.active]="iconFilterType === '2d'" (click)="iconFilterType = '2d'; iconPageSize = 96">
                         Ícones 2D
                       </button>
-                      <button type="button" class="type-btn" [class.active]="iconFilterType === '3d'" (click)="iconFilterType = '3d'">
+                      <button type="button" class="type-btn" [class.active]="iconFilterType === '3d'" (click)="iconFilterType = '3d'; iconPageSize = 96">
                         Ícones 3D
                       </button>
                     </div>
@@ -282,19 +285,21 @@ import { AuthService } from '../../../../services/auth.service';
 
                   <!-- Grupos de ícones -->
                   <div class="groups-filter-scroll">
-                    <button type="button" class="grp-chip" [class.active]="selectedIconGroup === 'all'" (click)="selectedIconGroup = 'all'">Todos</button>
+                    <button type="button" class="grp-chip" [class.active]="selectedIconGroup === 'all'" (click)="selectedIconGroup = 'all'; iconPageSize = 96">Todos</button>
                     @for (grp of iconGroups; track grp) {
-                      <button type="button" class="grp-chip" [class.active]="selectedIconGroup === grp" (click)="selectedIconGroup = grp">{{ grp }}</button>
+                      <button type="button" class="grp-chip" [class.active]="selectedIconGroup === grp" (click)="selectedIconGroup = grp; iconPageSize = 96">{{ grp }}</button>
                     }
                   </div>
 
                   <!-- Grid de Ícones com Scroll -->
                   <div class="icons-grid-container">
-                    @for (icon of filteredIcons; track icon.id) {
+                    @for (icon of filteredIcons.slice(0, iconPageSize); track icon.id) {
                       <button
                         type="button"
                         class="icon-select-card"
                         [class.selected]="catForm.iconKey === icon.id"
+                        [attr.aria-label]="icon.name + ' · ' + icon.type.toUpperCase()"
+                        [attr.aria-pressed]="catForm.iconKey === icon.id"
                         (click)="selectCatalogIcon(icon)"
                         [title]="icon.name">
                         <div class="icon-visual" [innerHTML]="getSafeSvg(icon.svg)"></div>
@@ -312,6 +317,9 @@ import { AuthService } from '../../../../services/auth.service';
                       </div>
                     }
                   </div>
+                  @if (iconPageSize < filteredIcons.length) {
+                    <button type="button" class="grp-chip" (click)="iconPageSize = iconPageSize + 96">Mostrar mais ícones ({{ iconPageSize }} de {{ filteredIcons.length }})</button>
+                  }
                 </div>
               }
 
@@ -412,18 +420,22 @@ import { AuthService } from '../../../../services/auth.service';
 
     <!-- Modal: Item -->
     @if (showItemModal) {
-      <div class="modal-overlay" (click)="closeItemModal()">
-        <div class="modal-card large" (click)="$event.stopPropagation()">
-          <div class="modal-top">
-            <h3 class="modal-title">{{ editingItemId ? 'Editar Produto' : 'Novo Produto' }}</h3>
-            <button class="modal-close" (click)="closeItemModal()" aria-label="Fechar editor de produto">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+      <div class="modal-overlay item-editor-overlay" (click)="closeItemModal()">
+        <div class="modal-card large item-editor" role="dialog" aria-modal="true" aria-labelledby="item-editor-title" tabindex="-1" appDialogFocus (dialogEscape)="closeItemModal()" (click)="$event.stopPropagation()">
+          <div class="modal-top item-editor-header">
+            <span class="item-editor-symbol" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5L9 20l-6 1 1-6L16 3ZM13 6l5 5"/></svg></span>
+            <div class="item-editor-heading"><span class="item-editor-kicker">SEU CARDÁPIO</span><h3 id="item-editor-title" class="modal-title">{{ editingItemId ? 'Editar Produto' : 'Novo Produto' }}</h3><p>Cuide de cada detalhe do seu produto.</p></div>
+            <button type="button" class="modal-close" (click)="closeItemModal()" aria-label="Fechar editor de produto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
           </div>
           <form (ngSubmit)="saveItem()">
+            <div class="item-editor-scroll">
+              <div class="item-editor-layout">
+                <div class="item-editor-main">
+                  <section class="item-editor-section" aria-label="Informações do produto">
+<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span><div><h4>Informações do produto</h4><p>Nome, descrição e organização no cardápio.</p></div></div>
             <div class="form-field">
-              <label>Categoria</label>
-              <select [(ngModel)]="itemForm.categoryId" name="itemCat" required class="field-input" (ngModelChange)="itemForm.subcategoryId = null">
+              <label for="editor-itemCat">Categoria</label>
+              <select [(ngModel)]="itemForm.categoryId" id="editor-itemCat" name="itemCat" required class="field-input" (ngModelChange)="itemForm.subcategoryId = null">
                 <option value="">Selecione...</option>
                 @for (c of menuService.categories(); track c.id) {
                   <option [value]="c.id">{{ c.name }}</option>
@@ -432,8 +444,8 @@ import { AuthService } from '../../../../services/auth.service';
             </div>
             @if (itemFormSubcategories.length > 0) {
               <div class="form-field">
-                <label>Subcategoria</label>
-                <select [(ngModel)]="itemForm.subcategoryId" name="itemSubcat" class="field-input">
+                <label for="editor-itemSubcat">Subcategoria</label>
+                <select [(ngModel)]="itemForm.subcategoryId" id="editor-itemSubcat" name="itemSubcat" class="field-input">
                   <option [ngValue]="null">Nenhuma (raiz da categoria)</option>
                   @for (s of itemFormSubcategories; track s.id) {
                     <option [value]="s.id">{{ s.name }}</option>
@@ -442,61 +454,102 @@ import { AuthService } from '../../../../services/auth.service';
               </div>
             }
             <div class="form-field">
-              <label>Nome do Produto</label>
-              <input type="text" [(ngModel)]="itemForm.name" name="itemName" placeholder="Ex: Bacon Supreme Burger" required class="field-input" />
+              <label for="editor-itemName">Nome do Produto</label>
+              <input type="text" [(ngModel)]="itemForm.name" id="editor-itemName" name="itemName" placeholder="Ex: Bacon Supreme Burger" required class="field-input" />
             </div>
             <div class="form-field">
-              <label>Descrição</label>
-              <textarea [(ngModel)]="itemForm.description" name="itemDesc" placeholder="Ingredientes, modo de preparo..." class="field-input field-textarea"></textarea>
+              <label for="editor-itemDesc">Descrição</label>
+              <textarea [(ngModel)]="itemForm.description" id="editor-itemDesc" name="itemDesc" placeholder="Ingredientes, modo de preparo..." class="field-input field-textarea"></textarea>
             </div>
+                  </section>
+                  <section class="item-editor-section" aria-label="Preços do produto">
+<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13 13 20a2 2 0 0 1-3 0L2 12V3h9l9 8a2 2 0 0 1 0 2Z"/><circle cx="7" cy="8" r="1"/></svg></span><div><h4>Preços</h4><p>Defina o valor e a promoção, se houver.</p></div></div>
             <!-- Ativar / Desativar Preço -->
-            <label class="checkbox-field" style="margin: 12px 0 6px 0;">
+            <label class="checkbox-field price-visibility">
               <input type="checkbox" [(ngModel)]="itemForm.showPrice" name="itemShowPrice" />
               <span>Exibir preço no cardápio</span>
             </label>
             @if (!itemForm.showPrice) {
-              <p style="font-size: 0.8rem; color: #F59E0B; margin: 0 0 14px 26px; line-height: 1.3;">
+              <p class="price-disabled-hint">
                 Quando desativado, o produto exibirá "Consulte..." para os clientes.
               </p>
             }
 
             <div class="form-row" [style.opacity]="itemForm.showPrice ? '1' : '0.45'" [style.pointer-events]="itemForm.showPrice ? 'auto' : 'none'">
               <div class="form-field">
-                <label>Preço Regular (R$)</label>
-                <input type="number" step="0.01" [(ngModel)]="itemForm.price" name="itemPrice" [required]="itemForm.showPrice" class="field-input" />
+                <label for="editor-itemPrice">Preço Regular (R$)</label>
+                <input type="number" step="0.01" [(ngModel)]="itemForm.price" id="editor-itemPrice" name="itemPrice" inputmode="decimal" [required]="itemForm.showPrice" class="field-input" />
               </div>
               <div class="form-field">
-                <label>Preço Promocional (R$)</label>
-                <input type="number" step="0.01" [(ngModel)]="itemForm.promotionalPrice" name="itemPromo" placeholder="Opcional" class="field-input" />
+                <label for="editor-itemPromo">Preço Promocional (R$)</label>
+                <input type="number" step="0.01" [(ngModel)]="itemForm.promotionalPrice" id="editor-itemPromo" name="itemPromo" inputmode="decimal" placeholder="Opcional" class="field-input" />
               </div>
             </div>
 
+                  </section>
+                  <section class="item-editor-section" aria-label="Destaque do produto">
+<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"/></svg></span><div><h4>Destaque no cardápio</h4><p>Escolha como apresentar este produto.</p></div></div>
+            <!-- Tipo de Destaque -->
+            <div class="form-field">
+
+              <div class="highlight-type-grid" role="group" aria-label="Tipo de Destaque">
+                <button type="button" class="highlight-card" [class.selected]="itemForm.highlightType === 'none'" (click)="itemForm.highlightType = 'none'" [attr.aria-pressed]="itemForm.highlightType === 'none'">
+                  <span class="hl-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></span>
+                  <span class="hl-label">Padrão</span>
+                </button>
+                <button type="button" class="highlight-card promo" [class.selected]="itemForm.highlightType === 'promotion'" (click)="itemForm.highlightType = 'promotion'" [attr.aria-pressed]="itemForm.highlightType === 'promotion'">
+                  <span class="hl-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-9 12h7l-1 8 10-12h-7l1-8Z"/></svg></span>
+                  <span class="hl-label">Promoção</span>
+                </button>
+                <button type="button" class="highlight-card liked" [class.selected]="itemForm.highlightType === 'most_liked'" (click)="itemForm.highlightType = 'most_liked'" [attr.aria-pressed]="itemForm.highlightType === 'most_liked'">
+                  <span class="hl-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></span>
+                  <span class="hl-label">+Curtidos</span>
+                </button>
+                <button type="button" class="highlight-card chef" [class.selected]="itemForm.highlightType === 'chef'" (click)="itemForm.highlightType = 'chef'" [attr.aria-pressed]="itemForm.highlightType === 'chef'">
+                  <span class="hl-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14a4 4 0 1 1-1-7 6 6 0 0 1 12 0 4 4 0 1 1-1 7v7H7v-7ZM7 17h10"/></svg></span>
+                  <span class="hl-label">Prato Chefe</span>
+                </button>
+                <button type="button" class="highlight-card combo" [class.selected]="itemForm.highlightType === 'combo'" (click)="itemForm.highlightType = 'combo'" [attr.aria-pressed]="itemForm.highlightType === 'combo'">
+                  <span class="hl-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></svg></span>
+                  <span class="hl-label">Combo</span>
+                </button>
+                <button type="button" class="highlight-card best-seller" [class.selected]="itemForm.highlightType === 'best_seller'" (click)="itemForm.highlightType = 'best_seller'" [attr.aria-pressed]="itemForm.highlightType === 'best_seller'">
+                  <span class="hl-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 13-2 9 6-3 6 3-2-9"/><circle cx="12" cy="8" r="6"/></svg></span>
+                  <span class="hl-label">Mais Vendido</span>
+                </button>
+              </div>
+            </div>
+                  </section>
+                </div>
+                <div class="item-editor-media">
+                  <section class="item-editor-section item-photo-section" aria-label="Foto do produto">
+<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5-7 7-3-3-3 3"/></svg></span><div><h4>Foto do produto</h4><p>Uma boa imagem faz a diferença.</p></div></div>
             <!-- Seção de Foto do Produto (Upload ou URL) -->
             <div class="form-field">
-              <label class="field-label">Foto do Produto</label>
-              <div class="mode-tabs">
-                <button type="button" class="mode-tab" [class.active]="itemImageMode === 'upload'" (click)="itemImageMode = 'upload'">
+              <span class="field-label sr-only">Foto do Produto</span>
+              <div class="mode-tabs" role="group" aria-label="Origem da foto">
+                <button type="button" class="mode-tab" [class.active]="itemImageMode === 'upload'" [attr.aria-pressed]="itemImageMode === 'upload'" (click)="itemImageMode = 'upload'">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   Upload de Foto
                 </button>
-                <button type="button" class="mode-tab" [class.active]="itemImageMode === 'url'" (click)="itemImageMode = 'url'">
+                <button type="button" class="mode-tab" [class.active]="itemImageMode === 'url'" [attr.aria-pressed]="itemImageMode === 'url'" (click)="itemImageMode = 'url'">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   Inserir Link / URL
                 </button>
               </div>
 
               @if (itemImageMode === 'upload') {
-                <div class="file-dropzone" (click)="productFileInput.click()">
+                <div class="file-dropzone" role="button" tabindex="0" aria-label="Escolher foto do produto" (keydown.enter)="productFileInput.click(); $event.preventDefault()" (keydown.space)="productFileInput.click(); $event.preventDefault()" (click)="productFileInput.click()">
                   <input #productFileInput type="file" accept="image/png, image/jpeg, image/webp, image/jpg" (change)="onItemFileSelected($event)" style="display: none" />
                   <div class="dropzone-content">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span class="dropzone-title">Clique para escolher uma imagem do seu dispositivo</span>
+                    <span class="dropzone-title">Escolher foto do produto</span>
                     <span class="dropzone-subtitle">Formatos: JPG, PNG ou WebP (Máx. 5MB)</span>
                   </div>
                 </div>
               } @else {
                 <div class="url-input-wrap">
-                  <input type="url" [(ngModel)]="itemForm.imageUrl" name="itemImageUrl" placeholder="https://images.unsplash.com/photo-..." class="field-input" />
+                  <label for="editor-itemImageUrl" class="sr-only">Link da foto</label><input id="editor-itemImageUrl" type="url" [(ngModel)]="itemForm.imageUrl" name="itemImageUrl" placeholder="https://images.unsplash.com/photo-..." class="field-input" />
                 </div>
               }
 
@@ -514,45 +567,27 @@ import { AuthService } from '../../../../services/auth.service';
               }
             </div>
 
+                  </section>
             <app-product-video-uploader
               [itemId]="editingItemId"
+              [canUpload]="videoUploadAllowed"
               (busyChange)="videoUploadBlocksSave = $event"
               (onToast)="onToast.emit($event)">
             </app-product-video-uploader>
+                </div>
+                <div class="item-editor-complements">
+            @if (editingItemId) {
+              <app-product-recommendations-editor [itemId]="editingItemId" (busyChange)="recommendationsBusy = $event" />
+            }
 
-            <!-- Tipo de Destaque -->
-            <div class="form-field">
-              <label class="field-label">Tipo de Destaque</label>
-              <div class="highlight-type-grid">
-                <button type="button" class="highlight-card" [class.selected]="itemForm.highlightType === 'none'" (click)="itemForm.highlightType = 'none'">
-                  <span class="hl-icon">—</span>
-                  <span class="hl-label">Padrão</span>
-                </button>
-                <button type="button" class="highlight-card promo" [class.selected]="itemForm.highlightType === 'promotion'" (click)="itemForm.highlightType = 'promotion'">
-                  <span class="hl-icon">🔥</span>
-                  <span class="hl-label">Promoção</span>
-                </button>
-                <button type="button" class="highlight-card liked" [class.selected]="itemForm.highlightType === 'most_liked'" (click)="itemForm.highlightType = 'most_liked'">
-                  <span class="hl-icon">❤️</span>
-                  <span class="hl-label">+Curtidos</span>
-                </button>
-                <button type="button" class="highlight-card chef" [class.selected]="itemForm.highlightType === 'chef'" (click)="itemForm.highlightType = 'chef'">
-                  <span class="hl-icon"><img src="/icons_chef_hat.webp" alt="" /></span>
-                  <span class="hl-label">Prato Chefe</span>
-                </button>
-                <button type="button" class="highlight-card combo" [class.selected]="itemForm.highlightType === 'combo'" (click)="itemForm.highlightType = 'combo'">
-                  <span class="hl-icon" [innerHTML]="getHighlightIconSvg('3d-combo')"></span>
-                  <span class="hl-label">Combo</span>
-                </button>
-                <button type="button" class="highlight-card best-seller" [class.selected]="itemForm.highlightType === 'best_seller'" (click)="itemForm.highlightType = 'best_seller'">
-                  <span class="hl-icon" [innerHTML]="getHighlightIconSvg('3d-bestseller')"></span>
-                  <span class="hl-label">Mais Vendido</span>
-                </button>
+                </div>
               </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer item-editor-footer">
+              <span class="item-save-hint">Revise os detalhes antes de salvar.</span>
               <button type="button" class="btn-ghost" (click)="closeItemModal()">Cancelar</button>
-              <button type="submit" class="btn-cta primary" [disabled]="videoUploadBlocksSave">
+              <button type="submit" class="btn-cta primary" [disabled]="videoUploadBlocksSave || recommendationsBusy">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
                 {{ videoUploadBlocksSave ? 'Finalize o vídeo' : 'Salvar Produto' }}
               </button>
             </div>
@@ -2100,7 +2135,6 @@ import { AuthService } from '../../../../services/auth.service';
   `]
 })
 export class MenuEditorComponent implements OnInit {
-  private highlightIconSvgCache = new Map<string, SafeHtml>();
   @Output() onToast = new EventEmitter<string>();
 
   selectedCategoryId: string | null = null;
@@ -2110,6 +2144,7 @@ export class MenuEditorComponent implements OnInit {
   iconGroups = ICON_GROUPS;
   iconFilterType: 'all' | '2d' | '3d' = 'all';
   iconSearchQuery = '';
+  iconPageSize = 96;
   selectedIconGroup = 'all';
 
   // Modal state
@@ -2136,6 +2171,10 @@ export class MenuEditorComponent implements OnInit {
   showItemModal = false;
   editingItemId: string | null = null;
   videoUploadBlocksSave = false;
+  get videoUploadAllowed(): boolean {
+    return this.auth.account()?.entitlements?.VIDEO_UPLOAD === true && Number(this.auth.account()?.entitlements?.MAX_VIDEOS ?? 0) > 0;
+  }
+  recommendationsBusy = false;
   itemForm = {
     categoryId: '',
     subcategoryId: null as string | null,
@@ -2169,11 +2208,9 @@ export class MenuEditorComponent implements OnInit {
       list = list.filter(i => i.group === this.selectedIconGroup);
     }
     if (this.iconSearchQuery.trim()) {
-      const q = this.iconSearchQuery.toLowerCase().trim();
-      list = list.filter(i =>
-        i.name.toLowerCase().includes(q) ||
-        i.tags.some(t => t.toLowerCase().includes(q))
-      );
+      const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const terms = normalize(this.iconSearchQuery.trim()).split(/\s+/);
+      list = list.filter(i => terms.every(term => normalize([i.name, i.group, i.source || '', ...i.tags].join(' ')).includes(term)));
     }
     return list;
   }
@@ -2182,16 +2219,6 @@ export class MenuEditorComponent implements OnInit {
     if (!this.catForm.iconKey) return null;
     const icon = findCatalogIcon(this.catForm.iconKey);
     return icon ? this.sanitizer.bypassSecurityTrustHtml(icon.svg) : null;
-  }
-
-  getHighlightIconSvg(key: '3d-combo' | '3d-bestseller'): SafeHtml | null {
-    const cached = this.highlightIconSvgCache.get(key);
-    if (cached) return cached;
-    const icon = findCatalogIcon(key);
-    if (!icon) return null;
-    const safeIcon = this.sanitizer.bypassSecurityTrustHtml(icon.svg.replace('<svg ', '<svg width="28" height="28" '));
-    this.highlightIconSvgCache.set(key, safeIcon);
-    return safeIcon;
   }
 
   getSafeSvg(svgStr: string): SafeHtml {
@@ -2265,6 +2292,7 @@ export class MenuEditorComponent implements OnInit {
     if(!cat && this.auth.account()?.usage?.categories >= this.auth.account()?.entitlements?.MAX_CATEGORIES){this.onToast.emit('Limite de categorias atingido. Compare os planos acima ou edite uma categoria existente.');return;}
     this.editingCategoryId = cat?.id || null;
     this.iconSearchQuery = '';
+    this.iconPageSize = 96;
     this.iconFilterType = 'all';
     this.selectedIconGroup = 'all';
 
@@ -2447,6 +2475,7 @@ export class MenuEditorComponent implements OnInit {
   }
 
   closeItemModal(): void {
+    if (this.recommendationsBusy) { this.onToast.emit('Aguarde o salvamento das sugestões.'); return; }
     if (this.videoUploadBlocksSave) {
       this.onToast.emit('Conclua ou cancele o envio do vídeo antes de fechar.');
       return;
@@ -2455,6 +2484,7 @@ export class MenuEditorComponent implements OnInit {
   }
 
   saveItem(): void {
+    if (this.recommendationsBusy) { this.onToast.emit('Aguarde o salvamento das sugestões.'); return; }
     if (this.videoUploadBlocksSave) {
       this.onToast.emit('Conclua ou cancele o envio do vídeo antes de salvar.');
       return;

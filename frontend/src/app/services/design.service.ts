@@ -383,6 +383,10 @@ export class DesignService {
   introCard = computed(() => this.draft().introCard || DEFAULT_INTRO_CARD);
   enableLikes = computed(() => (this.draft().customConfig as any)?.enable_likes !== false);
   enableCart = computed(() => (this.draft().customConfig as any)?.enable_cart !== false);
+  cartRecommendationsEnabled = computed(() => this.draft().customConfig?.['cart_recommendations_enabled'] === true);
+  setCartRecommendationsEnabled(enabled: boolean): void {
+    this.draft.update(d => ({ ...d, customConfig: { ...d.customConfig, cart_recommendations_enabled: enabled } }));
+  }
 
   // Sincronização em tempo real da categoria visualizada no preview do smartphone
   previewCategory = signal<string | null>(null);

@@ -1,5 +1,7 @@
 # Fase 4 — QR Code, Analytics e revisão final de segurança
 
+> Registro da fase original. Para os limites, valores e permissões atuais, consulte [Planos e publicação](plan-permissions.md).
+
 Relatório do código e das verificações locais de 02/10/2026. Consolida as fases 1–4 do proprietário e os limites da validação. As migrations, variáveis e tarefas descritas aqui **não foram aplicadas ou configuradas no Supabase/Vercel de produção nesta execução**.
 
 ## 1. Arquitetura final

@@ -1,6 +1,8 @@
 import { verifyBusinessSocialLinks } from './verify-business-social-links.mjs';
 import { verifyBusinessOrders } from './verify-business-orders.mjs';
 import { verifyMenuTransfer } from './verify-menu-transfer.mjs';
+import { verifyPlanPermissions } from './verify-plan-permissions.mjs';
+import { verifyProductRecommendations } from './verify-product-recommendations.mjs';
 // Real local PostgreSQL, no .env or remote database URL. Complete migration chain.
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -123,6 +125,8 @@ try {
   await verifyBusinessSocialLinks(pool);
   await verifyBusinessOrders(pool);
   await verifyMenuTransfer(pool);
+  await verifyProductRecommendations(pool);
+  await verifyPlanPermissions(pool);
   await verifyOwnerDatabase(pool);
   await verifyOwnerTutorial(pool);
   await verifyMenuAnalytics(pool);

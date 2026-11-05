@@ -27,7 +27,7 @@ export class EntitlementService {
   async getEntitlements(businessId: string): Promise<EntitlementSnapshot> {
     if (isDemoMode()) return {
       plan: { code: 'FREE', name: 'Free' }, subscription: { status: 'active', provider: null },
-      entitlements: { MAX_PRODUCTS: 10, MAX_CATEGORIES: 4, MAX_VIDEOS: 1, VIDEO_UPLOAD: true,
+      entitlements: { MAX_PRODUCTS: 10, MAX_CATEGORIES: 4, MAX_VIDEOS: 0, VIDEO_UPLOAD: false, THEMATIC_TEMPLATES: false,
         ANALYTICS_BASIC: false, ANALYTICS_ADVANCED: false, ANALYTICS_EXPORT: false, QR_GENERATOR: false, QR_CUSTOMIZATION: false },
       usage: { products: localDb.items.filter(row => row.business_id === businessId).length,
         categories: localDb.categories.filter(row => row.business_id === businessId).length, videos: 0 }

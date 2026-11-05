@@ -36,6 +36,7 @@ export function publicationErrorMessage(error: unknown): string {
   const failure = error instanceof PublicationError ? error : new PublicationError('publication', error);
   const reason = failure.reason as any;
   const code = reason?.error?.error?.code;
+  if (code === 'THEMATIC_TEMPLATE_REQUIRES_PLAN') return 'Publique este template com o Basic ou superior. Seu design continua disponível no preview.';
   if (code === 'MENU_NEEDS_PRODUCT') return 'Adicione pelo menos um produto antes de publicar o cardápio.';
   if (code === 'ACCOUNT_NOT_ACTIVE') return 'Sua conta precisa estar ativa para publicar o cardápio.';
   if (reason?.status === 401) return 'Sua sessão expirou. Entre novamente para publicar o cardápio.';
@@ -46,4 +47,9 @@ export function publicationErrorMessage(error: unknown): string {
     publication: 'Não foi possível liberar o cardápio online. Tente novamente.'
   };
   return imageSaveError(reason, messages[failure.stage]);
+}
+
+export function publicationNeedsTemplateUpgrade(error: unknown): boolean {
+  const reason = error instanceof PublicationError ? error.reason : error;
+  return (reason as any)?.error?.error?.code === 'THEMATIC_TEMPLATE_REQUIRES_PLAN';
 }

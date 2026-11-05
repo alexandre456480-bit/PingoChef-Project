@@ -28,6 +28,7 @@ export class CommercialService {
       this.auth.account()?.entitlements?.ANALYTICS_ADVANCED === true,
   );
   readonly qr = computed(() => this.auth.account()?.entitlements?.QR_GENERATOR === true);
+  readonly thematicTemplates = computed(() => this.auth.account()?.entitlements?.THEMATIC_TEMPLATES === true);
   constructor(
     private http: HttpClient,
     private auth: AuthService,

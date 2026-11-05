@@ -16,6 +16,7 @@ export interface CartItem {
 })
 export class CartService {
   cartItems = signal<CartItem[]>([]);
+  readonly changeVersion = signal(0);
   isCartOpen = signal<boolean>(false);
   currentSlug = signal<string>('sapatolandia-gourmet');
 
@@ -53,7 +54,7 @@ export class CartService {
     this.isCartOpen.set(false);
   }
 
-  unitPrice(item: CartItem): number {
+  unitPrice(item: Pick<CartItem, 'price' | 'promotionalPrice'>): number {
     return item.promotionalPrice != null && item.promotionalPrice >= 0 && item.promotionalPrice < item.price ? item.promotionalPrice : item.price;
   }
 
@@ -74,7 +75,9 @@ export class CartService {
     const index = current.findIndex(i => i.itemId === item.id);
 
     if (index > -1) {
-      current[index].quantity += quantity;
+      const existing = { ...current.splice(index, 1)[0] };
+      existing.quantity += quantity;
+      current.push(existing); // The last added product also has recommendation priority.
     } else {
       current.push({
         itemId: item.id,
@@ -122,6 +125,7 @@ export class CartService {
   }
 
   private saveToStorage(): void {
+    this.changeVersion.update(version => version + 1);
     try {
       localStorage.setItem(`cart_${this.currentSlug()}`, JSON.stringify(this.cartItems()));
     } catch {
@@ -130,6 +134,7 @@ export class CartService {
   }
 
   private loadFromStorage(): void {
+    this.changeVersion.update(version => version + 1);
     this.cartItems.set([]);
     try {
       const saved = localStorage.getItem(`cart_${this.currentSlug()}`);

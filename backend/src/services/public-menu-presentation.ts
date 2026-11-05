@@ -62,7 +62,7 @@ export function publicCustomConfig(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const config = value as Record<string, unknown>,
     result: Record<string, unknown> = {};
-  for (const flag of ["enable_likes", "enable_cart"])
+  for (const flag of ["enable_likes", "enable_cart", "cart_recommendations_enabled"])
     if (typeof config[flag] === "boolean") result[flag] = config[flag];
   if (config.home_icons && typeof config.home_icons === 'object' && !Array.isArray(config.home_icons)) {
     const icons = config.home_icons as Record<string, unknown>;

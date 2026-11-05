@@ -1,6 +1,6 @@
 import { publicOrderSettings } from '../utils/order-settings';
 import { publicSocialLinks } from '../utils/social-links';
-import { DEFAULT_TEMPLATE_KEY, normalizeTemplateKey, withoutTemplateBlocks } from '../constants/menu-template';
+import { DEFAULT_TEMPLATE_KEY, withoutTemplateBlocks } from '../constants/menu-template';
 import { Request, Response, NextFunction } from 'express';
 import { createHmac, randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -9,6 +9,8 @@ import { localDb, isDemoMode } from '../config/localDb';
 import { SupabaseProductMediaRepository } from '../repositories/product-media.repository';
 import { businessEligibility } from '../services/business-eligibility.service';
 import { publicBanners, publicCategoryHeroes, publicCustomConfig, publicImage } from '../services/public-menu-presentation';
+import { listProductRecommendations, publicProductRecommendations } from '../services/product-recommendations.service';
+import { publicTemplateKey } from '../services/template-entitlement.service';
 
 const slugParamSchema = z.string().trim().regex(/^[a-z0-9-]+$/, 'Slug inválido');
 
@@ -353,6 +355,10 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
       }
     });
 
+    const cartRecommendationsEnabled = design.custom_config?.cart_recommendations_enabled === true
+      && design.custom_config?.enable_cart !== false;
+    const productRecommendations = cartRecommendationsEnabled
+      ? publicProductRecommendations(await listProductRecommendations(business.id).catch(() => []), items, categories) : [];
     return res.status(200).json({
       success: true,
       data: {
@@ -360,7 +366,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           name: business.name,
           slug: business.slug,
           description: business.description || '',
-          logoUrl: publicImage(business.logo_url) || '/logo_img.webp',
+          logoUrl: publicImage(business.logo_url) || '/pingo-chef-logo-principal.webp',
           coverImageUrl: publicImage(business.cover_image_url) || publicImage(business.welcome_bg_image) || '',
           welcomeBgType: business.welcome_bg_type || 'image',
           welcomeBgImage: publicImage(business.welcome_bg_image) || publicImage(business.cover_image_url) || '',
@@ -371,7 +377,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           orderSettings: publicOrderSettings(business.order_settings)
         },
         design: {
-          templateKey: normalizeTemplateKey(design.template_key),
+          templateKey: await publicTemplateKey(business.id, design.template_key),
           palette: design.palette,
           fontPair: design.font_pair || 'modern_clean',
           fontHeading: design.font_heading || 'Outfit',
@@ -385,6 +391,8 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         },
         categories: categories.map(category => ({...category, imageUrl: publicImage(category.imageUrl)})),
         subcategories,
+        cartRecommendationsEnabled,
+        productRecommendations,
         items: items.map(item => ({...item, imageUrl: publicImage(item.imageUrl)}))
       }
     });
