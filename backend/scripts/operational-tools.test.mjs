@@ -8,7 +8,14 @@ import { restrictionSettings } from './configure-mux-playback-restriction.mjs';
 
 const run=(script,input='',env={})=>spawnSync(process.execPath,[fileURLToPath(new URL(script,import.meta.url))],{
   input,encoding:'utf8',env:{SystemRoot:process.env.SystemRoot,NODE_ENV:'test',...env},timeout:10000});
-test('official migration manifest is complete, ordered and unique',async()=>assert.equal((await checkedMigrations()).length,58));
+test('official migration manifest is complete, ordered and unique',async()=>{
+  // checkedMigrations validates files, ordering, uniqueness and every checksum.
+  // Security releases must be present; a growing migration chain is expected.
+  const files=new Set((await checkedMigrations()).map(entry=>entry.file));
+  for(const file of ['20261003010000_owner_sessions_and_registration.sql',
+    '20261107010000_owner_registration_without_email_delivery.sql',
+    '20261108000000_restore_video_security_contract.sql'])assert.ok(files.has(file),file);
+});
 test('staging proxy preserves headers but cannot point to production',()=>{
   const base={headers:[{source:'/(.*)',headers:[{key:'security',value:'keep'}]}],rewrites:[{source:'/api/:path*',destination:'https://production.example/api/:path*'},{source:'/(.*)',destination:'/index.html'}]};
   const safe=stagingConfig(base,'https://staging.example','https://production.example');

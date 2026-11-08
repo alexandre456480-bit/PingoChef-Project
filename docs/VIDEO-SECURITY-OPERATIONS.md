@@ -2,6 +2,16 @@
 
 Estado: preparado e validado localmente; staging/Mux real e configuração do deploy são gates obrigatórios antes da produção. Auditoria prévia: [VIDEO-SECURITY-AUDIT.md](VIDEO-SECURITY-AUDIT.md). Resultado dos testes e tabela antes/depois: [VIDEO-SECURITY-REPORT.md](VIDEO-SECURITY-REPORT.md).
 
+## Reparo de contrato ausente (08/11/2026)
+
+O backend depende de `consume_video_security_budget`, `reserve_video_upload_secure`, tabelas de budgets e da coluna de idempotência. A ausência desse contrato pode bloquear upload e reprodução simultaneamente, retornando `503` ao visitante. A auditoria registra apenas o código fixo `VIDEO_SCHEMA_NOT_READY`, sem diagnósticos SQL ou credenciais.
+
+1. Executar `node scripts/check-video-readiness.mjs` a partir de `backend`, com seu ambiente de servidor. A sondagem não cria uploads, tokens ou contadores e sai com código 1 se o contrato estiver indisponível.
+2. Aplicar `supabase/migrations/20261108000000_restore_video_security_contract.sql` no SQL Editor do banco correto. É um reparo transacional, repetível e com os mesmos controles do hardening original. Preserva vídeos, contadores, leases e bloqueios administrativos; não reaplicar a migração antiga manualmente.
+3. A migração termina com `NOTIFY pgrst,'reload schema'`, conforme a [documentação do PostgREST](https://docs.postgrest.org/en/v16/references/schema_cache.html). Reexecutar a sondagem e verificar reprodução pública. Upload/troca real exige uma sessão de proprietário e deve preservar o vídeo antigo até o novo ficar pronto.
+
+A correção só fica ativa na instalação afetada após aplicar o SQL. Não existe fallback que ignore quotas ou passe a emitir playback público sem assinatura. Testes em PostgreSQL temporário simulam contrato totalmente ausente e parcialmente aplicado, repetem o reparo e verificam os controles existentes.
+
 ## Arquitetura e autoridade
 
 Angular → sessão owner atual/Origin/CSRF → orçamento de tentativas persistente → reserva comercial existente (`lock_business_capacity`, entitlements reais, limite diário e pendentes) → Mux Direct Upload signed → webhook raw/assinatura oficial/event ID → validação de vínculo, duração e policy → ready.

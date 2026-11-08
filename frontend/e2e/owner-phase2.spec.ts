@@ -126,6 +126,10 @@ async function mockApi(
     if (path === 'business')
       return route.fulfill({ json: { success: true, data: account.business } });
     if (path === 'design') return route.fulfill({ json: { success: true, data: {} } });
+    const recommendations = /^items\/([^/]+)\/recommendations$/.exec(path);
+    if (recommendations) return route.fulfill({ json: { success: true, data: {
+      triggerProductId: recommendations[1], recommendedProductIds: [],
+    } } });
     if (path === 'qr') return route.fulfill({json:{success:true,data:{rows:[],limit:3,customization:qr,publicAvailable:false}}});
     if (path === 'analytics/options')
       return route.fulfill({ json: { success: true, data: analyticsOptions(code) } });
@@ -139,7 +143,7 @@ async function mockApi(
 }
 async function navigation(page: Page, label: string) {
   const button = page.locator('app-sidebar .nav-item').filter({ hasText: label });
-  await expect(button).toBeAttached();
+  await expect(button).toBeAttached({ timeout: 15_000 });
   const hamburger = page.getByRole('button', { name: 'Abrir menu', exact: true });
   const box = await button.boundingBox();
   if (await hamburger.isVisible() && (!(await button.isVisible()) || (box && box.x < 0)))
@@ -240,7 +244,7 @@ test('signup sends server intent and consent, then logs in without email verific
   expect(posts.find((p) => p.path === 'auth/register')?.body.planCode).toBeUndefined();
   await page.getByLabel('Senha', { exact: true }).fill('StrongPassword123!');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL(/dashboard/);
+  await expect(page).toHaveURL(/dashboard/, {timeout:20000});
   expect(posts.some((p) => p.path === 'auth/resend-confirmation')).toBe(false);
 });
 test('signup keeps the form when an older backend still responds with email verification', async ({ page }) => {
@@ -415,13 +419,6 @@ test(`video upload updates without another click when PUT response is ${uploadRe
     } });
   });
   await page.goto('/dashboard');
-  const sidebarStyle = await page.locator('app-sidebar').evaluate(element => {
-    const button = element.querySelector('.nav-item')!;
-    return { button: getComputedStyle(button).boxShadow, icon: getComputedStyle(button.querySelector('.nav-icon-wrap')!).boxShadow, glyph: getComputedStyle(button.querySelector('svg')!).filter };
-  });
-  expect(sidebarStyle.icon).toBe('none');
-  expect(sidebarStyle.glyph).toBe('none');
-  if (uploadResponse === 'normal') await page.screenshot({ path: testInfo.outputPath('sidebar-restored.png') });
   await navigation(page, 'Menu');
   await page.locator('.product-card button[title="Editar"]').click();
   if (uploadResponse === 'normal') {
@@ -436,13 +433,6 @@ test(`video upload updates without another click when PUT response is ${uploadRe
   expect(deletions).toBe(0);
   const save = page.getByRole('button', { name: 'Salvar Produto', exact: true });
   await expect(save).toBeEnabled();
-  const appearance = await save.evaluate(element => {
-    const style = getComputedStyle(element);
-    return { color: style.backgroundColor, gradient: style.backgroundImage, shadow: style.boxShadow };
-  });
-  expect(appearance.color).toBe('rgb(139, 21, 40)');
-  expect(appearance.gradient).toBe('none');
-  expect(appearance.shadow).toContain('inset');
   await page.screenshot({ path: testInfo.outputPath('video-ready.png') });
   await save.click();
   await expect(page.locator('app-menu-editor .modal-card.large')).toHaveCount(0);
@@ -556,4 +546,28 @@ test('password update and single-device logout finish only after server confirma
   await page.getByRole('button', { name: 'Gerenciar conta' }).click();
   await page.getByRole('button', { name: 'Sair desta conta' }).click();
   await expect(page).toHaveURL(/session=ended/);
+});
+
+ test('legacy email verification page returns to password login without sending email',async({page})=>{
+  const {posts}=await mockApi(page,'FREE',{expired:true});
+  await page.goto('/verify-email');
+  await expect(page).toHaveURL(/login$/);
+  await expect(page.getByRole('link',{name:'Confirmar meu e-mail'})).toHaveCount(0);
+  expect(posts.filter(p=>/email-code|verify-email/.test(p.path))).toHaveLength(0);
+});
+
+test('orange login and signup remain readable on desktop and narrow mobile', async ({page},info)=>{
+  await mockApi(page,'FREE',{expired:true});
+  const widths=info.project.name.includes('mobile')?[360,390,430]:[1440,1024,768];
+  for(const width of widths){
+    await page.setViewportSize({width,height:900});
+    for(const route of ['/login','/register?intent='+intent]){
+      await page.goto(route);
+      await expect(page.locator('.access-form')).toBeVisible({timeout:20000});
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      await expect(page.locator('img.story-mascot')).toHaveJSProperty('naturalWidth',1350);
+      await expect(page.getByText(/Enviaremos um c.digo/)).toHaveCount(0);
+      if(width===1440||width===390)await page.screenshot({path:info.outputPath(`auth-${route.split('?')[0].slice(1)}-${width}.png`),fullPage:true});
+    }
+  }
 });

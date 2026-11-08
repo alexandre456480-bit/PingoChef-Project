@@ -1,3 +1,5 @@
+> Fluxo atual (07/11/2026): cadastro sem envio de código. Consulte [cadastro e segurança](owner-email-code-verification.md), incluindo a nova migração de transição.
+
 # 🔐 02 — Autenticação e Cadastro
 
 > **Atualização de implementação (02/10/2026):** o proprietário usa sessão BFF por cookie HttpOnly. Cadastro público Free e convites exigem confirmação Supabase Auth e compartilham provisionamento idempotente. Contratos, transição e configurações obrigatórias estão em [19 — Fase 1 do proprietário](./19-OWNER-PHASE1-FOUNDATION.md). As seções abaixo são histórico de especificação.

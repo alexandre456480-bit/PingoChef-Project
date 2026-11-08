@@ -1,3 +1,5 @@
+> Fluxo atual (07/11/2026): cadastro sem envio de código. Consulte [cadastro e segurança](owner-email-code-verification.md), incluindo a nova migração de transição.
+
 # Cadastro do proprietário sem confirmação de e-mail
 
 Este fluxo substitui a confirmação de cadastro descrita na fase 1. O e-mail

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Observable, of, Subject } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ProductVideoUploaderComponent } from './product-video-uploader.component';
 import { DirectUploadProgress, ProductMediaDeletionStatus, VideoUploadService } from '../../services/video-upload.service';
@@ -192,6 +192,22 @@ describe('ProductVideoUploaderComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Verificar status do vídeo');
     expect(service.deletedMediaIds).toEqual([]);
     expect(busy.at(-1)).toBe(false);
+  });
+
+  it('reports backend unavailability while preserving the previous video', () => {
+    const component = fixture.componentInstance;
+    const service = TestBed.inject(VideoUploadService) as unknown as VideoUploadServiceStub;
+    component.itemId = 'item-1';
+    component.videoMedia = [readyMedia('kept')];
+    component.replacementMediaId = 'kept';
+    component.state = 'selected';
+    component.selectedVideo = { file: new File(['video'], 'prato.mp4', { type: 'video/mp4' }), mimeType: 'video/mp4', durationSeconds: 8 };
+    vi.spyOn(service, 'createUploadIntent').mockReturnValue(throwError(() => ({status:503})));
+    component.startUpload();
+    expect(component.errorMessage).toContain('temporariamente indisponível');
+    expect(component.errorMessage).toContain('O vídeo anterior foi mantido.');
+    expect(component.videoMedia[0].id).toBe('kept');
+    expect(service.deletedMediaIds).toEqual([]);
   });
 
   it('checks provider readiness while the PUT response is pending and stops the transfer observer when ready', () => {

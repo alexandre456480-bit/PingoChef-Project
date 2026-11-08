@@ -1062,10 +1062,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
             }
             @if (likeMessage()) { <p class="like-feedback" role="status">{{ likeMessage() }}</p> }
             <!-- Footer info -->
-            <footer class="public-menu-footer">
-              <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="footer-mini-logo" />
-              <span class="footer-powered">Cardápio Digital</span>
-            </footer>
+            @if (showPingoChefBranding()) {
+              <footer class="public-menu-footer">
+                <a class="pingochef-credit" href="/plans" [style.color]="textSecondary" aria-label="PingoChef — conhecer os planos">
+                  <img src="/pingo-chef-logo-principal.webp" alt="PingoChef" class="footer-mini-logo" width="26" height="26" loading="lazy" />
+                  <span class="footer-powered">Cardápio Digital</span>
+                </a>
+              </footer>
+            }
 
           </div>
         </div>
@@ -2565,6 +2569,9 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     .footer-mini-logo { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; opacity: 0.7; }
     .footer-brand { font-size: 0.74rem; font-weight: 700; }
     .footer-powered { font-size: 0.6rem; opacity: 0.6; }
+    .pingochef-credit { display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:44px;padding:0 10px;text-decoration:none;border-radius:8px; }
+    .pingochef-credit:hover { text-decoration:underline;text-underline-offset:3px; }
+    .pingochef-credit:focus-visible { outline:2px solid currentColor;outline-offset:3px; }
 
     /* Modal Product Detail */
     .product-modal-backdrop {
@@ -3123,6 +3130,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   /** Se for false (rota pública), recebe os dados carregados da API */
   @Input() publicSlug: string | null = null;
+  readonly showPingoChefBranding = computed(() => this.isPhonePreview
+    ? this.authService.account()?.entitlements?.['REMOVE_PINGOCHEF_BRANDING'] !== true
+    : this.publicMenuService.menuData()?.showPingoChefBranding !== false);
 
   // View state: 'welcome' -> 'transitioning' -> 'menu'
   viewState: 'welcome' | 'transitioning' | 'menu' = 'welcome';

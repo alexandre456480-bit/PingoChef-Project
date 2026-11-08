@@ -11,6 +11,7 @@ import { businessEligibility } from '../services/business-eligibility.service';
 import { publicBanners, publicCategoryHeroes, publicCustomConfig, publicImage } from '../services/public-menu-presentation';
 import { listProductRecommendations, publicProductRecommendations } from '../services/product-recommendations.service';
 import { publicTemplateKey } from '../services/template-entitlement.service';
+import { showPingoChefBranding } from '../services/public-menu-branding.service';
 
 const slugParamSchema = z.string().trim().regex(/^[a-z0-9-]+$/, 'Slug inválido');
 
@@ -331,6 +332,11 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         }));
     }
 
+    // Service-role reads bypass RLS: apply the same category visibility boundary here.
+    const visibleCategoryIds = new Set(categories.map(category => category.id));
+    items = items.filter(item => visibleCategoryIds.has(item.categoryId));
+    subcategories = subcategories.filter(subcategory => visibleCategoryIds.has(subcategory.categoryId));
+
     // Headers de segurança e anti-cache
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -392,6 +398,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         categories: categories.map(category => ({...category, imageUrl: publicImage(category.imageUrl)})),
         subcategories,
         cartRecommendationsEnabled,
+        showPingoChefBranding: await showPingoChefBranding(business.id),
         productRecommendations,
         items: items.map(item => ({...item, imageUrl: publicImage(item.imageUrl)}))
       }

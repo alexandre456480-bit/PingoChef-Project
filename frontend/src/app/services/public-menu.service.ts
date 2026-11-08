@@ -29,6 +29,7 @@ export interface PublicMenuResponse {
   subcategories?: Subcategory[];
   items: MenuItem[];
   cartRecommendationsEnabled?: boolean;
+  showPingoChefBranding?: boolean;
   productRecommendations?: ProductRecommendation[];
 }
 

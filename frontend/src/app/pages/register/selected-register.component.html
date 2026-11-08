@@ -1,0 +1,23 @@
+<app-auth-shell [signup]="true">
+  @if (loading) { <p class="access-wait" role="status">Preparando seu cadastro…</p> }
+  @if (error) { <div class="access-alert" role="alert">{{ error }}</div> }
+  @if (intent) {
+    <header class="access-heading"><span class="step-label">Plano {{ intent.plan.name }}</span><h1>Vamos tirar seu cardápio do papel?</h1><p>Crie sua conta e deixe seu negócio pronto para receber.</p></header>
+    <form class="access-form" (ngSubmit)="submit()" #form="ngForm">
+      <div class="access-fields">
+        <div class="access-field"><label for="signup-name">Seu nome</label><input id="signup-name" name="fullName" [(ngModel)]="data.fullName" placeholder="Como podemos te chamar?" autocomplete="name" required minlength="2" maxlength="120" /></div>
+        <div class="access-field"><label for="signup-business">Nome do estabelecimento</label><input id="signup-business" name="businessName" [(ngModel)]="data.businessName" (ngModelChange)="slug()" placeholder="O nome do seu negócio" autocomplete="organization" required minlength="2" maxlength="120" /></div>
+        <div class="access-field full"><label for="signup-slug">Endereço do cardápio</label><input id="signup-slug" name="slug" [(ngModel)]="data.slug" placeholder="seu-estabelecimento" pattern="[a-z0-9-]{3,50}" required maxlength="50" autocapitalize="none" spellcheck="false" /><small>Seu link termina em /m/{{ data.slug || 'seu-estabelecimento' }}. Use letras minúsculas, números e hífens.</small></div>
+        <div class="access-field full"><label for="signup-email">E-mail</label><div class="access-input"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3 7 9 6 9-6"/></svg><input id="signup-email" name="email" type="email" [(ngModel)]="data.email" placeholder="seu@email.com" autocomplete="email" required email maxlength="254" autocapitalize="none" spellcheck="false" /></div><small>Use um e-mail ao qual você tenha acesso para recuperar sua senha.</small></div>
+        <div class="access-field"><label for="signup-password">Senha</label><input id="signup-password" name="password" [type]="showPassword ? 'text' : 'password'" [(ngModel)]="data.password" placeholder="Pelo menos 8 caracteres" autocomplete="new-password" required minlength="8" maxlength="128" /></div>
+        <div class="access-field"><label for="signup-confirm">Confirmar senha</label><input id="signup-confirm" name="confirmPassword" [type]="showPassword ? 'text' : 'password'" [(ngModel)]="confirmation" placeholder="Repita sua senha" autocomplete="new-password" required minlength="8" maxlength="128" /></div>
+      </div>
+      <label class="access-check"><input type="checkbox" name="showPassword" [(ngModel)]="showPassword" />Mostrar senhas</label>
+      <details class="optional-invite"><summary>Tenho um código de convite</summary><div class="access-field"><label for="signup-invitation">Código do convite (opcional)</label><input id="signup-invitation" name="invitationCode" [(ngModel)]="invitationCode" maxlength="128" autocomplete="off" spellcheck="false" /></div></details>
+      <label class="access-check"><input type="checkbox" name="terms" [(ngModel)]="terms" required /><span>Li e aceito os <a routerLink="/terms" target="_blank" rel="noopener">Termos de Uso</a> e as <a routerLink="/privacy" target="_blank" rel="noopener">Informações de Privacidade</a> desta versão preliminar.</span></label>
+      <button class="access-primary" type="submit" [disabled]="saving || form.invalid || !terms" [attr.aria-busy]="saving">{{ saving ? 'Criando sua conta…' : 'Criar conta no ' + intent.plan.name }}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
+    </form>
+    <p class="access-bottom">Já tem uma conta? <a routerLink="/login">Entrar</a></p><a class="access-note-link" routerLink="/plans">Voltar e escolher outro plano</a>
+  }
+  @if (!loading && !intent) { <a class="access-primary" routerLink="/plans">Escolher meu plano</a> }
+</app-auth-shell>

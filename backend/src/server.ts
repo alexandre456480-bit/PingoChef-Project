@@ -197,7 +197,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
         code: 'VALIDATION_ERROR',
         requestId: res.locals?.requestId,
         message: 'Dados enviados são inválidos.',
-        details: err.errors,
+        details: err.issues,
         timestamp: new Date().toISOString()
       }
     });

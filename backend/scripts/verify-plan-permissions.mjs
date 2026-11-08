@@ -37,6 +37,7 @@ export async function verifyPlanPermissions(pool) {
       assert.equal(e.MAX_VIDEOS, videos);
       assert.equal(e.VIDEO_UPLOAD, plan !== 'FREE');
       assert.equal(e.THEMATIC_TEMPLATES, plan !== 'FREE');
+      assert.equal(e.REMOVE_PINGOCHEF_BRANDING, plan !== 'FREE');
       await c.query("UPDATE design_settings SET template_key='royal-palace' WHERE business_id=$1", [business]);
       if (plan === 'FREE') await denied(publish, [business, owner], /THEMATIC_TEMPLATE_REQUIRES_PLAN/);
       else assert.equal((await c.query(publish, [business, owner])).rows[0].value, true);

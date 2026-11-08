@@ -21,7 +21,13 @@ export interface VideoRateLimiter {
 export class PostgresVideoRateLimiter implements VideoRateLimiter {
   async consume(input: Record<string, unknown>) {
     const { data, error } = await supabaseAdmin.rpc('consume_video_security_budget', input);
-    if (error || !data || typeof data.allowed !== 'boolean') throw new VideoSecurityError(503, 'VIDEO_TEMPORARILY_UNAVAILABLE');
+    if (error || !data || typeof data.allowed !== 'boolean') {
+      videoAudit('video_security_storage_unavailable', {
+        code: error && ['PGRST202', 'PGRST205', '42703', '42883'].includes(error.code)
+          ? 'VIDEO_SCHEMA_NOT_READY' : 'VIDEO_SECURITY_STORAGE_UNAVAILABLE'
+      });
+      throw new VideoSecurityError(503, 'VIDEO_TEMPORARILY_UNAVAILABLE');
+    }
     return data as { allowed: boolean; code: string; state: string };
   }
 }

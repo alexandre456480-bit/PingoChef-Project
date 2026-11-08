@@ -1,6 +1,6 @@
 .plans-showcase{position:relative;overflow:hidden;background:radial-gradient(ellipse at 18% 5%,#70206033,transparent 42%),radial-gradient(ellipse at 95% 35%,#283b7933,transparent 42%),#100e1b;color:#f8f5ff;padding-bottom:60px}
 .plans-showcase .commercial-nav{position:relative;z-index:1}
-.plans-showcase .commercial-nav>a:first-child{display:block;padding:3px 10px;background:#fff8ef;border-radius:16px;border:1px solid #fff3d9;box-shadow:0 4px 20px #0002}
+.plans-showcase .commercial-nav>a:first-child{display:block;padding:3px 10px}
 .plans-showcase .commercial-nav>a:last-child{display:inline-flex;align-items:center;min-height:44px;padding:0 17px;border:1px solid #ffffff29;border-radius:12px;color:#eee4fa;text-decoration:none;font-size:12px;background:#ffffff05}
 .plans-showcase .hero{max-width:850px;margin:48px auto 50px}
 .plans-showcase .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid #ff92c24d;border-radius:99px;background:#ff8abd0a;color:#ffb2ce;font-size:10px;letter-spacing:.1em}

@@ -1,3 +1,6 @@
+import { verifyOwnerRegistrationNoEmail } from './verify-owner-registration-no-email.mjs';
+import { verifyVideoContractRepair } from './verify-video-contract-repair.mjs';
+import { verifyPublicMenuReads } from './verify-public-menu-reads.mjs';
 import { verifyBusinessSocialLinks } from './verify-business-social-links.mjs';
 import { verifyBusinessOrders } from './verify-business-orders.mjs';
 import { verifyMenuTransfer } from './verify-menu-transfer.mjs';
@@ -105,6 +108,8 @@ try {
       else if (file === '20261103020000_add_rounded_showcase_template.sql') await verifyAdditionalTemplate(pool, sql, 'rounded-showcase');
       else if (file === '20261103030000_add_soft_showcase_template.sql') await verifyAdditionalTemplate(pool, sql, 'soft-showcase');
       else if (file === '20261103040000_add_double_showcase_template.sql') await verifyAdditionalTemplate(pool, sql, 'double-showcase');
+      else if (file === '20261107010000_owner_registration_without_email_delivery.sql') await verifyOwnerRegistrationNoEmail(pool, sql);
+      else if (file === '20261108000000_restore_video_security_contract.sql') await verifyVideoContractRepair(pool, sql);
       else await pool.query(sql);
     }
     catch (error) { throw new Error(`Migration ${file}: ${error.message}`, { cause: error }); }
@@ -135,6 +140,7 @@ try {
   await verifyImageStorage(pool);
   await verifyIndexRecovery(pool);
   await verifyVideoSecurity(pool, config);
+  await verifyPublicMenuReads(pool);
 } finally {
   if (pool) await pool.end();
   if (started) await run(binaries.pg_ctl, ['-D', dataDirectory, '-m', 'fast', '-w', 'stop'], { windowsHide: true, timeout: 30000 });

@@ -331,3 +331,12 @@ describe('Public Free signup without email verification',()=>{
     expect((await request(api).post('/api/v1/auth/forgot-password').set('Origin',origin).send({email:body.email})).status).toBe(202);
   });
 });
+
+test('retired email-code endpoints do not invoke provider authentication', async()=>{
+  jest.clearAllMocks();
+  for(const path of ['email-code','verify-email']) {
+    await request(app()).post('/api/v1/auth/'+path).set('Origin',origin).send({email:user.email,code:'123456'}).expect(404);
+  }
+  expect(provider.verifyOtp).not.toHaveBeenCalled();
+  expect(provider.resend).not.toHaveBeenCalled();
+});

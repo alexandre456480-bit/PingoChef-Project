@@ -581,7 +581,7 @@ export class ProductVideoUploaderComponent implements OnChanges, OnDestroy {
       },
       error: error => {
         this.planLimitReached=error?.error?.error?.code==='LIMIT_EXCEEDED';
-        this.handleUploadError(this.planLimitReached?'Limite de vídeos do plano atingido. Você pode substituir um vídeo existente ou comparar planos.':'Não foi possível iniciar o envio. Confira sua conexão e tente novamente.');
+        this.handleUploadError(this.planLimitReached?'Limite de vídeos do plano atingido. Você pode substituir um vídeo existente ou comparar planos.':error?.status>=500?'O serviço de vídeos está temporariamente indisponível. Tente novamente mais tarde.':'Não foi possível iniciar o envio. Confira sua conexão e tente novamente.');
       }
     });
   }

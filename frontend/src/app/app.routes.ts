@@ -13,6 +13,7 @@ export const routes: Routes = [
   { path: 'privacy', loadComponent:()=>import('./pages/plans/legal-information.component').then(m=>m.LegalInformationComponent),data:{privacy:true} },
   { path: 'register', loadComponent:()=>import('./pages/register/selected-register.component').then(m=>m.SelectedRegisterComponent) },
   { path: 'confirm-email', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'verify-email', redirectTo: 'login', pathMatch: 'full' },
   { path: 'forgot-password', loadComponent: () => import('./pages/login/account-access.component').then(m => m.AccountAccessComponent), data: { mode: 'forgot' } },
   { path: 'reset-password', loadComponent: () => import('./pages/login/account-access.component').then(m => m.AccountAccessComponent), data: { mode: 'reset' } },
   { path: 'complete-registration', loadComponent: () => import('./pages/login/account-access.component').then(m => m.AccountAccessComponent), data: { mode: 'complete' } },

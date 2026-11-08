@@ -32,11 +32,25 @@ describe('Cardápio público com subconjuntos', () => {
     const response = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
 
     expect(response.status).toBe(200);
+    expect(response.body.data.showPingoChefBranding).toBe(true);
     expect(response.body.data.business.socialLinks).toEqual([{ platform: 'instagram', url: 'https://instagram.com/pingo' }]);
     expect(response.body.data.business).not.toHaveProperty('owner_user_id');
     expect(response.body.data.design.templateKey).toBe('default');
     expect(response.body.data.subcategories).toEqual([{ id: 'test_sub', categoryId: 'test_cat', name: 'Artesanais', displayOrder: 0 }]);
     expect(response.body.data.items).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'test_item', subcategoryId: 'test_sub' })]));
+
+    // Service-role reads must not leak products/subcategories of hidden categories.
+    localDb.categories.find(row => row.id === 'test_cat')!.is_active = false;
+    const hidden = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
+    expect(hidden.status).toBe(200);
+    expect(hidden.body.data.categories).toEqual([]);
+    expect(hidden.body.data.items).toEqual([]);
+    expect(hidden.body.data.subcategories).toEqual([]);
+    localDb.categories.find(row => row.id === 'test_cat')!.is_active = true;
+    localDb.items.find(row => row.id === 'test_item')!.is_available = false;
+    const unavailable = await request(app).get('/api/v1/public/menu/teste-subconjuntos');
+    expect(unavailable.body.data.items).toEqual([]);
+    localDb.items.find(row => row.id === 'test_item')!.is_available = true;
 
     localDb.designSettings[businessId] = {
       template_key: 'showcase', font_heading: 'Oswald', font_body: 'Lora',

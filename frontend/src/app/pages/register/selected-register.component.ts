@@ -2,145 +2,16 @@ import { finalize } from 'rxjs';
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthShellComponent } from '../login/auth-shell.component';
 import { AuthService } from '../../services/auth.service';
 import { CommercialService, PlanIntent } from '../../services/commercial.service';
 @Component({
   selector: 'app-selected-register',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.Default,
-  imports: [FormsModule, RouterLink],
-  styleUrl: '../plans/commercial.css',
-  template: ` <div class="commercial-page">
-    <nav class="commercial-nav">
-      <a routerLink="/plans"><img src="/pingo-chef-logo-principal.webp" alt="PingoChef" /></a
-      ><a routerLink="/login">Entrar</a>
-    </nav>
-    <div class="stepper" aria-label="Etapas do cadastro">
-      <span>1. Plano</span><span class="current">2. Conta</span><span>3. Primeiros passos</span>
-    </div>
-    <main class="center-card">
-      @if (loading) {
-        <p role="status">Preparando seu cadastro…</p>
-      }
-      @if (error) {
-        <p class="error" role="alert">{{ error }}</p>
-      }
-      @if (intent) {
-        <span class="eyebrow">Plano {{ intent.plan.name }}</span>
-        <h1>Seu cardápio começa aqui.</h1>
-        <p>
-          Crie sua conta no {{ intent.plan.name }} e entre para configurar seu estabelecimento.
-        </p>
-        <a routerLink="/plans">Voltar e escolher outro plano</a>
-        <form (ngSubmit)="submit()" #form="ngForm">
-          <div class="field">
-            <label for="signup-name">Seu nome</label
-            ><input
-              id="signup-name"
-              name="fullName"
-              [(ngModel)]="data.fullName"
-              autocomplete="name"
-              required
-              minlength="2"
-              maxlength="120"
-            />
-          </div>
-          <div class="field">
-            <label for="signup-business">Nome do estabelecimento</label
-            ><input
-              id="signup-business"
-              name="businessName"
-              [(ngModel)]="data.businessName"
-              (ngModelChange)="slug()"
-              autocomplete="organization"
-              required
-              minlength="2"
-              maxlength="100"
-            />
-          </div>
-          <div class="field">
-            <label for="signup-slug">Endereço do cardápio</label
-            ><input
-              id="signup-slug"
-              name="slug"
-              [(ngModel)]="data.slug"
-              pattern="[a-z0-9-]{3,50}"
-              required
-              maxlength="50"
-            /><span class="fine"
-              >Use letras minúsculas, números e hífens. Você poderá ajustar os dados no
-              painel.</span
-            >
-          </div>
-          <div class="field">
-            <label for="signup-email">E-mail</label
-            ><input
-              id="signup-email"
-              name="email"
-              type="email"
-              [(ngModel)]="data.email"
-              autocomplete="email"
-              required
-              maxlength="254"
-            />
-          </div>
-          <div class="field">
-            <label for="signup-password">Senha</label
-            ><input
-              id="signup-password"
-              name="password"
-              [type]="showPassword ? 'text' : 'password'"
-              [(ngModel)]="data.password"
-              autocomplete="new-password"
-              required
-              minlength="8"
-              maxlength="128"
-            /><span class="fine"
-              >Pelo menos 8 caracteres. Combine palavras, números e símbolos.</span
-            >
-          </div>
-          <div class="field">
-            <label for="signup-confirm">Confirmar senha</label
-            ><input
-              id="signup-confirm"
-              name="confirmPassword"
-              [type]="showPassword ? 'text' : 'password'"
-              [(ngModel)]="confirmation"
-              autocomplete="new-password"
-              required
-              maxlength="128"
-            />
-          </div>
-          <label class="check-label"
-            ><input type="checkbox" name="showPassword" [(ngModel)]="showPassword" />Mostrar
-            senhas</label
-          >
-          <div class="field">
-            <label class="check-label"
-              ><input type="checkbox" name="terms" [(ngModel)]="terms" required /><span
-                >Li e aceito os
-                <a routerLink="/terms" target="_blank" rel="noopener">Termos de Uso</a> e as
-                <a routerLink="/privacy" target="_blank" rel="noopener"
-                  >Informações de Privacidade</a
-                >
-                desta versão preliminar.</span
-              ></label
-            >
-          </div>
-          <button
-            class="button primary"
-            type="submit"
-            [disabled]="saving || form.invalid || !terms"
-          >
-            {{ saving ? 'Criando conta…' : 'Criar conta no ' + intent.plan.name }}
-          </button>
-        </form>
-      }
-      @if (!loading && !intent) {
-        <a class="button primary" routerLink="/plans">Escolher meu plano</a>
-      }
-    </main>
-  </div>`,
+  imports: [FormsModule, RouterLink, AuthShellComponent],
+  styleUrl: '../login/access-form.css',
+  templateUrl: './selected-register.component.html',
 })
 export class SelectedRegisterComponent implements OnInit {
   intent: PlanIntent | null = null;
@@ -150,6 +21,7 @@ export class SelectedRegisterComponent implements OnInit {
   terms = false;
   showPassword = false;
   confirmation = '';
+  invitationCode = '';
   data = { fullName: '', businessName: '', slug: '', email: '', password: '' };
   constructor(
     private commercial: CommercialService,
@@ -200,7 +72,7 @@ export class SelectedRegisterComponent implements OnInit {
     }
     this.saving = true;
     this.auth
-      .register({ ...this.data, intentId: this.intent.id, termsAccepted: true })
+      .register({ ...this.data, invitationCode: this.invitationCode, intentId: this.intent.id, termsAccepted: true })
       .pipe(finalize(() => this.cdr.markForCheck()))
       .subscribe({
         next: (response) => {
@@ -212,10 +84,7 @@ export class SelectedRegisterComponent implements OnInit {
           const email = this.data.email;
           this.data.password = '';
           this.confirmation = '';
-          this.router.navigate(['/login'], {
-            state: { email },
-            queryParams: { registration: 'received' },
-          });
+          this.router.navigate(['/login'], { queryParams: { registration: 'received' }, state: { email } });
         },
         error: (e) => {
           this.saving = false;

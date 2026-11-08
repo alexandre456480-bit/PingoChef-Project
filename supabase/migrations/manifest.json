@@ -242,5 +242,25 @@
   {
     "file": "20261104020000_update_plan_permissions.sql",
     "sha256": "d24865fd436bff068c9d7f07f2b9654a94c2e268eeba7572e00bc0859dbd392a"
+  },
+  {
+    "file": "20261107000000_owner_email_code_verification.sql",
+    "sha256": "212ec6616c4592af748ab4fcb83d69fdd98381878a231223354b4d53a8ceecf4"
+  },
+  {
+    "file": "20261107010000_owner_registration_without_email_delivery.sql",
+    "sha256": "c1827e5a1042da1d4dc402e6bf1615dab3e99841e9183e35f6ce4a350f2a1f95"
+  },
+  {
+    "file": "20261108000000_restore_video_security_contract.sql",
+    "sha256": "b8b92fc012bbba4dac9939c1f989662976c027e9a9d04d88bbd55de99dc5ecff"
+  },
+  {
+    "file": "20261108173908_restrict_public_menu_item_reads.sql",
+    "sha256": "8019b427c162681ea0062f37692f58af8149a5e10e829a43f1d9aeeb394fb745"
+  },
+  {
+    "file": "20261108174854_add_public_menu_branding_entitlement.sql",
+    "sha256": "e1d465f37fcbb7901c3c42a26a446c1ba0bbcfb7ca16aff527781373eb23f74a"
   }
 ]
