@@ -179,7 +179,7 @@
   box-shadow: var(--pixel-frame), inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 25%, transparent);
 }
 .menu-viewport[data-template="pixel"] .m-qty-btn { width: 44px; min-height: 44px; color: var(--primary-color); opacity: 1; }
-.menu-viewport[data-template="pixel"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) {
+.menu-viewport[data-template="pixel"] :is(.menu-action-button, .btn-sheet-close-action) {
   min-height: 52px; min-width: 0; flex: 1 1 170px; border-radius: 0; padding: 12px;
   border: 2px solid var(--accent-color); font: inherit; font-weight: 700;
   box-shadow: var(--pixel-frame), inset 0 0 0 1px color-mix(in srgb, var(--surface-color) 40%, transparent), 0 4px var(--pixel-ink);

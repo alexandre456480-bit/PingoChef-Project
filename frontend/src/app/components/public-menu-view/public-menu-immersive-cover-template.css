@@ -94,7 +94,7 @@
 .menu-viewport[data-template="immersive-cover"] .sheet-price-row { flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--immersive-edge); padding-top: 20px; }
 .menu-viewport[data-template="immersive-cover"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
 .menu-viewport[data-template="immersive-cover"] .modal-qty-selector { border-radius: 999px; border: 1px solid var(--immersive-edge); }
-.menu-viewport[data-template="immersive-cover"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) {
+.menu-viewport[data-template="immersive-cover"] :is(.menu-action-button, .btn-sheet-close-action) {
   flex: 1 1 170px; min-width: 0; min-height: 52px; border-radius: 999px; border: 1px solid var(--immersive-edge); box-shadow: var(--immersive-shadow);
 }
 /* Home highlights use the same photo-led, rounded presentation. */

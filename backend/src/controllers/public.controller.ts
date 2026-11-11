@@ -86,7 +86,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
         let bData: any;
         try {
           bData = await businessEligibility.findPublicBusinessBySlug(slug,
-            'id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color, phone, whatsapp, social_links, order_settings');
+            'id, name, slug, description, logo_url, cover_image_url, welcome_bg_type, welcome_bg_image, welcome_bg_color,welcome_bg_accent_color, phone, whatsapp, social_links, order_settings');
         } catch {
           console.error('[Data Audit]', { event: 'public_menu_business_query_failed' });
           return res.status(503).json({
@@ -377,6 +377,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           welcomeBgType: business.welcome_bg_type || 'image',
           welcomeBgImage: publicImage(business.welcome_bg_image) || publicImage(business.cover_image_url) || '',
           welcomeBgColor: business.welcome_bg_color || '#0F0F12',
+          welcomeBgAccentColor: business.welcome_bg_accent_color || null,
           phone: business.phone || null,
           whatsapp: business.whatsapp || null,
           socialLinks: publicSocialLinks(business.social_links),

@@ -67,35 +67,41 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       <!-- ══════════════════════════════════════════════════ -->
       <!-- ── 1. WELCOME SCREEN (TELA DE ENTRADA) ── -->
       <!-- ══════════════════════════════════════════════════ -->
-      @if (viewState === 'welcome' || viewState === 'transitioning') {
+      @if (menuOpening) {
+        <div class="entry-transition-layer" aria-hidden="true"
+          [style.--curtain-base]="welcomeBgColor" [style.--curtain-accent]="welcomeButtonColor">
+          <div class="entry-curtain entry-curtain-left"></div>
+          <div class="entry-curtain entry-curtain-right"></div>
+          <img class="entry-company-logo" [appMenuImage]="logoUrl" menuImageKind="logo" menuImagePriority="high" alt="" />
+        </div>
+      }
+      @if (viewState === 'welcome') {
         <div
           class="welcome-screen"
-          [class.anim-exit]="viewState === 'transitioning'"
-
+          [class.welcome-color]="welcomeBgType === 'color'"
+          [style.--welcome-detail]="welcomeAccentColor"
           [style.background-color]="welcomeBgColor">
 
           @if (welcomeBgType === 'image' && welcomeBgImage) {
             <img class="welcome-cover" [appMenuImage]="welcomeBgImage" menuImageKind="hero" menuImagePriority="high" alt="" />
+            <div class="welcome-overlay"></div>
+          } @else {
+            <div class="welcome-shapes" aria-hidden="true">
+              <div class="welcome-shape welcome-shape-top"></div>
+              <div class="welcome-shape welcome-shape-bottom"></div>
+            </div>
           }
-          <!-- Dynamic Glass Gradient Overlay -->
-          <div
-            class="welcome-overlay"
-            [style.background]="'radial-gradient(circle at 50% 30%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 75%, ' + (welcomeBgType === 'color' ? welcomeBgColor : screenBg) + ' 100%)'">
-          </div>
-
-          <!-- Ambient Lighting Pulses -->
-          <div class="ambient-glow" [style.background]="accentColor"></div>
 
           <!-- Welcome Center Content -->
-          <div class="welcome-content">
-            <!-- Floating Logo with Glowing Ring -->
+          <div class="welcome-content" [style.color]="welcomeTextColor">
+            <!-- Company identity -->
             <div class="welcome-logo-wrap">
               <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="welcome-logo-img" [menuImagePriority]="welcomeBgType === 'image' && welcomeBgImage ? 'auto' : 'high'" />
             </div>
 
             <!-- Business Typography -->
             <div class="welcome-texts">
-              <span class="welcome-kicker" [style.color]="accentColor">BEM-VINDO AO</span>
+              <span class="welcome-kicker">BEM-VINDO AO</span>
               <h1 class="welcome-title" [style.font-family]="headingFont + ', sans-serif'">
                 {{ businessName }}
               </h1>
@@ -106,20 +112,17 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               }
             </div>
 
-            <!-- CINEMATIC CTA BUTTON -->
+            <!-- Welcome action follows the company's selected background color. -->
             <div class="cta-action-area">
               <button
                 type="button"
                 class="btn-enter-menu"
-                [style.background]="'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')'"
+                [style.--welcome-action]="welcomeButtonColor"
+                [style.--welcome-on-action]="welcomeButtonTextColor"
+                [style.background-color]="welcomeButtonColor"
+                [style.color]="welcomeButtonTextColor"
                 (click)="openMenuWithAnimation()">
-                <span class="btn-shimmer"></span>
                 <span class="btn-text">Ver o Cardápio</span>
-                <div class="btn-icon-circle">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </div>
               </button>
               <span class="cta-sub-hint">Toque para explorar</span>
             </div>
@@ -130,12 +133,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       <!-- ══════════════════════════════════════════════════ -->
       <!-- ── 2. VITRINE & MENU PRINCIPAL ── -->
       <!-- ══════════════════════════════════════════════════ -->
-      @if (viewState === 'menu' || viewState === 'transitioning') {
+      @if (viewState === 'menu') {
         <div
+          #menuShell tabindex="-1"
           class="menu-main-shell"
-          [attr.inert]="selectedProduct ? '' : null"
-          [class.anim-enter]="viewState === 'transitioning'"
-          [class.menu-opening]="menuOpening"
+          [attr.inert]="selectedProduct || menuOpening ? '' : null"
           [style.background]="screenBg">
 
           @if (business.socialLinks?.length) {
@@ -1170,8 +1172,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
                   <button
                     type="button"
-                    class="btn-sheet-add-cart"
-                    [style.background]="'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')'"
+                    class="btn-sheet-add-cart menu-action-button"
                     (click)="confirmAddToCart(selectedProduct); closeProductDetail()">
                     {{ selectedProduct.showPrice === false ? 'Adicionar ao Pedido' : 'Adicionar • R$ ' + getModalTotal(selectedProduct).toFixed(2) }}
                   </button>
@@ -1323,8 +1324,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   </button>
                   <button
                     type="button"
-                    class="btn-continue-nav"
-                    [style.background]="'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')'"
+                    class="btn-continue-nav menu-action-button"
                     (click)="cartService.closeCart()">
                     Continuar Vendo
                   </button>
@@ -1400,188 +1400,80 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     /* ── 1. WELCOME SCREEN ── */
     /* ══════════════════════════════════════════════════ */
     .welcome-screen {
-      position: absolute;
-      inset: 0;
-      z-index: 50;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-size: cover;
-      background-position: center;
-      padding: 24px 20px;
-      text-align: center;
+      position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;
+      justify-content:flex-start;box-sizing:border-box;overflow:hidden auto;
+      padding:calc(env(safe-area-inset-top,0px) + clamp(58px,12vh,110px)) 24px 32px;text-align:center;
     }
+    .welcome-overlay { position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,#0006,#000b); }
+    .welcome-shapes { position:absolute;inset:0;overflow:hidden;pointer-events:none; }
+    .welcome-shape { position:absolute;aspect-ratio:1;border-radius:50%;background:var(--welcome-detail); }
+    .welcome-shape-top { width:66%;max-width:360px;top:0;right:0;transform:translate(46%,-46%); }
+    .welcome-shape-bottom { width:114%;max-width:520px;bottom:0;left:0;transform:translate(-47%,47%); }
+    .welcome-content { position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:22px;width:100%;max-width:360px; }
+    .welcome-logo-wrap { display:grid;place-items:center;width:112px;height:112px;flex-shrink:0; }
+    .welcome-logo-img { width:100%;height:100%;object-fit:contain; }
+    .welcome-texts { display:flex;flex-direction:column;align-items:center;gap:10px;max-width:100%; }
+    .welcome-kicker { font-size:.65rem;font-weight:650;letter-spacing:.18em;opacity:.65; }
+    .welcome-title { font-size:clamp(1.5rem,5vw,2.1rem);font-weight:800;color:inherit;margin:0;line-height:1.2;overflow-wrap:anywhere; }
+    .welcome-tagline { font-size:.84rem;color:inherit;opacity:.75;margin:0;line-height:1.55;max-width:290px;overflow-wrap:anywhere; }
+    .welcome-screen:not(.welcome-color) .welcome-title { text-shadow:0 2px 14px #0008; }
+    .welcome-screen:not(.welcome-color) .welcome-tagline { text-shadow:0 1px 8px #0008; }
 
-    .welcome-overlay {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      backdrop-filter: blur(2px);
-    }
-
-    .ambient-glow {
-      position: absolute;
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.28;
-      z-index: 2;
-      animation: pulseGlow 4s ease-in-out infinite alternate;
-    }
-
-    @keyframes pulseGlow {
-      0% { transform: scale(0.8); opacity: 0.2; }
-      100% { transform: scale(1.3); opacity: 0.38; }
-    }
-
-    .welcome-content {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      width: 100%;
-      max-width: 320px;
-    }
-
-    /* Floating Logo */
-    .welcome-logo-wrap {
-      position: relative;
-      width: 88px;
-      height: 88px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: floatLogo 3.5s ease-in-out infinite;
-    }
-
-    .logo-luminous-ring {
-      display: none;
-    }
-
-    @keyframes ringSpin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes floatLogo {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-
-    .welcome-logo-img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .welcome-texts {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    .welcome-kicker {
-      font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-    .welcome-title {
-      font-size: 1.65rem;
-      font-weight: 800;
-      color: #FFF;
-      margin: 0;
-      line-height: 1.15;
-      text-shadow: 0 4px 16px rgba(0,0,0,0.6);
-    }
-    .welcome-tagline {
-      font-size: 0.84rem;
-      color: #E4E4E7;
-      margin: 0;
-      line-height: 1.35;
-      max-width: 260px;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    }
-    .welcome-desc-custom {
-      max-width: 290px;
-      line-height: 1.45;
-      font-size: 0.82rem;
-      color: #F4F4F5;
-    }
-
-    /* Cinema Button */
+    /* Company-colored welcome action */
     .cta-action-area {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 54px;
       width: 100%;
     }
 
     .btn-enter-menu {
       width: 100%;
-      max-width: 240px;
-      padding: 14px 20px;
-      border: none;
-      border-radius: 18px;
+      max-width: 260px;
+      min-height: 60px;
+      padding: 16px 26px;
+      border: 1px solid color-mix(in srgb, var(--welcome-action) 70%, white);
+      border-radius: 17px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      color: #FFF;
-      font-size: 1rem;
+      gap: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
       font-weight: 700;
       cursor: pointer;
       position: relative;
-      overflow: hidden;
       box-shadow:
-        0 8px 25px rgba(244, 123, 32, 0.4),
-        inset 0 1px 2px rgba(255, 255, 255, 0.4);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        0 12px 28px color-mix(in srgb, var(--welcome-action) 32%, transparent),
+        0 3px 0 color-mix(in srgb, var(--welcome-action) 70%, black),
+        inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      transition: transform 180ms ease, box-shadow 180ms ease;
     }
-
-    .btn-enter-menu:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 12px 32px rgba(244, 123, 32, 0.6);
-    }
-
-    .btn-shimmer {
-      position: absolute;
-      top: 0; left: -100%; width: 50%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-      animation: shimmerPass 2.8s infinite;
-    }
-
-    @keyframes shimmerPass {
-      0% { left: -100%; }
-      50%, 100% { left: 150%; }
-    }
-
-    .btn-icon-circle {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .btn-enter-menu .btn-text { flex: 1; text-align: center; }
+    .btn-enter-menu:focus-visible { outline: 3px solid white; outline-offset: 5px; }
+    .btn-enter-menu:active { transform: translateY(2px); }
+    @media (hover:hover) and (prefers-reduced-motion:no-preference) { .btn-enter-menu:hover { transform:translateY(-2px); } }
+    @media (prefers-reduced-motion:reduce) { .btn-enter-menu { transition:none; } .btn-enter-menu:active { transform:none; } }
 
     .cta-sub-hint {
       font-size: 0.7rem;
-      color: #D4D4D8;
+      color: inherit;
+      opacity: .65;
       letter-spacing: 0.04em;
     }
 
     /* ══════════════════════════════════════════════════ */
     /* ── 2. MENU MAIN SHELL ── */
     /* ══════════════════════════════════════════════════ */
+    .entry-transition-layer { position:absolute;inset:0;z-index:80;display:grid;place-items:center;overflow:hidden; }
+    .entry-curtain { position:absolute;inset-block:0;width:calc(50% + 1px);background:linear-gradient(90deg,var(--curtain-base),color-mix(in srgb,var(--curtain-base) 88%,var(--curtain-accent)),var(--curtain-base));animation:curtain-open 720ms cubic-bezier(.65,0,.25,1) both;will-change:transform; }
+    .entry-curtain-left { left:0;--curtain-shift:-101%;border-right:1px solid color-mix(in srgb,var(--curtain-accent) 24%,transparent); }
+    .entry-curtain-right { right:0;--curtain-shift:101%;border-left:1px solid color-mix(in srgb,var(--curtain-accent) 24%,transparent); }
+    .entry-company-logo { position:relative;width:128px;height:128px;object-fit:contain;animation:entry-logo-dissolve 520ms ease-out both;will-change:transform,opacity; }
+    @keyframes curtain-open { 0%,12% { transform:translateX(0); } 100% { transform:translateX(var(--curtain-shift)); } }
+    @keyframes entry-logo-dissolve { 0%,15% { opacity:1;transform:scale(1); } 100% { opacity:0;transform:scale(1.14) translateY(-10px); } }
+    .menu-main-shell:focus { outline:none; }
     .menu-main-shell {
       flex: 1;
       height: 100%;
@@ -2924,12 +2816,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       flex: 1;
       padding: 14px;
       border: none;
-      border-radius: 14px;
-      color: #FFF;
+      border-radius: var(--template-button-radius, 14px);
       font-weight: 700;
       font-size: 0.92rem;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      box-shadow: 0 4px 16px color-mix(in srgb,var(--accent-color) 22%,transparent);
     }
 
     /* Cart Drawer Modal Sheet */
@@ -3093,8 +2984,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       flex: 1;
       padding: 12px;
       border: none;
-      border-radius: 12px;
-      color: #FFF;
+      border-radius: var(--template-button-radius, 12px);
       font-weight: 700;
       font-size: 0.9rem;
       cursor: pointer;
@@ -3103,10 +2993,18 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     .category-nav-pill.active { color: var(--on-primary); }
     .cart-badge-count { color: var(--on-accent); }
-    .btn-enter-menu, .btn-sheet-add-cart, .btn-continue-nav { color: var(--on-action); }
+    .btn-enter-menu { color: var(--on-action); }
+    .menu-action-button {
+      background:var(--accent-color);color:var(--on-accent);font-family:inherit;
+      min-height:48px;min-width:0;line-height:1.35;overflow-wrap:anywhere;
+      transition:transform 150ms ease;
+    }
+    .menu-action-button:focus-visible { outline:2px solid var(--text-primary);outline-offset:3px; }
+    @media (hover:hover) and (prefers-reduced-motion:no-preference) { .menu-action-button:hover { transform:translateY(-1px); } }
+    @media (prefers-reduced-motion:reduce) { .menu-action-button { transition:none; } }
 
     @media (prefers-reduced-motion: reduce) {
-      .welcome-screen, .welcome-screen.anim-exit, .menu-main-shell.anim-enter, .welcome-logo-wrap, .ambient-glow, .btn-shimmer {
+      .welcome-screen, .welcome-logo-wrap {
         animation: none !important;
         transition: none !important;
       }
@@ -3116,11 +3014,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
         transform: none !important;
       }
       .entry-transition-layer { display: none !important; }
-      .welcome-screen.anim-exit { display: none !important; }
     }
   `]
 })
 export class PublicMenuViewComponent implements OnInit, OnDestroy {
+  @ViewChild('menuShell') private menuShell?: ElementRef<HTMLElement>;
   @ViewChild('showcaseScroller') private showcaseScroller?: ElementRef<HTMLElement>;
   @ViewChild('catalogSection') private catalogSection?: ElementRef<HTMLElement>;
   /** Se for true, consome os signals em tempo real do painel (DesignService, MenuService, AuthService) */
@@ -3134,8 +3032,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     ? this.authService.account()?.entitlements?.['REMOVE_PINGOCHEF_BRANDING'] !== true
     : this.publicMenuService.menuData()?.showPingoChefBranding !== false);
 
-  // View state: 'welcome' -> 'transitioning' -> 'menu'
-  viewState: 'welcome' | 'transitioning' | 'menu' = 'welcome';
+  viewState: 'welcome' | 'menu' = 'welcome';
   menuOpening = false;
   private openingTimers: ReturnType<typeof setTimeout>[] = [];
 
@@ -3344,6 +3241,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
         welcomeBgType: b?.welcome_bg_type || 'image',
         welcomeBgImage: b?.welcome_bg_image || b?.cover_image_url || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
         welcomeBgColor: b?.welcome_bg_color || '#0F0F12',
+        welcomeBgAccentColor: b?.welcome_bg_accent_color || null,
         socialLinks: safeSocialLinks(b?.social_links),
         orderSettings: safeOrderSettings(b?.order_settings)
       };
@@ -3388,6 +3286,20 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   get welcomeBgColor(): string {
     return (this.business as any)?.welcomeBgColor || (this.business as any)?.welcome_bg_color || '#0F0F12';
   }
+
+  get welcomeAccentColor(): string {
+    const color = this.business.welcomeBgAccentColor;
+    return typeof color === 'string' && /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(color) ? color : '#FFB800';
+  }
+
+  get welcomeTextColor(): string { return this.welcomeBgType === 'color' ? contrastTextColor(this.welcomeBgColor) : '#FFFFFF'; }
+
+  get welcomeButtonColor(): string {
+    const color = this.welcomeBgType === 'color' ? this.welcomeAccentColor : this.accentColor;
+    return /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(color) ? color : '#0F0F12';
+  }
+
+  get welcomeButtonTextColor(): string { return contrastTextColor(this.welcomeButtonColor); }
 
   get categoryHeroConfigs(): Record<string, { enabled: boolean; banners: string[] }> {
     if (this.isPhonePreview) {
@@ -3723,12 +3635,27 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   // ── INTERAÇÕES & ANIMAÇÃO ──
 
   openMenuWithAnimation(): void {
+    if (this.viewState !== 'welcome') return;
     this.viewState = 'menu';
-    this.menuOpening = false;
+    this.menuOpening = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.startBannerTimer();
+    this.cdr.detectChanges();
+    if (!this.menuOpening) {
+      this.menuShell?.nativeElement.focus({ preventScroll: true });
+      return;
+    }
+    this.openingTimers = [setTimeout(() => {
+      this.menuOpening = false;
+      this.openingTimers = [];
+      this.cdr.detectChanges();
+      this.menuShell?.nativeElement.focus({ preventScroll: true });
+    }, 780)];
   }
 
   resetToWelcome(): void {
+    this.openingTimers.forEach(clearTimeout);
+    this.openingTimers = [];
+    this.menuOpening = false;
     this.viewState = 'welcome';
     this.activeCatId = null;
     this.searchActive = false;

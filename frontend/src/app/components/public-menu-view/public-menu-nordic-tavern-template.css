@@ -153,7 +153,7 @@
 .menu-viewport[data-template="nordic-tavern"] .sheet-price-row::before { content: ''; position: absolute; top: -6px; left: 25%; width: 50%; height: 10px; background: var(--secondary-color); mask: var(--tavern-knot) center / 48px 12px repeat-x; pointer-events: none; }
 .menu-viewport[data-template="nordic-tavern"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; padding-top: 10px; border-top: 3px double var(--tavern-edge); }
 .menu-viewport[data-template="nordic-tavern"] .modal-qty-selector { border: 3px double var(--tavern-metal); border-radius: 6px; }
-.menu-viewport[data-template="nordic-tavern"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border-radius: 6px; border: 3px double var(--tavern-metal); box-shadow: inset 0 0 0 1px var(--tavern-iron), var(--tavern-shadow); }
+.menu-viewport[data-template="nordic-tavern"] :is(.menu-action-button, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border-radius: 6px; border: 3px double var(--tavern-metal); box-shadow: inset 0 0 0 1px var(--tavern-iron), var(--tavern-shadow); }
 /* Home uses the same paper panels, wood plaques and riveted photo frames. */
 .menu-viewport[data-template="nordic-tavern"] .showcase-block { padding: 12px; background: var(--tavern-paper-grain), var(--surface-color); border: 1px solid var(--tavern-edge); border-radius: 4px; box-shadow: var(--tavern-shadow); }
 .menu-viewport[data-template="nordic-tavern"] .showcase-block .block-header { padding-bottom: 10px; border-bottom: 3px double var(--tavern-edge); }

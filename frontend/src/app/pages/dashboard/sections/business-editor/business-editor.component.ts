@@ -144,7 +144,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
               </div>
               <div>
                 <h3 class="section-heading">Fundo da Página de Entrada (Welcome)</h3>
-                <p class="section-desc">Personalize o fundo da tela de abertura. Os efeitos dinâmicos de luz, vinheta e ambient glow permanecem ativos em ambos os modos.</p>
+                <p class="section-desc">Use uma imagem ou combine duas cores: uma para o fundo e outra para as formas arredondadas e o botão.</p>
               </div>
             </div>
 
@@ -165,7 +165,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
                 [class.active]="form.welcome_bg_type === 'color'"
                 (click)="setBgType('color')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-                Cor Sólida Personalizada
+                Duas Cores Personalizadas
               </button>
             </div>
 
@@ -203,6 +203,7 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
             <!-- Conteúdo de Background: Cor Sólida -->
             @if (form.welcome_bg_type === 'color') {
               <div class="bg-color-box">
+                <label for="welcomeColorPicker" class="hex-label">Cor do fundo</label>
                 <div class="color-picker-row">
                   <div class="color-input-wrap">
                     <input
@@ -227,6 +228,20 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
                       maxlength="7"
                       class="field-input hex-field"
                     />
+                  </div>
+                </div>
+
+                <label for="welcomeAccentColorPicker" class="hex-label">Cor dos detalhes e do botão</label>
+                <div class="color-picker-row">
+                  <div class="color-input-wrap">
+                    <input type="color" id="welcomeAccentColorPicker" name="welcomeAccentColor" class="native-color-picker"
+                      [(ngModel)]="form.welcome_bg_accent_color" (ngModelChange)="onLiveAccentColorChange($event)" />
+                    <label for="welcomeAccentColorPicker" class="color-swatch-display" [style.background-color]="form.welcome_bg_accent_color"></label>
+                  </div>
+                  <div class="hex-input-group">
+                    <label for="welcomeAccentHex" class="hex-label">Código HEX</label>
+                    <input id="welcomeAccentHex" type="text" name="welcomeAccentHex" class="field-input hex-field" maxlength="7"
+                      [(ngModel)]="form.welcome_bg_accent_color" (ngModelChange)="onLiveAccentColorChange($event)" />
                   </div>
                 </div>
 
@@ -874,7 +889,8 @@ export class BusinessEditorComponent implements OnInit {
     order_settings: defaultOrderSettings(),
     welcome_bg_type: 'image' as 'image' | 'color',
     welcome_bg_image: '',
-    welcome_bg_color: '#0F0F12'
+    welcome_bg_color: '#0F0F12',
+    welcome_bg_accent_color: '#FFB800'
   };
 
   logoPreview: string | null = null;
@@ -883,6 +899,7 @@ export class BusinessEditorComponent implements OnInit {
   readonly defaultCoverImage = 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80';
 
   readonly colorPresets = [
+    { name: 'Branco', color: '#FFFFFF' },
     { name: 'Carvão Escuro', color: '#0F0F12' },
     { name: 'Vinho Nobre', color: '#1F0A12' },
     { name: 'Café & Malte', color: '#1A110B' },
@@ -922,6 +939,7 @@ export class BusinessEditorComponent implements OnInit {
     this.form.welcome_bg_type = biz.welcome_bg_type || 'image';
     this.form.welcome_bg_image = biz.welcome_bg_image || biz.cover_image_url || this.defaultCoverImage;
     this.form.welcome_bg_color = biz.welcome_bg_color || '#0F0F12';
+    this.form.welcome_bg_accent_color = biz.welcome_bg_accent_color || '#FFB800';
   }
 
   onOrderSettingsChange(settings: OrderSettings): void {
@@ -990,6 +1008,11 @@ export class BusinessEditorComponent implements OnInit {
     this.syncLiveDraft();
   }
 
+  onLiveAccentColorChange(color: string): void {
+    this.form.welcome_bg_accent_color = color;
+    this.syncLiveDraft();
+  }
+
   onLiveNameChange(name: string): void {
     this.syncLiveDraft();
   }
@@ -1014,6 +1037,7 @@ export class BusinessEditorComponent implements OnInit {
       welcome_bg_type: this.form.welcome_bg_type,
       welcome_bg_image: this.form.welcome_bg_image,
       welcome_bg_color: this.form.welcome_bg_color,
+      welcome_bg_accent_color: this.form.welcome_bg_accent_color,
       cover_image_url: this.form.welcome_bg_type === 'image' ? this.form.welcome_bg_image : current.cover_image_url
     });
   }
@@ -1044,7 +1068,8 @@ export class BusinessEditorComponent implements OnInit {
       logo_url: this.logoPreview,
       welcome_bg_type: this.form.welcome_bg_type,
       welcome_bg_image: this.form.welcome_bg_image,
-      welcome_bg_color: this.form.welcome_bg_color
+      welcome_bg_color: this.form.welcome_bg_color,
+      welcome_bg_accent_color: this.form.welcome_bg_accent_color
     };
 
     this.authService.updateBusiness(payload).subscribe({

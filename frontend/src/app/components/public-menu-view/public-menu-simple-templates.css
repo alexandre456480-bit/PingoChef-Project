@@ -12,7 +12,7 @@
 .menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .btn-view-item { width: 40px; height: 40px; min-height: 40px; border-radius: var(--template-button-radius); border: 1px solid var(--simple-edge); }
 .menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .product-modal-sheet { border: 1px solid var(--simple-edge); border-radius: 24px; }
 .menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) .sheet-price-row { border-top: 1px solid var(--simple-edge); padding-top: 18px; }
-.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) :is(.btn-sheet-add-cart, .btn-sheet-close-action, .modal-qty-selector) { border-radius: var(--template-button-radius); }
+.menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) :is(.menu-action-button, .btn-sheet-close-action, .modal-qty-selector) { border-radius: var(--template-button-radius); }
 .menu-viewport:is([data-template="editorial-menu"], [data-template="product-gallery"], [data-template="compact-menu"]) :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { border: 1px solid var(--simple-edge); border-radius: var(--template-item-radius); box-shadow: none; }
 
 /* Editorial: a horizontal masthead, quiet tabs and a photo on the right. */

@@ -147,7 +147,7 @@
 .menu-viewport[data-template="tropical-bamboo"] .sheet-price-row { flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--tropical-edge); padding-top: 18px; }
 .menu-viewport[data-template="tropical-bamboo"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
 .menu-viewport[data-template="tropical-bamboo"] .modal-qty-selector { border: 1px solid var(--tropical-edge); border-radius: 18px; }
-.menu-viewport[data-template="tropical-bamboo"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 2px solid var(--tropical-edge); border-radius: 18px; box-shadow: var(--tropical-shadow); }
+.menu-viewport[data-template="tropical-bamboo"] :is(.menu-action-button, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 2px solid var(--tropical-edge); border-radius: 18px; box-shadow: var(--tropical-shadow); }
 .menu-viewport[data-template="tropical-bamboo"] .showcase-block .block-header { padding-bottom: 8px; }
 .menu-viewport[data-template="tropical-bamboo"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { position: relative; border: 1px solid var(--tropical-edge); border-radius: 22px; box-shadow: var(--tropical-shadow); }
 .menu-viewport[data-template="tropical-bamboo"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card)::after { content: ''; position: absolute; inset: auto 12px 2px; height: 18px; background: var(--secondary-color); mask: var(--tropical-wave) center / 120px 24px repeat-x; opacity: .12; pointer-events: none; }

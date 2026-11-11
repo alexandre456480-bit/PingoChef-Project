@@ -78,7 +78,7 @@
 .menu-viewport[data-template="soft-showcase"] .sheet-price-row { flex-wrap: wrap; gap: 10px; padding-top: 8px; border-top: 0; }
 .menu-viewport[data-template="soft-showcase"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
 .menu-viewport[data-template="soft-showcase"] .modal-qty-selector { border: 1px solid var(--suave-edge); border-radius: 22px; box-shadow: var(--suave-shadow); }
-.menu-viewport[data-template="soft-showcase"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 180px; min-width: 0; min-height: 52px; border: 1px solid var(--suave-edge); border-radius: 24px; box-shadow: var(--suave-shadow); }
+.menu-viewport[data-template="soft-showcase"] :is(.menu-action-button, .btn-sheet-close-action) { flex: 1 1 180px; min-width: 0; min-height: 52px; border: 1px solid var(--suave-edge); border-radius: 24px; box-shadow: var(--suave-shadow); }
 @container (max-width: 359px) {
   .menu-viewport[data-template="soft-showcase"] .product-item-card { --item-photo-size: 92px; --item-content-size: 136px; gap: 8px; }
   .menu-viewport[data-template="soft-showcase"] .card-item-title { font-size: .78rem; }

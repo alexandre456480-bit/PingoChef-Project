@@ -35,6 +35,7 @@ export interface LocalBusiness {
   welcome_bg_type?: 'image' | 'color';
   welcome_bg_image?: string | null;
   welcome_bg_color?: string | null;
+  welcome_bg_accent_color?: string | null;
 }
 
 export interface LocalCategory {

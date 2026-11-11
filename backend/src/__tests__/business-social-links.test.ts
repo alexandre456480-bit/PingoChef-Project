@@ -85,6 +85,20 @@ it("persists links through the existing owner-scoped update, preserving old-clie
 it("includes persisted links when the company is reloaded", async () => {
   expect((await request(app()).get("/business")).status).toBe(404);
   expect(select.mock.calls[0][0]).toContain("social_links");
+  expect(select.mock.calls[0][0]).toContain("welcome_bg_accent_color");
+});
+
+it("persists the welcome accent for the owner and preserves omitted values", async () => {
+  const api = app();
+  expect((await request(api).put('/business').send({ name: 'Pingo', slug: 'pingo', welcome_bg_accent_color: '#FFB800' })).status).toBe(200);
+  expect(update.mock.calls.at(-1)[0].welcome_bg_accent_color).toBe('#FFB800');
+  expect((await request(api).put('/business').send({ name: 'Pingo', slug: 'pingo' })).status).toBe(200);
+  expect(update.mock.calls.at(-1)[0]).not.toHaveProperty('welcome_bg_accent_color');
+});
+
+it.each(['red', '#12345', 'url(https://example.com)', '#ffffff;display:none'])("rejects invalid welcome accent %s before writing", async (color) => {
+  expect((await request(app()).put('/business').send({ name: 'Pingo', slug: 'pingo', welcome_bg_accent_color: color })).status).toBe(400);
+  expect(update).not.toHaveBeenCalled();
 });
 
 it.each([

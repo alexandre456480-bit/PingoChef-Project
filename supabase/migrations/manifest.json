@@ -262,5 +262,9 @@
   {
     "file": "20261108174854_add_public_menu_branding_entitlement.sql",
     "sha256": "e1d465f37fcbb7901c3c42a26a446c1ba0bbcfb7ca16aff527781373eb23f74a"
+  },
+  {
+    "file": "20261111192607_add_welcome_accent_color.sql",
+    "sha256": "4fa6857ee48e895aded51431fef9f243b426b5d6460028392e5b6ba8e890cedc"
   }
 ]

@@ -13,6 +13,7 @@ export async function verifyMenuTransfer(pool) {
     for (const [business, user] of [[source, owner], [target, other]])
       await c.query("INSERT INTO public.businesses(id,owner_user_id,name,slug,status) VALUES($1,$2,'Source menu',$1::uuid::text,'ACTIVE')", [business, user]);
     await c.query("UPDATE public.businesses SET logo_url=$2 WHERE id=$1", [source, 'data:image/png;base64,' + 'A'.repeat(600000)]);
+    await c.query("UPDATE public.businesses SET welcome_bg_accent_color='#FFB800' WHERE id=$1", [source]);
     await c.query("INSERT INTO public.categories(id,business_id,name) VALUES($1,$2,'Category')", [category, source]);
     await c.query('INSERT INTO public.design_settings(business_id,custom_config) VALUES($1,$2)', [source,
       { hero_banners: ['/assets/banner.webp'], category_hero_configs: { [category]: { enabled: true, banners: ['/assets/category.webp'] } } }]);
@@ -30,6 +31,7 @@ export async function verifyMenuTransfer(pool) {
     assert.equal(exported.summary.items, 1);
     const text = (await Promise.all(Array.from({ length: exported.parts }, (_, i) => chunk(source, owner, exported.id, i)))).join('');
     const doc = JSON.parse(text);
+    assert.equal(doc.business.welcome_bg_accent_color, '#FFB800');
     assert.equal(doc.business.logo_url.length, 600022);
     for (const key of ['id', 'owner_user_id', 'slug', 'status']) assert.equal(key in doc.business, false);
     assert.equal('likesCount' in doc.items[0], false);
@@ -52,6 +54,7 @@ export async function verifyMenuTransfer(pool) {
     await rejected(() => apply(excessive), /IMPORT_PLAN_LIMIT/);
     assert.equal((await c.query('SELECT count(*) FROM public.menu_items WHERE business_id=$1', [target])).rows[0].count, '0');
     assert.equal((await apply(doc)).imported, true);
+    assert.equal((await c.query('SELECT welcome_bg_accent_color FROM public.businesses WHERE id=$1',[target])).rows[0].welcome_bg_accent_color,'#FFB800');
     assert.equal((await apply(doc)).imported, true); // no duplicate inserts
     assert.equal((await c.query('SELECT count(*) FROM public.menu_items WHERE business_id=$1', [target])).rows[0].count, '1');
     const state = (await c.query('SELECT owner_user_id,slug FROM public.businesses WHERE id=$1', [target])).rows[0];
@@ -74,6 +77,11 @@ export async function verifyMenuTransfer(pool) {
     assert.equal((await c.query('SELECT id FROM public.menu_items WHERE business_id=$1', [target])).rows[0].id, doc.items[0].id);
     assert.deepEqual((await c.query('SELECT custom_config FROM public.design_settings WHERE business_id=$1', [target])).rows[0].custom_config.category_hero_configs,
       { [cat]: { enabled: true, banners: ['/assets/category.webp'] } });
+
+    const legacy = structuredClone(doc); delete legacy.business.welcome_bg_accent_color;
+    const legacyTransfer = await start(target, other, 'import'); await chunk(target, other, legacyTransfer.id, 0, '{}');
+    await apply(legacy, false, legacyTransfer.id);
+    assert.equal((await c.query('SELECT welcome_bg_accent_color FROM public.businesses WHERE id=$1', [target])).rows[0].welcome_bg_accent_color, '#FFB800');
 
     await c.query("UPDATE public.menu_transfers SET expires_at=now()-interval '1 second' WHERE id=$1", [exported.id]);
     await rejected(() => chunk(source, owner, exported.id, 0), /TRANSFER_NOT_FOUND/);

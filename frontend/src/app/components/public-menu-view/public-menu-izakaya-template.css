@@ -136,7 +136,7 @@
 .menu-viewport[data-template="japanese-izakaya"] .sheet-price-row { flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--izakaya-edge); padding-top: 18px; }
 .menu-viewport[data-template="japanese-izakaya"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
 .menu-viewport[data-template="japanese-izakaya"] .modal-qty-selector { border: 1px solid var(--izakaya-edge); border-radius: 18px; }
-.menu-viewport[data-template="japanese-izakaya"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 1px solid var(--izakaya-edge); border-radius: 18px; box-shadow: var(--izakaya-shadow); }
+.menu-viewport[data-template="japanese-izakaya"] :is(.menu-action-button, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 1px solid var(--izakaya-edge); border-radius: 18px; box-shadow: var(--izakaya-shadow); }
 /* Home respects customer section order and uses the same brushwork and wave trim. */
 .menu-viewport[data-template="japanese-izakaya"] .showcase-block .block-header { padding-bottom: 8px; }
 .menu-viewport[data-template="japanese-izakaya"] :is(.promo-item-card, .ranking-item-row, .featured-chef-card, .combo-card, .best-seller-card) { border: 1px solid var(--izakaya-edge); border-radius: 16px; box-shadow: var(--izakaya-shadow); }

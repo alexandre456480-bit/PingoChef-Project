@@ -18,6 +18,7 @@ export interface PublicBusiness {
   welcomeBgType?: 'image' | 'color';
   welcomeBgImage?: string;
   welcomeBgColor?: string;
+  welcomeBgAccentColor?: string | null;
   phone?: string | null;
   whatsapp?: string | null;
 }

@@ -3,7 +3,48 @@ import { provideHttpClient } from '@angular/common/http';
 import { PublicMenuService } from '../../services/public-menu.service';
 import { PublicMenuViewComponent } from './public-menu-view.component';
 import { AuthService } from '../../services/auth.service';
+import { vi } from 'vitest';
 describe('public menu local navigation', () => {
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+  it.each([false, true])('opens curtains once, cleans up and respects reduced motion=%s', (reduced) => {
+    vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: reduced })));
+    TestBed.configureTestingModule({ imports: [PublicMenuViewComponent], providers: [provideHttpClient()] });
+    const fixture = TestBed.createComponent(PublicMenuViewComponent), view = fixture.componentInstance;
+    fixture.detectChanges();
+    view.openMenuWithAnimation();
+    expect(view.viewState).toBe('menu');
+    expect(view.menuOpening).toBe(!reduced);
+    expect(fixture.nativeElement.querySelectorAll('.entry-curtain').length).toBe(reduced ? 0 : 2);
+    view.openMenuWithAnimation();
+    vi.advanceTimersByTime(800);
+    expect(view.menuOpening).toBe(false);
+    expect(fixture.nativeElement.querySelector('.entry-transition-layer')).toBeNull();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('.menu-main-shell'));
+    view.resetToWelcome(); fixture.detectChanges();
+    view.openMenuWithAnimation(); view.resetToWelcome();
+    vi.advanceTimersByTime(800); fixture.detectChanges();
+    expect(view.viewState).toBe('welcome');
+    expect(view.menuOpening).toBe(false);
+  });
+  it('uses both welcome colors and a text-only entry button, with legacy fallback', () => {
+    TestBed.configureTestingModule({ imports: [PublicMenuViewComponent], providers: [provideHttpClient()] });
+    const service = TestBed.inject(PublicMenuService);
+    const data = { business: { name: 'Casa Jardim', welcomeBgType: 'color', welcomeBgColor: '#FFFFFF', welcomeBgAccentColor: '#FFB800' }, design: { templateKey: 'default', homeBlocks: [], customConfig: {} }, categories: [], items: [] };
+    service.menuData.set(data as any);
+    const fixture = TestBed.createComponent(PublicMenuViewComponent), view = fixture.componentInstance;
+    view.viewState = 'welcome'; fixture.detectChanges();
+    expect(view.welcomeAccentColor).toBe('#FFB800');
+    expect(view.welcomeButtonColor).toBe('#FFB800');
+    expect(fixture.nativeElement.querySelectorAll('.welcome-shape').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('.btn-enter-menu img, .btn-enter-menu svg')).toBeNull();
+    service.menuData.set({ ...data, business: { ...data.business, welcomeBgAccentColor: undefined } } as any);
+    expect(view.welcomeAccentColor).toBe('#FFB800');
+    expect(view.welcomeBgColor).toBe('#FFFFFF');
+    service.menuData.set({ ...data, business: { ...data.business, welcomeBgType: 'image', welcomeBgImage: '/cover.webp' } } as any);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.welcome-shape')).toBeNull();
+  });
   it('shows the full PingoChef footer only on Free, including preview', () => {
     TestBed.configureTestingModule({ imports: [PublicMenuViewComponent], providers: [provideHttpClient()] });
     const service = TestBed.inject(PublicMenuService);
@@ -67,6 +108,7 @@ describe('public menu local navigation', () => {
     expect(view.selectedProduct).toBe(item);
     view.closeProductDetail();
     expect(view.selectedProduct).toBeNull();
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })));
     view.openMenuWithAnimation();
     expect(view.viewState).toBe('menu');
     expect(view.menuOpening).toBe(false);

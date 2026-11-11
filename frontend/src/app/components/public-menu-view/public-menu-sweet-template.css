@@ -91,7 +91,7 @@
 .menu-viewport[data-template="sweet-boutique"] .sheet-price-row::after { content: ''; position: absolute; top: -10px; left: calc(50% - 9px); width: 18px; height: 18px; background: var(--primary-color); mask: var(--sweet-heart) center / contain no-repeat; pointer-events: none; }
 .menu-viewport[data-template="sweet-boutique"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
 .menu-viewport[data-template="sweet-boutique"] .modal-qty-selector { border: 1px solid var(--sweet-edge); border-radius: 24px; }
-.menu-viewport[data-template="sweet-boutique"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 1px solid var(--sweet-edge); border-radius: 24px; box-shadow: var(--sweet-shadow), inset 0 1px color-mix(in srgb, var(--surface-color) 40%, transparent); }
+.menu-viewport[data-template="sweet-boutique"] :is(.menu-action-button, .btn-sheet-close-action) { flex: 1 1 170px; min-width: 0; min-height: 52px; border: 1px solid var(--sweet-edge); border-radius: 24px; box-shadow: var(--sweet-shadow), inset 0 1px color-mix(in srgb, var(--surface-color) 40%, transparent); }
 .menu-viewport[data-template="sweet-boutique"] .public-menu-footer { position: relative; padding-top: 44px; }
 .menu-viewport[data-template="sweet-boutique"] .public-menu-footer::before { content: ''; position: absolute; inset: 0 0 auto; height: 28px; background: var(--sweet-edge); mask: radial-gradient(ellipse at top, white 70%, transparent 72%) left top / 36px 24px repeat-x; opacity: .65; pointer-events: none; }
 

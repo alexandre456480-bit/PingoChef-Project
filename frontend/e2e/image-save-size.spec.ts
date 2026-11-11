@@ -59,10 +59,12 @@ test('large company images and a color change save below the published request l
   await expect.poll(() => saves.length).toBe(1);
   expect(saves[0].bytes).toBeLessThanOrEqual(3_500_000);
   expect(saves[0].body.logo_url).toMatch(/^data:image\/webp/);
-  await editor.getByRole('button', { name: 'Cor Sólida Personalizada' }).click();
+  await editor.getByRole('button', { name: 'Duas Cores Personalizadas' }).click();
   await editor.locator('#welcomeColorPicker').fill('#125634');
+  await editor.locator('#welcomeAccentColorPicker').fill('#ffb800');
   await editor.locator('[data-tour="company-save"]').click();
   await expect.poll(() => saves.length).toBe(2);
   expect(saves[1].body.welcome_bg_color).toBe('#125634');
+  expect(saves[1].body.welcome_bg_accent_color).toBe('#ffb800');
   expect(saves[1].bytes).toBeLessThanOrEqual(3_500_000);
 });

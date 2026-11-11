@@ -30,11 +30,11 @@
   padding: 5px 14px; border-block: 1px solid currentColor;
 }
 .menu-viewport[data-template="retro-diner"] .btn-enter-menu {
-  border-radius: 999px; border: 3px double var(--on-action);
-  box-shadow: 0 0 0 1px var(--accent-color), 0 6px 20px color-mix(in srgb, var(--accent-color) 30%, transparent);
+  border-radius: 999px; border: 3px double var(--welcome-on-action);
+  box-shadow: 0 0 0 1px var(--welcome-action), 0 6px 20px color-mix(in srgb, var(--welcome-action) 30%, transparent);
 }
 .menu-viewport[data-template="retro-diner"] .btn-enter-menu:hover {
-  box-shadow: 0 0 0 1px var(--accent-color), 0 8px 24px color-mix(in srgb, var(--accent-color) 45%, transparent);
+  box-shadow: 0 0 0 1px var(--welcome-action), 0 8px 24px color-mix(in srgb, var(--welcome-action) 45%, transparent);
 }
 .menu-viewport[data-template="retro-diner"] .showcase-scrollable { gap: 14px; }
 .menu-viewport[data-template="retro-diner"] .showcase-scrollable:has(> .template-brand-header:first-child) { padding-top: 8px; }
@@ -170,7 +170,7 @@
 .menu-viewport[data-template="retro-diner"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
 .menu-viewport[data-template="retro-diner"] .modal-qty-selector { padding: 4px; gap: 8px; }
 .menu-viewport[data-template="retro-diner"] .m-qty-btn { width: 40px; min-height: 44px; color: var(--text-primary); }
-.menu-viewport[data-template="retro-diner"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) {
+.menu-viewport[data-template="retro-diner"] :is(.menu-action-button, .btn-sheet-close-action) {
   flex: 1 1 180px; min-height: 52px; min-width: 0; border-radius: 999px; border: 3px double var(--surface-color);
   box-shadow: 0 0 0 1px var(--accent-color), var(--diner-shadow); font: inherit; font-weight: 700;
 }

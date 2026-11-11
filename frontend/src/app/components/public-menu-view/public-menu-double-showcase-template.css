@@ -92,7 +92,7 @@
 .menu-viewport[data-template="double-showcase"] .sheet-price-row { flex-wrap: wrap; gap: 10px; padding-top: 18px; border-top: 1px solid var(--dupla-edge); }
 .menu-viewport[data-template="double-showcase"] .sheet-modal-actions { flex-wrap: wrap; gap: 12px; }
 .menu-viewport[data-template="double-showcase"] .modal-qty-selector { border: 1px solid var(--dupla-edge); border-radius: 20px; }
-.menu-viewport[data-template="double-showcase"] :is(.btn-sheet-add-cart, .btn-sheet-close-action) { flex: 1 1 180px; min-width: 0; min-height: 52px; border: 2px solid var(--surface-color); border-radius: 20px; box-shadow: var(--dupla-shadow); }
+.menu-viewport[data-template="double-showcase"] :is(.menu-action-button, .btn-sheet-close-action) { flex: 1 1 180px; min-width: 0; min-height: 52px; border: 2px solid var(--surface-color); border-radius: 20px; box-shadow: var(--dupla-shadow); }
 @container (max-width: 359px) {
   .menu-viewport[data-template="double-showcase"] .items-grid { gap: 8px; }
   .menu-viewport[data-template="double-showcase"] .card-title-row { flex-wrap: wrap; }

@@ -25,6 +25,7 @@ export const menuArchiveSchema = z.object({
     logo_url: image, banner_url: image, phone: z.string().max(30).nullable(), whatsapp: z.string().max(30).nullable(),
     welcome_bg_type: z.enum(['image', 'color']), welcome_bg_image: image,
     welcome_bg_color: z.string().regex(/^#(?:[a-f\d]{3}|[a-f\d]{6}|[a-f\d]{8})$/i).nullable(),
+    welcome_bg_accent_color: z.string().regex(/^#(?:[a-f\d]{3}|[a-f\d]{6})$/i).nullable().optional(),
     social_links: socialLinksSchema, order_settings: orderSettingsSchema
   }).strict(),
   design: designSchema.nullable(),
