@@ -52,8 +52,10 @@ test('large company images and a color change save below the published request l
   expect(source.length * 2).toBeGreaterThan(4_500_000);
   const file = { name: 'large-image.png', mimeType: 'image/png', buffer: Buffer.from(source.split(',')[1], 'base64') };
   await editor.locator('input[type="file"]').nth(0).setInputFiles(file);
+  await page.getByRole('button', { name: 'Usar imagem', exact: true }).click();
   await expect(editor.locator('.logo-img')).toHaveAttribute('src', /^data:image\/webp/);
   await editor.locator('input[type="file"]').nth(1).setInputFiles(file);
+  await page.getByRole('button', { name: 'Usar imagem', exact: true }).click();
   await expect(editor.locator('.bg-preview-wrap')).toHaveAttribute('style', /data:image\/webp/);
   await editor.locator('[data-tour="company-save"]').click();
   await expect.poll(() => saves.length).toBe(1);

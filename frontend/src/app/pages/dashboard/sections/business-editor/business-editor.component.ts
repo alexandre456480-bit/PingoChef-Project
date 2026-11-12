@@ -6,7 +6,8 @@ import { Component, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../services/auth.service';
-import { ImagePayloadService, imageSaveError } from '../../../../services/image-payload.service';
+import { imageSaveError } from '../../../../services/image-payload.service';
+import { ImageCropService } from '../../../../services/image-crop.service';
 import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
 
 @Component({
@@ -908,7 +909,7 @@ export class BusinessEditorComponent implements OnInit {
     { name: 'Preto Absoluto', color: '#000000' }
   ];
 
-  constructor(private authService: AuthService, private imagePayload: ImagePayloadService, private cdr: ChangeDetectorRef) {}
+  constructor(private authService: AuthService, private imageCrop: ImageCropService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     const biz = this.authService.currentBusiness();
@@ -953,14 +954,14 @@ export class BusinessEditorComponent implements OnInit {
   }
 
   onLogoSelect(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement, file = input.files?.[0]; input.value = '';
     if (!file) return;
     if (file.size > 8 * 1024 * 1024) {
       this.onToast.emit('Arquivo muito grande. Limite de 8MB.');
       return;
     }
-    this.imagePayload.readFile(file).subscribe({
-      next: image => { this.logoPreview = image; this.syncLiveDraft(); this.cdr.markForCheck(); },
+    this.imageCrop.open(file, { title: 'Logo da empresa', ratio: 1, fit: 'contain' }).subscribe({
+      next: image => { if (image) { this.logoPreview = image; this.syncLiveDraft(); this.cdr.markForCheck(); } },
       error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível carregar a logo.'))
     });
   }
@@ -980,14 +981,14 @@ export class BusinessEditorComponent implements OnInit {
   }
 
   onBgImageSelect(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement, file = input.files?.[0]; input.value = '';
     if (!file) return;
     if (file.size > 8 * 1024 * 1024) {
       this.onToast.emit('Imagem muito grande. Limite de 8MB.');
       return;
     }
-    this.imagePayload.readFile(file).subscribe({
-      next: image => { this.form.welcome_bg_image = image; this.syncLiveDraft(); this.cdr.markForCheck(); },
+    this.imageCrop.open(file, { title: 'Fundo da tela de entrada', ratio: 9 / 16 }).subscribe({
+      next: image => { if (image) { this.form.welcome_bg_image = image; this.syncLiveDraft(); this.cdr.markForCheck(); } },
       error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível carregar a imagem de fundo.'))
     });
   }

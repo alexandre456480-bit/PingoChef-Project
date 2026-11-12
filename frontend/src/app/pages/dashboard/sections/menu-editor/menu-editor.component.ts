@@ -8,12 +8,15 @@ import { ProductVideoUploaderComponent } from '../../../../features/product-vide
 import { AuthService } from '../../../../services/auth.service';
 import { ProductRecommendationsEditorComponent } from './product-recommendations-editor.component';
 import { DialogFocusDirective } from '../../../../components/dialog-focus.directive';
+import { ImageCropService } from '../../../../services/image-crop.service';
+import { ProductFlavorsEditorComponent } from './product-flavors-editor.component';
+import { ProductFlavor } from '../../../../models/product-flavors';
 
 @Component({
   selector: 'app-menu-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductVideoUploaderComponent, ProductRecommendationsEditorComponent, DialogFocusDirective],
-  styleUrls: ['./product-item-editor.css'],
+  imports: [CommonModule, FormsModule, ProductVideoUploaderComponent, ProductRecommendationsEditorComponent, ProductFlavorsEditorComponent, DialogFocusDirective],
+  styleUrls: ['./product-item-editor.css', './category-order.css'],
   template: `
     <div class="menu-container">
       <!-- 1. Categories Section -->
@@ -23,10 +26,15 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
             <h2 class="section-title">Categorias</h2>
             <p class="section-subtitle">{{ menuService.categories().length }} categorias configuradas</p>
           </div>
-          <button class="btn-cta" data-tour="new-category" (click)="openCategoryModal()">
+          <div class="category-header-actions">
+          <button type="button" class="btn-ghost" (click)="openCategoryOrder()" [disabled]="menuService.categories().length < 2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 8 3-3 3 3M7 5v14M14 7h6M14 12h6M14 17h6"/></svg> Organizar
+          </button>
+          <button type="button" class="btn-cta" data-tour="new-category" (click)="openCategoryModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nova Categoria
           </button>
+          </div>
         </div>
 
         <div class="categories-scroll">
@@ -223,6 +231,28 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
       </section>
     </div>
 
+    @if (showCategoryOrder) {
+      <div class="modal-overlay">
+        <section class="modal-card category-order-modal" role="dialog" aria-modal="true" aria-labelledby="category-order-title" tabindex="-1" appDialogFocus (dialogEscape)="closeCategoryOrder()">
+          <div class="modal-top"><h3 id="category-order-title" class="modal-title">Organizar categorias</h3><button type="button" class="modal-close" aria-label="Fechar organização" [disabled]="categoryOrderSaving" (click)="closeCategoryOrder()">×</button></div>
+          <p class="section-subtitle">Arraste para reorganizar ou escolha a posição. A ordem será a mesma no cardápio.</p>
+          <ol class="category-order-list" [attr.aria-busy]="categoryOrderSaving">
+            @for (cat of categoryOrder; track cat.id; let i = $index) {
+              <li [draggable]="!categoryOrderSaving" (dragstart)="startCategoryDrag($event, cat.id)" (dragover)="$event.preventDefault()" (drop)="dropCategory($event, i)" (dragend)="draggedCategoryId = null">
+                <span class="order-grip" aria-hidden="true">⠿</span><strong>{{ cat.name }}</strong>
+                <select [attr.aria-label]="'Posição de ' + cat.name" [ngModel]="i" (ngModelChange)="moveCategory(i, +$event)" [disabled]="categoryOrderSaving">
+                  @for (position of categoryOrder; track position.id; let n = $index) { <option [ngValue]="n">{{ n + 1 }}º</option> }
+                </select>
+                <button type="button" [disabled]="i === 0 || categoryOrderSaving" [attr.aria-label]="'Subir ' + cat.name" (click)="moveCategory(i, i - 1)">↑</button>
+                <button type="button" [disabled]="i === categoryOrder.length - 1 || categoryOrderSaving" [attr.aria-label]="'Descer ' + cat.name" (click)="moveCategory(i, i + 1)">↓</button>
+              </li>
+            }
+          </ol>
+          <p class="section-subtitle" role="status" aria-live="polite">{{ categoryOrderStatus }}</p>
+          <div class="category-header-actions"><button type="button" class="btn-ghost" [disabled]="categoryOrderSaving" (click)="closeCategoryOrder()">Cancelar</button><button type="button" class="btn-cta" [disabled]="categoryOrderSaving" (click)="saveCategoryOrder()">{{ categoryOrderSaving ? 'Salvando…' : 'Salvar ordem' }}</button></div>
+        </section>
+      </div>
+    }
     <!-- Modal: Category -->
     @if (showCategoryModal) {
       <div class="modal-overlay" (click)="showCategoryModal = false">
@@ -326,6 +356,8 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
               <!-- MODO: IMAGEM PERSONALIZADA -->
               @if (catForm.mode === 'image') {
                 <div class="custom-image-box">
+                  <input #categoryFile type="file" accept="image/png,image/jpeg,image/webp" (change)="onCategoryFileSelected($event)" hidden />
+                  <button type="button" class="btn-ghost" (click)="categoryFile.click()">Escolher imagem</button>
                   <div class="form-field">
                     <label class="field-label-sm">URL da Imagem da Categoria</label>
                     <input type="url" [(ngModel)]="catForm.imageUrl" name="catImageUrl" placeholder="https://exemplo.com/minha-categoria.png" class="field-input" />
@@ -431,11 +463,11 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
             <div class="item-editor-scroll">
               <div class="item-editor-layout">
                 <div class="item-editor-main">
-                  <section class="item-editor-section" aria-label="Informações do produto">
-<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span><div><h4>Informações do produto</h4><p>Nome, descrição e organização no cardápio.</p></div></div>
+                  <details class="item-editor-section" aria-label="Informações do produto">
+<summary class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span><div><h4>Informações do produto</h4><p>Nome, descrição e organização no cardápio.</p></div></summary>
             <div class="form-field">
               <label for="editor-itemCat">Categoria</label>
-              <select [(ngModel)]="itemForm.categoryId" id="editor-itemCat" name="itemCat" required class="field-input" (ngModelChange)="itemForm.subcategoryId = null">
+              <select [(ngModel)]="itemForm.categoryId" id="editor-itemCat" (invalid)="revealInvalidField($event)" name="itemCat" required class="field-input" (ngModelChange)="itemForm.subcategoryId = null">
                 <option value="">Selecione...</option>
                 @for (c of menuService.categories(); track c.id) {
                   <option [value]="c.id">{{ c.name }}</option>
@@ -455,15 +487,15 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
             }
             <div class="form-field">
               <label for="editor-itemName">Nome do Produto</label>
-              <input type="text" [(ngModel)]="itemForm.name" id="editor-itemName" name="itemName" placeholder="Ex: Bacon Supreme Burger" required class="field-input" />
+              <input type="text" [(ngModel)]="itemForm.name" id="editor-itemName" (invalid)="revealInvalidField($event)" name="itemName" placeholder="Ex: Bacon Supreme Burger" required class="field-input" />
             </div>
             <div class="form-field">
               <label for="editor-itemDesc">Descrição</label>
               <textarea [(ngModel)]="itemForm.description" id="editor-itemDesc" name="itemDesc" placeholder="Ingredientes, modo de preparo..." class="field-input field-textarea"></textarea>
             </div>
-                  </section>
-                  <section class="item-editor-section" aria-label="Preços do produto">
-<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13 13 20a2 2 0 0 1-3 0L2 12V3h9l9 8a2 2 0 0 1 0 2Z"/><circle cx="7" cy="8" r="1"/></svg></span><div><h4>Preços</h4><p>Defina o valor e a promoção, se houver.</p></div></div>
+                  </details>
+                  <details class="item-editor-section" aria-label="Preços do produto">
+<summary class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13 13 20a2 2 0 0 1-3 0L2 12V3h9l9 8a2 2 0 0 1 0 2Z"/><circle cx="7" cy="8" r="1"/></svg></span><div><h4>Preços</h4><p>Defina o valor e a promoção, se houver.</p></div></summary>
             <!-- Ativar / Desativar Preço -->
             <label class="checkbox-field price-visibility">
               <input type="checkbox" [(ngModel)]="itemForm.showPrice" name="itemShowPrice" />
@@ -478,7 +510,7 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
             <div class="form-row" [style.opacity]="itemForm.showPrice ? '1' : '0.45'" [style.pointer-events]="itemForm.showPrice ? 'auto' : 'none'">
               <div class="form-field">
                 <label for="editor-itemPrice">Preço Regular (R$)</label>
-                <input type="number" step="0.01" [(ngModel)]="itemForm.price" id="editor-itemPrice" name="itemPrice" inputmode="decimal" [required]="itemForm.showPrice" class="field-input" />
+                <input type="number" step="0.01" [(ngModel)]="itemForm.price" id="editor-itemPrice" (invalid)="revealInvalidField($event)" name="itemPrice" inputmode="decimal" [required]="itemForm.showPrice" class="field-input" />
               </div>
               <div class="form-field">
                 <label for="editor-itemPromo">Preço Promocional (R$)</label>
@@ -486,9 +518,9 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
               </div>
             </div>
 
-                  </section>
-                  <section class="item-editor-section" aria-label="Destaque do produto">
-<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"/></svg></span><div><h4>Destaque no cardápio</h4><p>Escolha como apresentar este produto.</p></div></div>
+                  </details>
+                  <details class="item-editor-section" aria-label="Destaque do produto">
+<summary class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"/></svg></span><div><h4>Destaque no cardápio</h4><p>Escolha como apresentar este produto.</p></div></summary>
             <!-- Tipo de Destaque -->
             <div class="form-field">
 
@@ -519,11 +551,12 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
                 </button>
               </div>
             </div>
-                  </section>
+                  </details>
+                <details class="item-editor-section"><summary class="item-section-heading"><div><h4>Sabores e opções</h4><p>Clique para expandir ou recolher.</p></div></summary><app-product-flavors-editor [(flavors)]="itemForm.flavors" /></details>
                 </div>
                 <div class="item-editor-media">
-                  <section class="item-editor-section item-photo-section" aria-label="Foto do produto">
-<div class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5-7 7-3-3-3 3"/></svg></span><div><h4>Foto do produto</h4><p>Uma boa imagem faz a diferença.</p></div></div>
+                  <details class="item-editor-section item-photo-section" aria-label="Foto do produto">
+<summary class="item-section-heading"><span class="item-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5-7 7-3-3-3 3"/></svg></span><div><h4>Foto do produto</h4><p>Uma boa imagem faz a diferença.</p></div></summary>
             <!-- Seção de Foto do Produto (Upload ou URL) -->
             <div class="form-field">
               <span class="field-label sr-only">Foto do Produto</span>
@@ -567,17 +600,17 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
               }
             </div>
 
-                  </section>
-            <app-product-video-uploader
+                  </details>
+            <details class="item-editor-section"><summary class="item-section-heading"><div><h4>Vídeo do produto</h4><p>Clique para expandir ou recolher.</p></div></summary><app-product-video-uploader
               [itemId]="editingItemId"
               [canUpload]="videoUploadAllowed"
               (busyChange)="videoUploadBlocksSave = $event"
               (onToast)="onToast.emit($event)">
-            </app-product-video-uploader>
+            </app-product-video-uploader></details>
                 </div>
                 <div class="item-editor-complements">
             @if (editingItemId) {
-              <app-product-recommendations-editor [itemId]="editingItemId" (busyChange)="recommendationsBusy = $event" />
+              <details class="item-editor-section"><summary class="item-section-heading"><div><h4>Sugestões para acompanhar</h4><p>Clique para expandir ou recolher.</p></div></summary><app-product-recommendations-editor [itemId]="editingItemId" (busyChange)="recommendationsBusy = $event" /></details>
             }
 
                 </div>
@@ -659,6 +692,7 @@ import { DialogFocusDirective } from '../../../../components/dialog-focus.direct
     }
   `,
   styles: [`
+
     :host { display: block; min-width: 0; }
     .menu-container {
       display: flex;
@@ -2149,6 +2183,55 @@ export class MenuEditorComponent implements OnInit {
 
   // Modal state
   showCategoryModal = false;
+  showCategoryOrder = false;
+  categoryOrder: Category[] = [];
+  categoryOrderSaving = false;
+  categoryOrderStatus = '';
+  draggedCategoryId: string | null = null;
+
+  openCategoryOrder(): void {
+    this.categoryOrder = [...this.menuService.categories()];
+    this.categoryOrderStatus = '';
+    this.showCategoryOrder = true;
+  }
+  closeCategoryOrder(): void { if (!this.categoryOrderSaving) this.showCategoryOrder = false; }
+  moveCategory(from: number, to: number): void {
+    if (this.categoryOrderSaving || from === to || from < 0 || to < 0 || to >= this.categoryOrder.length) return;
+    const rows = [...this.categoryOrder], [row] = rows.splice(from, 1);
+    if (!row) return;
+    rows.splice(to, 0, row); this.categoryOrder = rows;
+    this.categoryOrderStatus = `${row.name}: posição ${to + 1}. Salve para confirmar.`;
+  }
+  startCategoryDrag(event: DragEvent, id: string): void {
+    if (this.categoryOrderSaving) { event.preventDefault(); return; }
+    this.draggedCategoryId = id;
+    event.dataTransfer?.setData('text/plain', id);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+  dropCategory(event: DragEvent, to: number): void {
+    event.preventDefault();
+    if (this.draggedCategoryId) this.moveCategory(this.categoryOrder.findIndex(row => row.id === this.draggedCategoryId), to);
+    this.draggedCategoryId = null;
+  }
+  saveCategoryOrder(): void {
+    if (this.categoryOrderSaving) return;
+    const current = this.menuService.categories();
+    if (current.length !== this.categoryOrder.length || current.some(row => !this.categoryOrder.some(other => other.id === row.id))) {
+      this.categoryOrderStatus = 'As categorias mudaram. Feche e abra a organização novamente.'; return;
+    }
+    const orders = this.categoryOrder.map((row, displayOrder) => ({ id: row.id, displayOrder }));
+    this.categoryOrderSaving = true;
+    this.menuService.reorderCategories(orders).subscribe({
+      next: (res: any) => {
+        this.categoryOrderSaving = false;
+        if (!res.success) { this.categoryOrderStatus = 'Não foi possível salvar a ordem. Tente novamente.'; return; }
+        const positions = new Map(orders.map(row => [row.id, row.displayOrder]));
+        this.menuService.categories.update(rows => rows.map(row => ({ ...row, displayOrder: positions.get(row.id) ?? row.displayOrder })).sort((a, b) => a.displayOrder - b.displayOrder));
+        this.showCategoryOrder = false; this.onToast.emit('Ordem das categorias salva!'); this.cdr.markForCheck();
+      },
+      error: () => { this.categoryOrderSaving = false; this.categoryOrderStatus = 'Não foi possível salvar a ordem. Sua ordem anterior foi mantida.'; this.cdr.markForCheck(); }
+    });
+  }
   editingCategoryId: string | null = null;
   catForm = {
     name: '',
@@ -2182,6 +2265,7 @@ export class MenuEditorComponent implements OnInit {
     description: '',
     price: 0,
     promotionalPrice: null as number | null,
+    flavors: [] as ProductFlavor[],
     imageUrl: null as string | null,
     isHighlighted: false,
     highlightType: 'none' as 'none' | 'promotion' | 'most_liked' | 'chef' | 'combo' | 'best_seller',
@@ -2192,7 +2276,8 @@ export class MenuEditorComponent implements OnInit {
     public menuService: MenuService,
     private auth:AuthService,
     private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private imageCrop: ImageCropService
   ) {}
 
   ngOnInit(): void {
@@ -2374,67 +2459,28 @@ export class MenuEditorComponent implements OnInit {
   }
 
   onItemFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-    const file = input.files[0];
+    const input = event.target as HTMLInputElement, file = input.files?.[0];
     input.value = '';
+    if (!file) return;
     const form = this.itemForm;
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-    if (!allowedTypes.includes(file.type)) {
-      this.onToast.emit('Formato inválido. Selecione uma imagem JPG, PNG ou WebP.');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      this.onToast.emit('A imagem selecionada excede o limite de 10MB.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        if (this.itemForm !== form) return;
-        const maxDimension = 1200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          this.itemForm.imageUrl = canvas.toDataURL('image/jpeg', 0.85);
-          this.onToast.emit('Foto carregada e otimizada com sucesso!');
-        } else {
-          this.itemForm.imageUrl = reader.result as string;
-          this.onToast.emit('Foto carregada com sucesso!');
-        }
-        this.cdr.markForCheck();
-      };
-      img.onerror = () => {
-        if (this.itemForm === form) this.onToast.emit('Não foi possível abrir a imagem. Escolha outro arquivo JPG, PNG ou WebP.');
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = () => this.onToast.emit('Não foi possível ler a foto. Tente selecionar o arquivo novamente.');
-    reader.readAsDataURL(file);
+    this.imageCrop.open(file, { title: 'Foto do produto', ratio: 1 }).subscribe({
+      next: image => { if (image && this.itemForm === form) { this.itemForm.imageUrl = image; this.cdr.markForCheck(); } },
+      error: error => this.onToast.emit(error.message)
+    });
   }
 
   removeItemImage(): void {
     this.itemForm.imageUrl = null;
+  }
+
+  onCategoryFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement, file = input.files?.[0]; input.value = '';
+    if (!file) return;
+    const form = this.catForm;
+    this.imageCrop.open(file, { title: 'Imagem da categoria', ratio: 1, fit: 'contain' }).subscribe({
+      next: image => { if (image && this.catForm === form) { this.catForm.imageUrl = image; this.cdr.markForCheck(); } },
+      error: error => this.onToast.emit(error.message)
+    });
   }
 
   openItemModal(item?: MenuItem): void {
@@ -2450,6 +2496,7 @@ export class MenuEditorComponent implements OnInit {
         description: item.description || '',
         price: item.price,
         promotionalPrice: item.promotionalPrice || null,
+        flavors: (item.flavors || []).map(flavor => ({ ...flavor })),
         imageUrl: item.imageUrl || null,
         isHighlighted: item.isHighlighted,
         highlightType: item.highlightType || 'none',
@@ -2465,6 +2512,7 @@ export class MenuEditorComponent implements OnInit {
         description: '',
         price: 0,
         promotionalPrice: null,
+        flavors: [],
         imageUrl: null,
         isHighlighted: false,
         highlightType: 'none',
@@ -2483,7 +2531,18 @@ export class MenuEditorComponent implements OnInit {
     this.showItemModal = false;
   }
 
+  revealInvalidField(event: Event): void {
+    const panel = (event.target as HTMLElement).closest('details');
+    if (panel) panel.open = true;
+  }
+
   saveItem(): void {
+    const flavors = this.itemForm.flavors.map(flavor => ({ ...flavor, name: flavor.name.trim() }));
+    if (flavors.length > 30 || new Set(flavors.map(flavor => flavor.name.toLocaleLowerCase('pt-BR'))).size !== flavors.length
+      || flavors.some(flavor => !flavor.name || /[<>\x00-\x1f\x7f]/.test(flavor.name) || (flavor.price !== null && (!Number.isFinite(flavor.price) || flavor.price <= 0 || flavor.price > 999999.99)))) {
+      this.onToast.emit('Confira os sabores: use nomes diferentes e preços próprios positivos ou em branco.'); return;
+    }
+    this.itemForm.flavors = flavors;
     if (this.recommendationsBusy) { this.onToast.emit('Aguarde o salvamento das sugestões.'); return; }
     if (this.videoUploadBlocksSave) {
       this.onToast.emit('Conclua ou cancele o envio do vídeo antes de salvar.');

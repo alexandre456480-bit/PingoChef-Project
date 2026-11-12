@@ -54,7 +54,7 @@ function document(parts: string[], expected: number) {
 }
 router.post('/', sharedRateLimit('menu-transfer-start', 12, 3600, req => `business:${(req as AuthenticatedRequest).businessId}`), handle(async (req, res) => {
   const data = z.object({ kind: z.enum(['import', 'export']), parts: z.number().int().min(1).max(TRANSFER_MAX_PARTS).default(1) }).strict().parse(req.body);
-  const result = await supabaseAdmin.rpc('menu_transfer_start', { p_business_id: req.businessId, p_owner_id: req.userId, p_kind: data.kind, p_parts: data.parts });
+  const result = await supabaseAdmin.rpc('menu_transfer_start_with_flavors', { p_business_id: req.businessId, p_owner_id: req.userId, p_kind: data.kind, p_parts: data.parts });
   if (result.error) databaseError(result.error);
   res.json({ success: true, data: result.data });
 }));
@@ -90,7 +90,7 @@ router.post('/:id/apply', handle(async (req, res) => {
   const stage = await transfer(req);
   if (stage.completed) { res.json({ success: true, data: stage.summary }); return; }
   const doc = remapMenuArchive(document(stage.parts, stage.expected_parts));
-  const result = await supabaseAdmin.rpc('menu_transfer_apply', { ...identifiers(req), p_document: doc, p_catalog: catalog });
+  const result = await supabaseAdmin.rpc('menu_transfer_apply_with_flavors', { ...identifiers(req), p_document: doc, p_catalog: catalog });
   if (result.error) databaseError(result.error);
   res.json({ success: true, data: result.data });
 }));

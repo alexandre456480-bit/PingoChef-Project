@@ -18,7 +18,8 @@ import {
 import { MenuService } from '../../../../services/menu.service';
 import { HomeIconsEditorComponent } from './home-icons-editor.component';
 import { menuFontFamily } from '../../../../services/menu-fonts.service';
-import { ImagePayloadService, imageSaveError } from '../../../../services/image-payload.service';
+import { imageSaveError } from '../../../../services/image-payload.service';
+import { ImageCropService } from '../../../../services/image-crop.service';
 import { CommercialService } from '../../../../services/commercial.service';
 import { RouterLink } from '@angular/router';
 
@@ -2818,7 +2819,7 @@ export class DesignEditorComponent {
   constructor(
     public designService: DesignService,
     public menuService: MenuService,
-    private imagePayload: ImagePayloadService,
+    private imageCrop: ImageCropService,
     public commercial: CommercialService
   ) { }
 
@@ -3075,6 +3076,7 @@ export class DesignEditorComponent {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
+    input.value = '';
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
@@ -3089,8 +3091,10 @@ export class DesignEditorComponent {
 
     const category = this.selectedHeroCategory;
     const categoryName = this.activeHeroCategoryName;
-    this.imagePayload.readFile(file).subscribe({
+    const [w, h] = this.designService.currentTemplate().heroRatio.split('/').map(Number);
+    this.imageCrop.open(file, { title: 'Banner do cardápio', ratio: w / h }).subscribe({
       next: url => {
+        if (!url) return;
         if (category === 'home') this.designService.addHeroBanner(url);
         else this.designService.addCategoryHeroBanner(category, url);
         this.onToast.emit(`Banner carregado e adicionado a ${categoryName}!`);

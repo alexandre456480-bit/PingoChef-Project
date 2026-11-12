@@ -119,7 +119,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           supabaseAdmin.from('design_settings').select('template_key,palette,font_heading,font_body,font_pair,category_style,home_blocks,custom_config').eq('business_id', businessId).maybeSingle(),
           supabaseAdmin.from('categories').select('id,name,description,icon,icon_key,icon_type,image_url,display_order,display_mode').eq('business_id', businessId).eq('is_active', true).order('display_order', { ascending: true }),
           supabaseAdmin.from('subcategories').select('id,category_id,name,display_order').eq('business_id', businessId).order('display_order', { ascending: true }),
-          supabaseAdmin.from('menu_items').select('id,category_id,subcategory_id,name,description,price,promotional_price,image_url,is_highlighted,highlight_type,likes_count,display_order,show_price').eq('business_id', businessId).eq('is_available', true).order('display_order', { ascending: true })
+          supabaseAdmin.from('menu_items').select('id,category_id,subcategory_id,name,description,price,promotional_price,image_url,is_highlighted,highlight_type,likes_count,display_order,show_price,flavors').eq('business_id', businessId).eq('is_available', true).order('display_order', { ascending: true })
         ]);
         if ([designResult, categoryResult, subcategoryResult, itemResult].some(result => result.error)) {
           throw new Error('PUBLIC_MENU_DATABASE_UNAVAILABLE');
@@ -203,6 +203,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           isHighlighted: (i.highlight_type && i.highlight_type !== 'none') || Boolean(i.is_highlighted),
           highlightType: i.highlight_type || (i.is_highlighted ? 'chef' : 'none'),
           showPrice: i.show_price !== false,
+          flavors: i.flavors || [],
           likesCount: Number(i.likes_count || 0),
           displayOrder: i.display_order ?? 0
         }));
@@ -327,6 +328,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           isHighlighted: (i.highlight_type && i.highlight_type !== 'none') || Boolean(i.is_highlighted),
           highlightType: i.highlight_type || (i.is_highlighted ? 'chef' : 'none'),
           showPrice: i.show_price !== false,
+          flavors: i.flavors || [],
           likesCount: Number(i.likes_count || 0),
           displayOrder: i.display_order ?? 0
         }));

@@ -1,3 +1,4 @@
+import { productFlavorsSchema } from '../utils/product-flavors';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { designSchema } from '../controllers/design.controller';
@@ -35,7 +36,7 @@ export const menuArchiveSchema = z.object({
     id, categoryId: id, subcategoryId: id.nullable(), name: z.string(), description: z.string().nullable(),
     price: z.number().finite(), promotionalPrice: z.number().finite().nullable(), imageUrl: image,
     isAvailable: z.boolean(), isHighlighted: z.boolean(), highlightType: z.enum(['none', 'promotion', 'most_liked', 'chef', 'combo', 'best_seller']),
-    showPrice: z.boolean(), displayOrder: position
+    showPrice: z.boolean(), flavors: productFlavorsSchema.optional(), displayOrder: position
   }).strict()).max(1000)
 }).strict();
 export type MenuArchive = z.infer<typeof menuArchiveSchema>;
@@ -51,7 +52,7 @@ function safeImage(value: string) {
 export function validateMenuArchive(value: unknown): MenuArchive {
   let nodes = 0;
   const inspect = (node: unknown, depth = 0): void => {
-    if (++nodes > 50_000 || depth > 16) throw ownerError(400, 'INVALID_MENU_ARCHIVE');
+    if (++nodes > 250_000 || depth > 16) throw ownerError(400, 'INVALID_MENU_ARCHIVE');
     if (typeof node === 'string') {
       if (node.length > 11_000_000 || /(?:javascript|vbscript|file|blob):|data:(?!image\/(?:png|jpe?g|webp|gif|avif);base64,)|<\/?[a-z!]/i.test(node))
         throw ownerError(400, 'UNSAFE_MENU_ARCHIVE');

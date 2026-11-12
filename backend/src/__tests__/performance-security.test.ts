@@ -62,6 +62,17 @@ test('batch reorder uses the supplied owner/RLS client, preserves tenant binding
   await expect(reorderMenu(client,'trusted-tenant','products',orders)).rejects.toMatchObject({ code:'42501' });
 });
 
+test('category organization is atomic even when the optional performance flag is off', async () => {
+  process.env.PERFORMANCE_REORDER_RPC_ENABLED = 'false';
+  const client: any = { rpc: jest.fn().mockResolvedValue({ data: 2, error: null }), from: jest.fn() };
+  const orders = [{ id: 'a', displayOrder: 0 }, { id: 'b', displayOrder: 1 }];
+  await reorderMenu(client, 'trusted-tenant', 'categories', orders);
+  expect(client.rpc).toHaveBeenCalledWith('reorder_business_menu', { p_business: 'trusted-tenant', p_resource: 'categories', p_orders: orders });
+  client.rpc.mockResolvedValue({ error: { code: '42501', message: 'permission denied' } });
+  await expect(reorderMenu(client, 'trusted-tenant', 'categories', orders)).rejects.toMatchObject({ code: '42501' });
+  expect(client.from).not.toHaveBeenCalled();
+});
+
 test('batched analytics cache is tenant scoped and cannot mask a fresh authorization denial', async () => {
   process.env.PERFORMANCE_ANALYTICS_BATCH_RPC_ENABLED = 'true';
   const service = new MenuAnalyticsService();

@@ -76,6 +76,7 @@ test('editing and creating preserve fields, prices, all highlights, photo modes 
   await dialog.getByRole('button', { name: 'Remover Imagem', exact: true }).click();
   await dialog.getByRole('button', { name: 'Upload de Foto', exact: true }).click();
   await dialog.locator('input[type=file][accept*="image/png"]').setInputFiles({ name: 'product.png', mimeType: 'image/png', buffer: picture });
+  await page.getByRole('button', { name: 'Usar imagem', exact: true }).click();
   await expect(dialog.locator('.item-img-preview')).toBeVisible();
   await dialog.getByRole('button', { name: 'Inserir Link / URL', exact: true }).click();
   await dialog.getByLabel('Link da foto', { exact: true }).fill('https://images.example.test/updated.png');

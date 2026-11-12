@@ -1,3 +1,4 @@
+import { resolveFlavor } from './product-flavors';
 import { validSocialUrl } from './social-links';
 import type { CartItem } from '../services/cart.service';
 import type { MenuItem } from '../services/menu.service';
@@ -49,13 +50,16 @@ export function safeOrderSettings(value: unknown): OrderSettings {
 // Use current catalog names, never persisted cart names, for the outgoing message.
 export function orderDestination(settings: OrderSettings, cart: CartItem[], catalog: MenuItem[], businessName: string): string | null {
   if (!settings.enabled || orderSettingsError(settings) || !cart.length) return null;
-  if (settings.channel !== 'whatsapp') return settings.url;
+
   const clean = (value: string) => value.replace(/[\x00-\x1f\x7f*_~`]/g, ' ').trim();
   const lines = [`Olá! Gostaria de fazer um pedido em ${clean(businessName)}:`, ''];
   for (const row of cart) {
     const item = catalog.find(item => item.id === row.itemId && item.isAvailable !== false);
     if (!item || !Number.isSafeInteger(row.quantity) || row.quantity < 1 || row.quantity > 9999) return null;
-    lines.push(`${row.quantity}x ${clean(item.name)}`);
+    const flavor = resolveFlavor(item, row.flavorId);
+    if (flavor === undefined) return null;
+    lines.push(`${row.quantity}x ${clean(item.name)}${flavor ? ' - Sabor: ' + clean(flavor.name) : ''}`);
   }
+  if (settings.channel !== 'whatsapp') return settings.url;
   return `https://wa.me/${whatsappNumber(settings.url)}?text=${encodeURIComponent(lines.join('\n'))}`;
 }

@@ -1,0 +1,9 @@
+# Organização de categorias e enquadramento de imagens
+
+Em **Menu → Categorias → Organizar**, o proprietário pode arrastar as categorias, usar as setas ou escolher qualquer posição. Cancelar descarta o rascunho. **Salvar ordem** envia um único `PATCH /api/v1/categories/reorder` com IDs e posições; a interface só atualiza a ordem compartilhada após a confirmação. A operação existente mantém autenticação, CSRF, escopo da empresa e atualização atômica no banco. Não cria níveis adicionais nem altera as subcategorias.
+
+Os uploads de foto do produto, imagem da categoria, logo, fundo de entrada e banners abrem um enquadrador. Fotos e categorias usam moldura quadrada, logos começam com a imagem inteira, o fundo de entrada usa 9:16 e banners usam a proporção do template selecionado. O usuário pode arrastar, ajustar zoom, usar as setas do teclado, centralizar ou manter a imagem inteira. Cancelar preserva a imagem anterior. Links de imagens e configurações de QR/vídeo continuam com seus fluxos próprios.
+
+O editor de enquadramento é carregado sob demanda. O arquivo é processado no navegador: aceita somente os formatos raster permitidos, respeita os limites de arquivo de cada campo e recusa imagens acima de 32 megapixels. O resultado tem até 1200 px no maior lado, preserva proporções e transparência e passa pelo otimizador existente, sem ampliar artificialmente a resolução original. URLs temporárias são revogadas; o modal também é descartado ao navegar. Nenhum upload ocorre antes de confirmar e salvar os dados no fluxo já existente.
+
+A migração `supabase/migrations/20261111224444_restore_atomic_category_order.sql` restaura a RPC transacional ausente em instalações antigas. Ela usa `SECURITY INVOKER`, preserva o RLS e não permite execução anônima. A ordenação de categorias passa sempre por essa RPC, independentemente da flag opcional de desempenho. Não há mudança de plano; imagens e ordens já salvas não são modificadas automaticamente.

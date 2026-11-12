@@ -75,3 +75,14 @@
   .item-editor-footer .btn-cta { flex: 1; justify-content: center; }
   .item-editor .highlight-card .hl-label { font-size: 11px; }
 }
+
+/* Native disclosures retain field values and start closed on each opening. */
+.item-editor details > summary.item-section-heading { cursor:pointer; list-style:none; margin:0; align-items:center; min-height:44px; }
+.item-editor details > summary::-webkit-details-marker { display:none; }
+.item-editor details > summary > div { flex:1; min-width:0; }
+.item-editor details > summary::after { content:''; width:8px; height:8px; flex:0 0 8px; border-right:2px solid var(--panel-text-muted); border-bottom:2px solid var(--panel-text-muted); transform:rotate(45deg); margin:0 3px 4px 8px; }
+.item-editor details[open] > summary { margin-bottom:20px; }
+.item-editor details[open] > summary::after { transform:rotate(225deg); }
+.item-editor details > summary:focus-visible { outline:2px solid var(--panel-accent); outline-offset:5px; border-radius:8px; }
+.item-editor details[open] { border-color:color-mix(in srgb,var(--panel-accent) 40%,var(--panel-border)); }
+@media(max-width:600px) { .item-editor details.item-editor-section { padding:16px; } }

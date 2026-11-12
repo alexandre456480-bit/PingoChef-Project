@@ -1,3 +1,4 @@
+import type { ProductFlavor } from '../utils/product-flavors';
 import crypto from 'crypto';
 
 /**
@@ -78,6 +79,7 @@ export interface LocalItem {
   likes_count?: number;
   display_order: number;
   show_price?: boolean;
+  flavors?: ProductFlavor[];
   created_at: string;
 }
 

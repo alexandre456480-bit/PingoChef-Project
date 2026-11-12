@@ -1,3 +1,4 @@
+import { productFlavorsSchema } from '../utils/product-flavors';
 import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
@@ -40,6 +41,7 @@ export const itemSchema = z.object({
   isHighlighted: z.boolean().default(false),
   highlightType: z.enum(['none', 'promotion', 'most_liked', 'chef', 'combo', 'best_seller']).default('none'),
   showPrice: z.boolean().default(true),
+  flavors: productFlavorsSchema.optional(),
   displayOrder: z.number().int().optional()
 }).refine(data => {
   if (data.showPrice !== false) {
@@ -82,7 +84,7 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
       const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
       let query = client
         .from('menu_items')
-        .select('id,category_id,subcategory_id,name,description,price,promotional_price,image_url,is_available,is_highlighted,highlight_type,show_price,likes_count,display_order,created_at,categories!menu_items_category_tenant_fk(name)')
+        .select('id,category_id,subcategory_id,name,description,price,promotional_price,image_url,is_available,is_highlighted,highlight_type,show_price,likes_count,display_order,flavors,created_at,categories!menu_items_category_tenant_fk(name)')
         .eq('business_id', businessId)
         .order('display_order', { ascending: true });
 
@@ -116,6 +118,7 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
           isHighlighted: item.highlight_type ? item.highlight_type !== 'none' : Boolean(item.is_highlighted),
           highlightType: item.highlight_type || (item.is_highlighted ? 'chef' : 'none'),
           showPrice: item.show_price !== false,
+          flavors: item.flavors || [],
           likesCount: item.likes_count,
           displayOrder: item.display_order ?? 0,
           createdAt: item.created_at
@@ -189,6 +192,7 @@ export const getItemsController = async (req: AuthenticatedRequest, res: Respons
           isHighlighted: effectiveHighlight !== 'none',
           highlightType: effectiveHighlight,
           showPrice: item.show_price !== false,
+          flavors: item.flavors || [],
           likesCount: item.likes_count || 0,
           displayOrder: item.display_order ?? 0,
           createdAt: item.created_at
@@ -243,6 +247,7 @@ export const createItemController = async (req: AuthenticatedRequest, res: Respo
           is_highlighted: isHigh,
           highlight_type: effectiveHighlight,
           show_price: data.showPrice !== false,
+          ...(data.flavors !== undefined ? { flavors: data.flavors } : {}),
           display_order: nextOrder
         })
         .select()
@@ -288,6 +293,7 @@ export const createItemController = async (req: AuthenticatedRequest, res: Respo
       is_highlighted: isHigh,
       highlight_type: effectiveHighlight,
       show_price: data.showPrice !== false,
+          ...(data.flavors !== undefined ? { flavors: data.flavors } : {}),
       likes_count: 0,
       display_order: nextOrder,
       created_at: new Date().toISOString()
@@ -335,6 +341,7 @@ export const updateItemController = async (req: AuthenticatedRequest, res: Respo
           is_highlighted: isHigh,
           highlight_type: effectiveHighlight,
           show_price: data.showPrice !== false,
+          ...(data.flavors !== undefined ? { flavors: data.flavors } : {}),
           display_order: data.displayOrder !== undefined ? data.displayOrder : undefined,
           updated_at: new Date().toISOString()
         })
@@ -394,6 +401,7 @@ export const updateItemController = async (req: AuthenticatedRequest, res: Respo
     item.is_highlighted = isHigh;
     item.highlight_type = effectiveHighlight;
     item.show_price = data.showPrice !== false;
+    if (data.flavors !== undefined) item.flavors = data.flavors;
     if (data.displayOrder !== undefined) {
       item.display_order = data.displayOrder;
     }

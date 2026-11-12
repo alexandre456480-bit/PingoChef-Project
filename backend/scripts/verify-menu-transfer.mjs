@@ -18,8 +18,10 @@ export async function verifyMenuTransfer(pool) {
     await c.query('INSERT INTO public.design_settings(business_id,custom_config) VALUES($1,$2)', [source,
       { hero_banners: ['/assets/banner.webp'], category_hero_configs: { [category]: { enabled: true, banners: ['/assets/category.webp'] } } }]);
     await c.query("INSERT INTO public.menu_items(id,business_id,category_id,name,price) VALUES($1,$2,$3,'Product',10)", [item, source, category]);
+    const flavors = [{ id: randomUUID(), name: 'Frango', price: null, isAvailable: true }, { id: randomUUID(), name: 'Picanha', price: 18, isAvailable: false }];
+    await c.query('UPDATE public.menu_items SET flavors=$2 WHERE id=$1', [item, JSON.stringify(flavors)]);
     const rpc = async (sql, values) => (await c.query(sql, values)).rows[0].data;
-    const start = async (business, user, kind, parts = 1) => rpc('SELECT public.menu_transfer_start($1,$2,$3,$4) data', [business, user, kind, parts]);
+    const start = async (business, user, kind, parts = 1) => rpc('SELECT public.menu_transfer_start_with_flavors($1,$2,$3,$4) data', [business, user, kind, parts]);
     const chunk = async (business, user, transfer, index, content = null) => rpc('SELECT public.menu_transfer_chunk($1,$2,$3,$4,$5) data', [business, user, transfer, index, content]);
     const rejected = async (fn, pattern) => {
       await c.query('SAVEPOINT invalid_transfer');
@@ -31,6 +33,10 @@ export async function verifyMenuTransfer(pool) {
     assert.equal(exported.summary.items, 1);
     const text = (await Promise.all(Array.from({ length: exported.parts }, (_, i) => chunk(source, owner, exported.id, i)))).join('');
     const doc = JSON.parse(text);
+    assert.deepEqual(doc.items[0].flavors, flavors);
+    for (const bad of [[...flavors, flavors[0]], [{ ...flavors[0], price: -1 }], [{ ...flavors[0], businessId: target }], [{ ...flavors[0], name: '<script>' }]])
+      await rejected(() => c.query('UPDATE public.menu_items SET flavors=$2 WHERE id=$1', [item, JSON.stringify(bad)]), /check constraint/);
+    assert.deepEqual((await c.query('SELECT flavors FROM public.menu_items WHERE id=$1', [item])).rows[0].flavors, flavors);
     assert.equal(doc.business.welcome_bg_accent_color, '#FFB800');
     assert.equal(doc.business.logo_url.length, 600022);
     for (const key of ['id', 'owner_user_id', 'slug', 'status']) assert.equal(key in doc.business, false);
@@ -48,12 +54,13 @@ export async function verifyMenuTransfer(pool) {
     await rejected(() => chunk(target, other, staged.id, 0, '{"changed":true}'), /INVALID_TRANSFER/);
     const cat = randomUUID(); doc.categories[0].id = cat; doc.items[0].id = randomUUID(); doc.items[0].categoryId = cat;
     doc.design.custom_config.category_hero_configs = { [cat]: { enabled: true, banners: ['/assets/category.webp'] } };
-    const apply = async (payload, catalog = true, id = staged.id) => rpc('SELECT public.menu_transfer_apply($1,$2,$3,$4,$5) data', [target, other, id, payload, catalog]);
+    const apply = async (payload, catalog = true, id = staged.id) => rpc('SELECT public.menu_transfer_apply_with_flavors($1,$2,$3,$4,$5) data', [target, other, id, payload, catalog]);
     const excessive = structuredClone(doc);
     excessive.items = Array.from({ length: 11 }, () => ({ ...doc.items[0], id: randomUUID() }));
     await rejected(() => apply(excessive), /IMPORT_PLAN_LIMIT/);
     assert.equal((await c.query('SELECT count(*) FROM public.menu_items WHERE business_id=$1', [target])).rows[0].count, '0');
     assert.equal((await apply(doc)).imported, true);
+    assert.deepEqual((await c.query('SELECT flavors FROM public.menu_items WHERE business_id=$1', [target])).rows[0].flavors, flavors);
     assert.equal((await c.query('SELECT welcome_bg_accent_color FROM public.businesses WHERE id=$1',[target])).rows[0].welcome_bg_accent_color,'#FFB800');
     assert.equal((await apply(doc)).imported, true); // no duplicate inserts
     assert.equal((await c.query('SELECT count(*) FROM public.menu_items WHERE business_id=$1', [target])).rows[0].count, '1');
@@ -64,6 +71,9 @@ export async function verifyMenuTransfer(pool) {
 
     const second = await start(target, other, 'import'); await chunk(target, other, second.id, 0, '{}');
     const broken = structuredClone(doc); broken.business.name = 'Should roll back';
+    const malformed = structuredClone(doc); malformed.items[0].id = randomUUID(); malformed.items[0].flavors = [{ ...flavors[0], price: -1 }];
+    await rejected(() => apply(malformed, true, second.id), /check constraint/);
+    assert.deepEqual((await c.query('SELECT flavors FROM public.menu_items WHERE business_id=$1', [target])).rows[0].flavors, flavors);
     broken.categories[0].id = randomUUID(); broken.items[0].categoryId = broken.categories[0].id; broken.items[0].id = randomUUID();
     broken.items[0].price = -1;
     await rejected(() => apply(broken, true, second.id), /check constraint/);

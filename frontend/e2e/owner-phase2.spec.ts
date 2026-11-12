@@ -423,6 +423,7 @@ test(`video upload updates without another click when PUT response is ${uploadRe
   await page.locator('.product-card button[title="Editar"]').click();
   if (uploadResponse === 'normal') {
     await page.locator('app-menu-editor input[type=file][accept*="image/png"]').setInputFiles({ name: 'prato.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64') });
+    await page.getByRole('button', { name: 'Usar imagem', exact: true }).click();
     await expect(page.locator('.item-img-preview')).toBeVisible();
   }
   const uploader = page.locator('app-product-video-uploader');

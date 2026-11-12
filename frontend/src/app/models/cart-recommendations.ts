@@ -12,6 +12,7 @@ export function selectCartRecommendation(
 ): MenuItem | null {
   const present = new Set(cart.map(row => row.itemId));
   const eligible = (item: MenuItem | undefined): item is MenuItem => !!item && categories.has(item.categoryId)
+    && (!item.flavors?.length || item.flavors.some(flavor => flavor.isAvailable))
     && item.isAvailable !== false && item.showPrice !== false && Number.isFinite(item.price) && item.price > 0
     && Number.isFinite(unitPrice(item)) && unitPrice(item) > 0;
   for (let index = cart.length - 1; index >= 0; index--) {

@@ -4,7 +4,7 @@ import { ownerError } from './owner-session.service';
 export async function reorderMenu(client: ReturnType<typeof createUserClient>, business: string,
   resource: 'products' | 'categories' | 'subcategories', orders: { id: string; displayOrder: number }[]) {
   if (!orders.length) return;
-  if (process.env.PERFORMANCE_REORDER_RPC_ENABLED === 'true') {
+  if (resource === 'categories' || process.env.PERFORMANCE_REORDER_RPC_ENABLED === 'true') {
     const { data, error } = await client.rpc('reorder_business_menu', { p_business: business, p_resource: resource, p_orders: orders });
     if (error?.message === 'REORDER_RESOURCE_NOT_FOUND') throw ownerError(404, 'REORDER_RESOURCE_NOT_FOUND');
     if (error?.message === 'INVALID_MENU_ORDER') throw ownerError(400, 'INVALID_MENU_ORDER');

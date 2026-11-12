@@ -266,5 +266,13 @@
   {
     "file": "20261111192607_add_welcome_accent_color.sql",
     "sha256": "4fa6857ee48e895aded51431fef9f243b426b5d6460028392e5b6ba8e890cedc"
+  },
+  {
+    "file": "20261111224444_restore_atomic_category_order.sql",
+    "sha256": "293fc1f1881b05df63f715932a11c976faffa6447081e569bdba0086a7f424c3"
+  },
+  {
+    "file": "20261111233304_add_product_flavors.sql",
+    "sha256": "79ef4e228411d45d73d7ad951ce38936b99ebf8f8ed2584bbe21761cdd8da6f7"
   }
 ]

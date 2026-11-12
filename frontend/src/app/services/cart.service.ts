@@ -1,8 +1,12 @@
+import { resolveFlavor, flavorPrices } from '../models/product-flavors';
 import { Injectable, signal, computed } from '@angular/core';
 import type { MenuItem } from './menu.service';
 
 export interface CartItem {
   itemId: string;
+  flavorId?: string;
+  flavorName?: string;
+  unavailable?: boolean;
   name: string;
   price: number;
   promotionalPrice?: number | null;
@@ -55,51 +59,45 @@ export class CartService {
   }
 
   unitPrice(item: Pick<CartItem, 'price' | 'promotionalPrice'>): number {
+    if ('unavailable' in item && item.unavailable) return 0;
     return item.promotionalPrice != null && item.promotionalPrice >= 0 && item.promotionalPrice < item.price ? item.promotionalPrice : item.price;
   }
+
+  lineKey(row: Pick<CartItem, 'itemId' | 'flavorId'>): string { return `${row.itemId}:${row.flavorId || ''}`; }
 
   refreshFromCatalog(catalog: MenuItem[]): void {
     let changed = false;
     const rows = this.cartItems().map(row => {
       const item = catalog.find(item => item.id === row.itemId);
-      if (!item) return row; // Missing items remain visible for removal; checkout rejects them.
-      if (row.name === item.name && row.price === item.price && row.promotionalPrice === item.promotionalPrice && row.showPrice === item.showPrice) return row;
-      changed = true;
-      return { ...row, name: item.name, price: item.price, promotionalPrice: item.promotionalPrice, showPrice: item.showPrice };
+      const flavor = item ? resolveFlavor(item, row.flavorId) : undefined;
+      const patch = item && flavor !== undefined
+        ? { name: item.name, ...flavorPrices(item, flavor), showPrice: item.showPrice, imageUrl: item.imageUrl, flavorName: flavor?.name, unavailable: item.isAvailable === false }
+        : { unavailable: true };
+      const next = { ...row, ...patch };
+      if (JSON.stringify(next) !== JSON.stringify(row)) changed = true;
+      return next;
     });
     if (changed) { this.cartItems.set(rows); this.saveToStorage(); }
   }
 
-  addItem(item: { id: string; name: string; price: number; promotionalPrice?: number | null; imageUrl?: string | null; showPrice?: boolean }, quantity: number = 1): void {
+  addItem(item: MenuItem | { id: string; name: string; price: number; promotionalPrice?: number | null; imageUrl?: string | null; showPrice?: boolean; flavors?: MenuItem['flavors'] }, quantity = 1, flavorId?: string): void {
+    const flavor = resolveFlavor(item, flavorId);
+    if (flavor === undefined || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 9999) return;
     const current = [...this.cartItems()];
-    const index = current.findIndex(i => i.itemId === item.id);
-
-    if (index > -1) {
-      const existing = { ...current.splice(index, 1)[0] };
-      existing.quantity += quantity;
-      current.push(existing); // The last added product also has recommendation priority.
-    } else {
-      current.push({
-        itemId: item.id,
-        name: item.name,
-        price: item.price,
-        promotionalPrice: item.promotionalPrice,
-        showPrice: item.showPrice,
-        imageUrl: item.imageUrl,
-        quantity: Math.max(1, quantity)
-      });
-    }
-
-    this.cartItems.set(current);
-    this.saveToStorage();
+    const index = current.findIndex(row => row.itemId === item.id && row.flavorId === flavorId);
+    const row: CartItem = { itemId: item.id, name: item.name, ...flavorPrices(item, flavor), imageUrl: item.imageUrl, showPrice: item.showPrice, flavorId, flavorName: flavor?.name, unavailable: false, quantity };
+    if (index > -1) row.quantity = Math.min(9999, current.splice(index, 1)[0].quantity + quantity);
+    current.push(row);
+    this.cartItems.set(current); this.saveToStorage();
   }
 
-  updateQuantity(itemId: string, delta: number): void {
+  updateQuantity(itemId: string, delta: number, flavorId?: string): void {
     const current = [...this.cartItems()];
-    const index = current.findIndex(i => i.itemId === itemId);
+    const index = current.findIndex(i => i.itemId === itemId && i.flavorId === flavorId);
 
     if (index > -1) {
-      current[index].quantity += delta;
+      if (!Number.isSafeInteger(delta) || (delta > 0 && current[index].unavailable)) return;
+      current[index] = { ...current[index], quantity: Math.min(9999, current[index].quantity + delta) };
       if (current[index].quantity <= 0) {
         current.splice(index, 1);
       }
@@ -108,8 +106,8 @@ export class CartService {
     }
   }
 
-  removeItem(itemId: string): void {
-    const filtered = this.cartItems().filter(i => i.itemId !== itemId);
+  removeItem(itemId: string, flavorId?: string): void {
+    const filtered = this.cartItems().filter(i => i.itemId !== itemId || i.flavorId !== flavorId);
     this.cartItems.set(filtered);
     this.saveToStorage();
   }
@@ -120,8 +118,7 @@ export class CartService {
   }
 
   getItemQuantity(itemId: string): number {
-    const item = this.cartItems().find(i => i.itemId === itemId);
-    return item ? item.quantity : 0;
+    return this.cartItems().filter(row => row.itemId === itemId).reduce((sum, row) => sum + row.quantity, 0);
   }
 
   private saveToStorage(): void {
@@ -141,7 +138,10 @@ export class CartService {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          this.cartItems.set(parsed);
+          this.cartItems.set(parsed.slice(0, 500).filter(row => row && typeof row.itemId === 'string' && row.itemId.length <= 100
+            && Number.isSafeInteger(row.quantity) && row.quantity > 0 && row.quantity <= 9999
+            && typeof row.name === 'string' && row.name.length <= 200 && Number.isFinite(row.price) && row.price >= 0
+            && (row.flavorId === undefined || (typeof row.flavorId === 'string' && row.flavorId.length <= 100))));
         }
       }
     } catch {

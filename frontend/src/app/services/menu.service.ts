@@ -1,3 +1,4 @@
+import type { ProductFlavor } from '../models/product-flavors';
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
@@ -39,6 +40,7 @@ export interface MenuItem {
   isHighlighted: boolean;
   highlightType?: 'none' | 'promotion' | 'most_liked' | 'chef' | 'combo' | 'best_seller';
   showPrice?: boolean;
+  flavors?: ProductFlavor[];
   displayOrder?: number;
   likesCount?: number;
   media?: ProductGalleryMedia[];
@@ -86,6 +88,10 @@ export class MenuService {
   }
 
   // --- SUBCATEGORIAS ---
+  reorderCategories(orders: { id: string; displayOrder: number }[]): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/categories/reorder`, { orders }, this.getAuthHeaders());
+  }
+
   loadSubcategories(categoryId?: string): Observable<any> {
     let url = `${this.apiUrl}/subcategories`;
     if (categoryId) {

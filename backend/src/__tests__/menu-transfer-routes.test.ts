@@ -32,7 +32,7 @@ it('requires authentication and derives ownership from the session, never the fi
   expect((await request(app()).post('/transfer').set('x-owner', 'yes').send({ kind: 'export', businessId: 'victim' })).status).toBe(400);
   expect(supabaseAdmin.rpc).not.toHaveBeenCalled();
   expect((await request(app()).post('/transfer').set('x-owner', 'yes').send({ kind: 'export' })).status).toBe(200);
-  expect(supabaseAdmin.rpc).toHaveBeenCalledWith('menu_transfer_start', expect.objectContaining({ p_business_id: 'tenant-a', p_owner_id: 'owner-a' }));
+  expect(supabaseAdmin.rpc).toHaveBeenCalledWith('menu_transfer_start_with_flavors', expect.objectContaining({ p_business_id: 'tenant-a', p_owner_id: 'owner-a' }));
 });
 it('previews without changing the menu and requires explicit confirmation to apply', async () => {
   const api = app();

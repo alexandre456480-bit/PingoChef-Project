@@ -28,6 +28,7 @@ import { MenuHomeIconComponent } from '../menu-home-icon/menu-home-icon.componen
 import { HomeIconSection, homeIconChoice } from '../../constants/home-icons';
 import { CartRecommendationComponent } from '../cart-recommendation/cart-recommendation.component';
 import { recommendationMap, selectCartRecommendation } from '../../models/cart-recommendations';
+import { ProductFlavor, resolveFlavor, flavorPrices } from '../../models/product-flavors';
 
 export const normalizeMenuSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 
@@ -429,11 +430,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                             <div class="card-pricing">
                               @if (item.showPrice === false) {
                                 <span class="active-price" style="font-size: 0.85rem; font-style: italic;" [style.color]="accentColor">Consulte...</span>
-                              } @else if (item.promotionalPrice) {
+                              } @else if (displayPromotion(item)) {
                                 <span class="old-price" [style.color]="textSecondary">R$ {{ item.price.toFixed(2) }}</span>
-                                <span class="active-price" [style.color]="accentColor">R$ {{ item.promotionalPrice.toFixed(2) }}</span>
+                                <span class="active-price" [style.color]="accentColor">R$ {{ (displayPromotion(item) ?? 0).toFixed(2) }}</span>
                               } @else {
-                                <span class="active-price" [style.color]="accentColor">R$ {{ item.price.toFixed(2) }}</span>
+                                <span class="active-price" [style.color]="accentColor">{{ displayPriceLabel(item) }}</span>
                               }
                             </div>
                           @if (enableLikes) {
@@ -483,7 +484,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                           <div class="row-info">
                             <span class="row-name" [style.color]="textPrimary">{{ item.name }}</span>
                             <span class="row-price" [style.color]="accentColor">
-                              {{ item.showPrice === false ? 'Consulte...' : 'R$ ' + (item.promotionalPrice || item.price).toFixed(2) }}
+                              {{ item.showPrice === false ? 'Consulte...' : displayPriceLabel(item) }}
                             </span>
                           </div>
 
@@ -521,7 +522,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                             <p class="chef-card-desc" [style.color]="textSecondary">{{ item.description || 'Preparo artesanal com receita exclusiva da casa.' }}</p>
                             <div class="chef-card-pricing">
                               <span class="chef-price" [style.color]="accentColor">
-                                {{ item.showPrice === false ? 'Consulte...' : 'R$ ' + (item.promotionalPrice || item.price).toFixed(2) }}
+                                {{ item.showPrice === false ? 'Consulte...' : displayPriceLabel(item) }}
                               </span>
                               <span class="btn-chef-view" [style.background]="accentColor + '20'" [style.color]="accentColor">Ver Prato</span>
                             </div>
@@ -578,11 +579,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                               <div class="combo-prices">
                                 @if (item.showPrice === false) {
                                   <span class="active-price" style="font-size: 0.85rem; font-style: italic;" [style.color]="accentColor">Consulte...</span>
-                                } @else if (item.promotionalPrice) {
+                                } @else if (displayPromotion(item)) {
                                   <span class="old-price" [style.color]="textSecondary">R$ {{ item.price.toFixed(2) }}</span>
-                                  <span class="active-price" [style.color]="accentColor">R$ {{ item.promotionalPrice.toFixed(2) }}</span>
+                                  <span class="active-price" [style.color]="accentColor">R$ {{ (displayPromotion(item) ?? 0).toFixed(2) }}</span>
                                 } @else {
-                                  <span class="active-price" [style.color]="accentColor">R$ {{ item.price.toFixed(2) }}</span>
+                                  <span class="active-price" [style.color]="accentColor">{{ displayPriceLabel(item) }}</span>
                                 }
                               </div>
                               <span class="btn-combo-view" [style.background]="accentColor + '18'" [style.color]="accentColor">Ver Combo</span>
@@ -646,7 +647,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                           <div class="best-seller-info">
                             <h4 class="best-seller-name" [style.color]="textPrimary">{{ item.name }}</h4>
                             <span class="best-seller-price" [style.color]="accentColor">
-                              {{ item.showPrice === false ? 'Consulte...' : 'R$ ' + (item.promotionalPrice || item.price).toFixed(2) }}
+                              {{ item.showPrice === false ? 'Consulte...' : displayPriceLabel(item) }}
                             </span>
                           </div>
                           <div class="best-seller-action-wrap">
@@ -835,14 +836,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                   <p class="card-item-desc" [style.color]="textSecondary">{{ item.description || 'Preparo artesanal com os melhores ingredientes selecionados.' }}</p>
 
                                   <div class="card-bottom-row">
-                                    <div class="pricing-box" [class.has-promo]="item.promotionalPrice">
+                                    <div class="pricing-box" [class.has-promo]="displayPromotion(item)">
                                       @if (item.showPrice === false) {
                                         <span class="price-consult" [style.color]="accentColor">Consulte...</span>
-                                      } @else if (item.promotionalPrice) {
-                                        <span class="price-highlight" [style.color]="accentColor">R$ {{ item.promotionalPrice.toFixed(2) }}</span>
+                                      } @else if (displayPromotion(item)) {
+                                        <span class="price-highlight" [style.color]="accentColor">R$ {{ (displayPromotion(item) ?? 0).toFixed(2) }}</span>
                                         <span class="price-strikethrough" [style.color]="textSecondary">R$ {{ item.price.toFixed(2) }}</span>
                                       } @else {
-                                        <span class="price-regular" [style.color]="accentColor">R$ {{ item.price.toFixed(2) }}</span>
+                                        <span class="price-regular" [style.color]="accentColor">{{ displayPriceLabel(item) }}</span>
                                       }
                                     </div>
 
@@ -939,14 +940,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                                 <p class="card-item-desc" [style.color]="textSecondary">{{ item.description || 'Preparo artesanal com os melhores ingredientes selecionados.' }}</p>
 
                                 <div class="card-bottom-row">
-                                  <div class="pricing-box" [class.has-promo]="item.promotionalPrice">
+                                  <div class="pricing-box" [class.has-promo]="displayPromotion(item)">
                                     @if (item.showPrice === false) {
                                       <span class="price-consult" [style.color]="accentColor">Consulte...</span>
-                                    } @else if (item.promotionalPrice) {
-                                      <span class="price-highlight" [style.color]="accentColor">R$ {{ item.promotionalPrice.toFixed(2) }}</span>
+                                    } @else if (displayPromotion(item)) {
+                                      <span class="price-highlight" [style.color]="accentColor">R$ {{ (displayPromotion(item) ?? 0).toFixed(2) }}</span>
                                       <span class="price-strikethrough" [style.color]="textSecondary">R$ {{ item.price.toFixed(2) }}</span>
                                     } @else {
-                                      <span class="price-regular" [style.color]="accentColor">R$ {{ item.price.toFixed(2) }}</span>
+                                      <span class="price-regular" [style.color]="accentColor">{{ displayPriceLabel(item) }}</span>
                                     }
                                   </div>
 
@@ -1020,14 +1021,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                           <p class="card-item-desc" [style.color]="textSecondary">{{ item.description || 'Preparo artesanal com os melhores ingredientes selecionados.' }}</p>
 
                           <div class="card-bottom-row">
-                            <div class="pricing-box" [class.has-promo]="item.promotionalPrice">
+                            <div class="pricing-box" [class.has-promo]="displayPromotion(item)">
                               @if (item.showPrice === false) {
                                 <span class="price-consult" [style.color]="accentColor">Consulte...</span>
-                              } @else if (item.promotionalPrice) {
-                                <span class="price-highlight" [style.color]="accentColor">R$ {{ item.promotionalPrice.toFixed(2) }}</span>
+                              } @else if (displayPromotion(item)) {
+                                <span class="price-highlight" [style.color]="accentColor">R$ {{ (displayPromotion(item) ?? 0).toFixed(2) }}</span>
                                 <span class="price-strikethrough" [style.color]="textSecondary">R$ {{ item.price.toFixed(2) }}</span>
                               } @else {
-                                <span class="price-regular" [style.color]="accentColor">R$ {{ item.price.toFixed(2) }}</span>
+                                <span class="price-regular" [style.color]="accentColor">{{ displayPriceLabel(item) }}</span>
                               }
                             </div>
 
@@ -1148,17 +1149,30 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
               <p class="sheet-desc" [style.color]="textSecondary">{{ selectedProduct.description || 'Produto fresco e artesanal preparado na hora especialmente para você.' }}</p>
 
-              <div class="sheet-price-row">
+              @if (selectedProduct.flavors?.length) {
+                <fieldset class="product-flavor-picker"><legend>Escolha um sabor</legend>
+                  @for (flavor of selectedProduct.flavors; track flavor.id) {
+                    <label [class.flavor-unavailable]="!flavor.isAvailable">
+                      <input type="radio" name="product-flavor" [value]="flavor.id" [checked]="selectedFlavorId === flavor.id" [disabled]="!flavor.isAvailable" (change)="selectedFlavorId = flavor.id" />
+                      <span>{{ flavor.name }} @if (!flavor.isAvailable) { <small>Indisponível</small> }</span>
+                      @if (selectedProduct.showPrice !== false && flavor.isAvailable) { <strong>{{ formatOrderMoney(flavorUnitPrice(selectedProduct, flavor)) }}</strong> }
+                    </label>
+                  }
+                </fieldset>
+              }
+              <div class="sheet-price-row" aria-live="polite">
                 <span class="sheet-price-label" [style.color]="textSecondary">Preço:</span>
                 @if (selectedProduct.showPrice === false) {
                   <span class="sheet-current" style="font-style: italic; font-size: 0.95rem;" [style.color]="accentColor">Consulte com o atendente</span>
-                } @else if (selectedProduct.promotionalPrice) {
+                } @else if (selectedProduct.flavors?.length && !selectedFlavorId) {
+                  <span class="sheet-price-label" [style.color]="textSecondary">Selecione um sabor</span>
+                } @else if (modalPrices.promotionalPrice) {
                   <div class="sheet-pricing-dual">
-                    <span class="sheet-old" [style.color]="textSecondary">R$ {{ selectedProduct.price.toFixed(2) }}</span>
-                    <span class="sheet-current" [style.color]="accentColor">R$ {{ selectedProduct.promotionalPrice.toFixed(2) }}</span>
+                    <span class="sheet-old" [style.color]="textSecondary">R$ {{ modalPrices.price.toFixed(2) }}</span>
+                    <span class="sheet-current" [style.color]="accentColor">R$ {{ modalPrices.promotionalPrice.toFixed(2) }}</span>
                   </div>
                 } @else {
-                  <span class="sheet-current" [style.color]="accentColor">R$ {{ selectedProduct.price.toFixed(2) }}</span>
+                  <span class="sheet-current" [style.color]="accentColor">R$ {{ modalPrices.price.toFixed(2) }}</span>
                 }
               </div>
 
@@ -1173,8 +1187,9 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   <button
                     type="button"
                     class="btn-sheet-add-cart menu-action-button"
-                    (click)="confirmAddToCart(selectedProduct); closeProductDetail()">
-                    {{ selectedProduct.showPrice === false ? 'Adicionar ao Pedido' : 'Adicionar • R$ ' + getModalTotal(selectedProduct).toFixed(2) }}
+                    [disabled]="!canAddSelectedProduct"
+                    (click)="confirmAddToCart(selectedProduct)">
+                    {{ !canAddSelectedProduct ? 'Escolha um sabor' : selectedProduct.showPrice === false ? 'Adicionar ao Pedido' : 'Adicionar • R$ ' + getModalTotal(selectedProduct).toFixed(2) }}
                   </button>
                 </div>
               } @else {
@@ -1252,7 +1267,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                 </div>
               } @else {
                 <div class="cart-list">
-                  @for (cItem of cartService.cartItems(); track cItem.itemId) {
+                  @for (cItem of cartService.cartItems(); track cartService.lineKey(cItem)) {
                     <div class="cart-item-row" [style.border-bottom-color]="screenBg">
                       <div class="cart-item-thumb">
                         @if (cItem.imageUrl) {
@@ -1264,19 +1279,21 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
                       <div class="cart-item-info">
                         <h4 class="c-item-name" [style.color]="textPrimary">{{ cItem.name }}</h4>
+                        @if (cItem.flavorName) { <span class="c-item-flavor" [style.color]="textSecondary">Sabor: {{ cItem.flavorName }}</span> }
                         <span class="c-item-unit-price" [style.color]="textSecondary">
-                          @if (cItem.showPrice === false) { Preço a consultar }
+                          @if (cItem.unavailable) { Opção indisponível. Remova e escolha novamente. }
+                          @else if (cItem.showPrice === false) { Preço a consultar }
                           @else { {{ formatOrderMoney(cartService.unitPrice(cItem)) }} un. }
                         </span>
                       </div>
 
                       <div class="cart-item-actions">
                         <div class="cart-qty-ctrl" [style.background]="screenBg">
-                          <button type="button" class="c-qty-btn" (click)="cartService.updateQuantity(cItem.itemId, -1)">-</button>
+                          <button type="button" class="c-qty-btn" (click)="cartService.updateQuantity(cItem.itemId, -1, cItem.flavorId)">-</button>
                           <span class="c-qty-val" [style.color]="textPrimary">{{ cItem.quantity }}</span>
-                          <button type="button" class="c-qty-btn" (click)="cartService.updateQuantity(cItem.itemId, 1)">+</button>
+                          <button type="button" class="c-qty-btn" [disabled]="cItem.unavailable" (click)="cartService.updateQuantity(cItem.itemId, 1, cItem.flavorId)">+</button>
                         </div>
-                        <button type="button" class="c-remove-btn" (click)="cartService.removeItem(cItem.itemId)" title="Remover item">
+                        <button type="button" class="c-remove-btn" (click)="cartService.removeItem(cItem.itemId, cItem.flavorId)" title="Remover item">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                           </svg>
@@ -1290,7 +1307,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
             <div class="cart-recommendation-slot" aria-live="polite" aria-relevant="additions text">
               @if (cartRecommendationReady() ? cartRecommendation() : null; as suggestion) {
-                <app-cart-recommendation [item]="suggestion" [price]="cartService.unitPrice(suggestion)"
+                <app-cart-recommendation [item]="suggestion" [price]="displayUnitPrice(suggestion)"
                   (add)="addRecommendation($event)" (dismiss)="dismissCartRecommendation()"
                   (details)="cartService.closeCart(); openProductDetail($event)" />
               }
@@ -1340,6 +1357,13 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
   `,
   styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css', './public-menu-pixel-template.css', './public-menu-retro-diner-template.css', './public-menu-circuit-template.css', './public-menu-soft-wave-template.css', './public-menu-immersive-cover-template.css', './public-menu-nordic-tavern-template.css', './public-menu-izakaya-template.css', './public-menu-neon-arcade-template.css', './public-menu-tropical-template.css', './public-menu-fiesta-template.css', './public-menu-simple-templates.css', './public-menu-sweet-template.css', './public-menu-royal-template.css', './public-menu-liquid-glass-template.css', './public-menu-rounded-showcase-template.css', './public-menu-soft-showcase-template.css', './public-menu-double-showcase-template.css'],
   styles: [`
+    .product-flavor-picker { margin:0 0 18px;padding:14px;border:1px solid color-mix(in srgb,var(--accent-color) 30%,var(--surface-color));border-radius:var(--template-button-radius);color:var(--text-primary); }
+    .product-flavor-picker legend { padding:0 6px;font:700 .9rem var(--heading-font); }
+    .product-flavor-picker label { display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 4px;cursor:pointer; }
+    .product-flavor-picker input { accent-color:var(--accent-color);width:20px;height:20px;flex-shrink:0; }
+    .product-flavor-picker span { flex:1;min-width:0;overflow-wrap:anywhere; } .product-flavor-picker strong { font-size:.85rem;white-space:nowrap; }
+    .product-flavor-picker small,.c-item-flavor { display:block;font-size:.75rem;margin-top:4px; } .flavor-unavailable { opacity:.55; }
+    .btn-sheet-add-cart:disabled { opacity:.55;cursor:not-allowed;transform:none; }
     :host {
       display: block;
       width: 100%;
@@ -3050,6 +3074,10 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   readonly likeMessage = signal('');
   productVideoExpanded = false;
   modalItemQuantity = 1;
+  selectedFlavorId: string | undefined;
+  get modalPrices() { const item = this.selectedProduct; return item ? flavorPrices(item, resolveFlavor(item, this.selectedFlavorId) || null) : { price: 0, promotionalPrice: null }; }
+  get canAddSelectedProduct(): boolean { return !!this.selectedProduct && resolveFlavor(this.selectedProduct, this.selectedFlavorId) !== undefined; }
+  flavorUnitPrice(item: MenuItem, flavor: ProductFlavor): number { return this.cartService.unitPrice(flavorPrices(item, flavor)); }
   private previewLikedItemIds = new Set<string>();
 
   // Carousel state
@@ -3069,6 +3097,15 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     : this.publicMenuService.menuData()?.categories || []);
   private readonly subcategoryList = computed(() => this.isPhonePreview
     ? this.menuService.subcategories() : this.publicMenuService.menuData()?.subcategories || []);
+  private readonly flavorMinimums = computed(() => new Map(this.catalogItems().map(item => [item.id,
+    item.flavors?.length ? item.flavors.filter(flavor => flavor.isAvailable).map(flavor => this.flavorUnitPrice(item, flavor)).reduce((min, price) => Math.min(min, price), Infinity) : item.price
+  ])));
+  displayPromotion(item: MenuItem): number | null { return item.flavors?.length ? null : item.promotionalPrice || null; }
+  displayUnitPrice(item: MenuItem): number { return item.flavors?.length ? this.flavorMinimums().get(item.id) ?? item.price : this.cartService.unitPrice(item); }
+  displayPriceLabel(item: MenuItem): string {
+    const price = this.displayUnitPrice(item);
+    return Number.isFinite(price) ? (item.flavors?.length ? 'A partir de ' : '') + formatOrderMoney(price) : 'Sabores indispon?veis';
+  }
   private readonly recommendationProducts = computed(() => new Map(this.catalogItems().map(item => [item.id, item])));
   private readonly recommendationCategories = computed(() => new Set(this.categoryList().map(category => category.id)));
   private readonly recommendations = computed(() => recommendationMap(this.isPhonePreview
@@ -3694,6 +3731,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   openProductDetail(item: MenuItem): void {
     if (!this.isPhonePreview) this.analytics.record(this.publicSlug, 'PRODUCT_VIEW', { itemId: item.id });
     this.selectedProduct = item;
+    this.selectedFlavorId = undefined;
     this.productVideoExpanded = false;
     this.modalItemQuantity = 1;
   }
@@ -3704,7 +3742,7 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   increaseModalQty(): void {
-    this.modalItemQuantity++;
+    this.modalItemQuantity = Math.min(9999, this.modalItemQuantity + 1);
   }
 
   decreaseModalQty(): void {
@@ -3714,17 +3752,19 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   getModalTotal(item: MenuItem): number {
-    const activePrice = item.promotionalPrice && item.promotionalPrice < item.price ? item.promotionalPrice : item.price;
+    const activePrice = this.cartService.unitPrice(flavorPrices(item, resolveFlavor(item, this.selectedFlavorId) || null));
     return activePrice * this.modalItemQuantity;
   }
 
   confirmAddToCart(item: MenuItem): void {
-    this.addCatalogItem(item.id, this.modalItemQuantity);
+    if (this.addCatalogItem(item.id, this.modalItemQuantity, this.selectedFlavorId)) this.closeProductDetail();
   }
-  private addCatalogItem(id: string, quantity = 1): void {
+  private addCatalogItem(id: string, quantity = 1, flavorId?: string): boolean {
     const item = this.recommendationProducts().get(id);
-    if (!this.enableCart || !item || item.isAvailable === false || !this.recommendationCategories().has(item.categoryId)) return;
-    this.cartService.addItem(item, quantity);
+    if (!this.enableCart || !item || item.isAvailable === false || !this.recommendationCategories().has(item.categoryId)) return false;
+    if (resolveFlavor(item, flavorId) === undefined) { this.cartService.closeCart(); this.openProductDetail(item); return false; }
+    this.cartService.addItem(item, quantity, flavorId);
+    return true;
   }
 
   get selectedProductLikesCount(): number {
