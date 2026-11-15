@@ -274,5 +274,9 @@
   {
     "file": "20261111233304_add_product_flavors.sql",
     "sha256": "79ef4e228411d45d73d7ad951ce38936b99ebf8f8ed2584bbe21761cdd8da6f7"
+  },
+  {
+    "file": "20261115175608_increase_medium_product_limit.sql",
+    "sha256": "3d43bf279e1c7d81ddcc0cf14aec2db220ce670f0386a27345dc7266ad0e9cf2"
   }
 ]

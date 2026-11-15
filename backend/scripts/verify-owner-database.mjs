@@ -31,7 +31,7 @@ export async function verifyOwnerDatabase(pool) {
     assert.equal(await value("SELECT create_owner_session($1,$2,'owner','diagnostic',now()-interval '2 minutes',now()-interval '1 minute',NULL,$3) value",[randomBytes(32).toString('hex'),user,Math.floor(Date.now()/1000)]),false);
   });
   await check('exact plan matrix',async()=>{
-    const expected={FREE:[10,4,0,false,false,false,false,false],BASIC:[30,10,5,true,false,false,false,false],MEDIUM:[70,25,15,true,true,false,true,true],PRO:[150,40,30,true,true,true,true,true]};
+    const expected={FREE:[10,4,0,false,false,false,false,false],BASIC:[30,10,5,true,false,false,false,false],MEDIUM:[85,25,15,true,true,false,true,true],PRO:[150,40,30,true,true,true,true,true]};
     for(const [code,values] of Object.entries(expected)){
       const snapshot=await value('SELECT jsonb_object_agg(e.feature_key,e.value) value FROM plan_entitlements e JOIN plans p ON p.id=e.plan_id WHERE p.code=$1',[code]);
       assert.deepEqual(['MAX_PRODUCTS','MAX_CATEGORIES','MAX_VIDEOS','ANALYTICS_BASIC','ANALYTICS_ADVANCED','ANALYTICS_EXPORT','QR_GENERATOR','QR_CUSTOMIZATION'].map(key=>snapshot[key]),values);
@@ -330,7 +330,7 @@ export async function verifyOwnerDatabase(pool) {
     assert.ok(await value('SELECT consumed_at value FROM owner_plan_intents WHERE id=$1',[selection]));
   });
   await check('every plan rejects the next product, category and video at its exact limit',async()=>{
-    for(const [code,limits] of Object.entries({FREE:[10,4,0],BASIC:[30,10,5],MEDIUM:[70,25,15],PRO:[150,40,30]})){
+    for(const [code,limits] of Object.entries({FREE:[10,4,0],BASIC:[30,10,5],MEDIUM:[85,25,15],PRO:[150,40,30]})){
       const uid=randomUUID(),bid=randomUUID(),cid=randomUUID();
       await query('INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,$2,now())',[uid,code.toLowerCase()+'-capacity@local.test']);
       await query('INSERT INTO profiles(id,full_name) VALUES($1,$2)',[uid,code+' Owner']);

@@ -5,7 +5,7 @@ import { analyticsOptions, analyticsReport } from './analytics-fixture';
 const matrix = {
   FREE: [10, 4, 0, false, false],
   BASIC: [30, 10, 5, true, false],
-  MEDIUM: [70, 25, 15, true, true],
+  MEDIUM: [85, 25, 15, true, true],
   PRO: [150, 40, 30, true, true],
 } as const;
 const names = { FREE: 'Free', BASIC: 'Basic', MEDIUM: 'Medium', PRO: 'Pro' };

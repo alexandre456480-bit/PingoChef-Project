@@ -182,9 +182,9 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
           </div>
           </ng-template>
-          @if (!heroControlsInside) {
-            <ng-container *ngTemplateOutlet="controlsTemplate"></ng-container>
-          }
+
+          <!-- Persistent controls share the non-scrolling shell with the social menu. -->
+          <ng-container *ngTemplateOutlet="controlsTemplate"></ng-container>
 
           <!-- Search Expandable Bar -->
           @if (searchActive) {
@@ -208,6 +208,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
           <!-- Scrollable Showcase Body -->
           <div class="showcase-scrollable" #showcaseScroller>
+
 
             @if (!(activeCatId ? isCategoryHeroEnabled : showHeroBlock) && !searchFilter) {
               <div class="no-hero-header" [style.background]="templateKey === 'liquid-glass' ? null : surfaceColor" [style.border-bottom]="'1px solid ' + surfaceColor + '30'">
@@ -260,9 +261,6 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                   }
                 </div>
 
-                @if (heroControlsInside) {
-                  <ng-container *ngTemplateOutlet="controlsTemplate"></ng-container>
-                }
                 @if (currentTemplate.brandPosition === 'inside-hero') {
                   <ng-container *ngTemplateOutlet="brandIdentityTemplate"></ng-container>
                 }
@@ -3489,10 +3487,6 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return this.templateKey === 'pixel' || this.templateKey === 'neon-arcade'
       ? 'M4 4H10V6H14V4H20V6H22V12H20V14H18V16H16V18H14V20H10V18H8V16H6V14H4V12H2V6H4Z'
       : 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z';
-  }
-
-  get heroControlsInside(): boolean {
-    return this.currentTemplate.brandPosition === 'inside-hero' && !this.searchActive && !this.searchFilter && this.isCategoryHeroEnabled;
   }
 
   get currentTemplate(): TemplateConfig {

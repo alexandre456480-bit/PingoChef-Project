@@ -69,7 +69,7 @@ Habilitar Confirm email, configurar redirects e templates no Supabase é obrigat
 | --- | ---: | ---: | ---: | --- | --- |
 | Free | 10 | 4 | 1 | Demonstração | Não |
 | Basic | 30 | 10 | 7 | Essencial | Não |
-| Medium | 70 | 25 | 25 | Avançado | Sim |
+| Medium | 85 | 25 | 25 | Avançado | Sim |
 | Pro | 150 | 40 | 40 | Completo, CSV e detalhe por QR | Sim |
 
 Os preços de apresentação continuam provisórios: R$ 29,90 / R$ 59,90 / R$ 99,90. Contratação de planos pagos permanece indisponível. Medium/Pro podem existir por concessão administrativa auditada; isso não é cobrança.

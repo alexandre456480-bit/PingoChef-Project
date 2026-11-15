@@ -45,7 +45,7 @@ const cards = [
     code: "MEDIUM",
     name: "Medium",
     priceCents: 4990,
-    products: 70,
+    products: 85,
     categories: 25,
     videos: 15,
     profile: "Para crescer",

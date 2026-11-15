@@ -49,7 +49,7 @@ Dashboard, cadastro, cardápio público e demais páginas são carregados sob de
 |---|---:|---:|---:|---|---:|
 | Free | 10 | 4 | 1 | Editor e publicação | R$ 0,00 |
 | Basic | 30 | 10 | 7 | Analytics essencial | R$ 29,90/mês |
-| Medium | 70 | 25 | 25 | Analytics avançado e QR personalizado | R$ 59,90/mês |
+| Medium | 85 | 25 | 25 | Analytics avançado e QR personalizado | R$ 59,90/mês |
 | Pro | 150 | 40 | 40 | Analytics completo e QR premium | R$ 99,90/mês |
 
 Os preços são somente apresentação no catálogo comercial do backend. Não são valores de cobrança, direitos de assinatura nem autorização. Não há gateway, checkout ou contrato de pagamento implementado. Somente Free possui CTA de cadastro; os demais exibem **Em breve**. Medium recebe destaque **Mais recomendado**, sem ocultar Free, escassez fictícia, preço riscado ou contagem regressiva.

@@ -133,7 +133,7 @@ Os códigos FREE, BASIC, MEDIUM e PRO são estáveis. O nome de exibição conti
 
 | Entitlement | FREE | BASIC | MEDIUM | PRO |
 | --- | ---: | ---: | ---: | ---: |
-| MAX_PRODUCTS | 10 | 30 | 70 | 150 |
+| MAX_PRODUCTS | 10 | 30 | 85 | 150 |
 | MAX_CATEGORIES | 4 | 10 | 25 | 40 |
 | MAX_VIDEOS | 1 | 7 | 25 | 40 |
 | ANALYTICS_BASIC | false | true | true | true |

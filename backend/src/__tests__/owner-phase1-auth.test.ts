@@ -210,7 +210,7 @@ describe('Owner commercial journey and account operations',()=>{
     const r=await request(app()).get('/api/v1/auth/plans');expect(r.status).toBe(200);
     expect(r.body.data.billingAvailable).toBe(false);expect(r.body.data.pricesProvisional).toBe(true);
     expect(r.body.data.plans.map((p:any)=>[p.code,p.products,p.categories,p.videos,p.priceCents,p.available])).toEqual([
-      ['FREE',10,4,0,0,true],['BASIC',30,10,5,3490,false],['MEDIUM',70,25,15,4990,false],['PRO',150,40,30,8490,false]]);
+      ['FREE',10,4,0,0,true],['BASIC',30,10,5,3490,false],['MEDIUM',85,25,15,4990,false],['PRO',150,40,30,8490,false]]);
   });
   it('rejects every paid plan and injected entitlements before creating a selection',async()=>{
     for(const planCode of ['BASIC','MEDIUM','PRO'])expect((await request(app()).post('/api/v1/auth/plan-intents').set('Origin',origin).send({planCode})).status).toBe(409);
