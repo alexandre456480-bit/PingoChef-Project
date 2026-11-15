@@ -48,7 +48,7 @@ import { ProductFlavor } from '../../../../models/product-flavors';
           </button>
 
           @for (cat of menuService.categories(); track cat.id; let i = $index) {
-            <div class="cat-chip" role="group" [attr.aria-label]="'Categoria ' + cat.name" [class.active]="selectedCategoryId === cat.id" [style.animation-delay]="(i * 50 + 100) + 'ms'">
+            <div class="cat-chip" role="group" [attr.aria-label]="'Categoria ' + cat.name" [class.active]="selectedCategoryId === cat.id" [class.category-hidden]="!cat.isActive" [style.animation-delay]="(i * 50 + 100) + 'ms'">
               <button type="button" class="cat-filter-btn" [attr.aria-label]="cat.name" [attr.aria-pressed]="selectedCategoryId === cat.id" (click)="filterBy(cat.id)">
               @if (cat.iconType === 'image' && cat.imageUrl) {
                 <div class="chip-icon img-wrap">
@@ -57,9 +57,12 @@ import { ProductFlavor } from '../../../../models/product-flavors';
               } @else if (cat.iconType !== 'none' && getCategoryIconSvg(cat)) {
                 <div class="chip-icon svg-wrap" [innerHTML]="getCategoryIconSvg(cat)"></div>
               }
-              <span class="chip-label">{{ cat.name }}</span>
+              <span class="chip-label">{{ cat.name }}@if (!cat.isActive) { <small class="category-hidden-label">Oculta</small> }</span>
               </button>
               <div class="chip-actions">
+                <button type="button" class="chip-action-btn category-visibility-btn" [disabled]="categoryVisibilityBusy.has(cat.id)" [attr.aria-label]="(cat.isActive ? 'Ocultar categoria ' : 'Mostrar categoria ') + cat.name" [attr.title]="cat.isActive ? 'Ocultar categoria e seus produtos' : 'Mostrar categoria e seus produtos'" [attr.aria-pressed]="cat.isActive" (click)="toggleCategoryVisibility(cat)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>@if (!cat.isActive) { <path d="m3 3 18 18"/> }</svg>
+                </button>
                 <button type="button" class="chip-action-btn" (click)="openCategoryModal(cat)" title="Editar" [attr.aria-label]="'Editar categoria ' + cat.name">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                 </button>
@@ -860,6 +863,10 @@ import { ProductFlavor } from '../../../../models/product-flavors';
       display: flex;
       transition: color 0.15s;
     }
+    .category-hidden { border-style: dashed; }
+    .category-hidden-label { display: block; margin-top: 3px; font-size: 10px; color: var(--panel-text-muted); }
+    .category-visibility-btn { min-width: 44px; min-height: 44px; color: var(--panel-text-soft); }
+    .category-visibility-btn:disabled { opacity: .5; cursor: wait; }
     .chip-action-btn:hover { color: #F47B20; }
     .chip-action-btn.danger:hover { color: #EF4444; }
 
@@ -2419,7 +2426,7 @@ export class MenuEditorComponent implements OnInit {
       iconKey: this.catForm.mode === 'catalog' ? this.catForm.iconKey : null,
       imageUrl: this.catForm.mode === 'image' ? (this.catForm.imageUrl || null) : null,
       displayMode: this.catForm.displayMode,
-      isActive: true
+      isActive: this.editingCategoryId ? this.menuService.categories().find(cat => cat.id === this.editingCategoryId)?.isActive !== false : true
     };
 
     if (this.editingCategoryId) {
@@ -2435,6 +2442,24 @@ export class MenuEditorComponent implements OnInit {
         this.onToast.emit('Categoria criada com sucesso!');
       },error:e=>this.onToast.emit(e?.error?.error?.code==='LIMIT_EXCEEDED'?'Limite de categorias atingido. Compare os planos acima.':'Não foi possível criar a categoria. Confira sua conexão e tente novamente.')});
     }
+  }
+
+  categoryVisibilityBusy = new Set<string>();
+  toggleCategoryVisibility(category: Category): void {
+    if (this.categoryVisibilityBusy.has(category.id)) return;
+    this.categoryVisibilityBusy.add(category.id);
+    this.menuService.setCategoryVisibility(category.id, !category.isActive).subscribe({
+      next: () => {
+        this.categoryVisibilityBusy.delete(category.id);
+        this.onToast.emit(category.isActive ? 'Categoria e seus produtos ocultados do cardápio.' : 'Categoria visível novamente. Produtos respeitam sua disponibilidade.');
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.categoryVisibilityBusy.delete(category.id);
+        this.onToast.emit('Não foi possível alterar a visibilidade. Tente novamente.');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   deleteCategory(id: string): void {

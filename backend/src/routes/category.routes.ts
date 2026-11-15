@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { 
   getCategoriesController, 
   createCategoryController, 
-  updateCategoryController, 
+  updateCategoryController,
+  setCategoryVisibilityController,
   reorderCategoriesController, 
   deleteCategoryController 
 } from '../controllers/category.controller';
@@ -16,6 +17,7 @@ router.use(authenticateJwt as any);
 router.get('/', getCategoriesController as any);
 router.post('/', createCategoryController as any);
 router.patch('/reorder', reorderCategoriesController as any);
+router.patch('/:id/visibility', setCategoryVisibilityController as any);
 router.put('/:id', updateCategoryController as any);
 router.delete('/:id', deleteCategoryController as any);
 

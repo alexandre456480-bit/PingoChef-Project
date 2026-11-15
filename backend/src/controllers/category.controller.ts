@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { supabaseAdmin, createUserClient, isSupabaseConfigured } from '../config/supabase';
 import { localDb, isDemoMode } from '../config/localDb';
 import { entitlements, mapEntitlementDatabaseError } from '../services/entitlement.service';
+import { ownerError } from '../services/owner-session.service';
 import { reorderMenu } from '../services/menu-order.service';
 
 export const categorySchema = z.object({
@@ -213,6 +214,29 @@ export const createCategoryController = async (req: AuthenticatedRequest, res: R
   } catch (error) {
     next(error);
   }
+};
+
+// Visibility is independent from product availability and changes only this field.
+export const setCategoryVisibilityController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const businessId = req.businessId;
+    if (!businessId) throw ownerError(401, 'UNAUTHORIZED');
+    const id = z.string().min(1).max(100).parse(req.params.id);
+    const { isActive } = z.object({ isActive: z.boolean() }).strict().parse(req.body);
+    if (isSupabaseConfigured) {
+      const client = req.accessToken ? createUserClient(req.accessToken) : supabaseAdmin;
+      const { data, error } = await client.from('categories').update({ is_active: isActive })
+        .eq('business_id', businessId).eq('id', id).select('id,is_active').maybeSingle();
+      if (error) throw ownerError(503, 'CATEGORY_VISIBILITY_UNAVAILABLE');
+      if (!data) throw ownerError(404, 'CATEGORY_NOT_FOUND');
+      return res.json({ success: true, data: { id: data.id, isActive: data.is_active } });
+    }
+    if (!isDemoMode()) throw ownerError(503, 'SERVICE_UNAVAILABLE');
+    const category = localDb.categories.find(row => row.id === id && row.business_id === businessId);
+    if (!category) throw ownerError(404, 'CATEGORY_NOT_FOUND');
+    category.is_active = isActive;
+    return res.json({ success: true, data: { id, isActive } });
+  } catch (error) { next(error); }
 };
 
 export const updateCategoryController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

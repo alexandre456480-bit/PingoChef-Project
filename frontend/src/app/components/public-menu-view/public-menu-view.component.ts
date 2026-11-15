@@ -1995,10 +1995,20 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     }
     .featured-chef-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(130px, calc((100% - 12px) / 2));
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) transparent;
+      padding: 4px 2px 12px;
       gap: 12px;
     }
     .featured-chef-card {
+      min-width: 0;
+      scroll-snap-align: start;
       border-radius: 16px;
       overflow: hidden;
       display: flex;
@@ -2173,10 +2183,19 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     }
     .best-sellers-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(130px, calc((100% - 12px) / 2));
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) transparent;
+      padding: 4px 2px 12px;
       gap: 10px;
     }
     .best-seller-card {
+      scroll-snap-align: start;
       border-radius: 14px;
       overflow: hidden;
       display: flex;
@@ -3087,14 +3106,16 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   // Subcategories Accordion State
   collapsedSubcategories = new Set<string>();
   private readonly iconCache = new Map<string, SafeHtml | null>();
-  private readonly catalogItems = computed(() => this.isPhonePreview
-    ? this.menuService.items().filter(item => item.isAvailable)
-    : this.publicMenuService.menuData()?.items || []);
+  private readonly catalogItems = computed(() => {
+    if (!this.isPhonePreview) return this.publicMenuService.menuData()?.items || [];
+    const visible = new Set(this.menuService.categories().filter(category => category.isActive).map(category => category.id));
+    return this.menuService.items().filter(item => item.isAvailable && visible.has(item.categoryId));
+  });
   private readonly categoryList = computed(() => this.isPhonePreview
     ? this.menuService.categories().filter(category => category.isActive)
     : this.publicMenuService.menuData()?.categories || []);
   private readonly subcategoryList = computed(() => this.isPhonePreview
-    ? this.menuService.subcategories() : this.publicMenuService.menuData()?.subcategories || []);
+    ? this.menuService.subcategories().filter(subcategory => this.categoryList().some(category => category.id === subcategory.categoryId)) : this.publicMenuService.menuData()?.subcategories || []);
   private readonly flavorMinimums = computed(() => new Map(this.catalogItems().map(item => [item.id,
     item.flavors?.length ? item.flavors.filter(flavor => flavor.isAvailable).map(flavor => this.flavorUnitPrice(item, flavor)).reduce((min, price) => Math.min(min, price), Infinity) : item.price
   ])));

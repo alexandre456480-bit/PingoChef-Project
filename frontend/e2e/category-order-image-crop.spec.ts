@@ -21,6 +21,17 @@ async function setup(page: Page) {
       categories = categories.map(row => ({ ...row, displayOrder: body.orders.find((o: any) => o.id === row.id).displayOrder })).sort((a, b) => a.displayOrder - b.displayOrder);
       return ok({});
     }
+    if (/^categories\/cat-\d+\/visibility$/.test(path)) {
+      const id = path.split('/')[1], body = req.postDataJSON(); writes.push(body);
+      if (failOrder) { failOrder = false; return route.fulfill({status:503,json:{success:false}}); }
+      categories = categories.map(row => row.id === id ? { ...row, isActive: body.isActive } : row);
+      return ok({id,isActive:body.isActive});
+    }
+    if (/^categories\/cat-\d+$/.test(path) && req.method() === 'PUT') {
+      const id = path.split('/')[1], body = req.postDataJSON(); writes.push(body);
+      categories = categories.map(row => row.id === id ? {...row,...body} : row);
+      return ok(categories.find(row => row.id === id));
+    }
     if (path === 'business') { if (req.method() === 'PUT') business = { ...business, ...req.postDataJSON() }; return ok(business); }
     if (path === 'design') return ok({ template_key: 'default', home_blocks: [], custom_config: {} });
     return ok([]);
@@ -92,4 +103,24 @@ test('crop supports cancellation, keyboard panning, bounded pixels and no save u
   expect(pixels.width).toBe(pixels.height); expect(pixels.width).toBeLessThanOrEqual(400);
   expect(pixels.center[0]).toBeGreaterThan(240); expect(pixels.center[2]).toBeLessThan(10);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('category visibility persists, survives editing and preserves state after a failed write', async ({page}) => {
+  const state = await setup(page); await navigate(page, 'Menu');
+  const group = page.getByRole('group', {name:'Categoria Lanches',exact:true});
+  await group.getByRole('button',{name:'Ocultar categoria Lanches',exact:true}).click();
+  await expect(group).toContainText('Oculta');
+  expect(state.writes[0]).toEqual({isActive:false});
+  await page.reload(); await navigate(page,'Menu'); await expect(group).toContainText('Oculta');
+  await group.getByRole('button',{name:'Editar categoria Lanches',exact:true}).click();
+  await page.locator('.category-form button[type=submit]').click();
+  await expect(page.locator('.category-form')).toHaveCount(0);
+  expect(state.writes[1].isActive).toBe(false);
+  await expect(group).toContainText('Oculta');
+  state.failNext(); await group.getByRole('button',{name:'Mostrar categoria Lanches',exact:true}).click();
+  await expect(group.getByRole('button',{name:'Mostrar categoria Lanches',exact:true})).toBeEnabled();
+  await expect(group).toContainText('Oculta');
+  await group.getByRole('button',{name:'Mostrar categoria Lanches',exact:true}).click();
+  await expect(group.locator('.category-hidden-label')).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

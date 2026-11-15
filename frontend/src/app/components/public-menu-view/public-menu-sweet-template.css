@@ -50,7 +50,7 @@
 .menu-viewport[data-template="sweet-boutique"] .subcat-indicator { border-radius: 0; width: 20px; height: 22px; mask: var(--sweet-heart) center / contain no-repeat; }
 .menu-viewport[data-template="sweet-boutique"] .subcategory-title { white-space: normal; overflow-wrap: anywhere; }
 /* Two equally sized cards per row, including narrow phones and the panel preview. */
-.menu-viewport[data-template="sweet-boutique"] :is(.items-grid, .promo-items-scroll, .featured-chef-grid, .combos-scroll-track, .best-sellers-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.menu-viewport[data-template="sweet-boutique"] :is(.items-grid, .promo-items-scroll, .combos-scroll-track) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
 .menu-viewport[data-template="sweet-boutique"] .product-item-card { position: relative; display: flex; flex-direction: column; align-items: stretch; height: auto; padding: 4px; gap: 0; border: 1px solid var(--sweet-edge); box-shadow: var(--sweet-shadow), inset 0 0 0 3px var(--surface-color); }
 .menu-viewport[data-template="sweet-boutique"] .product-card-photo { width: 100%; height: auto; aspect-ratio: 8 / 5; align-self: stretch; border-radius: 18px 18px 12px 12px; }
 .menu-viewport[data-template="sweet-boutique"] :is(.product-photo-img, .photo-placeholder-box) { aspect-ratio: auto; }

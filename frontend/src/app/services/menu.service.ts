@@ -83,6 +83,14 @@ export class MenuService {
     return this.http.put(`${this.apiUrl}/categories/${id}`, data, this.getAuthHeaders());
   }
 
+  setCategoryVisibility(id: string, isActive: boolean): Observable<any> {
+    return this.http.patch<{ success: boolean; data: { id: string; isActive: boolean } }>(
+      `${this.apiUrl}/categories/${encodeURIComponent(id)}/visibility`, { isActive }, this.getAuthHeaders()
+    ).pipe(tap(res => {
+      if (res.success) this.categories.update(rows => rows.map(row => row.id === res.data.id ? { ...row, isActive: res.data.isActive } : row));
+    }));
+  }
+
   deleteCategory(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/categories/${id}`, this.getAuthHeaders());
   }
