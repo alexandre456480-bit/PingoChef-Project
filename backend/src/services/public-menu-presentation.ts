@@ -62,6 +62,10 @@ export function publicCustomConfig(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const config = value as Record<string, unknown>,
     result: Record<string, unknown> = {};
+  if (config.first_block_image && typeof config.first_block_image === 'object' && !Array.isArray(config.first_block_image)) {
+    const image = config.first_block_image as Record<string, unknown>;
+    result.first_block_image = { enabled: image.enabled === true, imageUrl: publicImage(image.imageUrl) };
+  }
   for (const flag of ["enable_likes", "enable_cart", "cart_recommendations_enabled"])
     if (typeof config[flag] === "boolean") result[flag] = config[flag];
   if (config.home_icons && typeof config.home_icons === 'object' && !Array.isArray(config.home_icons)) {

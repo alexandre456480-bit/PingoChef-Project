@@ -1,9 +1,10 @@
+import { HomeSideImageEditorComponent } from './home-side-image-editor.component';
+import { templateCollections } from '../../../../constants/template-collections';
 import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   DesignService,
-  AVAILABLE_TEMPLATES,
   AVAILABLE_PALETTES,
   AVAILABLE_HEADING_FONTS,
   AVAILABLE_BODY_FONTS,
@@ -28,7 +29,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
 @Component({
   selector: 'app-design-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, HomeIconsEditorComponent, RouterLink],
+  imports: [HomeSideImageEditorComponent, CommonModule, FormsModule, HomeIconsEditorComponent, RouterLink],
   template: `
     <div class="design-container">
 
@@ -60,11 +61,23 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
         }
         <div class="template-filters" role="group" aria-label="Categorias de templates">
           @for (filter of templateFilters; track filter) {
-            <button type="button" [attr.aria-pressed]="templateFilter === filter" (click)="templateFilter = filter">{{ filter }}</button>
+            <button type="button" [attr.aria-pressed]="templateFilter === filter" (click)="templateFilter = filter; selectedTemplateCollection = 'all'">{{ filter }}</button>
           }
         </div>
+        <div class="template-collection-toolbar">
+          <label for="template-collection">Estilo do template</label>
+          <select id="template-collection" [(ngModel)]="selectedTemplateCollection">
+            <option value="all">Todos os estilos</option>
+            @for (collection of availableTemplateCollections; track collection.key) {
+              <option [value]="collection.key">{{ collection.name }} ({{ collection.templates.length }})</option>
+            }
+          </select>
+        </div>
+        @for (collection of visibleTemplateCollections; track collection.key) {
+        <section class="template-collection" [attr.aria-labelledby]="'template-group-' + collection.key">
+          <header class="template-collection-heading"><div><h3 [id]="'template-group-' + collection.key">{{ collection.name }}</h3><p>{{ collection.description }}</p></div><span class="template-collection-count">{{ collection.templates.length }}</span></header>
         <div class="templates-grid">
-          @for (tmpl of filteredTemplates; track tmpl.key; let i = $index) {
+          @for (tmpl of collection.templates; track tmpl.key; let i = $index) {
             <button type="button"
               class="template-card"
               [class.selected]="designService.currentTemplate().key === tmpl.key"
@@ -105,6 +118,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
             </button>
           }
         </div>
+        </section>
+        }
         </div>
       </details>
 
@@ -393,6 +408,8 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
           <svg class="section-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </summary>
         <div class="section-content">
+
+        <app-home-side-image-editor />
 
         <!-- 1. Estrutura Fixa da Página -->
         <div class="blocks-subgroup">
@@ -1032,7 +1049,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
 
     </div>
   `,
-  styleUrls: ['./design-editor-simple-previews.css', './design-editor-sweet-preview.css', './design-editor-royal-preview.css', './design-editor-liquid-glass-preview.css', './design-editor-rounded-showcase-preview.css', './design-editor-soft-showcase-preview.css', './design-editor-double-showcase-preview.css'],
+  styleUrls: ['./template-collections.css', './design-editor-simple-previews.css', './design-editor-sweet-preview.css', './design-editor-royal-preview.css', './design-editor-liquid-glass-preview.css', './design-editor-rounded-showcase-preview.css', './design-editor-soft-showcase-preview.css', './design-editor-double-showcase-preview.css'],
   styles: [`
     :host { display: block; }
 
@@ -2750,9 +2767,12 @@ export class DesignEditorComponent {
 
   readonly templateFilters = ['Todos', 'Simples', 'Temáticos'] as const;
   templateFilter: 'Todos' | 'Simples' | 'Temáticos' = 'Todos';
-  get filteredTemplates() {
-    return AVAILABLE_TEMPLATES.filter(template => this.templateFilter === 'Todos' ||
-      (this.templateFilter === 'Temáticos' ? template.category === 'thematic' : template.category !== 'thematic'));
+  selectedTemplateCollection = 'all';
+  get availableTemplateCollections() {
+    return templateCollections(this.templateFilter === 'Todos' ? 'all' : this.templateFilter === 'Temáticos' ? 'thematic' : 'simple');
+  }
+  get visibleTemplateCollections() {
+    return this.availableTemplateCollections.filter(group => this.selectedTemplateCollection === 'all' || group.key === this.selectedTemplateCollection);
   }
   palettes = AVAILABLE_PALETTES;
   headingFonts = AVAILABLE_HEADING_FONTS;

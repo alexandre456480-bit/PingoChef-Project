@@ -1,3 +1,4 @@
+import { homeSideImage } from '../../models/home-side-image';
 import { safeOrderSettings, orderDestination, formatOrderMoney } from '../../models/order-settings';
 import { SocialMenuComponent } from '../social-menu/social-menu.component';
 import { safeSocialLinks } from '../../models/social-links';
@@ -324,6 +325,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
               }
 
               @for (block of orderedHomeBlocks; track block.id) {
+                <ng-template #homeBlockContent>
                 <!-- BLOCO HERO / BANNER -->
                 @if (block.type === 'hero') {
                   @if (showHeroBlock) {
@@ -406,6 +408,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       </div>
                     </div>
 
+                    <ng-template #productSectionItems>
                     <div class="promo-items-scroll">
                       @for (item of promoItems; track item.id) {
                         <div class="promo-item-card" [style.background]="templateKey === 'liquid-glass' ? null : surfaceColor" (click)="openProductDetail(item)">
@@ -454,6 +457,15 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         </div>
                       }
                     </div>
+                    </ng-template>
+                    @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
+                      <div class="home-first-block-layout" [attr.data-first-block]="block.type">
+                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                      </div>
+                    } @else {
+                      <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
+                    }
                   </div>
                 }
 
@@ -467,6 +479,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       </div>
                     </div>
 
+                    <ng-template #productSectionItems>
                     <div class="liked-ranking-list">
                       @for (item of mostLikedItems; track item.id) {
                         <div class="ranking-item-row" [style.background]="templateKey === 'liquid-glass' ? null : surfaceColor" (click)="openProductDetail(item)">
@@ -489,6 +502,15 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         </div>
                       }
                     </div>
+                    </ng-template>
+                    @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
+                      <div class="home-first-block-layout" [attr.data-first-block]="block.type">
+                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                      </div>
+                    } @else {
+                      <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
+                    }
                   </div>
                 }
 
@@ -502,6 +524,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       </div>
                     </div>
 
+                    <ng-template #productSectionItems>
                     @defer (on viewport) {
                     <div class="featured-chef-grid">
                       @for (item of featuredItems; track item.id) {
@@ -538,6 +561,15 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         }
                       </div>
                     }
+                    </ng-template>
+                    @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
+                      <div class="home-first-block-layout" [attr.data-first-block]="block.type">
+                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                      </div>
+                    } @else {
+                      <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
+                    }
                   </div>
                 }
 
@@ -551,6 +583,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       </div>
                     </div>
 
+                    <ng-template #productSectionItems>
                     @defer (on viewport) {
                     <div class="combos-scroll-track">
                       @for (item of comboItems; track item.id) {
@@ -614,6 +647,15 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         }
                       </div>
                     }
+                    </ng-template>
+                    @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
+                      <div class="home-first-block-layout" [attr.data-first-block]="block.type">
+                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                      </div>
+                    } @else {
+                      <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
+                    }
                   </div>
                 }
 
@@ -628,6 +670,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
                     </div>
 
+                    <ng-template #productSectionItems>
                     @defer (on viewport) {
                     <div class="best-sellers-grid">
                       @for (item of bestSellerItems; track item.id) {
@@ -680,8 +723,19 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                         }
                       </div>
                     }
+                    </ng-template>
+                    @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
+                      <div class="home-first-block-layout" [attr.data-first-block]="block.type">
+                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                      </div>
+                    } @else {
+                      <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
+                    }
                   </div>
                 }
+                </ng-template>
+                <ng-container *ngTemplateOutlet="homeBlockContent"></ng-container>
               }
             } @else if (!searchFilter) {
               <!-- Hero Section nas outras categorias (mantendo a descrição/intro card oculta) -->
@@ -1353,7 +1407,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
     </div>
   `,
-  styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css', './public-menu-pixel-template.css', './public-menu-retro-diner-template.css', './public-menu-circuit-template.css', './public-menu-soft-wave-template.css', './public-menu-immersive-cover-template.css', './public-menu-nordic-tavern-template.css', './public-menu-izakaya-template.css', './public-menu-neon-arcade-template.css', './public-menu-tropical-template.css', './public-menu-fiesta-template.css', './public-menu-simple-templates.css', './public-menu-sweet-template.css', './public-menu-royal-template.css', './public-menu-liquid-glass-template.css', './public-menu-rounded-showcase-template.css', './public-menu-soft-showcase-template.css', './public-menu-double-showcase-template.css'],
+  styleUrls: ['./public-menu-template-base.css', './public-menu-centered-templates.css', './public-menu-arched-cover-template.css', './public-menu-brand-hero-template.css', './public-menu-photo-cards.css', './public-menu-signature-cover-template.css', './public-menu-pixel-template.css', './public-menu-retro-diner-template.css', './public-menu-circuit-template.css', './public-menu-soft-wave-template.css', './public-menu-immersive-cover-template.css', './public-menu-nordic-tavern-template.css', './public-menu-izakaya-template.css', './public-menu-neon-arcade-template.css', './public-menu-tropical-template.css', './public-menu-fiesta-template.css', './public-menu-simple-templates.css', './public-menu-sweet-template.css', './public-menu-royal-template.css', './public-menu-liquid-glass-template.css', './public-menu-rounded-showcase-template.css', './public-menu-soft-showcase-template.css', './public-menu-double-showcase-template.css', './public-menu-home-side-image.css'],
   styles: [`
     .product-flavor-picker { margin:0 0 18px;padding:14px;border:1px solid color-mix(in srgb,var(--accent-color) 30%,var(--surface-color));border-radius:var(--template-button-radius);color:var(--text-primary); }
     .product-flavor-picker legend { padding:0 6px;font:700 .9rem var(--heading-font); }
@@ -2189,11 +2243,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       overflow-x: auto;
       overscroll-behavior-x: contain;
       scroll-snap-type: x proximity;
-      scrollbar-width: thin;
-      scrollbar-color: var(--accent-color) transparent;
+      scrollbar-width: none;
       padding: 4px 2px 12px;
       gap: 10px;
     }
+    .best-sellers-grid::-webkit-scrollbar { display: none; }
     .best-seller-card {
       scroll-snap-align: start;
       border-radius: 14px;
@@ -3582,6 +3636,23 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   get bodyFontFamily(): string { return menuFontFamily(this.bodyFont); }
 
   // ── HOME BLOCKS & RECURSOS ──
+
+  readonly firstBlockImageUrl = computed(() => {
+    const image = homeSideImage(this.design?.customConfig);
+    return image.enabled ? safeMenuImage(image.imageUrl) : '';
+  });
+  get firstVisibleProductBlockId(): string | undefined {
+    return this.orderedHomeBlocks.find(block => {
+      switch (block.type) {
+        case 'promotion': return this.showPromoBlock && this.promoItems.length > 0;
+        case 'most_liked': return this.showMostLikedBlock && this.enableLikes && this.mostLikedItems.length > 0;
+        case 'featured_product': return this.showFeaturedBlock && this.featuredItems.length > 0;
+        case 'combo': return this.showCombosBlock && this.comboItems.length > 0;
+        case 'best_seller': return this.showBestSellersBlock && this.bestSellerItems.length > 0;
+        default: return false;
+      }
+    })?.id;
+  }
 
   get orderedHomeBlocks(): HomeBlock[] {
     return (this.design?.homeBlocks || [])

@@ -1,0 +1,10 @@
+/* Only the first rendered product section reserves a right-hand image column. */
+.home-first-block-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(64px,35%); align-items:start; gap:12px; min-width:0; max-width:100%; }
+.home-first-block-content { display:flex; flex-direction:column; gap:16px; min-width:0; overflow:clip; }
+.home-first-block-image { min-width:0; width:100%; aspect-ratio:3/4; overflow:hidden; border-radius:18px; background:var(--surface-color); }
+.home-first-block-image img { display:block; width:100%; height:100%; object-fit:cover; }
+.home-first-block-content :is(.showcase-block,.categories-nav-section,.intro-description-wrapper) { min-width:0; max-width:100%; box-sizing:border-box; }
+
+@media (max-width: 768px) {
+  .home-first-block-layout { grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:10px; }
+}

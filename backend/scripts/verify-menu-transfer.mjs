@@ -16,7 +16,7 @@ export async function verifyMenuTransfer(pool) {
     await c.query("UPDATE public.businesses SET welcome_bg_accent_color='#FFB800' WHERE id=$1", [source]);
     await c.query("INSERT INTO public.categories(id,business_id,name) VALUES($1,$2,'Category')", [category, source]);
     await c.query('INSERT INTO public.design_settings(business_id,custom_config) VALUES($1,$2)', [source,
-      { hero_banners: ['/assets/banner.webp'], category_hero_configs: { [category]: { enabled: true, banners: ['/assets/category.webp'] } } }]);
+      { first_block_image: {enabled:true,imageUrl:'/assets/home-side.webp'}, hero_banners: ['/assets/banner.webp'], category_hero_configs: { [category]: { enabled: true, banners: ['/assets/category.webp'] } } }]);
     await c.query("INSERT INTO public.menu_items(id,business_id,category_id,name,price) VALUES($1,$2,$3,'Product',10)", [item, source, category]);
     const flavors = [{ id: randomUUID(), name: 'Frango', price: null, isAvailable: true }, { id: randomUUID(), name: 'Picanha', price: 18, isAvailable: false }];
     await c.query('UPDATE public.menu_items SET flavors=$2 WHERE id=$1', [item, JSON.stringify(flavors)]);
@@ -34,6 +34,7 @@ export async function verifyMenuTransfer(pool) {
     const text = (await Promise.all(Array.from({ length: exported.parts }, (_, i) => chunk(source, owner, exported.id, i)))).join('');
     const doc = JSON.parse(text);
     assert.deepEqual(doc.items[0].flavors, flavors);
+    assert.deepEqual(doc.design.custom_config.first_block_image, {enabled:true,imageUrl:'/assets/home-side.webp'});
     for (const bad of [[...flavors, flavors[0]], [{ ...flavors[0], price: -1 }], [{ ...flavors[0], businessId: target }], [{ ...flavors[0], name: '<script>' }]])
       await rejected(() => c.query('UPDATE public.menu_items SET flavors=$2 WHERE id=$1', [item, JSON.stringify(bad)]), /check constraint/);
     assert.deepEqual((await c.query('SELECT flavors FROM public.menu_items WHERE id=$1', [item])).rows[0].flavors, flavors);
@@ -81,6 +82,7 @@ export async function verifyMenuTransfer(pool) {
 
     await c.query("INSERT INTO public.product_media(business_id,menu_item_id,media_type,source,provider,storage_object_path,status) VALUES($1,$2,'image','storage','supabase','owned/image.png','ready')", [target, doc.items[0].id]);
     await rejected(() => apply(doc, true, second.id), /MENU_HAS_MEDIA/);
+    assert.deepEqual((await c.query('SELECT custom_config FROM public.design_settings WHERE business_id=$1',[target])).rows[0].custom_config.first_block_image, {enabled:true,imageUrl:'/assets/home-side.webp'});
     doc.business.name = 'Appearance only';
     doc.design.custom_config.category_hero_configs = {};
     assert.equal((await apply(doc, false, second.id)).catalog, false);

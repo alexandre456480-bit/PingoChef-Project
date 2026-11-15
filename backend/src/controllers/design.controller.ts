@@ -1,3 +1,4 @@
+import { publicImage } from '../services/public-menu-presentation';
 import { ACCEPTED_TEMPLATE_KEYS, DEFAULT_TEMPLATE_KEY, normalizeTemplateKey, withoutTemplateBlocks, withoutTemplateVariant } from '../constants/menu-template';
 import { Response, NextFunction } from 'express';
 import { z } from 'zod';
@@ -50,6 +51,10 @@ export const designSchema = z.object({
     })
   ).default([]),
   custom_config: z.object({
+    first_block_image: z.object({
+      enabled: z.boolean(),
+      imageUrl: z.string().trim().max(6_000_000).refine(value => publicImage(value) !== null, 'Imagem inválida').nullable()
+    }).strict().optional(),
     cart_recommendations_enabled: z.boolean().optional(),
     home_icons: z.object({
       home: homeIconSchema,

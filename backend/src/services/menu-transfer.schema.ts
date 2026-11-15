@@ -87,6 +87,7 @@ export function validateMenuArchive(value: unknown): MenuArchive {
   const images = [doc.business.logo_url, doc.business.banner_url, doc.business.welcome_bg_image,
     ...doc.categories.map(row => row.imageUrl), ...doc.items.map(row => row.imageUrl)];
   const config = doc.design?.custom_config as any;
+  if (config?.first_block_image?.imageUrl) images.push(config.first_block_image.imageUrl);
   if (config?.hero_banners) {
     if (!Array.isArray(config.hero_banners) || config.hero_banners.length > 10) throw ownerError(400, 'INVALID_MENU_ARCHIVE');
     images.push(...config.hero_banners);

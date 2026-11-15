@@ -1,3 +1,4 @@
+import { CdkScrollable } from '@angular/cdk/scrolling';
 import { ChangeDetectorRef, Component, OnInit, effect, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -35,6 +36,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
   standalone: true,
   providers: [TutorialService],
   imports: [
+    CdkScrollable,
     CommonModule,
     SidebarComponent,
     TopbarComponent,
@@ -87,7 +89,7 @@ import { TutorialOverlayComponent } from './tutorial/tutorial-overlay.component'
         </app-topbar>
 
         <!-- Dynamic Content Section -->
-        <main class="content-canvas" [style.padding-bottom.px]="tutorial.bottomReserve() || null"
+        <main cdkScrollable class="content-canvas" [style.padding-bottom.px]="tutorial.bottomReserve() || null"
           [style.--tutorial-sheet-space]="tutorial.step()?.id === 'design-save' && tutorial.bottomReserve() ? tutorial.bottomReserve() + 'px' : null">
           @switch (activeSection) {
             @case ('dashboard') {

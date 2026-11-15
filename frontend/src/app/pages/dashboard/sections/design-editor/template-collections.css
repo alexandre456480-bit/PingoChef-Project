@@ -1,0 +1,11 @@
+.template-collection-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:0 0 24px; }
+.template-collection-toolbar label { font-size:12px; font-weight:600; color:var(--panel-text-soft); }
+.template-collection-toolbar select { min-height:44px; max-width:100%; padding:10px 12px; border:1px solid var(--panel-border-strong); border-radius:12px; background:var(--panel-surface); color:var(--panel-text); font:inherit; font-size:12px; }
+.template-collection-toolbar select:focus-visible { outline:2px solid var(--panel-accent); outline-offset:3px; }
+.template-collection + .template-collection { margin-top:28px; padding-top:22px; border-top:1px solid var(--panel-border); }
+.template-collection-heading { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.template-collection-heading > div { flex:1; min-width:0; }
+.template-collection-heading h3 { margin:0; font:650 16px/1.35 Outfit,Inter,sans-serif; color:var(--panel-text); }
+.template-collection-heading p { margin:5px 0 0; font-size:12px; line-height:1.5; color:var(--panel-text-muted); }
+.template-collection-count { display:grid; place-items:center; min-width:30px; height:30px; border-radius:10px; background:var(--panel-surface-inset); color:var(--panel-accent); font-size:12px; font-weight:700; }
+@media(max-width:600px) { .template-collection-toolbar { display:grid; } .template-collection-toolbar select { width:100%; min-width:0; } }

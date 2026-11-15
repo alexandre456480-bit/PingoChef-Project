@@ -1,3 +1,4 @@
+import { HomeSideImageConfig, homeSideImage } from '../models/home-side-image';
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, switchMap, tap } from 'rxjs';
@@ -381,6 +382,10 @@ export class DesignService {
   heroBanners = computed(() => this.draft().heroBanners || DEFAULT_HERO_BANNERS);
   heroScope = computed(() => this.draft().heroScope || 'all');
   introCard = computed(() => this.draft().introCard || DEFAULT_INTRO_CARD);
+  readonly firstBlockImage = computed(() => homeSideImage(this.draft().customConfig));
+  setFirstBlockImage(value: HomeSideImageConfig): void {
+    this.draft.update(draft => ({...draft,customConfig:{...draft.customConfig,first_block_image:value}}));
+  }
   enableLikes = computed(() => (this.draft().customConfig as any)?.enable_likes !== false);
   enableCart = computed(() => (this.draft().customConfig as any)?.enable_cart !== false);
   cartRecommendationsEnabled = computed(() => this.draft().customConfig?.['cart_recommendations_enabled'] === true);

@@ -155,3 +155,22 @@ it.each(['centered-cover', 'arched-cover', 'brand-hero', 'signature-cover', 'pix
     palette, font_heading: 'Oswald', font_body: 'Lora', home_blocks: [block],
     custom_config: { enable_cart: false, home_icons: { home: null }, hero_scope: 'home_only' } });
 });
+
+it('persists the optional first-block image without changing the block order or palette', async () => {
+  const first_block_image = {enabled:true,imageUrl:'data:image/webp;base64,aGVsbG8='};
+  const home_blocks = [{id:'promo',type:'promotion',label:'Ofertas',enabled:true,position:0}];
+  const response = await request(app()).put('/design').send({palette,home_blocks,custom_config:{first_block_image}});
+  expect(response.status).toBe(200);
+  expect(upsert.mock.calls[0][0]).toMatchObject({business_id:'owner-business',palette,home_blocks,custom_config:{first_block_image}});
+});
+it.each([
+  {enabled:true,imageUrl:'javascript:alert(1)'},
+  {enabled:true,imageUrl:'data:image/svg+xml;base64,PHN2Zz4='},
+  {enabled:true,imageUrl:'https://user:password@example.test/photo.png'},
+  {enabled:'true',imageUrl:'/image.webp'},
+  {enabled:true,imageUrl:'/image.webp',business_id:'foreign'}
+])('rejects unsafe first-block image settings: %j', async first_block_image => {
+  const response = await request(app()).put('/design').send({palette,custom_config:{first_block_image}});
+  expect(response.status).toBe(400);
+  expect(upsert).not.toHaveBeenCalled();
+});

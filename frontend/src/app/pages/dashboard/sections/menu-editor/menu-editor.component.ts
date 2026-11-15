@@ -1,3 +1,4 @@
+import { CdkDrag, CdkDragHandle, CdkDropList, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,10 +16,10 @@ import { ProductFlavor } from '../../../../models/product-flavors';
 @Component({
   selector: 'app-menu-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductVideoUploaderComponent, ProductRecommendationsEditorComponent, ProductFlavorsEditorComponent, DialogFocusDirective],
-  styleUrls: ['./product-item-editor.css', './category-order.css'],
+  imports: [CdkDrag, CdkDragHandle, CdkDropList, CommonModule, FormsModule, ProductVideoUploaderComponent, ProductRecommendationsEditorComponent, ProductFlavorsEditorComponent, DialogFocusDirective],
+  styleUrls: ['./product-item-editor.css', './category-order.css', './product-order.css'],
   template: `
-    <div class="menu-container">
+    <div class="menu-container" #productPreviewHost>
       <!-- 1. Categories Section -->
       <section class="section-block" style="--i:0">
         <div class="section-header">
@@ -144,16 +145,18 @@ import { ProductFlavor } from '../../../../models/product-flavors';
           <div>
             <h2 class="section-title">Produtos do Cardápio</h2>
             <p class="section-subtitle">{{ filteredItems.length }} itens</p>
+            <p id="product-order-hint" class="product-order-hint">Segure os seis pontos para arrastar. No teclado, use as setas na alça.</p>
           </div>
-          <button class="btn-cta primary" data-tour="new-product" (click)="openItemModal()">
+          <button class="btn-cta primary" data-tour="new-product" [disabled]="productOrderSaving" (click)="openItemModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Novo Produto
           </button>
         </div>
 
-        <div class="products-grid">
+        <p class="product-order-status" role="status" aria-live="polite">{{ productOrderStatus }}</p>
+        <div class="products-grid" cdkDropList cdkDropListOrientation="mixed" [cdkDropListData]="filteredItems" [cdkDropListDisabled]="productOrderSaving" [attr.inert]="productOrderSaving ? '' : null" (cdkDropListDropped)="dropProduct($event)">
           @for (item of filteredItems; track item.id; let i = $index) {
-            <div class="product-card" [class.paused]="!item.isAvailable" [style.--pi]="i">
+            <div class="product-card" cdkDrag [cdkDragData]="item" [cdkDragPreviewContainer]="productPreviewHost" [cdkDragStartDelay]="{touch:180, mouse:0}" (cdkDragStarted)="productDragging = true" (cdkDragEnded)="productDragging = false" [class.paused]="!item.isAvailable" [style.--pi]="i">
               <!-- Badge Highlight Type -->
               @if (item.highlightType && item.highlightType !== 'none') {
                 <div class="product-badge" [attr.data-hl]="item.highlightType">
@@ -202,8 +205,9 @@ import { ProductFlavor } from '../../../../models/product-flavors';
                     {{ item.isAvailable ? 'Ativo' : 'Pausado' }}
                   </button>
                   <div class="action-btns">
-                    <button class="action-btn reorder-btn" (click)="moveItem(item, 'up')" title="Mover para cima">▲</button>
-                    <button class="action-btn reorder-btn" (click)="moveItem(item, 'down')" title="Mover para baixo">▼</button>
+                    <button type="button" class="action-btn product-drag-handle" cdkDragHandle [attr.aria-label]="'Reordenar ' + item.name" aria-describedby="product-order-hint" title="Segure e arraste para reordenar" (keydown)="reorderProductWithKeyboard($event, item)">
+                      <svg width="16" height="20" viewBox="0 0 16 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="1.6"/><circle cx="11" cy="5" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="11" cy="12" r="1.6"/><circle cx="5" cy="19" r="1.6"/><circle cx="11" cy="19" r="1.6"/></svg>
+                    </button>
                     <button class="action-btn" (click)="openViewItemModal(item)" title="Ver Detalhes do Produto">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
@@ -1251,8 +1255,26 @@ import { ProductFlavor } from '../../../../models/product-flavors';
     @media (max-width: 640px) {
       .section-block { padding: 18px; }
       .products-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
       }
+      .products-grid > .empty-state { grid-column: 1 / -1; }
+      .product-card { padding: 10px; border-radius: 14px; }
+      .product-badge { position: static; align-self: center; max-width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 4px 6px; font-size: .6rem; overflow-wrap: anywhere; }
+      .product-avatar { width: 56px; height: 56px; margin: 6px 0 10px; flex-shrink: 0; }
+      .product-info { flex: 1; min-width: 0; }
+      .product-name { font-size: .85rem; line-height: 1.3; }
+      .product-category { font-size: .65rem; }
+      .product-desc { font-size: .7rem; width: 100%; }
+      .product-pricing { flex-wrap: wrap; justify-content: center; gap: 4px; }
+      .price-main { font-size: .95rem; }
+      .price-promo { font-size: .72rem; }
+      .product-actions-bar { justify-content: center; gap: 6px; padding-top: 8px; }
+      .status-tag { min-height: 40px; width: 100%; }
+      .action-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 4px; }
+      .action-btn { width: 100%; min-width: 0; height: 36px; }
+      .action-btn svg { width: 13px; height: 13px; }
+
       .section-header {
         flex-direction: column;
         align-items: flex-start;
@@ -2163,11 +2185,6 @@ import { ProductFlavor } from '../../../../models/product-flavors';
       color: #34D399;
     }
 
-    .reorder-btn {
-      font-size: 0.65rem;
-      font-weight: 800;
-    }
-
     @media (prefers-reduced-motion: reduce) {
       .section-block, .cat-chip, .product-card, .modal-overlay, .modal-card {
         animation: none !important;
@@ -2337,6 +2354,7 @@ export class MenuEditorComponent implements OnInit {
   }
 
   get filteredItems(): MenuItem[] {
+    if (this.productOrderPreview) return this.productOrderPreview;
     let list = this.menuService.items();
     if (this.selectedCategoryId) {
       list = list.filter(i => i.categoryId === this.selectedCategoryId);
@@ -2375,6 +2393,7 @@ export class MenuEditorComponent implements OnInit {
   }
 
   filterBy(catId: string | null): void {
+    if (this.productDragging || this.productOrderSaving) return;
     this.selectedCategoryId = catId;
     this.cdr.markForCheck();
   }
@@ -2682,19 +2701,59 @@ export class MenuEditorComponent implements OnInit {
     });
   }
 
-  moveItem(item: MenuItem, direction: 'up' | 'down'): void {
-    const items = [...this.filteredItems];
-    const idx = items.findIndex(i => i.id === item.id);
-    if (direction === 'up' && idx > 0) {
-      [items[idx], items[idx - 1]] = [items[idx - 1], items[idx]];
-    } else if (direction === 'down' && idx < items.length - 1) {
-      [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
-    } else {
-      return;
+  productDragging = false;
+  productOrderSaving = false;
+  productOrderStatus = '';
+  private productOrderPreview: MenuItem[] | null = null;
+
+  dropProduct(event: CdkDragDrop<MenuItem[]>): void {
+    this.productDragging = false;
+    if (!event.isPointerOverContainer || event.previousIndex === event.currentIndex) return;
+    const ordered = [...event.container.data];
+    moveItemInArray(ordered, event.previousIndex, event.currentIndex);
+    this.saveProductOrder(ordered);
+  }
+
+  reorderProductWithKeyboard(event: KeyboardEvent, item: MenuItem): void {
+    const direction = ['ArrowUp', 'ArrowLeft'].includes(event.key) ? -1 : ['ArrowDown', 'ArrowRight'].includes(event.key) ? 1 : 0;
+    if (!direction || this.productOrderSaving || this.productDragging) return;
+    event.preventDefault();
+    const ordered = [...this.filteredItems], index = ordered.findIndex(row => row.id === item.id);
+    if (index < 0 || index + direction < 0 || index + direction >= ordered.length) return;
+    moveItemInArray(ordered, index, index + direction);
+    this.saveProductOrder(ordered);
+  }
+
+  private saveProductOrder(ordered: MenuItem[]): void {
+    if (this.productOrderSaving) return;
+    const all = [...this.menuService.items()].sort((a,b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    const visible = new Set(ordered.map(row => row.id));
+    if (ordered.length !== this.filteredItems.length || this.filteredItems.some(row => !visible.has(row.id))) {
+      this.onToast.emit('Os produtos mudaram. Tente organizar novamente.'); return;
     }
-    const orders = items.map((it, i) => ({ id: it.id, displayOrder: i + 1 }));
-    this.menuService.reorderItems(orders).subscribe(() => {
-      this.menuService.loadItems().subscribe();
+    // Keep non-visible products in their original slots when sorting a category.
+    let index = 0;
+    const merged = all.map(row => visible.has(row.id) ? ordered[index++] : row);
+    const orders = merged.map((row, displayOrder) => ({id: row.id, displayOrder}));
+    this.productOrderPreview = ordered;
+    this.productOrderSaving = true;
+    this.productOrderStatus = 'Salvando ordem dos produtos…';
+    this.menuService.reorderItems(orders).subscribe({
+      next: () => {
+        const positions = new Map(orders.map(row => [row.id, row.displayOrder]));
+        this.menuService.items.update(rows => rows.map(row => ({...row, displayOrder: positions.get(row.id) ?? row.displayOrder})));
+        this.productOrderPreview = null;
+        this.productOrderSaving = false;
+        this.productOrderStatus = 'Ordem dos produtos salva.';
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.productOrderPreview = null;
+        this.productOrderSaving = false;
+        this.productOrderStatus = 'Não foi possível salvar. A ordem anterior foi mantida.';
+        this.onToast.emit(this.productOrderStatus);
+        this.cdr.markForCheck();
+      }
     });
   }
 }

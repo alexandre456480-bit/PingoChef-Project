@@ -14,6 +14,25 @@ describe('Design settings persistence', () => {
   });
   afterEach(() => http.verify());
 
+  it('saves, optimizes, reloads and disables the first-block image without losing it', async () => {
+    const image = 'data:image/png;base64,' + 'A'.repeat(500_000), optimized = 'data:image/webp;base64,aGVsbG8=';
+    vi.spyOn(TestBed.inject(ImagePayloadService), 'optimizeImage').mockResolvedValue(optimized);
+    service.setFirstBlockImage({enabled:true,imageUrl:image});
+    expect(service.hasUnsavedChanges()).toBe(true);
+    service.saveDesign().subscribe();
+    const write = await vi.waitFor(() => http.expectOne('/api/v1/design'));
+    expect(write.request.body.custom_config.first_block_image).toEqual({enabled:true,imageUrl:optimized});
+    write.flush({success:true});
+    expect(service.firstBlockImage()).toEqual({enabled:true,imageUrl:optimized});
+    service.loadDesign().subscribe();
+    http.expectOne('/api/v1/design').flush({success:true,data:write.request.body});
+    expect(service.firstBlockImage()).toEqual({enabled:true,imageUrl:optimized});
+    service.setFirstBlockImage({...service.firstBlockImage(),enabled:false});
+    expect(service.firstBlockImage()).toEqual({enabled:false,imageUrl:optimized});
+    service.setFirstBlockImage({enabled:false,imageUrl:null});
+    expect(service.firstBlockImage().imageUrl).toBeNull();
+  });
+
   it('keeps a save with several inline banners below the published request limit', async () => {
     const image = 'data:image/png;base64,' + 'A'.repeat(1_000_000);
     const optimized = 'data:image/webp;base64,UklGRg==';

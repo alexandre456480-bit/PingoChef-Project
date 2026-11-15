@@ -62,14 +62,14 @@ test('batch reorder uses the supplied owner/RLS client, preserves tenant binding
   await expect(reorderMenu(client,'trusted-tenant','products',orders)).rejects.toMatchObject({ code:'42501' });
 });
 
-test('category organization is atomic even when the optional performance flag is off', async () => {
+test.each(['categories', 'products'] as const)('%s organization is atomic even when the optional performance flag is off', async resource => {
   process.env.PERFORMANCE_REORDER_RPC_ENABLED = 'false';
   const client: any = { rpc: jest.fn().mockResolvedValue({ data: 2, error: null }), from: jest.fn() };
   const orders = [{ id: 'a', displayOrder: 0 }, { id: 'b', displayOrder: 1 }];
-  await reorderMenu(client, 'trusted-tenant', 'categories', orders);
-  expect(client.rpc).toHaveBeenCalledWith('reorder_business_menu', { p_business: 'trusted-tenant', p_resource: 'categories', p_orders: orders });
+  await reorderMenu(client, 'trusted-tenant', resource, orders);
+  expect(client.rpc).toHaveBeenCalledWith('reorder_business_menu', { p_business: 'trusted-tenant', p_resource: resource, p_orders: orders });
   client.rpc.mockResolvedValue({ error: { code: '42501', message: 'permission denied' } });
-  await expect(reorderMenu(client, 'trusted-tenant', 'categories', orders)).rejects.toMatchObject({ code: '42501' });
+  await expect(reorderMenu(client, 'trusted-tenant', resource, orders)).rejects.toMatchObject({ code: '42501' });
   expect(client.from).not.toHaveBeenCalled();
 });
 
@@ -88,13 +88,13 @@ test('batched analytics cache is tenant scoped and cannot mask a fresh authoriza
   await expect(service.context('tenant-a',{comparison:'none',metric:'product_views',page:1,pageSize:5,section:'series'})).rejects.toMatchObject({status:403});
 });
 
-test.each([undefined, 'false'])('reorder legacy path stays available with independent flag %s', async flag => {
+test.each([undefined, 'false'])('subcategory legacy path stays available with independent flag %s', async flag => {
   process.env.PERFORMANCE_ANALYTICS_BATCH_RPC_ENABLED = 'true';
   process.env.PERFORMANCE_BATCH_RPC_ENABLED = 'true'; // retired flag must not activate either path
   if (flag !== undefined) process.env.PERFORMANCE_REORDER_RPC_ENABLED = flag;
   const builder: any = { update: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), then: (resolve:any) => resolve({error:null}) };
   const client:any = {from:jest.fn().mockReturnValue(builder),rpc:jest.fn()};
-  await reorderMenu(client,'trusted-tenant','products',[{id:'one',displayOrder:1}]);
+  await reorderMenu(client,'trusted-tenant','subcategories',[{id:'one',displayOrder:1}]);
   expect(client.rpc).not.toHaveBeenCalled();
   expect(builder.eq).toHaveBeenCalledWith('business_id','trusted-tenant');
 });
