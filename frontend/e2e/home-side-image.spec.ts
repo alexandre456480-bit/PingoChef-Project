@@ -2,7 +2,7 @@ import { expect, Page, test } from '@playwright/test';
 test.setTimeout(180_000);
 const types=['hero','categories','promotion','most_liked','featured_product','combo','best_seller'];
 const palette={key:'custom',name:'Minha paleta',colors:{primary:'#652738',secondary:'#a67944',accent:'#ca571e',background:'#fff9f2',surface:'#ffffff',textPrimary:'#31202a',textSecondary:'#75616b'}};
-const products=['promotion','chef','combo','best_seller'].map((highlightType,i)=>({id:`p${i}`,name:`Produto ${i}`,categoryId:'food',price:15,isAvailable:true,showPrice:true,isHighlighted:true,highlightType,likesCount:10,imageUrl:'/logo_img.webp'}));
+const products=['promotion','chef','combo','best_seller','promotion','chef','combo','best_seller','promotion','chef','combo','best_seller'].map((highlightType,i)=>({id:`p${i}`,name:`Produto ${i}`,categoryId:'food',price:15,isAvailable:true,showPrice:true,isHighlighted:true,highlightType,likesCount:10,imageUrl:'/logo_img.webp'}));
 async function mock(page:Page){
   const state={template:'default',first:'hero',enabled:true,emptyOffers:false,likes:true};
   await page.emulateMedia({reducedMotion:'reduce'});
@@ -15,7 +15,21 @@ async function geometry(page:Page,first:string){
   const wrapper=page.locator('.home-first-block-layout');await expect(wrapper).toHaveCount(1);await expect(wrapper).toHaveAttribute('data-first-block',first);
   const box=await wrapper.evaluate(el=>{const w=el.getBoundingClientRect(),c=el.querySelector('.home-first-block-content')!.getBoundingClientRect(),i=el.querySelector('.home-first-block-image')!.getBoundingClientRect();return {gap:i.left-c.right,ratio:i.width/i.height,right:i.right-w.right,radius:getComputedStyle(el.querySelector('.home-first-block-image')!).borderRadius,overflow:document.documentElement.scrollWidth>innerWidth};});
   await expect(wrapper.locator('.block-header')).toHaveCount(0);
-  expect(box.gap).toBeGreaterThan(0);expect(box.ratio).toBeCloseTo(.75,2);expect(box.right).toBeLessThan(1);expect(box.radius).not.toBe('0px');expect(box.overflow).toBe(false);
+  const cards=wrapper.locator('.promo-item-card,.ranking-item-row,.featured-chef-card,.combo-card,.best-seller-card').filter({visible:true});
+  await expect.poll(()=>cards.count()).toBeGreaterThanOrEqual(2);
+  const rows=await cards.evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};}));
+  for(let n=1;n<rows.length;n++) {expect(rows[n].left).toBeCloseTo(rows[0].left,0);expect(rows[n].top).toBeGreaterThanOrEqual(rows[n-1].bottom);}
+  const content=await wrapper.locator('.home-first-block-content').evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth}));
+  expect(content.scroll).toBeLessThanOrEqual(content.width+1);
+  const scroller=wrapper.locator('.home-first-block-content');
+  const visible=await scroller.evaluate(el=>{const frame=el.getBoundingClientRect();return [...el.querySelectorAll('.home-side-card')].filter(card=>{const r=card.getBoundingClientRect();return r.top>=frame.top && r.bottom<=frame.bottom;}).length;});
+  expect(visible).toBe(2);
+  await expect(wrapper.locator('.home-side-scroll')).toHaveCount(0);
+  await scroller.focus();
+  await scroller.press('End');
+  await expect.poll(()=>scroller.evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
+  await scroller.evaluate(el=>el.scrollTop=0);
+  expect(box.gap).toBeGreaterThan(0);expect(box.ratio).toBeCloseTo(9/16,2);expect(box.right).toBeLessThan(1);expect(box.radius).not.toBe('0px');expect(box.overflow).toBe(false);
 }
 test('side image follows the first rendered product section and disappears outside Home or when disabled',async({page})=>{
   const {state,open}=await mock(page);
@@ -25,7 +39,7 @@ test('side image follows the first rendered product section and disappears outsi
   state.likes=true;state.enabled=false;await open();await expect(page.locator('.home-first-block-layout')).toHaveCount(0);
   state.enabled=true;await open();await page.getByRole('button',{name:'Pratos',exact:true}).click();await expect(page.locator('.home-first-block-layout')).toHaveCount(0);
 });
-test('all template layouts reserve a separate 3:4 image column',async({page})=>{
+test('all template layouts reserve a separate 9:16 image column',async({page})=>{
   const {state,open}=await mock(page);
   for(const template of ['default','centered-cover','arched-cover','brand-hero','signature-cover','pixel','retro-diner','circuit-tech','soft-wave','immersive-cover','nordic-tavern','japanese-izakaya','neon-arcade','tropical-bamboo','mexican-fiesta','editorial-menu','product-gallery','compact-menu','sweet-boutique','royal-palace','liquid-glass','rounded-showcase','soft-showcase','double-showcase']){
     state.template=template;state.first='hero';await open();await geometry(page,'promotion');
@@ -55,7 +69,7 @@ test('owner crops, saves, reloads, hides and removes the image in Page Blocks',a
   await editor.locator('input[type=file]').setInputFiles(file);
   let dialog=page.getByRole('dialog',{name:'Imagem lateral do Início'});
   await expect(dialog).toBeVisible();
-  expect(await dialog.locator('.crop-frame').evaluate(el=>getComputedStyle(el).aspectRatio)).toBe('0.75 / 1');
+  expect(await dialog.locator('.crop-frame').evaluate(el=>getComputedStyle(el).aspectRatio)).toBe('0.5625 / 1');
   await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();
   await expect(editor.locator('.side-image-preview')).toHaveCount(0);
   await editor.locator('input[type=file]').setInputFiles(file);

@@ -324,6 +324,31 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                 <ng-container *ngTemplateOutlet="introDescriptionTemplate"></ng-container>
               }
 
+              <ng-template #sideProductCards let-products>
+                @for (item of products; track item.id) {
+                  <div class="promo-item-card home-side-card" [style.background]="templateKey === 'liquid-glass' ? null : surfaceColor">
+                    <button type="button" class="product-card-trigger" [attr.aria-label]="'Ver detalhes de ' + item.name" (click)="openProductDetail(item)"></button>
+                    <div class="home-side-photo">
+                      @if (item.imageUrl) { <img [appMenuImage]="item.imageUrl" [alt]="item.name" /> }
+                      @else { <span [style.color]="accentColor" aria-hidden="true">&#9733;</span> }
+                    </div>
+                    <div class="home-side-info">
+                      <h4 [style.color]="textPrimary">{{ item.name }}</h4>
+                      <div class="home-side-prices">
+                        @if (item.showPrice !== false && displayPromotion(item)) { <s [style.color]="textSecondary">R$ {{ item.price.toFixed(2) }}</s> }
+                        <strong [style.color]="accentColor">{{ item.showPrice === false ? 'Consulte...' : displayPriceLabel(item) }}</strong>
+                      </div>
+                      @if (enableLikes) {
+                        <button type="button" class="home-side-like" [class.liked]="isLiked(item.id)" [disabled]="isLikePending(item.id)"
+                          [style.color]="isLiked(item.id) ? '#E11D48' : textPrimary" [attr.aria-pressed]="isLiked(item.id)"
+                          [attr.aria-label]="isLiked(item.id) ? 'Item já curtido' : 'Curtir item'" (click)="onLikeClick($event,item.id)">
+                          <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="isLiked(item.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.6"><path [attr.d]="likeHeartPath" /></svg>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </ng-template>
               @for (block of orderedHomeBlocks; track block.id) {
                 <ng-template #homeBlockContent>
                 <!-- BLOCO HERO / BANNER -->
@@ -460,8 +485,18 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     </ng-template>
                     @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
                       <div class="home-first-block-layout" [attr.data-first-block]="block.type">
-                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
-                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                        <div class="home-first-block-products">
+                          <div #sideProducts class="home-first-block-content" role="region" aria-label="Produtos em destaque" tabindex="0"
+                            (scroll)="sideProducts.parentElement?.classList.toggle('side-products-at-end', sideProducts.scrollTop + sideProducts.clientHeight >= sideProducts.scrollHeight - 2)">
+                            <ng-container *ngTemplateOutlet="sideProductCards; context: {$implicit: homeSectionItems(block.type)}"></ng-container>
+                          </div>
+                          @if (homeSectionItems(block.type).length > 2) {
+                            <span class="home-side-scroll-hint" [style.color]="textPrimary" aria-hidden="true">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </span>
+                          }
+                        </div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="225" height="400" alt="" /></div>
                       </div>
                     } @else {
                       <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
@@ -505,8 +540,18 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     </ng-template>
                     @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
                       <div class="home-first-block-layout" [attr.data-first-block]="block.type">
-                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
-                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                        <div class="home-first-block-products">
+                          <div #sideProducts class="home-first-block-content" role="region" aria-label="Produtos em destaque" tabindex="0"
+                            (scroll)="sideProducts.parentElement?.classList.toggle('side-products-at-end', sideProducts.scrollTop + sideProducts.clientHeight >= sideProducts.scrollHeight - 2)">
+                            <ng-container *ngTemplateOutlet="sideProductCards; context: {$implicit: homeSectionItems(block.type)}"></ng-container>
+                          </div>
+                          @if (homeSectionItems(block.type).length > 2) {
+                            <span class="home-side-scroll-hint" [style.color]="textPrimary" aria-hidden="true">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </span>
+                          }
+                        </div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="225" height="400" alt="" /></div>
                       </div>
                     } @else {
                       <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
@@ -564,8 +609,18 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     </ng-template>
                     @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
                       <div class="home-first-block-layout" [attr.data-first-block]="block.type">
-                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
-                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                        <div class="home-first-block-products">
+                          <div #sideProducts class="home-first-block-content" role="region" aria-label="Produtos em destaque" tabindex="0"
+                            (scroll)="sideProducts.parentElement?.classList.toggle('side-products-at-end', sideProducts.scrollTop + sideProducts.clientHeight >= sideProducts.scrollHeight - 2)">
+                            <ng-container *ngTemplateOutlet="sideProductCards; context: {$implicit: homeSectionItems(block.type)}"></ng-container>
+                          </div>
+                          @if (homeSectionItems(block.type).length > 2) {
+                            <span class="home-side-scroll-hint" [style.color]="textPrimary" aria-hidden="true">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </span>
+                          }
+                        </div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="225" height="400" alt="" /></div>
                       </div>
                     } @else {
                       <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
@@ -650,8 +705,18 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     </ng-template>
                     @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
                       <div class="home-first-block-layout" [attr.data-first-block]="block.type">
-                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
-                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                        <div class="home-first-block-products">
+                          <div #sideProducts class="home-first-block-content" role="region" aria-label="Produtos em destaque" tabindex="0"
+                            (scroll)="sideProducts.parentElement?.classList.toggle('side-products-at-end', sideProducts.scrollTop + sideProducts.clientHeight >= sideProducts.scrollHeight - 2)">
+                            <ng-container *ngTemplateOutlet="sideProductCards; context: {$implicit: homeSectionItems(block.type)}"></ng-container>
+                          </div>
+                          @if (homeSectionItems(block.type).length > 2) {
+                            <span class="home-side-scroll-hint" [style.color]="textPrimary" aria-hidden="true">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </span>
+                          }
+                        </div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="225" height="400" alt="" /></div>
                       </div>
                     } @else {
                       <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
@@ -726,8 +791,18 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     </ng-template>
                     @if (firstBlockImageUrl() && block.id === firstVisibleProductBlockId) {
                       <div class="home-first-block-layout" [attr.data-first-block]="block.type">
-                        <div class="home-first-block-content"><ng-container *ngTemplateOutlet="productSectionItems"></ng-container></div>
-                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="300" height="400" alt="" /></div>
+                        <div class="home-first-block-products">
+                          <div #sideProducts class="home-first-block-content" role="region" aria-label="Produtos em destaque" tabindex="0"
+                            (scroll)="sideProducts.parentElement?.classList.toggle('side-products-at-end', sideProducts.scrollTop + sideProducts.clientHeight >= sideProducts.scrollHeight - 2)">
+                            <ng-container *ngTemplateOutlet="sideProductCards; context: {$implicit: homeSectionItems(block.type)}"></ng-container>
+                          </div>
+                          @if (homeSectionItems(block.type).length > 2) {
+                            <span class="home-side-scroll-hint" [style.color]="textPrimary" aria-hidden="true">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </span>
+                          }
+                        </div>
+                        <div class="home-first-block-image"><img [appMenuImage]="firstBlockImageUrl()" width="225" height="400" alt="" /></div>
                       </div>
                     } @else {
                       <ng-container *ngTemplateOutlet="productSectionItems"></ng-container>
@@ -2055,11 +2130,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
       overflow-x: auto;
       overscroll-behavior-x: contain;
       scroll-snap-type: x proximity;
-      scrollbar-width: thin;
-      scrollbar-color: var(--accent-color) transparent;
+      scrollbar-width: none;
       padding: 4px 2px 12px;
       gap: 12px;
     }
+    .featured-chef-grid::-webkit-scrollbar { display: none; }
     .featured-chef-card {
       min-width: 0;
       scroll-snap-align: start;
@@ -3641,6 +3716,16 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     const image = homeSideImage(this.design?.customConfig);
     return image.enabled ? safeMenuImage(image.imageUrl) : '';
   });
+  homeSectionItems(type: HomeBlock['type']): MenuItem[] {
+    switch (type) {
+      case 'promotion': return this.promoItems;
+      case 'most_liked': return this.mostLikedItems;
+      case 'featured_product': return this.featuredItems;
+      case 'combo': return this.comboItems;
+      case 'best_seller': return this.bestSellerItems;
+      default: return [];
+    }
+  }
   get firstVisibleProductBlockId(): string | undefined {
     return this.orderedHomeBlocks.find(block => {
       switch (block.type) {
