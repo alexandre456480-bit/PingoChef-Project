@@ -1,5 +1,7 @@
 import { Injectable, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { API_BASE_URL } from '../constants/api';
 import { AuthService } from './auth.service';
 
@@ -32,14 +34,17 @@ export class CommercialService {
   constructor(
     private http: HttpClient,
     private auth: AuthService,
+    private router: Router,
   ) {}
   plans() {
     return this.http.get<{
       data: { plans: PlanCard[]; pricesProvisional: boolean; billingAvailable: boolean };
     }>(`${API_BASE_URL}/auth/plans`);
   }
-  select(planCode: string) {
-    return this.http.post<{ data: PlanIntent }>(`${API_BASE_URL}/auth/plan-intents`, { planCode });
+  startRegistration(planCode: string) {
+    return this.http.post<{ data: PlanIntent }>(`${API_BASE_URL}/auth/plan-intents`, { planCode }).pipe(
+      switchMap(({ data }) => this.router.navigate(['/register'], { queryParams: { intent: data.id } })),
+    );
   }
   intent(id: string) {
     return this.http.get<{ data: PlanIntent }>(

@@ -10,6 +10,7 @@ import { sharedRateLimit } from '../middleware/shared-rate-limit.middleware';
 import type { RequestHandler } from 'express';
 import { getCommercialReport, getInfrastructureReport, getPurgeJobs } from '../controllers/admin-phase3-read.controller';
 import { getVideoSecurityReport, setVideoSecurityState } from '../controllers/video-security-admin.controller';
+import { listAppSuggestions } from '../controllers/app-suggestions.controller';
 
 const router = Router();
 const requireAdmin: RequestHandler = (req, res, next) => {
@@ -53,4 +54,5 @@ router.post('/businesses/:id/free-period', criticalLimiter, requireAdmin, requir
 router.post('/businesses/:id/revoke-sessions', criticalLimiter, requireAdmin, requireRecentAdmin,
   revokeCustomerSessions);
 router.get('/audit-logs', requireAdmin, listAuditLogs);
+router.get('/suggestions', requireAdmin, listAppSuggestions);
 export default router;

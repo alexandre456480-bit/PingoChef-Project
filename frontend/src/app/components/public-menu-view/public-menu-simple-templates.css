@@ -23,9 +23,19 @@
 .menu-viewport[data-template="editorial-menu"] .cat-nav-scroll { gap: 6px; padding-bottom: 0; border-bottom: 1px solid var(--simple-edge); }
 .menu-viewport[data-template="editorial-menu"] .category-nav-pill { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; color: var(--text-primary); box-shadow: none; padding: 10px 14px; }
 .menu-viewport[data-template="editorial-menu"] .category-nav-pill.active { background: transparent; color: var(--text-primary); border-bottom-color: var(--primary-color); }
-.menu-viewport[data-template="editorial-menu"] .items-grid { gap: 0; }
-.menu-viewport[data-template="editorial-menu"] .product-item-card { --item-photo-size: 96px; --item-content-size: 120px; grid-template-columns: minmax(0, 1fr) var(--item-photo-size); padding: 14px 0; height: 149px; border: 0; border-bottom: 1px solid var(--simple-edge); gap: 14px; border-radius: 0; }
-.menu-viewport[data-template="editorial-menu"] .product-card-photo { grid-column: 2; grid-row: 1; border-radius: 8px; }
+.menu-viewport[data-template="editorial-menu"] .items-grid { gap: clamp(12px, 2.4vw, 18px); }
+.menu-viewport[data-template="editorial-menu"] .product-item-card {
+  --item-photo-size: clamp(76px, 23vw, 104px);
+  --item-content-size: 120px;
+  grid-template-columns: minmax(0, 1fr) var(--item-photo-size);
+  gap: clamp(10px, 2.5vw, 16px);
+  height: auto;
+  padding: 12px;
+  border: 1px solid var(--simple-edge);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-primary) 6%, transparent);
+}
+.menu-viewport[data-template="editorial-menu"] .product-card-photo { grid-column: 2; grid-row: 1; border-radius: 10px; }
 .menu-viewport[data-template="editorial-menu"] .product-card-body { grid-column: 1; grid-row: 1; grid-template-rows: 36px minmax(0, 1fr) 40px; }
 .menu-viewport[data-template="editorial-menu"] .card-item-title { font-size: .9rem; }
 .menu-viewport[data-template="editorial-menu"] .section-heading { border-left: 3px solid var(--primary-color); padding-left: 12px; }

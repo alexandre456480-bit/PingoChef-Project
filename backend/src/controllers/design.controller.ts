@@ -1,3 +1,4 @@
+import { DEFAULT_MENU_PALETTE } from '../constants/menu-palette';
 import { publicImage } from '../services/public-menu-presentation';
 import { ACCEPTED_TEMPLATE_KEYS, DEFAULT_TEMPLATE_KEY, normalizeTemplateKey, withoutTemplateBlocks, withoutTemplateVariant } from '../constants/menu-template';
 import { Response, NextFunction } from 'express';
@@ -129,28 +130,16 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
       }
     }
 
-    if (!isDemoMode()) {
+    if (!isSupabaseConfigured && !isDemoMode()) {
       return res.status(503).json({
         success: false,
         error: { code: 'SERVICE_UNAVAILABLE', message: 'Banco de dados não configurado.', timestamp: new Date().toISOString() }
       });
     }
 
-    const localSettings = localDb.designSettings[businessId] || {
+    const localSettings = (!isSupabaseConfigured ? localDb.designSettings[businessId] : undefined) || {
       template_key: DEFAULT_TEMPLATE_KEY,
-      palette: {
-        key: 'gourmet_royal',
-        name: 'Gourmet Royal',
-        colors: {
-          primary: '#8B1A3A',
-          secondary: '#D26E2D',
-          accent: '#F47B20',
-          background: '#FAF5F0',
-          surface: '#FFFFFF',
-          textPrimary: '#2D1822',
-          textSecondary: '#6E5D65'
-        }
-      },
+      palette: DEFAULT_MENU_PALETTE,
       font_heading: 'Outfit',
       font_body: 'Inter',
       font_pair: 'modern_clean',
@@ -165,14 +154,10 @@ export const getDesignController = async (req: AuthenticatedRequest, res: Respon
         { id: 'block_best_sellers', type: 'best_seller', label: 'Mais Vendidos', enabled: true, position: 6 }
       ],
       custom_config: {
-        welcome_tagline: 'Experiência gastronômica artesanal e inesquecível',
         enable_likes: true,
         enable_cart: true,
-        intro_card: {
-          enabled: true,
-          title: 'Gastronomia Autoral & Ingredientes Nobres',
-          description: 'Seja muito bem-vindo ao nosso espaço gastronômico! Nossos pratos e burgers são elaborados com carnes nobres grelhadas no fogo e pães artesanais de fermentação natural. Escolha abaixo suas opções favoritas e bom apetite.'
-        }
+        intro_card: { enabled: false, title: '', description: '' },
+        hero_banners: []
       }
     };
 

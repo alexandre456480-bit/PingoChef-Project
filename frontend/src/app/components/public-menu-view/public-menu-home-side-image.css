@@ -4,7 +4,7 @@
 .home-first-block-content { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; max-height:calc(var(--side-card-height) * 2 + 14px); padding:2px; box-sizing:border-box; overflow-y:auto; overflow-x:hidden; overscroll-behavior-y:contain; scroll-snap-type:y proximity; scrollbar-width:none; }
 .home-first-block-content::-webkit-scrollbar { display:none; }
 .home-first-block-content:focus-visible { outline:2px solid var(--accent-color); outline-offset:2px; border-radius:16px; }
-.home-first-block-image { min-width:0; width:100%; margin-top:6px; aspect-ratio:9/16; overflow:hidden; border-radius:18px; background:var(--surface-color); }
+.home-first-block-image { min-width:0; width:100%; margin-top:12px; aspect-ratio:9/16; overflow:hidden; border-radius:18px; background:var(--surface-color); }
 .home-first-block-image img { display:block; width:100%; height:100%; object-fit:cover; }
 .menu-viewport[data-template] .home-first-block-content .home-side-card { display:grid; grid-template-columns:52% minmax(0,1fr); width:100%; min-width:0; max-width:100%; height:var(--side-card-height); min-height:0; box-sizing:border-box; gap:0; padding:5px; border-radius:20px; overflow:hidden; scroll-snap-align:start; box-shadow:0 3px 10px #00000012; }
 .home-side-photo { min-width:0; height:100%; overflow:hidden; border-radius:15px; display:flex; align-items:center; justify-content:center; background:var(--background-color); }
@@ -14,7 +14,8 @@
 .home-side-prices { display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 6px; font-size:clamp(.72rem,1.3vw,.9rem); line-height:1.2; }
 .home-side-prices strong { font-weight:800; }
 .home-side-prices s { font-size:.85em; }
-.home-side-like { position:relative; z-index:2; display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; padding:0; border:1px solid currentColor; border-radius:50%; background:transparent; cursor:pointer; }
+.home-side-like { position:relative; z-index:2; display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; padding:0; border:1px solid currentColor; border-radius:50%; background:transparent; cursor:pointer; }
+.home-side-like svg { width:16px; height:16px; }
 .home-side-like:disabled { opacity:.55; cursor:wait; }
 .home-side-like:focus-visible { outline:2px solid var(--accent-color); outline-offset:2px; }
 .menu-viewport[data-template] .showcase-block .block-header,.menu-viewport[data-template] .showcase-block .block-title-row { justify-content:center; text-align:center; }

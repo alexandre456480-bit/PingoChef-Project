@@ -76,6 +76,25 @@ beforeEach(() => {
   (createUserClient as jest.Mock).mockReturnValue({ from: () => ({ upsert }) });
 });
 
+it('provides a blank starting design when the business has no saved settings', async () => {
+  const lookup = {
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null })
+  };
+  (createUserClient as jest.Mock).mockReturnValue({ from: () => lookup });
+
+  const response = await request(app()).get('/design');
+
+  expect(response.status).toBe(200);
+  expect(response.body.data).toMatchObject({
+    template_key: 'default',
+    palette: { key: 'neutral' },
+    custom_config: { hero_banners: [], intro_card: { enabled: false, title: '', description: '' } }
+  });
+  expect(lookup.eq).toHaveBeenCalledWith('business_id', 'owner-business');
+});
+
 it.each([undefined, 'slide'])('saves new palette/fonts without motion, accepting legacy value %s', async motion => {
   const response = await request(app()).put('/design').send({
     palette, font_heading: 'Oswald', font_body: 'Source Sans 3', font_pair: 'bold_street',

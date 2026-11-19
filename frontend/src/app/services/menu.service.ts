@@ -168,6 +168,16 @@ export class MenuService {
     return this.http.delete(`${this.apiUrl}/items/${id}`, this.getAuthHeaders());
   }
 
+  deleteItems(ids: string[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/items/bulk-delete`, { ids }, this.getAuthHeaders()).pipe(tap(res => {
+      if (!res.success) return;
+      const deleted = new Set<string>(res.data.deletedIds);
+      this.items.update(items => items.filter(item => !deleted.has(item.id)));
+      this.productRecommendations.update(rows => rows.filter(row => !deleted.has(row.triggerProductId))
+        .map(row => ({ ...row, recommendedProductIds: row.recommendedProductIds.filter(id => !deleted.has(id)) })));
+    }));
+  }
+
   reorderItems(orders: { id: string; displayOrder: number }[]): Observable<any> {
     return this.http.patch(`${this.apiUrl}/items/reorder`, { orders }, this.getAuthHeaders());
   }

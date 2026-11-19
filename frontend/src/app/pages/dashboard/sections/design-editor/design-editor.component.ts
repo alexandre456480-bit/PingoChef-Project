@@ -36,7 +36,7 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
       <!-- ═════════════════════════════════════════════════════ -->
       <!-- ── 1. TEMPLATES DO CARDÁPIO (APENAS ESTRUTURA) ── -->
       <!-- ═════════════════════════════════════════════════════ -->
-      <details class="design-section" open>
+      <details class="design-section">
         <summary class="section-head" data-tour="design">
           <div class="head-icon tmpl">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -747,11 +747,6 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
             </div>
 
             <div class="intro-preview-stage" [style.background]="designService.draft().palette.colors.background">
-              <!-- Mock Hero decorativo de fundo para demonstrar o efeito de transparência real -->
-              <div class="preview-mock-hero">
-                <span class="mock-hero-tag">Hero Section / Capa</span>
-              </div>
-
               <!-- Card Glassmorphism Preview -->
               <div
                 class="intro-preview-card"
@@ -768,9 +763,9 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
                   </h4>
                   <p
                     class="preview-card-desc"
-                    [style.font-family]="fontFamily(designService.draft().fontBody)">
+                    [style.font-family]="fontFamily(designService.draft().fontBody)"
                     [style.color]="designService.draft().palette.colors.textSecondary"
-                    [textContent]="designService.introCard().description || 'Sua descrição de apresentação aparecerá aqui com efeito translúcido e elegante.'"></p>
+                    [textContent]="designService.introCard().description || 'Sua descrição de apresentação aparecerá aqui com o estilo do template selecionado.'"></p>
                 </div>
               </div>
 
@@ -2259,18 +2254,6 @@ type FontFilter = 'all' | 'modern' | 'classic' | 'impact' | 'rounded' | 'pixel';
       justify-content: center;
       min-height: 220px;
       overflow: hidden;
-    }
-    .preview-mock-hero {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url('https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=50');
-      background-size: cover;
-      background-position: center;
-      opacity: 0.45;
-      filter: blur(1px);
-      display: flex;
-      align-items: flex-end;
-      padding: 10px;
     }
     .mock-hero-tag {
       font-size: 0.65rem;

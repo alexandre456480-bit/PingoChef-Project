@@ -11,12 +11,14 @@ import { AdminClientDetailComponent } from './admin-client-detail.component';
 import { AdminInvitesComponent } from './admin-invites.component';
 import { AdminAnalyticsComponent } from './admin-analytics.component';
 import { AdminOperationsComponent } from './admin-operations.component';
+import { AdminSuggestionsComponent } from './admin-suggestions.component';
 import { filterFromParams, presetFilter } from './admin-filter';
 
 @Component({
   selector:'app-admin-workspace',standalone:true,
   imports:[CommonModule,RouterLink,AdminFilterComponent,AdminOverviewComponent,AdminClientsComponent,
-    AdminClientDetailComponent,AdminInvitesComponent,AdminAnalyticsComponent,AdminOperationsComponent],
+    AdminClientDetailComponent,AdminInvitesComponent,AdminAnalyticsComponent,AdminOperationsComponent,
+    AdminSuggestionsComponent],
   template:`
     <div class="admin-shell">
       <aside class="admin-sidebar" [class.open]="menuOpen()" aria-label="Navegação administrativa">
@@ -49,6 +51,7 @@ import { filterFromParams, presetFilter } from './admin-filter';
               @else{<app-admin-clients/>}
             }
             @case('invites'){<app-admin-invites/>}
+            @case('suggestions'){<app-admin-suggestions/>}
             @case('analytics'){<app-admin-analytics [data]="report()" [filter]="filter" [loading]="loading()" [error]="error()"/>}
             @default{<app-admin-operations [section]="section" [data]="report()" [filter]="filter" [loading]="loading()" [error]="error()"/>}
           }
@@ -72,7 +75,8 @@ export class AdminWorkspaceComponent {
   private lastKey='';
   readonly groups=[
     {title:'VISÃO GERAL',items:[{path:'overview',label:'Painel',icon:'◫'}]},
-    {title:'GESTÃO',items:[{path:'clients',label:'Clientes',icon:'▣'},{path:'invites',label:'Convites',icon:'✉'}]},
+    {title:'GESTÃO',items:[{path:'clients',label:'Clientes',icon:'▣'},{path:'invites',label:'Convites',icon:'✉'},
+      {path:'suggestions',label:'Sugestões',icon:'▱'}]},
     {title:'NEGÓCIO',items:[{path:'subscriptions',label:'Assinaturas',icon:'◈'},{path:'analytics',label:'Analytics',icon:'▥'}]},
     {title:'INFRAESTRUTURA',items:[{path:'usage',label:'Uso e custos',icon:'◉'},{path:'videos',label:'Vídeos',icon:'▷'},{path:'storage',label:'Storage',icon:'▤'}]},
     {title:'SISTEMA',items:[{path:'security',label:'Segurança',icon:'◇'},{path:'audit',label:'Auditoria',icon:'☷'},{path:'settings',label:'Configurações',icon:'⚙'}]}

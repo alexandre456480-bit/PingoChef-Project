@@ -8,6 +8,7 @@ import { verifyPlanPermissions } from './verify-plan-permissions.mjs';
 import { verifyProductRecommendations } from './verify-product-recommendations.mjs';
 // Real local PostgreSQL, no .env or remote database URL. Complete migration chain.
 import { spawn, execFile } from 'node:child_process';
+import assert from 'node:assert/strict';
 import { promisify } from 'node:util';
 import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
 import { resolve, join, sep } from 'node:path';
@@ -115,6 +116,21 @@ try {
     catch (error) { throw new Error(`Migration ${file}: ${error.message}`, { cause: error }); }
   }
   console.log(`OK full migration chain (PostgreSQL 16; source: ${process.env.MIGRATIONS_FROM_GIT_INDEX==='true'?'Git index':'working tree'})`);
+  const suggestionsAccess = await pool.query(`
+    SELECT role, has_table_privilege(role, 'public.app_suggestions', 'SELECT') AS can_read,
+      has_column_privilege(role, 'public.app_suggestions', 'message', 'INSERT') AS can_submit,
+      has_column_privilege(role, 'public.app_suggestions', 'created_on', 'INSERT') AS can_set_date
+    FROM unnest(ARRAY['anon', 'authenticated', 'service_role']) AS role
+  `);
+  for (const row of suggestionsAccess.rows) {
+    assert.equal(row.can_read, row.role === 'service_role');
+    assert.equal(row.can_submit, row.role === 'service_role');
+    assert.equal(row.can_set_date, false);
+  }
+  await pool.query(`BEGIN; SET LOCAL ROLE service_role;
+    INSERT INTO public.app_suggestions (message) VALUES ('Melhorar o editor');
+    SELECT id, message, created_on FROM public.app_suggestions; ROLLBACK;`);
+  console.log('OK anonymous suggestion schema and restricted read/write grants');
   for (const file of ['20261014000000_performance_read_paths.sql', '20261014010000_analytics_product_trend_index.sql']) {
     await pool.query(await migrationSql(file));
   }

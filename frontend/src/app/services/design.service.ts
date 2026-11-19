@@ -98,7 +98,22 @@ export interface DesignSettings {
 
 // ── Paletas disponíveis (independentes do template) ──
 
+const DEFAULT_MENU_PALETTE: PaletteConfig = {
+  key: 'neutral',
+  name: 'Neutra',
+  colors: {
+    primary: '#292929',
+    secondary: '#595959',
+    accent: '#303030',
+    background: '#FAFAFA',
+    surface: '#FFFFFF',
+    textPrimary: '#202020',
+    textSecondary: '#575757'
+  }
+};
+
 export const AVAILABLE_PALETTES: PaletteConfig[] = [
+  DEFAULT_MENU_PALETTE,
   {
     key: 'gourmet_royal',
     name: 'Gourmet Royal',
@@ -325,17 +340,9 @@ export const DEFAULT_HOME_BLOCKS: HomeBlock[] = [
   { id: 'block_best_sellers', type: 'best_seller', label: 'Mais Vendidos', enabled: true, position: 6 }
 ];
 
-export const DEFAULT_HERO_BANNERS: string[] = [
-  'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80'
-];
+export const DEFAULT_HERO_BANNERS: string[] = [];
 
-export const DEFAULT_INTRO_CARD: IntroCardConfig = {
-  enabled: true,
-  title: 'Gastronomia Autoral & Ingredientes Nobres',
-  description: 'Seja muito bem-vindo ao nosso espaço gastronômico! Nossos pratos e burgers são elaborados com carnes nobres grelhadas no fogo e pães artesanais de fermentação natural. Escolha abaixo suas opções favoritas e bom apetite.'
-};
+export const DEFAULT_INTRO_CARD: IntroCardConfig = { enabled: false, title: '', description: '' };
 
 // ── 5. Service Principal ──
 
@@ -351,7 +358,7 @@ export class DesignService {
   // Rascunho local (editável, para preview em tempo real)
   draft = signal<DesignSettings>({
     templateKey: DEFAULT_TEMPLATE_KEY,
-    palette: AVAILABLE_PALETTES[0], // Gourmet Royal
+    palette: DEFAULT_MENU_PALETTE,
     fontHeading: 'Outfit',
     fontBody: 'Inter',
     fontPair: 'modern_clean',
@@ -681,7 +688,7 @@ export class DesignService {
       tap((res: any) => {
         if (res.success && res.data) {
           const rawPal = res.data.palette;
-          const palette: PaletteConfig = rawPal?.colors ? rawPal : AVAILABLE_PALETTES[0];
+          const palette: PaletteConfig = rawPal?.colors ? rawPal : DEFAULT_MENU_PALETTE;
           const { template_variant: _legacyVariant, ...customCfg } = res.data.custom_config || {};
           const heroBanners = customCfg.hero_banners || res.data.hero_banners || [...DEFAULT_HERO_BANNERS];
           const categoryHeroConfigs: Record<string, CategoryHeroConfig> = customCfg.category_hero_configs || res.data.category_hero_configs || {};

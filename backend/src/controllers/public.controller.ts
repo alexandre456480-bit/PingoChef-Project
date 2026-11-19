@@ -1,3 +1,4 @@
+import { DEFAULT_MENU_PALETTE } from '../constants/menu-palette';
 import { publicOrderSettings } from '../utils/order-settings';
 import { publicSocialLinks } from '../utils/social-links';
 import { DEFAULT_TEMPLATE_KEY, withoutTemplateBlocks } from '../constants/menu-template';
@@ -130,19 +131,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
 
         design = dData || {
           template_key: DEFAULT_TEMPLATE_KEY,
-          palette: {
-            key: 'gourmet_royal',
-            name: 'Gourmet Royal',
-            colors: {
-              primary: '#8B1A3A',
-              secondary: '#D26E2D',
-              accent: '#F47B20',
-              background: '#FAF5F0',
-              surface: '#FFFFFF',
-              textPrimary: '#2D1822',
-              textSecondary: '#6E5D65'
-            }
-          },
+          palette: DEFAULT_MENU_PALETTE,
           font_heading: 'Outfit',
           font_body: 'Inter',
           font_pair: 'modern_clean',
@@ -267,19 +256,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
       const businessId = business.id;
       design = localDb.designSettings[businessId] || {
         template_key: DEFAULT_TEMPLATE_KEY,
-        palette: {
-          key: 'gourmet_royal',
-          name: 'Gourmet Royal',
-          colors: {
-            primary: '#8B1A3A',
-            secondary: '#D26E2D',
-            accent: '#F47B20',
-            background: '#FAF5F0',
-            surface: '#FFFFFF',
-            textPrimary: '#2D1822',
-            textSecondary: '#6E5D65'
-          }
-        },
+        palette: DEFAULT_MENU_PALETTE,
         font_heading: 'Outfit',
         font_body: 'Inter',
         font_pair: 'modern_clean',
@@ -374,7 +351,7 @@ export const getPublicMenuController = async (req: Request, res: Response, next:
           name: business.name,
           slug: business.slug,
           description: business.description || '',
-          logoUrl: publicImage(business.logo_url) || '/pingo-chef-logo-principal.webp',
+          logoUrl: publicImage(business.logo_url) || '',
           coverImageUrl: publicImage(business.cover_image_url) || publicImage(business.welcome_bg_image) || '',
           welcomeBgType: business.welcome_bg_type || 'image',
           welcomeBgImage: publicImage(business.welcome_bg_image) || publicImage(business.cover_image_url) || '',

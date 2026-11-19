@@ -147,16 +147,31 @@ import { ProductFlavor } from '../../../../models/product-flavors';
             <p class="section-subtitle">{{ filteredItems.length }} itens</p>
             <p id="product-order-hint" class="product-order-hint">Segure os seis pontos para arrastar. No teclado, use as setas na alça.</p>
           </div>
-          <button class="btn-cta primary" data-tour="new-product" [disabled]="productOrderSaving" (click)="openItemModal()">
+          <div class="product-header-actions">
+            <button type="button" class="btn-cta" [disabled]="productOrderSaving || productDragging || bulkDeleting" [attr.aria-pressed]="bulkSelectionMode" (click)="toggleBulkSelection()">{{ bulkSelectionMode ? 'Cancelar seleção' : 'Excluir vários' }}</button>
+          <button class="btn-cta primary" data-tour="new-product" [disabled]="productOrderSaving || bulkSelectionMode" (click)="openItemModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Novo Produto
           </button>
+          </div>
         </div>
 
+        @if (bulkSelectionMode) {
+          <div class="bulk-selection-bar" aria-label="Exclusão de produtos" [attr.aria-busy]="bulkDeleting">
+            <span role="status">{{ selectedProductIds.size }} selecionado(s)</span>
+            <button type="button" [disabled]="bulkDeleting || !filteredItems.length" (click)="selectVisibleProducts()">Selecionar exibidos</button>
+            <button type="button" [disabled]="bulkDeleting || !selectedProductIds.size" (click)="selectedProductIds.clear()">Limpar seleção</button>
+            <button type="button" class="bulk-delete-action" [disabled]="bulkDeleting || !selectedProductIds.size" (click)="deleteSelectedProducts()">{{ bulkDeleting ? 'Excluindo...' : 'Excluir selecionados (' + selectedProductIds.size + ')' }}</button>
+          </div>
+          <p class="product-order-hint">Selecione os produtos pelos cards. A seleção é mantida ao trocar de categoria ou buscar.</p>
+        }
         <p class="product-order-status" role="status" aria-live="polite">{{ productOrderStatus }}</p>
-        <div class="products-grid" cdkDropList cdkDropListOrientation="mixed" [cdkDropListData]="filteredItems" [cdkDropListDisabled]="productOrderSaving" [attr.inert]="productOrderSaving ? '' : null" (cdkDropListDropped)="dropProduct($event)">
+        <div class="products-grid" cdkDropList cdkDropListOrientation="mixed" [cdkDropListData]="filteredItems" [cdkDropListDisabled]="productOrderSaving || bulkSelectionMode" [attr.inert]="productOrderSaving || bulkDeleting ? '' : null" (cdkDropListDropped)="dropProduct($event)">
           @for (item of filteredItems; track item.id; let i = $index) {
-            <div class="product-card" cdkDrag [cdkDragData]="item" [cdkDragPreviewContainer]="productPreviewHost" [cdkDragStartDelay]="{touch:180, mouse:0}" (cdkDragStarted)="productDragging = true" (cdkDragEnded)="productDragging = false" [class.paused]="!item.isAvailable" [style.--pi]="i">
+            <div class="product-card" [class.bulk-selecting]="bulkSelectionMode" [class.bulk-selected]="selectedProductIds.has(item.id)" (click)="bulkSelectionMode && toggleProductSelection(item.id)" cdkDrag [cdkDragDisabled]="bulkSelectionMode" [cdkDragData]="item" [cdkDragPreviewContainer]="productPreviewHost" [cdkDragStartDelay]="{touch:180, mouse:0}" (cdkDragStarted)="productDragging = true" (cdkDragEnded)="productDragging = false" [class.paused]="!item.isAvailable" [style.--pi]="i">
+              @if (bulkSelectionMode) {
+                <label class="bulk-product-checkbox" (click)="$event.stopPropagation()"><input type="checkbox" [checked]="selectedProductIds.has(item.id)" [attr.aria-label]="'Selecionar ' + item.name" (change)="toggleProductSelection(item.id)" />Selecionar</label>
+              }
               <!-- Badge Highlight Type -->
               @if (item.highlightType && item.highlightType !== 'none') {
                 <div class="product-badge" [attr.data-hl]="item.highlightType">
@@ -170,7 +185,7 @@ import { ProductFlavor } from '../../../../models/product-flavors';
               }
 
               <!-- Avatar -->
-              <div class="product-avatar clickable" (click)="openViewItemModal(item)" title="Clique para ver detalhes do item">
+              <div class="product-avatar clickable" (click)="!bulkSelectionMode && openViewItemModal(item)" title="Clique para ver detalhes do item">
                 @if (item.imageUrl) {
                   <img [src]="item.imageUrl" [alt]="item.name" class="product-img" />
                 } @else {
@@ -200,6 +215,7 @@ import { ProductFlavor } from '../../../../models/product-flavors';
                 </div>
 
                 <!-- Actions bar -->
+                @if (!bulkSelectionMode) {
                 <div class="product-actions-bar">
                   <button class="status-tag" [class.active]="item.isAvailable" (click)="toggleAvailability(item.id)">
                     {{ item.isAvailable ? 'Ativo' : 'Pausado' }}
@@ -219,6 +235,7 @@ import { ProductFlavor } from '../../../../models/product-flavors';
                     </button>
                   </div>
                 </div>
+                }
               </div>
             </div>
           } @empty {
@@ -699,6 +716,18 @@ import { ProductFlavor } from '../../../../models/product-flavors';
     }
   `,
   styles: [`
+    .product-header-actions,.bulk-selection-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+    .bulk-selection-bar { padding:12px; margin-bottom:8px; border:1px solid var(--panel-border); border-radius:14px; background:var(--panel-surface); }
+    .bulk-selection-bar span { margin-right:auto; font-weight:600; }
+    .bulk-selection-bar button { min-height:40px; padding:8px 12px; border:1px solid var(--panel-border); border-radius:9px; background:var(--panel-surface); color:var(--panel-text); cursor:pointer; }
+    .bulk-selection-bar .bulk-delete-action { background:#b42332; color:white; border-color:#b42332; }
+    .bulk-selection-bar button:disabled { opacity:.5; cursor:default; }
+    .bulk-product-checkbox { position:relative; z-index:2; display:flex; align-items:center; gap:6px; min-height:36px; grid-column:1 / -1; font-size:12px; font-weight:600; cursor:pointer; }
+    .bulk-product-checkbox input { width:18px; height:18px; accent-color:var(--panel-accent); }
+    .product-card.bulk-selecting { cursor:pointer; }
+    .product-card.bulk-selected { outline:2px solid var(--panel-accent); outline-offset:1px; }
+    @media(max-width:600px) { .product-header-actions { width:100%; } .product-header-actions .btn-cta { flex:1; justify-content:center; } .bulk-selection-bar { gap:6px; } .bulk-selection-bar span { width:100%; } }
+
 
     :host { display: block; min-width: 0; }
     .menu-container {
@@ -2195,6 +2224,43 @@ import { ProductFlavor } from '../../../../models/product-flavors';
 export class MenuEditorComponent implements OnInit {
   @Output() onToast = new EventEmitter<string>();
 
+  bulkSelectionMode = false;
+  bulkDeleting = false;
+  selectedProductIds = new Set<string>();
+  toggleBulkSelection(): void {
+    if (this.bulkDeleting || this.productOrderSaving || this.productDragging) return;
+    this.bulkSelectionMode = !this.bulkSelectionMode;
+    this.selectedProductIds.clear();
+  }
+  toggleProductSelection(id: string): void {
+    if (this.bulkDeleting) return;
+    if (this.selectedProductIds.has(id)) this.selectedProductIds.delete(id);
+    else this.selectedProductIds.add(id);
+  }
+  selectVisibleProducts(): void {
+    if (!this.bulkDeleting) this.filteredItems.forEach(item => this.selectedProductIds.add(item.id));
+  }
+  deleteSelectedProducts(): void {
+    if (this.bulkDeleting || !this.selectedProductIds.size) return;
+    const ids = [...this.selectedProductIds];
+    if (!confirm(`Excluir ${ids.length} produto(s) selecionado(s)? Essa ação não pode ser desfeita.`)) return;
+    this.bulkDeleting = true;
+    this.menuService.deleteItems(ids).subscribe({
+      next: response => {
+        this.bulkDeleting = false;
+        response.data.deletedIds.forEach((id: string) => this.selectedProductIds.delete(id));
+        this.bulkSelectionMode = this.selectedProductIds.size > 0;
+        this.auth.restore().subscribe({ error: () => {} });
+        this.onToast.emit(`${response.data.deletedIds.length} produto(s) removido(s).`);
+        this.cdr.markForCheck();
+      },
+      error: error => {
+        this.bulkDeleting = false;
+        this.onToast.emit(error?.error?.error?.message || 'Não foi possível excluir os produtos. A seleção foi mantida.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
   selectedCategoryId: string | null = null;
   searchQuery = '';
 

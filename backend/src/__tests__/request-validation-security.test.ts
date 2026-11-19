@@ -4,6 +4,13 @@ import { request as httpRequest } from 'node:http';
 import { once } from 'node:events';
 import app from '../server';
 
+test('suggestions require an owner session to submit and an admin session to read', async () => {
+  const submitted = await request(app).post('/api/v1/suggestions').send({ message: 'Mais opções no editor' });
+  expect(submitted.status).toBe(401);
+  const listed = await request(app).get('/api/v1/admin/suggestions');
+  expect(listed.status).toBe(401);
+});
+
 test('invalid requests retain structured validation details after the Zod upgrade', async () => {
   const response = await request(app).post('/api/v1/public/menu/security-check/vitals')
     .send({ templateCode: 'default', deviceClass: 'mobile', metrics: [{ name: 'INP', value: -1 }] });

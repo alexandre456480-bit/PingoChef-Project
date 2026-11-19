@@ -1,4 +1,4 @@
-<app-auth-shell>
+<app-auth-shell [hideBrandOnMobile]="true">
   @if (checking) { <p class="access-wait" role="status">Verificando sua sessão…</p> }
   @else {
     <header class="access-heading"><h1>Bom ter você de volta.</h1><p>Entre para cuidar do seu cardápio.</p></header>

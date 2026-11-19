@@ -1,0 +1,146 @@
+<section class="menu-motion" aria-labelledby="menu-motion-title">
+  <h2 id="menu-motion-title" landingReveal>
+    <span data-enter="title">Mude seu cardápio</span>
+    <span class="menu-motion-accent" data-enter="title" data-enter-delay="120">onde e quando quiser.</span>
+  </h2>
+
+  <div class="menu-motion-art" landingReveal aria-hidden="true">
+    <svg class="art-definitions" width="0" height="0" focusable="false">
+      <defs>
+        <symbol id="motion-burger" viewBox="0 0 120 90">
+          <path d="M12 67h96v3c0 11-9 16-21 16H33c-12 0-21-5-21-16Z" fill="#e17619"/>
+          <path d="M12 67h96c0 8-8 12-18 12H30c-10 0-18-4-18-12Z" fill="#ffad37"/>
+          <rect x="8" y="53" width="104" height="16" rx="8" fill="#753122"/>
+          <path d="M15 53h89l-31 13-16-9-17 5Z" fill="#ffc928"/>
+          <path d="M12 42h96q4 0 4 5t-8 5q-8-4-14 1t-15 0-15 0-15 0-15 0-15 0q-8 1-8-5t5-6" fill="#26a640"/>
+          <path d="M14 36h92v10H14Z" fill="#f04a35"/>
+          <path d="M11 35C14 14 34 4 60 4s46 10 49 31c1 5-3 8-8 8H19c-5 0-9-3-8-8" fill="#ffa422"/>
+          <path d="M18 27c9-13 25-18 42-18 20 0 35 6 43 18-15-8-25-9-43-9s-29 3-42 9" fill="#ffc658"/>
+          <path d="m34 24 4-2m19 7 5-1m15-7 4 2m9 9 4 1" fill="none" stroke="#fff1ca" stroke-width="3" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="motion-pizza" viewBox="0 0 120 90">
+          <path d="M13 23c24-25 70-25 94 0L66 82c-3 4-9 4-12 0Z" fill="#f28b22"/>
+          <path d="M20 26c22-18 57-18 79 0L60 79Z" fill="#ffd64a"/>
+          <path d="M15 23c23-22 67-22 90 0" fill="none" stroke="#c96923" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="46" cy="33" r="8" fill="#e73e32"/><circle cx="74" cy="37" r="8" fill="#e73e32"/><circle cx="59" cy="58" r="7" fill="#e73e32"/>
+          <path d="m35 23 5-2m19 3 4 1m12 27 4-3" fill="none" stroke="#268b3e" stroke-width="3" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="motion-dessert" viewBox="0 0 120 90">
+          <path d="M22 48h76l-8 32c-1 4-4 6-8 6H38c-4 0-7-2-8-6Z" fill="#a74b2d"/>
+          <path d="M20 52c-8-8 1-22 13-24 2-11 13-15 22-15 5-7 15-10 21-3 8 0 15 6 16 14 14 4 19 20 10 28Z" fill="#ff7ba3"/>
+          <path d="M31 37c8-8 19-8 26-6m12-11c6-3 11-2 14 3" fill="none" stroke="#ffe2df" stroke-width="5" stroke-linecap="round"/>
+          <path d="m40 62 3 14m17-14v14m20-14-3 14" fill="none" stroke="#f29764" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="68" cy="10" r="8" fill="#df2452"/><path d="M68 4q2-5 7-5" fill="none" stroke="#2b8c4e" stroke-width="2"/>
+        </symbol>
+        <g id="motion-phone-shell">
+          <rect x="14" y="12" width="180" height="334" rx="32" fill="var(--device-side, #813725)"/>
+          <rect x="7" y="5" width="180" height="334" rx="31" fill="var(--device-edge, #37213a)"/>
+          <rect x="15" y="13" width="164" height="318" rx="25" fill="var(--screen, #fffbf0)"/>
+          <rect x="73" y="19" width="48" height="11" rx="5.5" fill="var(--device-edge, #37213a)"/>
+        </g>
+        <symbol id="motion-phone-burger" viewBox="0 0 200 350">
+          <use href="#motion-phone-shell"/>
+          <circle cx="35" cy="50" r="8" fill="var(--device-accent, #f26919)"/>
+          <rect x="49" y="47" width="61" height="6" rx="3" fill="var(--device-edge, #37213a)" opacity=".83"/>
+          <rect x="25" y="69" width="144" height="105" rx="17" fill="var(--block, #ffc977)"/>
+          <use href="#motion-burger" x="44" y="80" width="106" height="79"/>
+          <rect x="25" y="189" width="85" height="8" rx="4" fill="var(--device-edge, #37213a)" opacity=".83"/>
+          <rect x="25" y="207" width="53" height="5" rx="2.5" fill="var(--device-edge, #37213a)" opacity=".26"/>
+          <rect x="25" y="225" width="68" height="62" rx="13" fill="#ffd7a7"/>
+          <rect x="101" y="225" width="68" height="62" rx="13" fill="#ffc7d5"/>
+          <use href="#motion-pizza" x="36" y="234" width="46" height="41"/>
+          <use href="#motion-dessert" x="112" y="234" width="46" height="41"/>
+          <rect x="25" y="299" width="144" height="20" rx="10" fill="var(--device-accent, #f26919)"/>
+          <rect x="75" y="307" width="44" height="4" rx="2" fill="#fff8ed" opacity=".9"/>
+        </symbol>
+        <symbol id="motion-phone-pizza" viewBox="0 0 200 350">
+          <use href="#motion-phone-shell"/>
+          <rect x="25" y="39" width="144" height="83" rx="14" fill="#08795d"/>
+          <circle cx="137" cy="82" r="23" fill="#24ac80"/>
+          <use href="#motion-pizza" x="115" y="62" width="45" height="35" transform="rotate(12 137 82)"/>
+          <text x="35" y="73" font-family="sans-serif" font-size="15" font-weight="800" fill="#fff7e7">PIZZARIA</text>
+          <rect x="35" y="86" width="42" height="4" rx="2" fill="#9cebc9"/>
+          <rect x="25" y="134" width="68" height="12" rx="6" fill="#42cd9a"/>
+          <rect x="99" y="134" width="47" height="12" rx="6" fill="#c2f0dc"/>
+          <g fill="#c8f3dc">
+            <rect x="25" y="160" width="54" height="49" rx="10"/>
+            <rect x="25" y="218" width="54" height="49" rx="10"/>
+          </g>
+          <use href="#motion-pizza" x="31" y="168" width="41" height="31"/>
+          <use href="#motion-pizza" x="31" y="226" width="41" height="31" transform="rotate(-18 52 242)"/>
+          <g fill="#08795d">
+            <rect x="88" y="168" width="63" height="6" rx="3"/>
+            <rect x="88" y="226" width="69" height="6" rx="3"/>
+            <rect x="88" y="189" width="30" height="5" rx="2.5"/>
+            <rect x="88" y="247" width="35" height="5" rx="2.5"/>
+          </g>
+          <path d="M26 214h142m-142 58h142" stroke="#a6dcc8"/>
+          <rect x="25" y="288" width="144" height="29" rx="11" fill="#08795d"/>
+          <path d="M89 303h16m-8-8v16" stroke="#f0fcf8" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="motion-phone-dessert" viewBox="0 0 200 350">
+          <use href="#motion-phone-shell"/>
+          <circle cx="97" cy="57" r="15" fill="#ffbace"/>
+          <path d="M97 64c-21-12-6-20 0-13 6-7 21 1 0 13Z" fill="#d73278"/>
+          <text x="97" y="91" text-anchor="middle" font-family="serif" font-size="19" font-weight="700" fill="#67254c">Confeitaria</text>
+          <path d="M59 103h76" stroke="#f383ad" stroke-width="3" stroke-linecap="round"/>
+          <rect x="24" y="120" width="70" height="111" rx="14" fill="#ffcce4"/>
+          <rect x="101" y="120" width="70" height="111" rx="14" fill="#ffe0aa"/>
+          <use href="#motion-dessert" x="30" y="129" width="58" height="62"/>
+          <g>
+            <ellipse cx="135" cy="151" rx="24" ry="10" fill="#efa04c"/>
+            <rect x="111" y="151" width="48" height="27" fill="#cf693c"/>
+            <ellipse cx="135" cy="178" rx="24" ry="9" fill="#cf693c"/>
+            <path d="M112 157c11 10 36 10 46 0" fill="none" stroke="#fff4df" stroke-width="5"/>
+            <ellipse cx="135" cy="150" rx="24" ry="9" fill="#ff9eaa"/>
+            <circle cx="138" cy="144" r="5" fill="#dd325b"/>
+          </g>
+          <g fill="#712c53">
+            <rect x="35" y="195" width="46" height="5" rx="2.5"/>
+            <rect x="113" y="195" width="43" height="5" rx="2.5"/>
+          </g>
+          <g fill="#d95a95">
+            <rect x="35" y="208" width="28" height="5" rx="2.5"/>
+            <rect x="113" y="208" width="25" height="5" rx="2.5"/>
+            <rect x="28" y="247" width="80" height="7" rx="3.5"/>
+            <rect x="28" y="262" width="54" height="4" rx="2"/>
+          </g>
+          <rect x="25" y="283" width="144" height="28" rx="14" fill="#c73177"/>
+          <path d="M84 297h26" stroke="#fff3f6" stroke-width="4" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="motion-play" viewBox="0 0 100 100">
+          <rect x="9" y="16" width="82" height="77" rx="19" fill="#bf3a27"/>
+          <rect x="9" y="8" width="82" height="77" rx="19" fill="#ff684b"/>
+          <rect x="24" y="25" width="52" height="43" rx="11" fill="#fff5eb"/>
+          <path d="M45 37q0-3 3-2l14 9q3 2 0 4l-14 9q-3 1-3-2Z" fill="#e34530"/>
+        </symbol>
+        <symbol id="motion-qr" viewBox="0 0 100 100">
+          <rect x="9" y="16" width="82" height="77" rx="19" fill="#08785e"/>
+          <rect x="9" y="8" width="82" height="77" rx="19" fill="#14ae82"/>
+          <path d="M29 25h16v16H29Zm26 0h16v16H55ZM29 51h16v16H29Zm26 0h7v7h-7Zm8 8h8v8h-8Zm2-8h6v5h-6Z" fill="#fff9ea"/>
+          <path d="M34 30h6v6h-6Zm26 0h6v6h-6ZM34 56h6v6h-6Z" fill="#087d60"/>
+        </symbol>
+        <symbol id="motion-heart" viewBox="0 0 88 78">
+          <path d="M44 74C31 63 4 49 4 27 4 8 28 1 44 17 60 1 84 8 84 27c0 22-28 36-40 47" fill="#d82b54"/>
+          <path d="M44 67C31 56 4 42 4 22 4 5 28 0 44 14 60 0 84 5 84 22c0 20-28 34-40 45" fill="#f84f76"/>
+          <path d="M14 23c1-7 8-11 14-10" fill="none" stroke="#ffbacb" stroke-width="5" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="motion-spark" viewBox="0 0 64 64">
+          <path d="M30 5q2-5 4 0l7 17 17 7q6 3 0 6l-17 7-7 17q-2 5-4 0l-7-17-17-7q-6-3 0-6l17-7Z" fill="#ffad1e"/>
+          <path d="m32 15 4 12 12 5-12 4-4 12-4-12-12-4 12-5Z" fill="#fff0a0"/>
+        </symbol>
+      </defs>
+    </svg>
+
+    <svg class="motion-piece phone-side-left" data-enter="piece" data-enter-delay="100" viewBox="0 0 200 350" focusable="false"><use href="#motion-phone-pizza"/></svg>
+    <svg class="motion-piece phone-side-right" data-enter="piece" data-enter-delay="150" viewBox="0 0 200 350" focusable="false"><use href="#motion-phone-dessert"/></svg>
+    <svg class="motion-piece phone-center" data-enter="piece" data-enter-delay="45" viewBox="0 0 200 350" focusable="false"><use href="#motion-phone-burger"/></svg>
+    <svg class="motion-piece burger-piece" data-enter="piece" data-enter-delay="190" viewBox="0 0 120 90" focusable="false"><use href="#motion-burger"/></svg>
+    <svg class="motion-piece pizza-piece" data-enter="piece" data-enter-delay="225" viewBox="0 0 120 90" focusable="false"><use href="#motion-pizza"/></svg>
+    <svg class="motion-piece video-piece" data-enter="piece" data-enter-delay="255" viewBox="0 0 100 100" focusable="false"><use href="#motion-play"/></svg>
+    <svg class="motion-piece qr-piece" data-enter="piece" data-enter-delay="285" viewBox="0 0 100 100" focusable="false"><use href="#motion-qr"/></svg>
+    <svg class="motion-piece heart-piece" data-enter="piece" data-enter-delay="315" viewBox="0 0 88 78" focusable="false"><use href="#motion-heart"/></svg>
+    <svg class="motion-piece spark-piece" data-enter="piece" data-enter-delay="345" viewBox="0 0 64 64" focusable="false"><use href="#motion-spark"/></svg>
+    <svg class="motion-piece small-spark-piece" data-enter="piece" data-enter-delay="375" viewBox="0 0 64 64" focusable="false"><use href="#motion-spark"/></svg>
+  </div>
+</section>

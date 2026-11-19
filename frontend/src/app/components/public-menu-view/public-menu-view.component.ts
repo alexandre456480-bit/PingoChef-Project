@@ -74,7 +74,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
           [style.--curtain-base]="welcomeBgColor" [style.--curtain-accent]="welcomeButtonColor">
           <div class="entry-curtain entry-curtain-left"></div>
           <div class="entry-curtain entry-curtain-right"></div>
-          <img class="entry-company-logo" [appMenuImage]="logoUrl" menuImageKind="logo" menuImagePriority="high" alt="" />
+          @if (logoUrl) { <img class="entry-company-logo" [appMenuImage]="logoUrl" menuImageKind="logo" menuImagePriority="high" alt="" /> }
         </div>
       }
       @if (viewState === 'welcome') {
@@ -97,9 +97,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
           <!-- Welcome Center Content -->
           <div class="welcome-content" [style.color]="welcomeTextColor">
             <!-- Company identity -->
-            <div class="welcome-logo-wrap">
-              <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="welcome-logo-img" [menuImagePriority]="welcomeBgType === 'image' && welcomeBgImage ? 'auto' : 'high'" />
-            </div>
+            @if (logoUrl) {
+              <div class="welcome-logo-wrap">
+                <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="welcome-logo-img" [menuImagePriority]="welcomeBgType === 'image' && welcomeBgImage ? 'auto' : 'high'" />
+              </div>
+            }
 
             <!-- Business Typography -->
             <div class="welcome-texts">
@@ -214,12 +216,16 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
             @if (!(activeCatId ? isCategoryHeroEnabled : showHeroBlock) && !searchFilter) {
               <div class="no-hero-header" [style.background]="templateKey === 'liquid-glass' ? null : surfaceColor" [style.border-bottom]="'1px solid ' + surfaceColor + '30'">
                 <div class="no-hero-brand">
-                  <div class="no-hero-logo-wrap">
-                    <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="no-hero-logo-img" />
-                  </div>
+                  @if (logoUrl) {
+                    <div class="no-hero-logo-wrap">
+                      <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="no-hero-logo-img" />
+                    </div>
+                  }
                   <div class="no-hero-texts">
                     <h2 class="no-hero-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ businessName }}</h2>
-                    <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
+                    @if (businessDescription || welcomeTagline) {
+                      <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
+                    }
                   </div>
                 </div>
               </div>
@@ -228,9 +234,11 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
             <!-- TEMPLATE REUTILIZÁVEL: HERO BANNER SECTION (Exibido no Início e nas Categorias) -->
             <ng-template #brandIdentityTemplate>
               <div class="template-brand-header">
-                <div class="template-logo-wrap">
-                  <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="template-logo" />
-                </div>
+                @if (logoUrl) {
+                  <div class="template-logo-wrap">
+                    <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="template-logo" />
+                  </div>
+                }
                 <div class="template-brand-copy">
                   <h2>{{ businessName }}</h2>
                   @if (businessDescription.trim()) {
@@ -1217,21 +1225,23 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
 
             @if (templateKey === 'rounded-showcase' && !productVideoExpanded) {
               <div class="rounded-detail-brand">
-                <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="rounded-detail-logo" />
+                @if (logoUrl) { <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="rounded-detail-logo" /> }
                 <h2>{{ businessName }}</h2>
                 @if (businessDescription.trim()) { <p>{{ businessDescription }}</p> }
               </div>
             }
 
             @if (templateKey === 'soft-showcase' && !productVideoExpanded) {
-              <div class="soft-detail-brand">
-                <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="soft-detail-logo" />
-              </div>
+              @if (logoUrl) {
+                <div class="soft-detail-brand">
+                  <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="soft-detail-logo" />
+                </div>
+              }
             }
 
             @if (templateKey === 'double-showcase' && !productVideoExpanded) {
               <div class="double-detail-brand">
-                <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="double-detail-logo" />
+                @if (logoUrl) { <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="double-detail-logo" /> }
                 <div class="double-detail-copy">
                   <h2>{{ businessName }}</h2>
                   @if (businessDescription.trim()) { <p>{{ businessDescription }}</p> }
@@ -1562,7 +1572,7 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     .welcome-shape-bottom { width:114%;max-width:520px;bottom:0;left:0;transform:translate(-47%,47%); }
     .welcome-content { position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:22px;width:100%;max-width:360px; }
     .welcome-logo-wrap { display:grid;place-items:center;width:112px;height:112px;flex-shrink:0; }
-    .welcome-logo-img { width:100%;height:100%;object-fit:contain; }
+    .welcome-logo-img { width:100%;height:100%;object-fit:contain;border-radius:20px; }
     .welcome-texts { display:flex;flex-direction:column;align-items:center;gap:10px;max-width:100%; }
     .welcome-kicker { font-size:.65rem;font-weight:650;letter-spacing:.18em;opacity:.65; }
     .welcome-title { font-size:clamp(1.5rem,5vw,2.1rem);font-weight:800;color:inherit;margin:0;line-height:1.2;overflow-wrap:anywhere; }
@@ -3418,13 +3428,13 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     if (this.isPhonePreview) {
       const b = this.authService.currentBusiness();
       return {
-        name: b?.name || 'Sapatolândia Gourmet',
-        slug: b?.slug || 'sapatolandia-gourmet',
-        logoUrl: b?.logo_url || '/pingo-chef-logo-principal.webp',
-        coverImageUrl: b?.welcome_bg_image || b?.cover_image_url || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
+        name: b?.name || 'Estabelecimento',
+        slug: b?.slug || '',
+        logoUrl: b?.logo_url || '',
+        coverImageUrl: b?.welcome_bg_image || b?.cover_image_url || '',
         description: b?.description || '',
         welcomeBgType: b?.welcome_bg_type || 'image',
-        welcomeBgImage: b?.welcome_bg_image || b?.cover_image_url || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
+        welcomeBgImage: b?.welcome_bg_image || b?.cover_image_url || '',
         welcomeBgColor: b?.welcome_bg_color || '#0F0F12',
         welcomeBgAccentColor: b?.welcome_bg_accent_color || null,
         socialLinks: safeSocialLinks(b?.social_links),
@@ -3435,11 +3445,11 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return pb || {
       name: 'Estabelecimento',
       slug: '',
-      logoUrl: '/pingo-chef-logo-principal.webp',
-      coverImageUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
+      logoUrl: '',
+      coverImageUrl: '',
       description: '',
       welcomeBgType: 'image',
-      welcomeBgImage: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80',
+      welcomeBgImage: '',
       welcomeBgColor: '#0F0F12'
     };
   }
@@ -3453,11 +3463,11 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   }
 
   get logoUrl(): string {
-    return this.business.logoUrl || '/pingo-chef-logo-principal.webp';
+    return this.business.logoUrl || '';
   }
 
   get coverImageUrl(): string {
-    return this.business.coverImageUrl || (this.isPhonePreview ? 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80' : '');
+    return this.business.coverImageUrl || '';
   }
 
   get welcomeBgType(): 'image' | 'color' {
@@ -3600,9 +3610,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
 
   get welcomeTagline(): string {
     if (this.isPhonePreview) {
-      return (this.designService.draft().customConfig as any)?.welcome_tagline || 'Experiência gastronômica artesanal e inesquecível';
+      return (this.designService.draft().customConfig as any)?.welcome_tagline || '';
     }
-    return (this.publicMenuService.menuData()?.design?.customConfig as any)?.welcome_tagline || 'Experiência gastronômica artesanal e inesquecível';
+    return (this.publicMenuService.menuData()?.design?.customConfig as any)?.welcome_tagline || '';
   }
 
   get introCard(): { enabled: boolean; title: string; description: string } {
@@ -3612,9 +3622,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     const designData = this.publicMenuService.menuData()?.design;
     const fromCustom = (designData?.customConfig as any)?.intro_card;
     const fromDirect = (designData as any)?.introCard;
-    const cfg = fromCustom || fromDirect || this.designService.introCard();
+    const cfg = fromCustom || fromDirect;
     return {
-      enabled: cfg?.enabled !== false,
+      enabled: Boolean(cfg && cfg.enabled !== false),
       title: cfg?.title || '',
       description: cfg?.description || ''
     };
@@ -3991,7 +4001,4 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
     return this.iconCache.get(key) || null;
   }
 
-  onLogoError(event: Event): void {
-    (event.target as HTMLImageElement).src = '/pingo-chef-logo-principal.webp';
-  }
                         }

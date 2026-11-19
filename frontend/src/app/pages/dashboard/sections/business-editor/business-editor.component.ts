@@ -187,15 +187,8 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
                     <label class="upload-btn">
                       <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onBgImageSelect($event)" hidden />
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                      Trocar Imagem de Fundo
+                      {{ form.welcome_bg_image ? 'Trocar imagem de fundo' : 'Adicionar imagem de fundo' }}
                     </label>
-                    <button
-                      type="button"
-                      class="btn-reset-bg"
-                      (click)="resetDefaultBgImage()"
-                      title="Restaurar imagem padrão gastronômica">
-                      Restaurar Padrão
-                    </button>
                   </div>
                 </div>
               </div>
@@ -897,8 +890,6 @@ export class BusinessEditorComponent implements OnInit {
   logoPreview: string | null = null;
   isSaving = false;
 
-  readonly defaultCoverImage = 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80';
-
   readonly colorPresets = [
     { name: 'Branco', color: '#FFFFFF' },
     { name: 'Carvão Escuro', color: '#0F0F12' },
@@ -938,7 +929,7 @@ export class BusinessEditorComponent implements OnInit {
     this.form.order_settings = safeOrderSettings(biz.order_settings);
     this.logoPreview = biz.logo_url || null;
     this.form.welcome_bg_type = biz.welcome_bg_type || 'image';
-    this.form.welcome_bg_image = biz.welcome_bg_image || biz.cover_image_url || this.defaultCoverImage;
+    this.form.welcome_bg_image = biz.welcome_bg_image || biz.cover_image_url || '';
     this.form.welcome_bg_color = biz.welcome_bg_color || '#0F0F12';
     this.form.welcome_bg_accent_color = biz.welcome_bg_accent_color || '#FFB800';
   }
@@ -974,9 +965,6 @@ export class BusinessEditorComponent implements OnInit {
 
   setBgType(type: 'image' | 'color'): void {
     this.form.welcome_bg_type = type;
-    if (type === 'image' && !this.form.welcome_bg_image) {
-      this.form.welcome_bg_image = this.defaultCoverImage;
-    }
     this.syncLiveDraft();
   }
 
@@ -991,12 +979,6 @@ export class BusinessEditorComponent implements OnInit {
       next: image => { if (image) { this.form.welcome_bg_image = image; this.syncLiveDraft(); this.cdr.markForCheck(); } },
       error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível carregar a imagem de fundo.'))
     });
-  }
-
-  resetDefaultBgImage(): void {
-    this.form.welcome_bg_image = this.defaultCoverImage;
-    this.syncLiveDraft();
-    this.onToast.emit('Imagem de fundo restaurada para o padrão.');
   }
 
   selectColorPreset(colorHex: string): void {

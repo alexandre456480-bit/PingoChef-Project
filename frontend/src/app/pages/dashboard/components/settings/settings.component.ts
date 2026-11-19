@@ -7,7 +7,11 @@ import {
   OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  DestroyRef,
+  inject,
 } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
@@ -15,6 +19,7 @@ import { CommercialService } from '../../../../services/commercial.service';
 import { PlanUsageComponent } from '../../../../components/plan-usage/plan-usage.component';
 import { DialogFocusDirective } from '../../../../components/dialog-focus.directive';
 import { MenuTransferComponent } from './menu-transfer.component';
+import { API_BASE_URL } from '../../../../constants/api';
 @Component({
   selector: 'app-owner-settings',
   standalone: true,
@@ -45,6 +50,12 @@ export class SettingsComponent implements OnInit {
   deleteConfirmation = '';
   deletePassword = '';
   confirmDelete = false;
+  suggestion = '';
+  sendingSuggestion = false;
+  suggestionError = '';
+  suggestionSent = false;
+  private readonly http = inject(HttpClient);
+  private readonly destroyRef = inject(DestroyRef);
   constructor(
     public auth: AuthService,
     public commercial: CommercialService,
@@ -79,6 +90,30 @@ export class SettingsComponent implements OnInit {
   compare() {
     this.close.emit();
     this.router.navigate(['/plans']);
+  }
+  sendSuggestion(): void {
+    const message = this.suggestion.trim();
+    if (this.sendingSuggestion || !message || message.length > 1000) return;
+    this.sendingSuggestion = true;
+    this.suggestionSent = false;
+    this.suggestionError = '';
+    this.http.post(`${API_BASE_URL}/suggestions`, { message }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.sendingSuggestion = false;
+        this.cdr.markForCheck();
+      }),
+    ).subscribe({
+      next: () => {
+        this.suggestion = '';
+        this.suggestionSent = true;
+      },
+      error: (error) => {
+        this.suggestionError = error.status === 429
+          ? 'Você atingiu o limite de envios. Aguarde antes de tentar novamente.'
+          : 'Não foi possível enviar a sugestão. Tente novamente.';
+      },
+    });
   }
   logout(all = false) {
     if (this.busy) return;

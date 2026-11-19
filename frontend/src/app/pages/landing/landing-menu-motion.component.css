@@ -1,0 +1,186 @@
+:host { display: block; }
+
+.menu-motion {
+  overflow: hidden;
+  isolation: isolate;
+  padding-top: clamp(48px, 7vw, 114px);
+  background:
+    linear-gradient(180deg, transparent 86%, var(--sales-end-color, #ffe6ce)),
+    radial-gradient(ellipse at 52% 85%, #ffce9b69, transparent 58%),
+    linear-gradient(180deg, #fff 0%, #fff8f1 24%, #ffecd9 76%, var(--sales-end-color, #ffe6ce) 100%);
+}
+
+h2 {
+  position: relative;
+  z-index: 1;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-inline: 20px;
+  color: #452921;
+  font: 700 clamp(2.2rem, 5.8vw, 4.8rem)/1.04 var(--landing-title-font);
+  letter-spacing: -.048em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+h2 span { display: block; }
+.menu-motion-accent { color: #b3491d; }
+
+.menu-motion-art {
+  position: relative;
+  width: min(100%, 1520px);
+  height: clamp(460px, 53vw, 760px);
+  margin: 0 auto;
+  pointer-events: none;
+}
+
+.art-definitions { position: absolute; }
+
+.motion-piece {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: calc(var(--size) * .91);
+  height: auto;
+  filter: drop-shadow(0 10px 0 rgb(130 60 35 / 8%));
+  transform:
+    translate(-50%, -50%)
+    translate(
+      calc(var(--menu-scroll, 0) * var(--travel-x, 0px)),
+      calc(var(--menu-scroll, 0) * var(--travel-y, 0px))
+    )
+    perspective(860px)
+    rotateY(var(--tilt, 0deg))
+    rotate(calc(var(--angle) + var(--menu-scroll, 0) * var(--spin, 0deg)));
+}
+
+.phone-side-left {
+  --x: 15%;
+  --y: 28%;
+  --size: clamp(124px, 16vw, 234px);
+  --angle: -31deg;
+  --spin: 13deg;
+  --tilt: 36deg;
+  --travel-x: -60px;
+  --travel-y: -136px;
+  --device-side: #198c7b;
+  --device-edge: #164b45;
+  --screen: #f0fcf8;
+}
+
+.phone-side-right {
+  --x: 84%;
+  --y: 58%;
+  --size: clamp(126px, 17vw, 250px);
+  --angle: 32deg;
+  --spin: -16deg;
+  --tilt: -34deg;
+  --travel-x: 57px;
+  --travel-y: -112px;
+  --device-side: #b83f81;
+  --device-edge: #602b56;
+  --screen: #fff5f7;
+}
+
+.phone-center {
+  --x: 51%;
+  --y: 58%;
+  --size: clamp(152px, 23vw, 312px);
+  --angle: -12deg;
+  --tilt: 12deg;
+  --spin: 16deg;
+  --travel-x: 9px;
+  --travel-y: -122px;
+  z-index: 1;
+  filter: drop-shadow(12px 24px 22px rgb(128 57 32 / 17%));
+}
+
+.burger-piece {
+  --x: 25%;
+  --y: 63%;
+  --size: clamp(83px, 11vw, 170px);
+  --angle: -16deg;
+  --spin: -24deg;
+  --travel-x: 38px;
+  --travel-y: -58px;
+}
+
+.pizza-piece {
+  --x: 75%;
+  --y: 20%;
+  --size: clamp(70px, 9vw, 138px);
+  --angle: 19deg;
+  --spin: 33deg;
+  --travel-x: -48px;
+  --travel-y: 62px;
+}
+
+.video-piece {
+  --x: 33%;
+  --y: 18%;
+  --size: clamp(56px, 7vw, 106px);
+  --angle: 14deg;
+  --spin: -34deg;
+  --travel-x: 21px;
+  --travel-y: 78px;
+}
+
+.qr-piece {
+  --x: 68%;
+  --y: 80%;
+  --size: clamp(58px, 8vw, 118px);
+  --angle: -16deg;
+  --spin: 38deg;
+  --travel-x: 27px;
+  --travel-y: -95px;
+}
+
+.heart-piece {
+  --x: 92%;
+  --y: 14%;
+  --size: clamp(36px, 5vw, 76px);
+  --angle: 16deg;
+  --spin: 25deg;
+  --travel-x: 25px;
+  --travel-y: 66px;
+}
+
+.spark-piece {
+  --x: 58%;
+  --y: 13%;
+  --size: clamp(33px, 5vw, 68px);
+  --angle: 12deg;
+  --spin: 64deg;
+  --travel-y: -43px;
+}
+
+.small-spark-piece {
+  --x: 9%;
+  --y: 78%;
+  --size: clamp(22px, 4vw, 50px);
+  --angle: -10deg;
+  --spin: -54deg;
+  --travel-x: -25px;
+  --travel-y: 54px;
+}
+
+@media (max-width: 680px) {
+  .menu-motion { padding-top: 52px; }
+  .menu-motion-art { height: clamp(375px, 86vw, 475px); }
+  .phone-side-left { --x: 5%; --y: 36%; --travel-x: -20px; --travel-y: -60px; }
+  .phone-side-right { --x: 98%; --y: 62%; --travel-x: 19px; --travel-y: -57px; }
+  .phone-center { --x: 50%; --y: 57%; --size: clamp(136px, 40vw, 215px); --travel-y: -44px; }
+  .burger-piece { --x: 19%; --y: 75%; --travel-x: 14px; --travel-y: -30px; }
+  .pizza-piece { --x: 85%; --y: 25%; --travel-x: -23px; --travel-y: 30px; }
+  .video-piece { --x: 26%; --y: 20%; --travel-y: 27px; }
+  .qr-piece { --x: 78%; --y: 84%; --travel-x: 11px; --travel-y: -34px; }
+  .heart-piece { --x: 97%; --y: 14%; --travel-y: 17px; }
+  .spark-piece { --x: 61%; --y: 17%; --travel-y: -19px; }
+  .small-spark-piece { --x: 9%; --y: 89%; --travel-y: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-piece {
+    transform: translate(-50%, -50%) perspective(860px) rotateY(var(--tilt, 0deg)) rotate(var(--angle));
+  }
+}

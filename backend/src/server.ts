@@ -26,6 +26,8 @@ import analyticsRoutes from './routes/analytics.routes';
 import { requireAnalyticsJson } from './controllers/menu-analytics.controller';
 import qrRoutes from './routes/qr.routes';
 import { sharedRateLimit } from './middleware/shared-rate-limit.middleware';
+import { authenticateJwt, type AuthenticatedRequest } from './middleware/auth.middleware';
+import { submitAppSuggestion } from './controllers/app-suggestions.controller';
 import { ownerError, ownerCookie } from './services/owner-session.service';
 import { securityAudit } from './services/security-audit.service';
 import { validateVideoDeploymentEnvironment } from './config/video-deployment.config';
@@ -132,7 +134,11 @@ app.use('/api/v1/qr', (req, _res, next) => {
 }, express.json({ limit: '256kb' }));
 app.use('/api/v1/items/:itemId/media/video/upload-intent', express.json({ limit: '2kb' }));
 app.use('/api/v1/items/:id/recommendations', express.json({ limit: '2kb' }));
+app.use('/api/v1/items/bulk-delete', express.json({ limit: '16kb' }));
 app.use('/api/v1/menu-transfer', express.json({ limit: '3mb' }));
+app.post('/api/v1/suggestions', express.json({ limit: '8kb' }), authenticateJwt,
+  sharedRateLimit('app-suggestions', 5, 3600, req => `owner:${(req as AuthenticatedRequest).userId}`),
+  submitAppSuggestion);
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 

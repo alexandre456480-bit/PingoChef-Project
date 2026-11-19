@@ -278,5 +278,9 @@
   {
     "file": "20261115175608_increase_medium_product_limit.sql",
     "sha256": "3d43bf279e1c7d81ddcc0cf14aec2db220ce670f0386a27345dc7266ad0e9cf2"
+  },
+  {
+    "file": "20261118233846_add_anonymous_app_suggestions.sql",
+    "sha256": "3cffd837596b4c5ace40782bff17585e63dc8c35f1079db2bccdbd17569981a8"
   }
 ]

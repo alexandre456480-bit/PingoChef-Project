@@ -178,7 +178,8 @@ label {
   font-size: 14px;
   font-weight: 600;
 }
-input {
+input,
+textarea {
   min-width: 0;
   width: 100%;
   min-height: 46px;
@@ -188,6 +189,17 @@ input {
   border: 1px solid var(--pc-border);
   border-radius: 12px;
   font: inherit;
+}
+textarea { display: block; resize: vertical; }
+.suggestion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--pc-muted);
+  font-size: 13px;
 }
 .check-label {
   flex-direction: row;

@@ -1,0 +1,194 @@
+<header class="site-header" #siteHeader [class.site-header-hidden]="navHidden()">
+  <nav class="site-nav" aria-label="Navegação principal">
+    <a class="brand" routerLink="/" aria-label="PingoChef — início">
+      <img src="/pingo-chef-logo-principal.webp" width="62" height="62" alt="">
+    </a>
+    @if (navCtaVisible()) {
+      <a class="cta cta-primary nav-cta" routerLink="/plans">Criar meu cardápio</a>
+    }
+  </nav>
+</header>
+
+<main class="hero" landingReveal aria-labelledby="landing-title">
+  <div class="hero-art" data-enter="phone">
+    @if (showVideo()) {
+      <video [muted]="true" autoplay playsinline preload="metadata"
+        poster="/landing/pingochef-intro.webp" width="640" height="640"
+        [class.blink-ready]="blinkReady()" (ended)="startBlinkAfterOutro()"
+        (error)="showVideo.set(false)" aria-label="Animação do mascote PingoChef">
+        <source src="/landing/pingochef-intro.webm" type="video/webm" (error)="showVideo.set(false)">
+      </video>
+      @if (showBlink()) {
+        <img class="hero-blink" [class.blink-ready]="blinkReady()" (load)="blinkReady.set(true)"
+          src="/landing/pingochef-blink.webp" width="512" height="512" alt="" aria-hidden="true">
+      }
+    } @else {
+      <img src="/landing/pingochef-intro.webp" width="640" height="640"
+        alt="Mascote do PingoChef em uma moldura laranja">
+    }
+  </div>
+
+  <div class="hero-copy">
+    <h1 id="landing-title"><span data-enter="title">Seu cardápio,</span><br>
+      <em data-enter="title" data-enter-delay="90">do seu jeito.</em></h1>
+    <p class="hero-description" data-enter="copy" data-enter-delay="190">Monte um cardápio com a cara do seu negócio. Atualize pratos e preços quando quiser e compartilhe por link ou QR Code.</p>
+    <div class="hero-actions" data-enter="stamp" data-enter-delay="270">
+      <a class="cta cta-primary" #heroCta [class.cta-in-navbar]="navCtaVisible()" routerLink="/plans">Criar meu cardápio</a>
+      <a class="cta cta-secondary" routerLink="/login">Já tenho uma conta</a>
+    </div>
+  </div>
+</main>
+
+<section class="segments-strip" aria-label="Segmentos atendidos pelo PingoChef">
+  <svg class="segment-symbols" width="0" height="0" aria-hidden="true">
+    <defs>
+      <symbol id="pc-segment-meal" viewBox="0 0 32 32">
+        <path d="M5 22a11 11 0 0 1 22 0Z" fill="#ffad4c"/><path d="M4 23h24" stroke="#9f3e2b" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M8 19a8 8 0 0 1 5-5" stroke="#fff4db" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="16" cy="10" r="2" fill="#c85439"/>
+      </symbol>
+      <symbol id="pc-segment-cake" viewBox="0 0 32 32">
+        <path d="M6 17h20v8H6Z" fill="#f47c96"/><path d="M6 17h20v3H6Z" fill="#ffd1d9"/><path d="M5 17c1-5 5-7 11-7s10 2 11 7Z" fill="#fff8ef"/>
+        <circle cx="17" cy="9" r="3" fill="#ce3d55"/><path d="M4 26h24" stroke="#a64f57" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="pc-segment-snack" viewBox="0 0 32 32">
+        <path d="M7 17C8 13 14 8 16 5c3 4 9 10 9 15a8 8 0 0 1-9 8c-7 0-11-5-9-11Z" fill="#e99130" stroke="#a95725" stroke-width="1.5"/>
+        <path d="M11 19c1-3 3-5 5-7" fill="none" stroke="#ffda83" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="22" r="1.3" fill="#b66425"/>
+      </symbol>
+      <symbol id="pc-segment-drink" viewBox="0 0 32 32">
+        <path d="M6 9h20l-10 12Z" fill="#9d78d9"/><path d="M9 12h14l-7 8Z" fill="#ed9dc5"/>
+        <path d="M16 20v7m-5 0h10" stroke="#694092" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="8" r="4" fill="#ffb451"/>
+      </symbol>
+      <symbol id="pc-segment-pizza" viewBox="0 0 32 32">
+        <path d="M5 9q11-8 22 0L16 27Z" fill="#ffca57" stroke="#b86b35" stroke-width="1.5"/><path d="M5 9q11-8 22 0" fill="none" stroke="#db8340" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="2.5" fill="#df4d42"/><circle cx="20" cy="14" r="2.5" fill="#df4d42"/><circle cx="15" cy="20" r="2" fill="#df4d42"/>
+      </symbol>
+      <symbol id="pc-segment-burger" viewBox="0 0 32 32">
+        <path d="M5 14a11 9 0 0 1 22 0Zm1 10h20q-1 4-5 4H11q-4 0-5-4Z" fill="#f0a34c"/>
+        <path d="M5 17h22m-21 4h20" stroke="#659052" stroke-width="2.5" stroke-linecap="round"/><path d="M7 21h18" stroke="#8b4a33" stroke-width="3" stroke-linecap="round"/>
+        <path d="m12 10 1-1m7 2 1-1" stroke="#fff1cc" stroke-width="1.5" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="pc-segment-coffee" viewBox="0 0 32 32">
+        <path d="M22 13h3a4 4 0 0 1 0 8h-4" fill="none" stroke="#607e63" stroke-width="2"/><path d="M6 12h17v6a8.5 8.5 0 0 1-17 0Z" fill="#769c77"/>
+        <path d="M7 12h15M5 27h21m-14-18c-3-2 3-3 0-5m5 5c-3-2 3-3 0-5" fill="none" stroke="#5d725b" stroke-width="1.7" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="pc-segment-icecream" viewBox="0 0 32 32">
+        <path d="m10 16 6 13 6-13Z" fill="#df9b53" stroke="#ab6938" stroke-width="1.4"/><path d="M9 15a7 7 0 0 1 14 0c0 3-3 4-7 4s-7-1-7-4Z" fill="#f58ead"/>
+        <path d="M12 12c1-2 3-3 5-3" stroke="#ffd7e3" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="pc-segment-bread" viewBox="0 0 32 32">
+        <path d="M5 22c-2-5 2-11 9-15s13-3 15 2-2 11-9 15S7 27 5 22Z" fill="#e7a057" stroke="#a75e36" stroke-width="1.5"/>
+        <path d="m11 12 3 4m2-7 3 4m2-6 3 4" stroke="#fff0cf" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="segments-inner" landingReveal data-enter="copy">
+    <div class="segments-window">
+      <div class="segments-track">
+        @for (copy of [0, 1]; track copy) {
+          <ul class="segments-list" [class.segments-copy]="copy === 1" [attr.aria-hidden]="copy === 1 ? 'true' : null">
+            @for (segment of segments; track segment.icon) {
+              <li class="segment">
+                <span class="segment-icon" aria-hidden="true">
+                  <svg width="30" height="30" viewBox="0 0 32 32"><use [attr.href]="'#pc-segment-' + segment.icon"/></svg>
+                </span>
+                {{ segment.label }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sales-section" aria-labelledby="sales-title">
+  <div class="sales-inner">
+    <div class="sales-copy" landingReveal>
+      <h2 id="sales-title">
+        <span data-enter="title"><b>+</b> visual.</span>
+        <span data-enter="title" data-enter-delay="85"><b>+</b> desejo.</span>
+        <span data-enter="title" data-enter-delay="170"><b>+</b> vendas.</span>
+      </h2>
+      <p data-enter="copy" data-enter-delay="260">Seu cliente come primeiro com os olhos! Com o PingoChef, seus produtos ganham destaque com fotos, vídeos e um cardápio feito para encantar. Transforme cada visita em uma experiência irresistível e <strong>aumente suas oportunidades de venda.</strong></p>
+    </div>
+    <div class="sales-art" landingReveal data-enter="phone" data-enter-delay="100">
+      <img src="/landing/sessao-2.webp" width="714" height="950" loading="lazy" decoding="async"
+        alt="Celular exibindo um cardápio PingoChef">
+    </div>
+    <div class="sales-details" landingReveal>
+      <h3 data-enter="title">cada detalhe importa</h3>
+      <p data-enter="copy" data-enter-delay="160">Muito além de mostrar preços e produtos! Com fotos, vídeos e designs envolventes, você transforma seu cardápio em uma vitrine digital que conquista os olhos, desperta o apetite e facilita cada escolha.</p>
+    </div>
+    <video #inViewVideo class="sales-video" landingReveal data-enter="phone" width="960" height="540"
+      aria-hidden="true" muted playsinline preload="none"
+      poster="/landing/animation-sessao-2-poster.webp"
+      src="/landing/animation-sessao-2.webm"></video>
+  </div>
+  <app-landing-menu-motion #menuMotion />
+</section>
+
+@defer (on viewport) {
+  <app-plans [embedded]="true" />
+} @placeholder {
+  <div class="plans-placeholder" aria-hidden="true"></div>
+}
+
+<div class="plans-exit-transition" aria-hidden="true"></div>
+<section class="trial-section" aria-labelledby="trial-title">
+  <div class="sales-copy" landingReveal>
+    <h2 id="trial-title"><span data-enter="title">experimente.</span>
+      <span data-enter="title" data-enter-delay="85">personalize.</span>
+      <span data-enter="title" data-enter-delay="170">surpreenda.</span></h2>
+    <p data-enter="copy" data-enter-delay="240">Descubra tudo o que o PingoChef pode fazer pelo seu negócio! Com nosso plano de teste, você pode explorar templates, personalizar seu cardápio e descobrir como transformar seus produtos em uma vitrine digital irresistível. Experimente na prática antes de escolher o plano ideal para você!</p>
+    <button type="button" class="cta cta-secondary trial-cta" data-enter="stamp" data-enter-delay="305"
+      [disabled]="!!registeringFree()" (click)="startFreeRegistration('trial')">
+      {{ registeringFree() === 'trial' ? 'Preparando…' : 'Criar Cardápio Grátis' }}
+    </button>
+    @if (registrationError()?.source === 'trial') {
+      <p class="trial-error" role="alert">{{ registrationError()?.message }}</p>
+    }
+  </div>
+  <video #inViewVideo #trialVideo class="trial-video" landingReveal data-enter="phone" width="540" height="960"
+    aria-hidden="true" muted playsinline preload="none"
+    poster="/landing/animation-sessao-4-poster.webp"
+    src="/landing/animation-sessao-4.webm"></video>
+</section>
+
+<section class="closing-section" landingReveal aria-labelledby="closing-title">
+  <h2 id="closing-title" data-enter="title">Crie seu cardápio com o PingoChef</h2>
+  <button type="button" class="cta cta-primary closing-cta" data-enter="stamp" data-enter-delay="200"
+    [disabled]="!!registeringFree()" (click)="startFreeRegistration('closing')">
+    {{ registeringFree() === 'closing' ? 'Preparando…' : 'Crie Agora' }}
+  </button>
+  @if (registrationError()?.source === 'closing') {
+    <p class="closing-error" role="alert">{{ registrationError()?.message }}</p>
+  }
+</section>
+
+<div class="closing-art" aria-hidden="true">
+  <svg class="closing-wave" viewBox="0 0 1440 400" preserveAspectRatio="none" focusable="false">
+    <path d="M0 104H154C301 104 289 224 460 224C563 224 538 348 720 348C902 348 877 224 980 224C1151 224 1139 104 1286 104H1440V400H0Z"/>
+  </svg>
+  <svg class="closing-wave closing-wave-mobile" viewBox="0 0 480 200" preserveAspectRatio="none" focusable="false">
+    <path d="M0 0C35 27 60 10 101 31C142 52 130 99 240 99C350 99 338 52 379 31C420 10 445 27 480 0V200H0Z"/>
+  </svg>
+  <svg class="closing-float closing-float-burger" landingReveal data-enter="piece" data-enter-delay="140" viewBox="0 0 120 90" focusable="false"><use href="#motion-burger"/></svg>
+  <svg class="closing-float closing-float-pizza" landingReveal data-enter="piece" data-enter-delay="180" viewBox="0 0 120 90" focusable="false"><use href="#motion-pizza"/></svg>
+  <svg class="closing-float closing-float-dessert" landingReveal data-enter="piece" data-enter-delay="225" viewBox="0 0 120 90" focusable="false"><use href="#motion-dessert"/></svg>
+  <svg class="closing-float closing-float-coffee" landingReveal data-enter="piece" data-enter-delay="270" viewBox="0 0 32 32" focusable="false"><use href="#pc-segment-coffee"/></svg>
+  <svg class="closing-float closing-float-heart" landingReveal data-enter="piece" data-enter-delay="300" viewBox="0 0 88 78" focusable="false"><use href="#motion-heart"/></svg>
+  <svg class="closing-float closing-float-spark-left" landingReveal data-enter="piece" data-enter-delay="345" viewBox="0 0 64 64" focusable="false"><use href="#motion-spark"/></svg>
+  <svg class="closing-float closing-float-spark-right" landingReveal data-enter="piece" data-enter-delay="385" viewBox="0 0 64 64" focusable="false"><use href="#motion-spark"/></svg>
+  <img src="/landing/celular-sessao-final.webp" landingReveal data-enter="phone" width="640" height="800" loading="lazy" decoding="async" alt="">
+</div>
+
+<footer class="landing-footer">
+  <div class="landing-footer-inner">
+    <strong>PingoChef</strong>
+    <nav aria-label="Links do rodapé">
+      <a routerLink="/terms">Termos de uso</a>
+      <a routerLink="/privacy">Privacidade</a>
+    </nav>
+  </div>
+</footer>

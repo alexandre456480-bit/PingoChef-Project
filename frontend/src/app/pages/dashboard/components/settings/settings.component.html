@@ -131,6 +131,29 @@
             <p>Precisa de ajuda com sua conta, plano ou cardápio?</p>
             <a class="button primary" href="mailto:pingochefcardapio@gmail.com">pingochefcardapio&#64;gmail.com</a>
             <p>Nunca envie sua senha ou dados de acesso ao suporte.</p>
+            <section class="security-action" aria-labelledby="suggestion-title">
+              <h3 id="suggestion-title">Tem uma ideia para o PingoChef?</h3>
+              <p id="suggestion-help">Sua sugestão é anônima. Evite incluir dados pessoais no texto.</p>
+              <form (ngSubmit)="sendSuggestion()">
+                <label for="suggestion-message">Sua sugestão</label>
+                <textarea id="suggestion-message" name="suggestion" [(ngModel)]="suggestion"
+                  rows="4" maxlength="1000" required [readOnly]="sendingSuggestion"
+                  aria-describedby="suggestion-help suggestion-length"
+                  placeholder="O que podemos melhorar?"></textarea>
+                <div class="suggestion-actions">
+                  <span id="suggestion-length">{{ suggestion.length }} / 1.000</span>
+                  <button type="submit" class="button primary" [disabled]="sendingSuggestion || !suggestion.trim()">
+                    {{ sendingSuggestion ? 'Enviando…' : 'Enviar sugestão' }}
+                  </button>
+                </div>
+                @if (suggestionSent) {
+                  <p role="status">Sugestão enviada. Obrigado pela ideia!</p>
+                }
+                @if (suggestionError) {
+                  <p class="error" role="alert">{{ suggestionError }}</p>
+                }
+              </form>
+            </section>
           }
           @case ('manage') {
             <h2>Gerenciar conta</h2>

@@ -28,6 +28,11 @@ export interface AdminInvitation {
   expires_at: string; consumed_at: string|null; revoked_at: string|null;
   created_at: string;
 }
+export interface AdminSuggestion {
+  id: string;
+  message: string;
+  created_on: string;
+}
 export interface AdminCommercialReport {
   statuses: Record<string,number>; newSubscriptions:number;cancellations:number;
   planDistribution:{plan:string;count:number}[];graceDays:number;billingEnforced:boolean;
@@ -135,6 +140,11 @@ export class AdminApiService {
   business(id: string) {
     return this.http.get<AdminEnvelope<any>>(`${this.base}/businesses/${encodeURIComponent(id)}`,
       this.options()).pipe(map(result => result.data));
+  }
+  suggestions(page: number) {
+    return this.http.get<AdminEnvelope<AdminSuggestion[]>>(
+      `${this.base}/suggestions`, this.options(this.params({ page })),
+    );
   }
   invitations(query: Record<string,string|number|null|undefined>) {
     return this.http.get<AdminEnvelope<AdminInvitation[]>>(`${this.base}/invites`,

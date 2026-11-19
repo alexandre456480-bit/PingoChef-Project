@@ -68,6 +68,14 @@
   backdrop-filter: blur(32px) saturate(190%);
   -webkit-backdrop-filter: blur(32px) saturate(190%);
 }
+.menu-viewport:is([data-template="default"], [data-template="centered-cover"], [data-template="arched-cover"], [data-template="brand-hero"]) .intro-description-card {
+  background: var(--surface-color);
+  border-color: color-mix(in srgb, var(--text-primary) 10%, var(--surface-color));
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--text-primary) 5%, transparent),
+    0 8px 18px color-mix(in srgb, var(--text-primary) 9%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 .menu-viewport[data-template] .no-hero-header { margin-top: 0; border-radius: var(--template-item-radius); }
 .menu-viewport[data-template] .no-hero-logo-wrap {
   width: var(--template-logo-size); height: var(--template-logo-size);

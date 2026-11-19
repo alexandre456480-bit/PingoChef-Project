@@ -6,7 +6,8 @@ import { adminGuard } from './admin/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: () => inject(DOCUMENT).location.hostname === 'admin.pingochef.com'
-    ? 'admin/login' : 'plans', pathMatch: 'full' },
+    ? 'admin/login' : 'inicio', pathMatch: 'full' },
+  { path: 'inicio', title: 'PingoChef | Cardápio digital para restaurantes', loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent) },
   { path: 'login', loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent) },
   { path: 'plans', loadComponent: () => import('./pages/plans/plans.component').then(m=>m.PlansComponent) },
   { path: 'terms', loadComponent:()=>import('./pages/plans/legal-information.component').then(m=>m.LegalInformationComponent) },
