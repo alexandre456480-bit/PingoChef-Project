@@ -20,7 +20,7 @@ export class BusinessEligibilityService {
       return data === true;
     }
     if (!isDemoMode()) throw new Error('BUSINESS_ELIGIBILITY_UNAVAILABLE');
-    return localDb.businesses.some(b => b.id === businessId && b.status === 'ACTIVE');
+    return localDb.businesses.some(b => b.id === businessId && b.status === 'ACTIVE' && b.is_published !== false);
   }
 
   async findPublicBusinessBySlug<T extends { id: string }>(slug: string, columns: string): Promise<T | null> {

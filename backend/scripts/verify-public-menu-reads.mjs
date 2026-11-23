@@ -30,6 +30,22 @@ export async function verifyPublicMenuReads(pool) {
     await client.query("SELECT set_config('request.jwt.claims',$1,true)",[JSON.stringify({sub:owner,iat:Math.floor(Date.now()/1000)+1})]);
     assert.equal((await client.query("UPDATE menu_items SET name='Owner still edits hidden items' WHERE id=$1",[hiddenItem])).rowCount,1);
     assert.equal((await client.query("UPDATE menu_items SET name='Forbidden' WHERE id=$1",[otherItem])).rowCount,0);
+    const canUnpublish = "SELECT has_function_privilege(current_user,'public.unpublish_business_menu(uuid,uuid)','EXECUTE') AS allowed";
+    const unpublish = 'SELECT public.unpublish_business_menu($1,$2) AS ok';
+    const eligibility = 'SELECT public.business_is_publicly_eligible($1) AS visible';
+    assert.equal((await client.query(canUnpublish)).rows[0].allowed, false);
+    await client.query('SET LOCAL ROLE service_role');
+    assert.equal((await client.query(unpublish,[business,other])).rows[0].ok, false);
+    assert.equal((await client.query(eligibility,[business])).rows[0].visible, true);
+    for (let attempt = 0; attempt < 2; attempt++)
+      assert.equal((await client.query(unpublish,[business,owner])).rows[0].ok, true);
+    assert.equal((await client.query(eligibility,[business])).rows[0].visible, false);
+    await client.query('SET LOCAL ROLE anon');
+    assert.equal((await client.query(canUnpublish)).rows[0].allowed, false);
+    assert.equal((await client.query('SELECT id FROM menu_items WHERE id=$1',[available])).rowCount, 0);
+    await client.query('SET LOCAL ROLE service_role');
+    assert.equal((await client.query('SELECT public.publish_business_menu($1,$2) AS ok',[business,owner])).rows[0].ok, true);
+    assert.equal((await client.query(eligibility,[business])).rows[0].visible, true);
     console.log('OK public catalogue RLS: unavailable/hidden/unpublished denied, owner read/write and tenant isolation preserved');
   } finally {
     await client.query('ROLLBACK');

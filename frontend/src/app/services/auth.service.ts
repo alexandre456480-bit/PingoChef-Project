@@ -60,7 +60,18 @@ export class AuthService {
   getBusiness(): Observable<any> {
     return this.http.get(this.businessApiUrl).pipe(tap((res: any) => this.currentBusiness.set(res.data)));
   }
-  publishBusinessMenu(): Observable<any> { return this.http.post(`${this.businessApiUrl}/publish`, {}); }
+  publishBusinessMenu(): Observable<any> { return this.changeMenuPublication('publish'); }
+  unpublishBusinessMenu(): Observable<any> { return this.changeMenuPublication('unpublish'); }
+  private changeMenuPublication(action: 'publish' | 'unpublish') {
+    return this.http.post<{ success: boolean; data: { published: boolean } }>(`${this.businessApiUrl}/${action}`, {}).pipe(
+      tap(response => {
+        const published = response.data?.published;
+        if (response.success && typeof published === 'boolean') {
+          this.account.update(account => account ? { ...account, isPublished: published } : account);
+        }
+      }),
+    );
+  }
   updateBusiness(data: any): Observable<any> {
     return this.imagePayload.prepare(data).pipe(switchMap(prepared => this.http.put(this.businessApiUrl, prepared)), tap((res: any) => this.currentBusiness.set(res.data)));
   }

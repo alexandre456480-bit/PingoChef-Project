@@ -53,6 +53,19 @@
               <dd>{{ auth.currentBusiness()?.name }}</dd>
             </dl>
             <p>Os dados do estabelecimento podem ser ajustados na seção Empresa do painel.</p>
+            <div class="account-actions">
+              <button type="button" class="button" [disabled]="busy" (click)="themeToggle.emit()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                  @if (theme === 'dark') { <circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/> }
+                  @else { <path d="M20.8 15.1A8.5 8.5 0 0 1 8.9 3.2 8.5 8.5 0 1 0 20.8 15.1Z"/> }
+                </svg>
+                {{ theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro' }}
+              </button>
+              <button type="button" class="button sign-out" [disabled]="busy" (click)="logout()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H5v16h5m4-13 5 5-5 5m-5-5h10"/></svg>
+                Sair
+              </button>
+            </div>
             <app-menu-transfer (busyChange)="busy = $event"></app-menu-transfer>
             <div class="tutorial-entry">
               <div><h3>Conheça seu painel</h3><p>Reveja o guia completo do painel.</p></div>

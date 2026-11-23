@@ -94,6 +94,16 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 1100px) {
+  html:has(app-dashboard, app-public-menu),
+  body:has(app-dashboard, app-public-menu) {
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+  }
+}
+
 body {
   font-family: var(--font-body);
   color: var(--dark);

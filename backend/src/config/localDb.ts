@@ -28,6 +28,7 @@ export interface LocalBusiness {
   name: string;
   slug: string;
   status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'SUSPENDED';
+  is_published?: boolean;
   phone?: string | null;
   whatsapp?: string | null;
   logo_url?: string | null;

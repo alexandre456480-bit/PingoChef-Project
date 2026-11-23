@@ -282,5 +282,9 @@
   {
     "file": "20261118233846_add_anonymous_app_suggestions.sql",
     "sha256": "3cffd837596b4c5ace40782bff17585e63dc8c35f1079db2bccdbd17569981a8"
+  },
+  {
+    "file": "20261122000000_unpublish_business_menu.sql",
+    "sha256": "aec42cb33e367d01cddf5d9ab9db7fd27ee9a191919e9dd226b56310a9f442ec"
   }
 ]

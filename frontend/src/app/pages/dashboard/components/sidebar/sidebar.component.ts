@@ -111,33 +111,22 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
             </button>
           }
 
-          <div class="nav-separator"></div>
-
-          <button class="nav-item logout-item" (click)="onLogout.emit()">
-            <span class="nav-icon-wrap">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </span>
-            <span class="nav-label">Sair</span>
-          </button>
         </nav>
       </div>
 
       <!-- Bottom actions -->
       <div class="sidebar-bottom">
-        <button class="icon-round-btn theme-toggle-btn" type="button" (click)="themeToggle.emit(); mobileClose.emit()"
-          [attr.aria-pressed]="isDarkTheme" [attr.aria-label]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'"
-          [title]="isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            @if (isDarkTheme) { <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.41M17.66 6.34l1.41-1.41"/> }
-            @else { <path d="M20.8 15.1A8.5 8.5 0 0 1 8.9 3.2 8.5 8.5 0 1 0 20.8 15.1Z"/> }
-          </svg>
-        </button>
         <button class="icon-round-btn" title="Configurações" aria-label="Abrir configurações" (click)="settingsOpen.emit(); mobileClose.emit()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg width="32" height="32" viewBox="0 0 26 26" aria-hidden="true">
+            <defs>
+              <linearGradient id="settings-gear-shine" x2="75%" y2="100%">
+                <stop stop-color="#ffe6a8"/><stop offset=".48" stop-color="#ffad51"/><stop offset="1" stop-color="#da541e"/>
+              </linearGradient>
+              <path id="settings-gear-shape" fill-rule="evenodd" d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915Z M15 12a3 3 0 1 0-6 0 3 3 0 1 0 6 0Z"/>
+            </defs>
+            <use href="#settings-gear-shape" transform="translate(1 2)" fill="#933218"/>
+            <use href="#settings-gear-shape" fill="url(#settings-gear-shine)" stroke="#ffcc85" stroke-width=".55"/>
+          </svg>
         </button>
       </div>
     </aside>
@@ -331,20 +320,6 @@ export type ActiveSection = 'dashboard' | 'menu' | 'empresa' | 'design' | 'previ
       animation: pulse 2s ease-in-out infinite;
     }
 
-    .nav-separator {
-      height: 1px;
-      margin: 12px 20px;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
-    }
-
-    .logout-item:hover {
-      color: #EF4444 !important;
-    }
-    .logout-item:hover .nav-icon-wrap {
-      background: rgba(239, 68, 68, 0.12);
-    }
-
-    /* ── Bottom ── */
     .sidebar-bottom {
       flex-shrink:0;
       display: flex;
@@ -449,12 +424,9 @@ export class SidebarComponent {
   @Input() analyticsEnabled=false;
   @Input() qrEnabled=false;
   @Output() settingsOpen=new EventEmitter<void>();
-  @Output() themeToggle = new EventEmitter<void>();
-  @Input() isDarkTheme = false;
   @Input() activeSection: ActiveSection = 'dashboard';
   @Input() mobileOpen = false;
   @Output() sectionChange = new EventEmitter<ActiveSection>();
-  @Output() onLogout = new EventEmitter<void>();
   @Output() onToast = new EventEmitter<string>();
   @Output() mobileClose = new EventEmitter<void>();
 

@@ -14,8 +14,11 @@ export const publishBusinessMenuController = async (req: AuthenticatedRequest, r
       if (isThematicTemplate(localDb.designSettings[req.businessId]?.template_key))
         return res.status(403).json({ success: false, error: { code: 'THEMATIC_TEMPLATE_REQUIRES_PLAN', requiredPlan: 'BASIC' } });
       const hasProduct = localDb.items.some(item => item.business_id === req.businessId);
-      return hasProduct ? res.json({ success: true, data: { published: true } })
-        : res.status(400).json({ success: false, error: { code: 'MENU_NEEDS_PRODUCT' } });
+      if (!hasProduct) return res.status(400).json({ success: false, error: { code: 'MENU_NEEDS_PRODUCT' } });
+      const business = localDb.businesses.find(row => row.id === req.businessId && row.owner_user_id === req.userId && row.status === 'ACTIVE');
+      if (!business) return res.status(403).json({ success: false, error: { code: 'ACCOUNT_NOT_ACTIVE' } });
+      business.is_published = true;
+      return res.json({ success: true, data: { published: true } });
     }
     if (!isSupabaseConfigured) return res.status(503).json({ success: false, error: { code: 'SERVICE_UNAVAILABLE' } });
     const { data, error } = await supabaseAdmin.rpc('publish_business_menu', {
@@ -31,6 +34,27 @@ export const publishBusinessMenuController = async (req: AuthenticatedRequest, r
     }
     return data ? res.status(200).json({ success: true, data: { published: true } })
       : res.status(403).json({ success: false, error: { code: 'ACCOUNT_NOT_ACTIVE' } });
+  } catch (error) { next(error); }
+};
+
+export const unpublishBusinessMenuController = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.businessId || !req.userId) return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED' } });
+    let allowed: boolean;
+    if (isDemoMode()) {
+      const business = localDb.businesses.find(row => row.id === req.businessId && row.owner_user_id === req.userId && row.status === 'ACTIVE');
+      allowed = Boolean(business);
+      if (business) business.is_published = false;
+    } else {
+      if (!isSupabaseConfigured) return res.status(503).json({ success: false, error: { code: 'SERVICE_UNAVAILABLE' } });
+      const { data, error } = await supabaseAdmin.rpc('unpublish_business_menu', {
+        p_business_id: req.businessId, p_owner_id: req.userId,
+      });
+      if (error) throw error;
+      allowed = data === true;
+    }
+    if (!allowed) return res.status(403).json({ success: false, error: { code: 'ACCOUNT_NOT_ACTIVE' } });
+    return res.json({ success: true, data: { published: false } });
   } catch (error) { next(error); }
 };
 

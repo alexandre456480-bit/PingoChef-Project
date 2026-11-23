@@ -221,12 +221,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                       <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="no-hero-logo-img" />
                     </div>
                   }
-                  <div class="no-hero-texts">
-                    <h2 class="no-hero-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ businessName }}</h2>
-                    @if (businessDescription || welcomeTagline) {
-                      <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
-                    }
-                  </div>
+                  @if (templateKey !== 'immersive-cover' || !logoUrl) {
+                    <div class="no-hero-texts">
+                      <h2 class="no-hero-title" [style.font-family]="headingFont + ', sans-serif'" [style.color]="textPrimary">{{ businessName }}</h2>
+                      @if (businessDescription || welcomeTagline) {
+                        <span class="no-hero-tagline" [style.color]="textSecondary">{{ businessDescription || welcomeTagline }}</span>
+                      }
+                    </div>
+                  }
                 </div>
               </div>
             }
@@ -239,12 +241,14 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
                     <img [appMenuImage]="logoUrl" menuImageKind="logo" [alt]="businessName" class="template-logo" />
                   </div>
                 }
-                <div class="template-brand-copy">
-                  <h2>{{ businessName }}</h2>
-                  @if (businessDescription.trim()) {
-                    <p>{{ businessDescription }}</p>
-                  }
-                </div>
+                @if (templateKey !== 'immersive-cover' || !logoUrl) {
+                  <div class="template-brand-copy">
+                    <h2>{{ businessName }}</h2>
+                    @if (businessDescription.trim()) {
+                      <p>{{ businessDescription }}</p>
+                    }
+                  </div>
+                }
               </div>
             </ng-template>
 
@@ -1730,8 +1734,10 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     /* Scrollable body */
     .showcase-scrollable {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
+      overscroll-behavior-y: contain;
       padding: 10px 12px 32px;
       scrollbar-width: none;
       display: flex;
@@ -1888,15 +1894,30 @@ export const normalizeMenuSearch = (value: string) => value.normalize('NFD').rep
     .categories-nav-section {
       margin: 2px 0 6px;
     }
+    @media (min-width: 768px) and (pointer: fine) {
+      .menu-viewport:not(.in-phone) {
+        --category-scrollbar-width: thin;
+        --category-scrollbar-display: block;
+      }
+    }
     .cat-nav-scroll {
       display: flex;
       gap: 10px;
       overflow-x: auto;
       padding: 12px;
-      scrollbar-width: none;
+      scrollbar-width: var(--category-scrollbar-width, none);
+      scrollbar-color: color-mix(in srgb, var(--text-primary) 56%, var(--surface-color))
+        color-mix(in srgb, var(--text-primary) 12%, var(--surface-color));
       -webkit-overflow-scrolling: touch;
     }
-    .cat-nav-scroll::-webkit-scrollbar { display: none; }
+    .cat-nav-scroll::-webkit-scrollbar {
+      display: var(--category-scrollbar-display, none);
+      height: 7px;
+    }
+    .cat-nav-scroll::-webkit-scrollbar-thumb {
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--text-primary) 56%, var(--surface-color));
+    }
 
     .category-nav-pill {
       display: flex;
@@ -3286,8 +3307,9 @@ export class PublicMenuViewComponent implements OnInit, OnDestroy {
   private readonly visibleItems = computed(() => {
     const query = normalizeMenuSearch(this.searchFilter), category = this.activeCatId;
     const index = this.searchIndex();
-    return this.items.filter(item => (!category || item.categoryId === category) &&
-      (!query || index.get(item.id)?.includes(query)))
+    return this.items.filter(item => query
+      ? index.get(item.id)?.includes(query)
+      : !category || item.categoryId === category)
       .sort((a,b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   });
   private readonly groupedItems = computed(() => {

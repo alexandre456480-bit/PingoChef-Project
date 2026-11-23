@@ -292,3 +292,6 @@ a {
     animation: none;
   }
 }
+.account-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 24px; }
+.account-actions .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; }
+.account-actions .sign-out { color: var(--panel-danger); }

@@ -28,7 +28,7 @@ export class DialogFocusDirective implements AfterViewInit, OnDestroy {
     (this.nodes()[0] || this.element.nativeElement).focus();
   }
   @HostListener('keydown', ['$event']) onKey(e: KeyboardEvent) {
-    if (!this.dialogFocusEnabled) return;
+    if (!this.dialogFocusEnabled || e.defaultPrevented) return;
     if (e.key === 'Escape') {
       e.preventDefault();
       this.dialogEscape.emit();

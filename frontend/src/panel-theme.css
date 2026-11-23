@@ -29,6 +29,7 @@
   --panel-action-shadow: 5px 6px 12px rgba(0, 0, 0, .25), -2px -2px 8px rgba(255, 255, 255, .08), inset 1px 1px 2px rgba(255, 255, 255, .2), inset -1px -2px 3px rgba(0, 0, 0, .22);
   --panel-plum: #35103c;
   --panel-success: #24834b;
+  --panel-danger: #a51a3c;
   --panel-shadow-raised: 9px 9px 20px rgba(105, 79, 54, 0.18), -9px -9px 20px rgba(255, 255, 245, 0.82);
   --panel-shadow-soft: 5px 5px 12px rgba(105, 79, 54, 0.15), -5px -5px 12px rgba(255, 255, 245, 0.72);
   --panel-shadow-inset: inset 3px 3px 7px rgba(105, 79, 54, 0.14), inset -3px -3px 7px rgba(255, 255, 245, 0.74);
@@ -59,6 +60,7 @@
   --panel-wine-deep: #940b34;
   --panel-plum: #f2dff0;
   --panel-success: #4ade80;
+  --panel-danger: #ff9eac;
   --panel-shadow-raised: 9px 9px 20px rgba(0, 0, 0, 0.42), -7px -7px 18px rgba(255, 255, 255, 0.025);
   --panel-shadow-soft: 5px 5px 12px rgba(0, 0, 0, 0.38), -4px -4px 10px rgba(255, 255, 255, 0.022);
   --panel-shadow-inset: inset 3px 3px 7px rgba(0, 0, 0, 0.36), inset -3px -3px 7px rgba(255, 255, 255, 0.025);
@@ -130,8 +132,7 @@
 .dashboard-shell .icon-round-btn,
 .dashboard-shell .hamburger-btn,
 .dashboard-shell .preview-minimize-btn,
-.dashboard-shell .close-btn,
-.dashboard-shell .theme-toggle-btn {
+.dashboard-shell .close-btn {
   color: var(--panel-text-muted) !important;
   background: var(--panel-surface) !important;
   border-color: var(--panel-border) !important;
@@ -162,11 +163,6 @@
 }
 
 
-.dashboard-shell .theme-toggle-btn {
-  color: var(--panel-wine) !important;
-  background: linear-gradient(145deg, var(--panel-surface-strong), var(--panel-surface-muted)) !important;
-}
-
 @media (max-width: 640px) {
   .dashboard-shell .hamburger-btn {
     background: transparent !important;
@@ -175,7 +171,6 @@
   }
 }
 
-.dashboard-shell .nav-separator,
 .dashboard-shell .modal-bar {
   border-color: var(--panel-border) !important;
 }

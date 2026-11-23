@@ -77,7 +77,8 @@ async function meData(user: OwnerSession['user']) {
   ]);
   if (lifecycleError || milestonesError || profileError) throw ownerError(503, 'AUTH_SERVICE_UNAVAILABLE');
   return { user: { id: user.id, email: user.email, name: profile?.full_name || null }, business,
-    accountActive, provisioningRequired: !business, isPublished:lifecycle?.is_published===true,
+    accountActive, provisioningRequired: !business,
+    isPublished: isDemoMode() ? business?.status === 'ACTIVE' && business.is_published !== false : lifecycle?.is_published === true,
     onboarding:{designConfigured:Array.isArray(milestones)&&milestones.some((e:any)=>e.event_name==='DESIGN_CONFIGURED')},
     plan: snapshot?.plan || null, subscription: snapshot?.subscription || null,
     entitlements: snapshot?.entitlements || {}, usage: snapshot?.usage || { products: 0, categories: 0, videos: 0 } };
