@@ -36,6 +36,7 @@ async function company(page: Page) {
   const nav = page.locator('[data-tour="nav-empresa"]');
   if (!(await nav.isVisible())) await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
   await nav.click();
+  await page.locator('app-business-editor summary').filter({ hasText: /^Pedidos$/ }).click();
   await expect(page.locator('app-order-settings-editor')).toBeVisible();
 }
 async function menu(page: Page) {

@@ -87,11 +87,17 @@
 }
 
 .dashboard-shell .content-canvas {
-  scrollbar-color: var(--panel-text-faint) transparent !important;
+  scrollbar-color: var(--panel-scrollbar-thumb, var(--panel-text-faint)) transparent !important;
 }
 
 .dashboard-shell .content-canvas::-webkit-scrollbar-thumb {
-  background: var(--panel-text-faint) !important;
+  background: var(--panel-scrollbar-thumb, var(--panel-text-faint)) !important;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-shell .content-canvas {
+    --panel-scrollbar-thumb: #dc2626;
+  }
 }
 
 .dashboard-shell .sidebar {
@@ -246,7 +252,7 @@
 }
 
 .dashboard-shell :is(app-dashboard-home, app-menu-editor, app-business-editor, app-design-editor, app-product-video-uploader)
-  :is(.field-label, .label-row, .presets-label, .preview-header-label, .token-label, .toggle-label, .font-tag, legend) {
+  :is(.field-label, .label-row, .preview-header-label, .token-label, .toggle-label, .font-tag, legend) {
   color: var(--panel-text-soft) !important;
 }
 
@@ -504,13 +510,13 @@
   scrollbar-color: var(--panel-text-faint) transparent !important;
 }
 
-.dashboard-shell :is(.category-chip-live-preview, .cat-chip, .grp-chip, .custom-chip, .theme-chip, .preset-pill, .hero-target-chip, .target-current-badge, .block-order-pill, .char-pill, .field-badge) {
+.dashboard-shell :is(.category-chip-live-preview, .cat-chip, .grp-chip, .custom-chip, .theme-chip, .hero-target-chip, .target-current-badge, .block-order-pill, .char-pill, .field-badge) {
   color: var(--panel-text-soft) !important;
   background: var(--panel-fill) !important;
   border-color: var(--panel-border) !important;
 }
 
-.dashboard-shell :is(.cat-chip.active, .grp-chip.active, .preset-pill.active, .custom-chip.active, .theme-chip.active) {
+.dashboard-shell :is(.cat-chip.active, .grp-chip.active, .custom-chip.active, .theme-chip.active) {
   color: var(--panel-wine) !important;
   background: rgba(244, 123, 32, 0.14) !important;
   border-color: rgba(244, 123, 32, 0.42) !important;

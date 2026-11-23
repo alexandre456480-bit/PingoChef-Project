@@ -2,7 +2,6 @@
 section { padding: 22px; border: 1px solid var(--panel-border-strong); border-radius: 20px; background: var(--panel-surface-muted); }
 .heading { display: flex; gap: 12px; align-items: center; }
 .icon { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border-radius: 12px; color: var(--panel-accent); background: var(--panel-surface-inset); }
-h3 { margin: 0; font: 600 16px Outfit, sans-serif; }
 p { margin: 5px 0 0; color: var(--panel-text-soft); font-size: 12px; line-height: 1.6; }
 .toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 16px 0 0; font-size: 14px; font-weight: 600; cursor: pointer; }
 input[type='checkbox'], input[type='radio'] { accent-color: var(--panel-action); width: 18px; height: 18px; flex-shrink: 0; margin: 0; }

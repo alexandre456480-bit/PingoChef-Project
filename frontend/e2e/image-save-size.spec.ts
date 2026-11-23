@@ -34,6 +34,8 @@ test('large company images and a color change save below the published request l
   await nav.click();
   const editor = page.locator('app-business-editor');
   await expect(editor).toBeVisible();
+  await editor.locator('summary').filter({ hasText: /^Logo da Empresa$/ }).click();
+  await editor.locator('summary').filter({ hasText: 'Fundo da Página de Entrada' }).click();
   const source = await page.evaluate(() => {
     const canvas = document.createElement('canvas'); canvas.width = 1200; canvas.height = 900;
     const context = canvas.getContext('2d')!;

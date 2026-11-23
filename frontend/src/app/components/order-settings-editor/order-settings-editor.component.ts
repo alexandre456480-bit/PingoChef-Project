@@ -8,14 +8,14 @@ import { DesignService, contrastTextColor } from '../../services/design.service'
   standalone: true,
   imports: [FormsModule],
   template: `
-    <section aria-labelledby="orders-title">
+    <section aria-label="Configuração de pedidos">
       <div class="heading">
         <span class="icon" aria-hidden="true">
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M3 3h2l3 12h11l3-9H6M9 20h.01M18 20h.01" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        <div><h3 id="orders-title">Pedidos</h3><p>Conecte o carrinho ao seu canal de atendimento.</p></div>
+        <p>Conecte o carrinho ao seu canal de atendimento.</p>
       </div>
       <label class="toggle">
         <input type="checkbox" [ngModel]="settings.enabled" (ngModelChange)="change({ enabled: $event })" [ngModelOptions]="{ standalone: true }" />

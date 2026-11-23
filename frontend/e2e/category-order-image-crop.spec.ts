@@ -83,6 +83,7 @@ test('crop supports cancellation, keyboard panning, bounded pixels and no save u
   });
   const file = { name: 'colors.png', mimeType: 'image/png', buffer: Buffer.from(source.split(',')[1], 'base64') };
   const upload = page.locator('app-business-editor input[type=file]').first();
+  await page.locator('app-business-editor summary').filter({ hasText: /^Logo da Empresa$/ }).click();
   const logo = page.locator('app-business-editor .logo-img');
   const previous = await logo.count() ? await logo.getAttribute('src') : null;
   await upload.setInputFiles(file); await expect(page.getByRole('dialog', { name: 'Logo da empresa' })).toBeVisible();

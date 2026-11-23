@@ -22,8 +22,7 @@ import { SocialIconComponent } from '../social-icon/social-icon.component';
   standalone: true,
   imports: [FormsModule, SocialIconComponent],
   template: `
-    <section aria-labelledby="social-links-title">
-      <h3 id="social-links-title">Redes Sociais <span>Opcional</span></h3>
+    <section aria-label="Configuração de redes sociais">
       <p>Adicione suas redes e canais de pedido ao menu do cardápio.</p>
       <div class="entry">
         <div class="chooser">

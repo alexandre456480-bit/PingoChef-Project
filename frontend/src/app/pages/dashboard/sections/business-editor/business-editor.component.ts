@@ -33,231 +33,227 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
 
         <form (ngSubmit)="save()" class="form-layout">
           <!-- ── 1. Upload da Logo Oficial ── -->
-          <div class="section-block" style="--i:1">
-            <div class="block-title-row">
-              <label class="block-title">Logo da Empresa</label>
-              <span class="badge-sync">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                Visível em todo o cardápio e Welcome
-              </span>
-            </div>
-
-            <div class="upload-zone">
-              <div class="upload-preview">
-                @if (logoPreview) {
-                  <img [src]="logoPreview" alt="Logo" class="logo-img" />
-                } @else {
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect width="18" height="18" x="3" y="3" rx="2"/>
-                    <circle cx="9" cy="9" r="2"/>
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                  </svg>
-                }
+          <details class="company-section">
+            <summary>Logo da Empresa</summary>
+            <div class="section-block" style="--i:1">
+              <div class="block-title-row">
+                <span class="badge-sync">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  Visível em todo o cardápio e Welcome
+                </span>
               </div>
 
-              <div class="upload-info">
-                <span class="upload-label">Imagem da Marca</span>
-                <span class="upload-hint">PNG transparente, WebP ou JPEG · Máx. 8MB</span>
-                <div class="upload-actions">
-                  <label class="upload-btn">
-                    <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onLogoSelect($event)" hidden />
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                    Selecionar Logo
-                  </label>
+              <div class="upload-zone">
+                <div class="upload-preview">
                   @if (logoPreview) {
-                    <button type="button" class="btn-remove-file" (click)="removeLogo()" title="Remover logo personalizada">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      Remover
-                    </button>
+                    <img [src]="logoPreview" alt="Logo" class="logo-img" />
+                  } @else {
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect width="18" height="18" x="3" y="3" rx="2"/>
+                      <circle cx="9" cy="9" r="2"/>
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                    </svg>
                   }
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- ── 2. Campos de Texto Básicos ── -->
-          <div class="fields-grid">
-            <div class="form-field" style="--i:2">
-              <div class="label-row">
-                <label>Nome do Estabelecimento <span class="required-star">*</span></label>
-                <span class="field-badge">Unificado</span>
-              </div>
-              <input
-                type="text"
-                [(ngModel)]="form.name"
-                name="bName"
-                placeholder="Ex: Hamburgueria & Chopp Artesanal"
-                required
-                class="field-input"
-                (ngModelChange)="onLiveNameChange($event)"
-              />
-              <span class="field-hint">Aparece na barra superior, na tela Welcome e nos cabeçalhos</span>
-            </div>
-
-            <div class="form-field" style="--i:3">
-              <div class="label-row">
-                <label>Slug da URL Pública <span class="required-star">*</span></label>
-              </div>
-              <div class="input-addon">
-                <span class="addon-prefix" [title]="publicMenuPathLabel">{{ publicMenuPathLabel }}</span>
-                <input
-                  type="text"
-                  [(ngModel)]="form.slug"
-                  name="bSlug"
-                  placeholder="meu-restaurante"
-                  required
-                  class="field-input addon-field"
-                />
-              </div>
-              <span class="field-hint">Endereço direto do seu cardápio para os clientes</span>
-            </div>
-
-            <div class="form-field full" style="--i:4">
-              <div class="label-row">
-                <label>Descrição do Negócio <span class="badge-optional">Opcional</span></label>
-                <span class="char-count">{{ (form.description || '').length }}/500</span>
-              </div>
-              <textarea
-                [(ngModel)]="form.description"
-                name="bDesc"
-                maxlength="500"
-                placeholder="Apresentação do seu espaço gastronômico, especialidades da casa, proposta culinária..."
-                class="field-input field-textarea"
-                (ngModelChange)="onLiveDescriptionChange($event)">
-              </textarea>
-              <span class="field-hint">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                Texto de acolhimento exibido no centro da tela de entrada (Welcome) do cardápio digital
-              </span>
-            </div>
-          </div>
-
-          <app-social-links-editor [links]="form.social_links" (linksChange)="onSocialLinksChange($event)" />
-          <app-order-settings-editor [settings]="form.order_settings" (settingsChange)="onOrderSettingsChange($event)" />
-
-          <!-- ── 3. Configuração de Background da Página Welcome ── -->
-          <div class="welcome-bg-section" style="--i:5">
-            <div class="section-title-box">
-              <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="section-heading">Fundo da Página de Entrada (Welcome)</h3>
-                <p class="section-desc">Use uma imagem ou combine duas cores: uma para o fundo e outra para as formas arredondadas e o botão.</p>
-              </div>
-            </div>
-
-            <!-- Seletor de Tipo: Com Imagem vs Cor Sólida -->
-            <div class="bg-mode-selector">
-              <button
-                type="button"
-                class="mode-btn"
-                [class.active]="form.welcome_bg_type === 'image'"
-                (click)="setBgType('image')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                Com Imagem de Fundo
-              </button>
-
-              <button
-                type="button"
-                class="mode-btn"
-                [class.active]="form.welcome_bg_type === 'color'"
-                (click)="setBgType('color')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-                Duas Cores Personalizadas
-              </button>
-            </div>
-
-            <!-- Conteúdo de Background: Imagem -->
-            @if (form.welcome_bg_type === 'image') {
-              <div class="bg-image-box">
-                <div class="bg-preview-wrap" [style.background-image]="form.welcome_bg_image ? 'url(' + form.welcome_bg_image + ')' : 'none'">
-                  <div class="bg-preview-overlay">
-                    <span class="preview-badge">Pré-visualização do Fundo</span>
-                  </div>
-                </div>
-
-                <div class="bg-controls">
-                  <span class="bg-info-title">Imagem de Alta Resolução</span>
-                  <span class="bg-info-hint">Recomendado: 1200x800 ou superior · Máx. 8MB</span>
-                  
+                <div class="upload-info">
+                  <span class="upload-label">Imagem da Marca</span>
+                  <span class="upload-hint">PNG transparente, WebP ou JPEG · Máx. 8MB</span>
                   <div class="upload-actions">
                     <label class="upload-btn">
-                      <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onBgImageSelect($event)" hidden />
+                      <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onLogoSelect($event)" hidden />
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                      {{ form.welcome_bg_image ? 'Trocar imagem de fundo' : 'Adicionar imagem de fundo' }}
+                      Selecionar Logo
                     </label>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- Conteúdo de Background: Cor Sólida -->
-            @if (form.welcome_bg_type === 'color') {
-              <div class="bg-color-box">
-                <label for="welcomeColorPicker" class="hex-label">Cor do fundo</label>
-                <div class="color-picker-row">
-                  <div class="color-input-wrap">
-                    <input
-                      type="color"
-                      [(ngModel)]="form.welcome_bg_color"
-                      name="wColor"
-                      (ngModelChange)="onLiveColorChange($event)"
-                      class="native-color-picker"
-                      id="welcomeColorPicker"
-                    />
-                    <label for="welcomeColorPicker" class="color-swatch-display" [style.background-color]="form.welcome_bg_color"></label>
-                  </div>
-
-                  <div class="hex-input-group">
-                    <span class="hex-label">Código HEX</span>
-                    <input
-                      type="text"
-                      [(ngModel)]="form.welcome_bg_color"
-                      name="wColorHex"
-                      (ngModelChange)="onLiveColorChange($event)"
-                      placeholder="#0F0F12"
-                      maxlength="7"
-                      class="field-input hex-field"
-                    />
-                  </div>
-                </div>
-
-                <label for="welcomeAccentColorPicker" class="hex-label">Cor dos detalhes e do botão</label>
-                <div class="color-picker-row">
-                  <div class="color-input-wrap">
-                    <input type="color" id="welcomeAccentColorPicker" name="welcomeAccentColor" class="native-color-picker"
-                      [(ngModel)]="form.welcome_bg_accent_color" (ngModelChange)="onLiveAccentColorChange($event)" />
-                    <label for="welcomeAccentColorPicker" class="color-swatch-display" [style.background-color]="form.welcome_bg_accent_color"></label>
-                  </div>
-                  <div class="hex-input-group">
-                    <label for="welcomeAccentHex" class="hex-label">Código HEX</label>
-                    <input id="welcomeAccentHex" type="text" name="welcomeAccentHex" class="field-input hex-field" maxlength="7"
-                      [(ngModel)]="form.welcome_bg_accent_color" (ngModelChange)="onLiveAccentColorChange($event)" />
-                  </div>
-                </div>
-
-                <!-- Paleta de Atalhos Sofisticados -->
-                <div class="presets-section">
-                  <span class="presets-label">Sugestões de Tons Gastronômicos:</span>
-                  <div class="presets-grid">
-                    @for (preset of colorPresets; track preset.color) {
-                      <button
-                        type="button"
-                        class="preset-pill"
-                        [class.active]="form.welcome_bg_color?.toUpperCase() === preset.color.toUpperCase()"
-                        (click)="selectColorPreset(preset.color)">
-                        <span class="preset-dot" [style.background-color]="preset.color"></span>
-                        <span class="preset-name">{{ preset.name }}</span>
+                    @if (logoPreview) {
+                      <button type="button" class="btn-remove-file" (click)="removeLogo()" title="Remover logo personalizada">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Remover
                       </button>
                     }
                   </div>
                 </div>
               </div>
-            }
-          </div>
+            </div>
+          </details>
+
+          <!-- ── 2. Campos de Texto Básicos ── -->
+          <details class="company-section">
+            <summary>Dados do Estabelecimento</summary>
+            <div class="fields-grid">
+              <div class="form-field" style="--i:2">
+                <div class="label-row">
+                  <label>Nome do Estabelecimento <span class="required-star">*</span></label>
+                  <span class="field-badge">Unificado</span>
+                </div>
+                <input
+                  type="text"
+                  [(ngModel)]="form.name"
+                  name="bName"
+                  placeholder="Ex: Hamburgueria & Chopp Artesanal"
+                  required
+                  class="field-input"
+                  (ngModelChange)="onLiveNameChange($event)"
+                />
+                <span class="field-hint">Aparece na barra superior, na tela Welcome e nos cabeçalhos</span>
+              </div>
+
+              <div class="form-field" style="--i:3">
+                <div class="label-row">
+                  <label>Slug da URL Pública <span class="required-star">*</span></label>
+                </div>
+                <div class="input-addon">
+                  <span class="addon-prefix" [title]="publicMenuPathLabel">{{ publicMenuPathLabel }}</span>
+                  <input
+                    type="text"
+                    [(ngModel)]="form.slug"
+                    name="bSlug"
+                    placeholder="meu-restaurante"
+                    required
+                    class="field-input addon-field"
+                  />
+                </div>
+                <span class="field-hint">Endereço direto do seu cardápio para os clientes</span>
+              </div>
+
+              <div class="form-field full" style="--i:4">
+                <div class="label-row">
+                  <label>Descrição do Negócio <span class="badge-optional">Opcional</span></label>
+                  <span class="char-count">{{ (form.description || '').length }}/500</span>
+                </div>
+                <textarea
+                  [(ngModel)]="form.description"
+                  name="bDesc"
+                  maxlength="500"
+                  placeholder="Apresentação do seu espaço gastronômico, especialidades da casa, proposta culinária..."
+                  class="field-input field-textarea"
+                  (ngModelChange)="onLiveDescriptionChange($event)">
+                </textarea>
+                <span class="field-hint">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  Texto de acolhimento exibido no centro da tela de entrada (Welcome) do cardápio digital
+                </span>
+              </div>
+            </div>
+          </details>
+
+          <details class="company-section">
+            <summary>Redes Sociais</summary>
+            <app-social-links-editor [links]="form.social_links" (linksChange)="onSocialLinksChange($event)" />
+          </details>
+          <details class="company-section">
+            <summary>Pedidos</summary>
+            <app-order-settings-editor [settings]="form.order_settings" (settingsChange)="onOrderSettingsChange($event)" />
+          </details>
+
+          <!-- ── 3. Configuração de Background da Página Welcome ── -->
+          <details class="company-section">
+            <summary>Fundo da Página de Entrada (Welcome)</summary>
+            <div class="welcome-bg-section" style="--i:5">
+              <div class="section-title-box">
+                <div class="section-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="section-desc">Use uma imagem ou combine duas cores: uma para o fundo e outra para as formas arredondadas e o botão.</p>
+                </div>
+              </div>
+
+              <!-- Seletor de Tipo: Com Imagem vs Cor Sólida -->
+              <div class="bg-mode-selector">
+                <button
+                  type="button"
+                  class="mode-btn"
+                  [class.active]="form.welcome_bg_type === 'image'"
+                  (click)="setBgType('image')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                  Com Imagem de Fundo
+                </button>
+
+                <button
+                  type="button"
+                  class="mode-btn"
+                  [class.active]="form.welcome_bg_type === 'color'"
+                  (click)="setBgType('color')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                  Duas Cores Personalizadas
+                </button>
+              </div>
+
+              <!-- Conteúdo de Background: Imagem -->
+              @if (form.welcome_bg_type === 'image') {
+                <div class="bg-image-box">
+                  <div class="bg-preview-wrap" [style.background-image]="form.welcome_bg_image ? 'url(' + form.welcome_bg_image + ')' : 'none'">
+                    <div class="bg-preview-overlay">
+                      <span class="preview-badge">Pré-visualização do Fundo</span>
+                    </div>
+                  </div>
+
+                  <div class="bg-controls">
+                    <span class="bg-info-title">Imagem de Alta Resolução</span>
+                    <span class="bg-info-hint">Recomendado: 1200x800 ou superior · Máx. 8MB</span>
+                  
+                    <div class="upload-actions">
+                      <label class="upload-btn">
+                        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onBgImageSelect($event)" hidden />
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        {{ form.welcome_bg_image ? 'Trocar imagem de fundo' : 'Adicionar imagem de fundo' }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Conteúdo de Background: Cor Sólida -->
+              @if (form.welcome_bg_type === 'color') {
+                <div class="bg-color-box">
+                  <label for="welcomeColorPicker" class="hex-label">Cor do fundo</label>
+                  <div class="color-picker-row">
+                    <div class="color-input-wrap">
+                      <input
+                        type="color"
+                        [(ngModel)]="form.welcome_bg_color"
+                        name="wColor"
+                        (ngModelChange)="onLiveColorChange($event)"
+                        class="native-color-picker"
+                        id="welcomeColorPicker"
+                      />
+                      <label for="welcomeColorPicker" class="color-swatch-display" [style.background-color]="form.welcome_bg_color"></label>
+                    </div>
+
+                    <div class="hex-input-group">
+                      <span class="hex-label">Código HEX</span>
+                      <input
+                        type="text"
+                        [(ngModel)]="form.welcome_bg_color"
+                        name="wColorHex"
+                        (ngModelChange)="onLiveColorChange($event)"
+                        placeholder="#0F0F12"
+                        maxlength="7"
+                        class="field-input hex-field"
+                      />
+                    </div>
+                  </div>
+
+                  <label for="welcomeAccentColorPicker" class="hex-label">Cor dos detalhes e do botão</label>
+                  <div class="color-picker-row">
+                    <div class="color-input-wrap">
+                      <input type="color" id="welcomeAccentColorPicker" name="welcomeAccentColor" class="native-color-picker"
+                        [(ngModel)]="form.welcome_bg_accent_color" (ngModelChange)="onLiveAccentColorChange($event)" />
+                      <label for="welcomeAccentColorPicker" class="color-swatch-display" [style.background-color]="form.welcome_bg_accent_color"></label>
+                    </div>
+                    <div class="hex-input-group">
+                      <label for="welcomeAccentHex" class="hex-label">Código HEX</label>
+                      <input id="welcomeAccentHex" type="text" name="welcomeAccentHex" class="field-input hex-field" maxlength="7"
+                        [(ngModel)]="form.welcome_bg_accent_color" (ngModelChange)="onLiveAccentColorChange($event)" />
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </details>
 
           <!-- ── 4. Ações do Formulário ── -->
           <div class="form-actions" style="--i:6">
@@ -276,6 +272,39 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
     </div>
   `,
   styles: [`
+    .company-section {
+      margin-bottom: 14px;
+      border: 1px solid var(--panel-border-strong);
+      border-radius: 16px;
+      background: var(--panel-surface-muted);
+    }
+    .company-section > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      padding: 12px 16px;
+      list-style: none;
+      color: var(--panel-text);
+      font: 650 1rem/1.3 Outfit, sans-serif;
+      cursor: pointer;
+      border-radius: 15px;
+    }
+    .company-section > summary::-webkit-details-marker { display: none; }
+    .company-section > summary::after {
+      content: '';
+      width: 9px;
+      height: 9px;
+      flex: none;
+      border: solid var(--panel-text-muted);
+      border-width: 0 2px 2px 0;
+      transform: translateY(-2px) rotate(45deg);
+    }
+    .company-section[open] > summary::after { transform: translateY(2px) rotate(225deg); }
+    .company-section > summary:hover { background: var(--panel-fill-hover); }
+    .company-section > summary:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 2px; }
+    .company-section > :not(summary) { margin: 0 12px 12px; }
     .business-container {
       display: flex;
       flex-direction: column;
@@ -337,12 +366,6 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
       align-items: center;
       justify-content: space-between;
       margin-bottom: 10px;
-    }
-    .block-title {
-      font-size: 0.86rem;
-      font-weight: 600;
-      color: #D4D4D8;
-      font-family: 'Inter', sans-serif;
     }
     .badge-sync {
       display: inline-flex;
@@ -589,13 +612,6 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
       justify-content: center;
       flex-shrink: 0;
     }
-    .section-heading {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #FFF;
-      margin: 0;
-    }
     .section-desc {
       font-size: 0.78rem;
       color: #71717A;
@@ -762,51 +778,6 @@ import { PUBLIC_MENU_PATH_LABEL } from '../../../../constants/public-menu';
       padding: 8px 12px;
     }
 
-    .presets-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .presets-label {
-      font-size: 0.76rem;
-      font-weight: 600;
-      color: #A1A1AA;
-    }
-    .presets-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .preset-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #D4D4D8;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .preset-pill:hover {
-      background: rgba(255, 255, 255, 0.07);
-      border-color: rgba(255, 255, 255, 0.18);
-    }
-    .preset-pill.active {
-      border-color: #F47B20;
-      background: rgba(244, 123, 32, 0.12);
-      color: #FFF;
-    }
-    .preset-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
     /* ── Botão Salvar ── */
     .form-actions {
       margin-top: 10px;
@@ -890,16 +861,6 @@ export class BusinessEditorComponent implements OnInit {
   logoPreview: string | null = null;
   isSaving = false;
 
-  readonly colorPresets = [
-    { name: 'Branco', color: '#FFFFFF' },
-    { name: 'Carvão Escuro', color: '#0F0F12' },
-    { name: 'Vinho Nobre', color: '#1F0A12' },
-    { name: 'Café & Malte', color: '#1A110B' },
-    { name: 'Azul Meia-Noite', color: '#0A111E' },
-    { name: 'Verde Oliva', color: '#0B1A12' },
-    { name: 'Preto Absoluto', color: '#000000' }
-  ];
-
   constructor(private authService: AuthService, private imageCrop: ImageCropService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
@@ -979,11 +940,6 @@ export class BusinessEditorComponent implements OnInit {
       next: image => { if (image) { this.form.welcome_bg_image = image; this.syncLiveDraft(); this.cdr.markForCheck(); } },
       error: error => this.onToast.emit(imageSaveError(error, 'Não foi possível carregar a imagem de fundo.'))
     });
-  }
-
-  selectColorPreset(colorHex: string): void {
-    this.form.welcome_bg_color = colorHex;
-    this.syncLiveDraft();
   }
 
   onLiveColorChange(color: string): void {

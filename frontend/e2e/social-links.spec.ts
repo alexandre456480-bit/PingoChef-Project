@@ -107,6 +107,7 @@ async function company(page: Page) {
   if (!(await nav.isVisible()))
     await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
   await nav.click();
+  await page.locator('app-business-editor summary').filter({ hasText: /^Redes Sociais$/ }).click();
   await expect(page.locator('app-social-links-editor')).toBeVisible();
 }
 async function publicMenu(page: Page) {
